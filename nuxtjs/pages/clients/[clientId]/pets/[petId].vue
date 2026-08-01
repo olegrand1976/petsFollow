@@ -225,42 +225,43 @@
           {{ $t('common.save') }}
         </ProButton>
       </ProCard>
-      <details
-        v-if="hasChartData || hasWeightChartData || hasBpChartData"
-        class="pro-pet-charts-details"
-        open
+      <ProCard
+        v-if="hasAnyVitalsData"
+        :title="$t('clients.pet.chartsToggle')"
+        class="pro-mb-lg"
         data-testid="pet-overview-charts"
       >
-        <summary>{{ $t('clients.pet.chartsToggle') }}</summary>
-        <div class="pro-pet-charts-details__body">
-          <ProPetVitalsCharts
-            layout="grid"
-            :chart-range="chartRange"
-            :weight-chart-range="weightChartRange"
-            :bp-chart-range="bpChartRange"
-            :has-chart-data="hasChartData"
-            :has-weight-chart-data="hasWeightChartData"
-            :has-bp-chart-data="hasBpChartData"
-            :chart-values="chartValues"
-            :chart-alerts="chartAlerts"
-            :chart-dates="chartDates"
-            :domain-start="chartDomain.start"
-            :domain-end="chartDomain.end"
-            :weight-chart-values="weightChartValues"
-            :weight-chart-dates="weightChartDates"
-            :weight-domain-start="weightChartDomain.start"
-            :weight-domain-end="weightChartDomain.end"
-            :bp-chart-sys-values="bpChartSysValues"
-            :bp-chart-dia-values="bpChartDiaValues"
-            :bp-chart-dates="bpChartDates"
-            :bp-domain-start="bpChartDomain.start"
-            :bp-domain-end="bpChartDomain.end"
-            @update:chart-range="chartRange = $event"
-            @update:weight-chart-range="weightChartRange = $event"
-            @update:bp-chart-range="bpChartRange = $event"
-          />
-        </div>
-      </details>
+        <p class="pro-hint pro-mb-md">{{ $t('clients.pet.chartsPreviewHint') }}</p>
+        <ul class="pro-pet-charts-preview" :aria-label="$t('clients.pet.chartsToggle')">
+          <li v-if="hasChartData">
+            <ProIcon name="favorite" :size="18" aria-hidden="true" />
+            <span>{{ $t('clients.pet.chartsTypeHeartrate') }}</span>
+            <strong>{{ kpiLastBpm }}</strong>
+          </li>
+          <li v-if="hasWeightChartData">
+            <ProIcon name="monitor_weight" :size="18" aria-hidden="true" />
+            <span>{{ $t('clients.pet.chartsTypeWeight') }}</span>
+            <strong>{{ kpiLastWeight }}</strong>
+          </li>
+          <li v-if="hasBpChartData">
+            <ProIcon name="monitor_heart" :size="18" aria-hidden="true" />
+            <span>{{ $t('clients.pet.chartsTypeBp') }}</span>
+            <strong>{{ kpiLastBp }}</strong>
+          </li>
+          <li v-if="hasLabChartData">
+            <ProIcon name="science" :size="18" aria-hidden="true" />
+            <span>{{ $t('clients.pet.chartsTypeLabs') }}</span>
+            <strong>{{ kpiLastLab }}</strong>
+          </li>
+        </ul>
+        <ProButton
+          variant="secondary"
+          test-id="pet-overview-open-vitals"
+          @click="openVitalsTab"
+        >
+          {{ $t('clients.pet.chartsOpenVitals') }}
+        </ProButton>
+      </ProCard>
 
       <ProPetDayTimeline
         :items="timeline"
@@ -276,12 +277,15 @@
       data-testid="pet-tab-vitals"
     >
       <ProPetVitalsCharts
+        show-empty
         :chart-range="chartRange"
         :weight-chart-range="weightChartRange"
         :bp-chart-range="bpChartRange"
+        :lab-chart-range="labChartRange"
         :has-chart-data="hasChartData"
         :has-weight-chart-data="hasWeightChartData"
         :has-bp-chart-data="hasBpChartData"
+        :has-lab-chart-data="hasLabChartData"
         :chart-values="chartValues"
         :chart-alerts="chartAlerts"
         :chart-dates="chartDates"
@@ -296,12 +300,21 @@
         :bp-chart-dates="bpChartDates"
         :bp-domain-start="bpChartDomain.start"
         :bp-domain-end="bpChartDomain.end"
+        :lab-trend-analyte="labTrendAnalyte"
+        :lab-analyte-options="labAnalyteOptions"
+        :lab-chart-values="labChartValues"
+        :lab-chart-dates="labChartDates"
+        :lab-domain-start="labChartDomain.start"
+        :lab-domain-end="labChartDomain.end"
+        :lab-axis-title="labTrendAnalyte ? labAnalyteLabel(labTrendAnalyte) : ''"
         @update:chart-range="chartRange = $event"
         @update:weight-chart-range="weightChartRange = $event"
         @update:bp-chart-range="bpChartRange = $event"
+        @update:lab-chart-range="labChartRange = $event"
+        @update:lab-trend-analyte="onLabTrendAnalyte"
       />
 
-      <ProCard :title="$t('clients.pet.heartrateTitle')">
+      <ProCard :title="$t('clients.pet.heartrateTitle')" class="pro-mb-lg">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.heartrateTitle')">
         <button
           type="button"
@@ -375,7 +388,7 @@
       </ProTable>
       </ProCard>
 
-      <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card">
+      <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card" class="pro-mb-lg">
       <ProTable
         :empty="!weights.length"
         :empty-title="$t('clients.pet.weightEmptyTitle')"
@@ -604,32 +617,6 @@
           </div>
         </form>
         <p v-if="labError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ labError }}</p>
-
-        <div v-if="labPanels.length" class="pro-pet-labs-trend pro-mb-lg">
-          <label class="pro-label">{{ $t('clients.pet.labsTrend') }}</label>
-          <select
-            v-model="labTrendAnalyte"
-            class="pro-input"
-            data-testid="pet-labs-trend-select"
-            @change="loadLabTrend"
-          >
-            <option value="">{{ $t('clients.pet.labsTrendSelect') }}</option>
-            <option v-for="code in labAnalyteCodes" :key="code" :value="code">
-              {{ labAnalyteLabel(code) }}
-            </option>
-          </select>
-          <ProBpmChart
-            v-if="labTrendValues.length"
-            :values="labTrendValues"
-            :dates="labTrendDates"
-            :domain-start="labTrendDomain.start"
-            :domain-end="labTrendDomain.end"
-            auto-y-domain
-            hide-legend
-            :axis-title="labTrendAnalyte ? labAnalyteLabel(labTrendAnalyte) : ''"
-            :aria-label="$t('clients.pet.labsTrend')"
-          />
-        </div>
 
         <ProTable
           :empty="!labPanels.length"
@@ -1242,6 +1229,7 @@ const sessionFilter = ref<'all' | 'alerts'>('all')
 const chartRange = ref<'3m' | '6m' | '1y'>('3m')
 const weightChartRange = ref<'3m' | '6m' | '1y'>('3m')
 const bpChartRange = ref<'3m' | '6m' | '1y'>('3m')
+const labChartRange = ref<'3m' | '6m' | '1y'>('1y')
 const bpBusy = ref(false)
 const bpError = ref('')
 const bpDraft = reactive({
@@ -1348,10 +1336,18 @@ const { user, fetchUser } = useProUser()
 const { refresh: refreshNavBadges } = useNavBadges()
 const router = useRouter()
 
+const vitalsTabCount = computed(() => {
+  const n = sessions.value.length
+    + weights.value.length
+    + bloodPressures.value.length
+    + labPanels.value.length
+  return n || undefined
+})
+
 const petTabs = computed(() => {
   const tabs = [
     { id: 'overview', label: t('clients.pet.tabs.overview') },
-    { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
+    { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: vitalsTabCount.value },
     { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
     { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
   ]
@@ -1428,6 +1424,12 @@ const kpiLastBp = computed(() => {
   return `${bp.systolicMmHg}/${bp.diastolicMmHg}`
 })
 
+const kpiLastLab = computed(() => {
+  const panel = labPanels.value[0]
+  if (!panel?.collectedAt) return '—'
+  return formatDate(panel.collectedAt)
+})
+
 const kpiOverdueCare = computed(() =>
   careReminders.value.filter(c => isCareOverdue(c)).length,
 )
@@ -1481,9 +1483,37 @@ async function loadBloodPressures() {
   bloodPressures.value = res.data ?? res ?? []
 }
 
+async function preferLabTrendAnalyte() {
+  if (labTrendAnalyte.value || !labPanels.value.length) return
+  const latestId = labPanels.value[0]?.id as string | undefined
+  if (!latestId) return
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/lab-panels/${latestId}`)
+    const panel = res.data ?? res
+    const results = Array.isArray(panel?.results) ? panel.results : []
+    const withNum = results.find((r: any) =>
+      r?.analyteCode && Number.isFinite(Number(r.valueNum)),
+    )
+    const code = String(withNum?.analyteCode || results[0]?.analyteCode || '').trim()
+    if (!code) return
+    labTrendAnalyte.value = code
+    await loadLabTrend()
+  } catch {
+    // Leave analyte unset — user picks from the select.
+  }
+}
+
 async function loadLabPanels() {
   const res: any = await $fetch(`/api/pets/${petId}/lab-panels`)
   labPanels.value = res.data ?? res ?? []
+  await preferLabTrendAnalyte()
+}
+
+function openVitalsTab() {
+  if (activeTab.value !== 'vitals') {
+    activeTab.value = 'vitals'
+  }
+  router.replace({ query: { ...route.query, tab: 'vitals' } })
 }
 
 function bpMethodLabel(method: string) {
@@ -1732,6 +1762,11 @@ async function loadLabTrend() {
   }
 }
 
+async function onLabTrendAnalyte(code: string) {
+  labTrendAnalyte.value = code
+  await loadLabTrend()
+}
+
 async function loadTimeline() {
   const res: any = await $fetch(`/api/pets/${petId}/timeline`)
   timeline.value = res.data ?? res ?? []
@@ -1777,17 +1812,15 @@ const filteredSessions = computed(() => {
 
 const recentAlert = computed(() => sessions.value.length > 0 && !!sessions.value[0]?.isAlert)
 
-const rangeMonths = computed(() =>
-  chartRange.value === '3m' ? 3 : chartRange.value === '6m' ? 6 : 12,
-)
-
-const chartDomain = computed(() => {
+/** Approximate calendar months via 30-day units (avoids setMonth day overflow). */
+function chartDomainFor(range: '3m' | '6m' | '1y') {
+  const months = range === '3m' ? 3 : range === '6m' ? 6 : 12
   const end = new Date()
-  const start = new Date(end.getTime())
-  // Approximate calendar months via 30-day units to avoid setMonth day overflow (31→28).
-  start.setTime(end.getTime() - rangeMonths.value * 30 * 24 * 60 * 60 * 1000)
+  const start = new Date(end.getTime() - months * 30 * 24 * 60 * 60 * 1000)
   return { start: start.toISOString(), end: end.toISOString() }
-})
+}
+
+const chartDomain = computed(() => chartDomainFor(chartRange.value))
 
 const hasChartData = computed(() =>
   sessions.value.some(s => s.bpm != null && s.startedAt),
@@ -1803,16 +1836,7 @@ const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number)
 const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
 const chartDates = computed(() => chartSessions.value.map(s => s.startedAt as string))
 
-const weightRangeMonths = computed(() =>
-  weightChartRange.value === '3m' ? 3 : weightChartRange.value === '6m' ? 6 : 12,
-)
-
-const weightChartDomain = computed(() => {
-  const end = new Date()
-  const start = new Date(end.getTime())
-  start.setTime(end.getTime() - weightRangeMonths.value * 30 * 24 * 60 * 60 * 1000)
-  return { start: start.toISOString(), end: end.toISOString() }
-})
+const weightChartDomain = computed(() => chartDomainFor(weightChartRange.value))
 
 const hasWeightChartData = computed(() =>
   weights.value.some(w => w.weightKg != null && w.recordedAt),
@@ -1827,16 +1851,7 @@ const weightChartReadings = computed(() => {
 const weightChartValues = computed(() => weightChartReadings.value.map(w => Number(w.weightKg)))
 const weightChartDates = computed(() => weightChartReadings.value.map(w => w.recordedAt as string))
 
-const bpRangeMonths = computed(() =>
-  bpChartRange.value === '3m' ? 3 : bpChartRange.value === '6m' ? 6 : 12,
-)
-
-const bpChartDomain = computed(() => {
-  const end = new Date()
-  const start = new Date(end.getTime())
-  start.setTime(end.getTime() - bpRangeMonths.value * 30 * 24 * 60 * 60 * 1000)
-  return { start: start.toISOString(), end: end.toISOString() }
-})
+const bpChartDomain = computed(() => chartDomainFor(bpChartRange.value))
 
 const hasBpChartData = computed(() =>
   bloodPressures.value.some(bp => bp.systolicMmHg != null && bp.recordedAt),
@@ -1857,20 +1872,34 @@ const bpChartSysValues = computed(() => bpChartReadings.value.map(bp => Number(b
 const bpChartDiaValues = computed(() => bpChartReadings.value.map(bp => Number(bp.diastolicMmHg)))
 const bpChartDates = computed(() => bpChartReadings.value.map(bp => bp.recordedAt as string))
 
-const labTrendSeries = computed(() =>
-  labTrendPoints.value.filter(p => Number.isFinite(Number(p.valueNum))),
+const hasLabChartData = computed(() => labPanels.value.length > 0)
+
+const hasAnyVitalsData = computed(() =>
+  hasChartData.value || hasWeightChartData.value || hasBpChartData.value || hasLabChartData.value,
 )
-const labTrendValues = computed(() =>
+
+const labAnalyteOptions = computed(() =>
+  labAnalyteCodes.map(code => ({ code, label: labAnalyteLabel(code) })),
+)
+
+const labChartDomain = computed(() => chartDomainFor(labChartRange.value))
+
+const labTrendSeries = computed(() => {
+  const cutoff = new Date(labChartDomain.value.start)
+  return labTrendPoints.value
+    .filter(p =>
+      Number.isFinite(Number(p.valueNum))
+      && p.collectedAt
+      && new Date(p.collectedAt) >= cutoff,
+    )
+    .sort((a, b) => +new Date(a.collectedAt) - +new Date(b.collectedAt))
+})
+const labChartValues = computed(() =>
   labTrendSeries.value.map(p => Number(p.valueNum)),
 )
-const labTrendDates = computed(() =>
+const labChartDates = computed(() =>
   labTrendSeries.value.map(p => p.collectedAt as string),
 )
-const labTrendDomain = computed(() => {
-  const end = new Date()
-  const start = new Date(end.getTime() - 365 * 24 * 60 * 60 * 1000)
-  return { start: start.toISOString(), end: end.toISOString() }
-})
 
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }
@@ -2304,34 +2333,31 @@ onBeforeUnmount(() => {
   min-width: 8rem;
 }
 
-.pro-pet-charts-details {
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius, 8px);
-  background: var(--pf-vet-surface);
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.pro-pet-charts-details > summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--pf-vet-primary);
+.pro-pet-charts-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
   list-style: none;
 }
 
-.pro-pet-charts-details > summary::-webkit-details-marker {
-  display: none;
+.pro-pet-charts-preview li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-bg, var(--pf-vet-surface));
+  font-size: 0.875rem;
+  color: var(--pf-vet-text-muted, #64748b);
 }
 
-.pro-pet-charts-details > summary::before {
-  content: '▸';
-  display: inline-block;
-  margin-right: 0.4rem;
-  transition: transform 0.15s ease;
-}
-
-.pro-pet-charts-details[open] > summary::before {
-  transform: rotate(90deg);
+.pro-pet-charts-preview strong {
+  color: var(--pf-vet-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .pet-daf-dispenses {
@@ -2345,12 +2371,6 @@ onBeforeUnmount(() => {
   padding-left: 1rem;
   font-size: 0.9rem;
   color: var(--pf-vet-muted, #64748b);
-}
-
-.pro-pet-charts-details__body {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--pf-vet-border);
 }
 
 .pet-visit-report-modal {
