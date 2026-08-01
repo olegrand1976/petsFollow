@@ -29,6 +29,18 @@ describe('pacs-measure', () => {
     expect(formatPacsLength(r)).toBe('50.0 mm')
   })
 
+  it('demo-rx spacing 0.5 mm: 10 image px → 5.0 mm', () => {
+    // Matches DEMO_PIXEL_SPACING_MM in scripts/gen-minimal-dicom.py
+    const spacing = parsePixelSpacingMm([0.5, 0.5])!
+    const matrix = parseMatrixSize(64, 64)!
+    const usable = spacingUsableForBitmap(spacing, matrix, 64, 64)
+    expect(usable).toEqual([0.5, 0.5])
+    const r = measureImageSegment(10, 0, usable)
+    expect(r).toMatchObject({ calibrated: true, unit: 'mm' })
+    expect(r.length).toBeCloseTo(5, 5)
+    expect(formatPacsLength(r)).toBe('5.0 mm')
+  })
+
   it('accounts for viewer zoom scale', () => {
     const r = measureScreenSegment(100, 0, 2, [0.5, 0.5])
     expect(r.length).toBeCloseTo(25, 5)

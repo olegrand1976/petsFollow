@@ -109,7 +109,12 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
       await expect(page.getByTestId('dicom-tool-pan')).toBeVisible()
       await expect(page.getByTestId('dicom-tool-zoom')).toBeVisible()
       await expect(page.getByTestId('dicom-tool-wl')).toBeVisible()
-      await expect(page.getByTestId('dicom-calib-badge')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-measure')).toBeVisible()
+      const calib = page.getByTestId('dicom-calib-badge')
+      await expect(calib).toBeVisible()
+      // demo-rx.dcm embeds PixelSpacing 0.5\\0.5 — badge must flip to calibrated after metadata+preview.
+      await expect(calib).toHaveAttribute('data-calibrated', '1', { timeout: 20000 })
+      await expect(calib).toContainText(/mm|calibr/i)
       await page.getByTestId('pacs-compare-toggle').check()
       // Compare toggle must not blank the left pane.
       await expect.poll(async () => canvasHasNonBackgroundPixels(page), { timeout: 10000 }).toBe(true)

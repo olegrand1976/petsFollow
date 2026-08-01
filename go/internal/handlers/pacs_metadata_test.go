@@ -41,3 +41,25 @@ func TestBuildPacsInstanceMetadataImagerFallback(t *testing.T) {
 		t.Fatalf("spacing %#v", meta.PixelSpacingMm)
 	}
 }
+
+func TestBuildPacsInstanceMetadataNominalScannedFallback(t *testing.T) {
+	t.Parallel()
+	meta := buildPacsInstanceMetadata("x", map[string]any{
+		"NominalScannedPixelSpacing": "0.25\\0.25",
+	})
+	if len(meta.PixelSpacingMm) != 2 || meta.PixelSpacingMm[0] != 0.25 || meta.PixelSpacingMm[1] != 0.25 {
+		t.Fatalf("spacing %#v", meta.PixelSpacingMm)
+	}
+}
+
+func TestBuildPacsInstanceMetadataPrefersPixelSpacing(t *testing.T) {
+	t.Parallel()
+	meta := buildPacsInstanceMetadata("x", map[string]any{
+		"PixelSpacing":               "0.5\\0.5",
+		"ImagerPixelSpacing":         "0.1\\0.1",
+		"NominalScannedPixelSpacing": "0.9\\0.9",
+	})
+	if len(meta.PixelSpacingMm) != 2 || meta.PixelSpacingMm[0] != 0.5 || meta.PixelSpacingMm[1] != 0.5 {
+		t.Fatalf("spacing %#v", meta.PixelSpacingMm)
+	}
+}

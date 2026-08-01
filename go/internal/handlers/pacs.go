@@ -966,6 +966,9 @@ func buildPacsInstanceMetadata(instanceID string, tags map[string]any) pacsInsta
 	if len(out.PixelSpacingMm) == 0 {
 		out.PixelSpacingMm = parseSpacingTag(tags, "ImagerPixelSpacing")
 	}
+	if len(out.PixelSpacingMm) == 0 {
+		out.PixelSpacingMm = parseSpacingTag(tags, "NominalScannedPixelSpacing")
+	}
 	if v, ok := tagFloat(tags, "WindowCenter"); ok {
 		out.WindowCenter = &v
 	}
