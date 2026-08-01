@@ -12,14 +12,22 @@ const PROFILE_ROLE_ORDER: string[] = [
 
 /**
  * Home role for the switch matrix: earliest non-client profile (stable across switches).
- * Mirrors store.homeSwitchRole ordering (createdAt ASC).
+ * Mirrors store.homeSwitchRole ordering (createdAt ASC, id ASC).
+ * If createdAt is missing, keeps API list order (ListProfiles is already created_at ASC).
  */
-export function homeSwitchRole(profiles: { role: string; createdAt?: string }[]): string {
-  const nonClient = profiles
-    .filter((p) => p.role !== 'client')
-    .slice()
-    .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')))
-  return nonClient[0]?.role || ''
+export function homeSwitchRole(profiles: { id?: string; role: string; createdAt?: string }[]): string {
+  const nonClient = profiles.filter((p) => p.role !== 'client')
+  if (nonClient.length === 0) return ''
+  const hasTimestamps = nonClient.some((p) => !!p.createdAt)
+  if (!hasTimestamps) {
+    return nonClient[0]?.role || ''
+  }
+  const sorted = nonClient.slice().sort((a, b) => {
+    const byDate = String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
+    if (byDate !== 0) return byDate
+    return String(a.id || '').localeCompare(String(b.id || ''))
+  })
+  return sorted[0]?.role || ''
 }
 
 /**

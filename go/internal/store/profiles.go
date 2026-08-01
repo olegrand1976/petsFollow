@@ -175,7 +175,14 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 	} else {
 		spec = ""
 	}
-	_, err = s.pool.Exec(ctx, `
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Profile{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
 		UPDATE identity.users SET
 			active_profile_id = $2,
 			role = $3,
@@ -187,9 +194,23 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 		return Profile{}, err
 	}
 	if kernel.IsPracticeStaff(p.Role) && p.PracticeID != "" {
-		if serr := s.syncTeamRoleForStaffProfile(ctx, userID, p); serr != nil {
-			return Profile{}, serr
+		teamRole := kernelRoleToTeamRole(p.Role)
+		if teamRole != "" {
+			if _, err = tx.Exec(ctx, `
+				UPDATE practice.team_members
+				SET profile_id = $3::uuid,
+				    team_role = $4
+				WHERE practice_id = $1::uuid
+				  AND user_id = $2::uuid
+				  AND status = 'active'
+				  AND team_role <> 'reference_vet'`,
+				p.PracticeID, userID, p.ID, string(teamRole)); err != nil {
+				return Profile{}, err
+			}
 		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Profile{}, err
 	}
 	p.Active = true
 	return p, nil
@@ -210,25 +231,6 @@ func (s *Store) homeSwitchRole(ctx context.Context, userID string) (kernel.Role,
 		return "", err
 	}
 	return kernel.Role(role), nil
-}
-
-// syncTeamRoleForStaffProfile aligns team_members.team_role with the active staff profile
-// so ACL permissions match the switched role. Never demotes reference_vet.
-func (s *Store) syncTeamRoleForStaffProfile(ctx context.Context, userID string, p Profile) error {
-	teamRole := kernelRoleToTeamRole(p.Role)
-	if teamRole == "" {
-		return nil
-	}
-	_, err := s.pool.Exec(ctx, `
-		UPDATE practice.team_members
-		SET profile_id = $3::uuid,
-		    team_role = $4
-		WHERE practice_id = $1::uuid
-		  AND user_id = $2::uuid
-		  AND status = 'active'
-		  AND team_role <> 'reference_vet'`,
-		p.PracticeID, userID, p.ID, string(teamRole))
-	return err
 }
 
 func kernelRoleToTeamRole(role kernel.Role) TeamRole {
