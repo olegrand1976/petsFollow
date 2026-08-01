@@ -23,7 +23,33 @@ func TestResearchGroupsAndDataRoom(t *testing.T) {
 
 	researchTok := loginToken(t, api.handler, "research.demo@petsfollow.test", "ResearchDemo123!")
 
-	// Seed may enable a demo Data room group — isolate gate assertions.
+	// Seed may enable a demo Data room group — isolate gate assertions, then restore.
+	rows, err := api.pool.Query(ctx, `SELECT id::text, dataroom_enabled FROM research.groups`)
+	if err != nil {
+		t.Fatalf("list group flags: %v", err)
+	}
+	prevFlags := map[string]bool{}
+	for rows.Next() {
+		var id string
+		var enabled bool
+		if err := rows.Scan(&id, &enabled); err != nil {
+			rows.Close()
+			t.Fatalf("scan group flags: %v", err)
+		}
+		prevFlags[id] = enabled
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		t.Fatalf("group flags rows: %v", err)
+	}
+	t.Cleanup(func() {
+		for id, enabled := range prevFlags {
+			if _, err := api.pool.Exec(context.Background(),
+				`UPDATE research.groups SET dataroom_enabled = $2 WHERE id = $1::uuid`, id, enabled); err != nil {
+				t.Errorf("restore dataroom flag %s: %v", id, err)
+			}
+		}
+	})
 	if _, err := api.pool.Exec(ctx, `UPDATE research.groups SET dataroom_enabled = false`); err != nil {
 		t.Fatalf("reset dataroom flags: %v", err)
 	}
@@ -121,7 +147,9 @@ func TestResearchGroupsAndDataRoom(t *testing.T) {
 		t.Fatalf("expected >= %d events, got %d %#v", store.ResearchKAnonymity, len(items), dm)
 	}
 	first, _ := items[0].(map[string]any)
-	for _, forbidden := range []string{"practiceId", "practice_id_hash", "sourceHash", "petId", "userId", "email", "city"} {
+	for _, forbidden := range []string{
+		"practiceId", "practice_id_hash", "sourceHash", "petId", "userId", "email", "city", "payload",
+	} {
 		if _, ok := first[forbidden]; ok {
 			t.Fatalf("PII/leak key %q in dataroom event: %#v", forbidden, first)
 		}

@@ -77,7 +77,7 @@
                 <ProButton
                   variant="secondary"
                   :loading="togglingId === g.id"
-                  :test-id="`admin-research-dataroom-toggle-${g.id}`"
+                  test-id="admin-research-dataroom-toggle"
                   @click="toggleDataroom(g)"
                 >
                   {{ g.dataroomEnabled ? $t('admin.research.disableDataroom') : $t('admin.research.enableDataroom') }}

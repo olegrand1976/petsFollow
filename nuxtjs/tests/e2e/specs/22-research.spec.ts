@@ -72,5 +72,16 @@ test.describe('Research observatory', { tag: '@p0' }, () => {
     await expect(page.getByTestId('admin-research-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('admin-research-dev-badge')).toBeVisible()
     await expect(page.getByTestId('admin-research-optins-table')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('admin-research-groups-table')).toBeVisible({ timeout: 15000 })
+
+    const toggle = page.getByTestId('admin-research-dataroom-toggle').first()
+    await expect(toggle).toBeVisible({ timeout: 15000 })
+    const before = (await toggle.innerText()).trim()
+    await toggle.click()
+    await expect(toggle).not.toHaveText(before, { timeout: 15000 })
+    // Restore seed-friendly state (toggle back).
+    const mid = (await toggle.innerText()).trim()
+    await toggle.click()
+    await expect(toggle).not.toHaveText(mid, { timeout: 15000 })
   })
 })

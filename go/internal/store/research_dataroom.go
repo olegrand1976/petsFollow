@@ -2,24 +2,25 @@ package store
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 )
 
-// ResearchDataRoomEvent is a micro-event safe for Data room export (no practice_id_hash / source_hash / city).
+// ResearchDataRoomEvent is a micro-event safe for Data room export
+// (no practice_id_hash / source_hash / city / payload — payload stays warehouse-only).
 type ResearchDataRoomEvent struct {
-	EventWeek   string          `json:"eventWeek"`
-	PostalCode  string          `json:"postalCode"`
-	CountryCode string          `json:"countryCode"`
-	Species     string          `json:"species"`
-	AgeBand     string          `json:"ageBand"`
-	SignalType  string          `json:"signalType"`
-	Payload     json.RawMessage `json:"payload"`
+	EventWeek   string `json:"eventWeek"`
+	PostalCode  string `json:"postalCode"`
+	CountryCode string `json:"countryCode"`
+	Species     string `json:"species"`
+	AgeBand     string `json:"ageBand"`
+	SignalType  string `json:"signalType"`
 }
 
 // ResearchDataRoomEvents returns anonymized micro-events only for grains with
 // ≥ ResearchKAnonymity distinct practice_id_hash (multi-cabinet k-anonymity).
+// Access is network-wide once the caller has membership in any dataroom_enabled group
+// (groups gate privilege; they do not scope the event set).
 func (s *Store) ResearchDataRoomEvents(ctx context.Context, species, signal, country, postal, from, to string, limit int) ([]ResearchDataRoomEvent, error) {
 	if from != "" {
 		if _, err := time.Parse("2006-01-02", from); err != nil {
@@ -42,7 +43,7 @@ func (s *Store) ResearchDataRoomEvents(ctx context.Context, species, signal, cou
 		  HAVING COUNT(DISTINCT practice_id_hash) >= $7
 		)
 		SELECT e.event_week::text, e.postal_code, e.country_code, e.species, e.age_band,
-		       e.signal_type, e.payload
+		       e.signal_type
 		FROM research.anon_events e
 		JOIN eligible k ON k.event_week = e.event_week
 		  AND k.postal_code = e.postal_code
@@ -65,15 +66,10 @@ func (s *Store) ResearchDataRoomEvents(ctx context.Context, species, signal, cou
 	var out []ResearchDataRoomEvent
 	for rows.Next() {
 		var e ResearchDataRoomEvent
-		var payload []byte
 		if err := rows.Scan(&e.EventWeek, &e.PostalCode, &e.CountryCode, &e.Species,
-			&e.AgeBand, &e.SignalType, &payload); err != nil {
+			&e.AgeBand, &e.SignalType); err != nil {
 			return nil, err
 		}
-		if len(payload) == 0 {
-			payload = []byte("{}")
-		}
-		e.Payload = payload
 		out = append(out, e)
 	}
 	if out == nil {

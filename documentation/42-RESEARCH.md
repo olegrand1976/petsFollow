@@ -98,7 +98,8 @@ Sources cliniques (opt-in practice)
 ## RGPD
 
 - Finalité **distincte** de la continuité de soins (observatoire / santé publique vétérinaire). Base légale à valider juridiquement (intérêt légitime + contrat opt-in cabinet recommandé).
-- Minimisation : pas de nom, email, microchip, rue, UUID pet/user dans les payloads API.
+- Minimisation : pas de nom, email, microchip, rue, UUID pet/user dans les réponses API.
+- Data room API : **pas de `payload`** warehouse (reste en base pour ETL) — champs exposés = semaine / CP / pays / espèce / age_band / signal.
 - Opt-out : stop ingest + purge `anon_events` par `practice_id_hash` ; rebuild agrégats.
 - `GET /me/export` : **ne pas** inclure les agrégats research (pas de donnée personnelle).
 - Voir aussi [36-RGPD.md](36-RGPD.md).
@@ -114,7 +115,8 @@ Sources cliniques (opt-in practice)
 ## V2 (livré — tag `dev`)
 
 - `research.groups` + `research.group_members` (owner/member) + `dataroom_enabled` (défaut off).
-- Data room : `GET /research/dataroom/events` — sans `practice_id_hash` / `source_hash` / `city` ; grain éligible si **COUNT(DISTINCT practice_id_hash) ≥ 5** ; membership d’un groupe **dataroom_enabled** (pas de solo-groupe).
+- Data room : `GET /research/dataroom/events` — sans `practice_id_hash` / `source_hash` / `city` / `payload` ; grain éligible si **COUNT(DISTINCT practice_id_hash) ≥ 5** ; membership d’un groupe **dataroom_enabled** (pas de solo-groupe).
+- **Scope réseau** : le groupe est une **porte d’accès** (privilege), pas un filtre de données — un membre autorisé voit tous les micro-événements k-anon du réseau opt-in, pas seulement ceux « de son groupe ».
 - Seed : groupe « Réseau démo BE » + flag Data room on + 5 hashes cabinet synthétiques (TRUNCATE au re-seed).
 
 ### Encore hors scope
@@ -149,5 +151,5 @@ curl -X POST http://localhost:8291/api/v1/internal/research-etl/run \
 ## Tests
 
 - Go : `TestResearch*` + `TestResearchGroupsAndDataRoom` (groups, gate Data room, k-anon sans PII).
-- Playwright : `@p0` `22-research` — overview + timeseries + heatmap + groups + dataroom + admin opt-ins.
+- Playwright : `@p0` `22-research` — overview + timeseries + heatmap + groups + dataroom + admin opt-ins + toggle Data room.
 - Plan : [15-PLAN-TESTS.md](15-PLAN-TESTS.md).

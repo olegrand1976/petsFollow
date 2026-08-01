@@ -29,7 +29,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Admin commissions véto | `GET /admin/commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid`, `PUT /admin/commissions/tiers`, `GET/PUT /admin/commissions/settings` (PUT rejette : taux commercial = constantes plan) |
 | Admin commissions commercial | `GET /admin/commercial-commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid` |
 | Admin SPIFF | `GET /admin/commercial-bonuses?periodYm&trendMonths&status&commercialId`, `POST /admin/commercial-bonuses/{id}/mark-paid` |
-| Research (dev) | `GET /research/overview\|heatmap\|timeseries\|alerts` ; V2 `groups` + `dataroom/events` (k≥5 cabinets distincts, `dataroom_enabled` admin) ; `GET /admin/research/opt-ins\|groups` ; `GET/POST/DELETE /vet/practice/research-opt-in` ; `POST /internal/research-etl/run` — [42](42-RESEARCH.md) |
+| Research (dev) | `GET /research/overview\|heatmap\|timeseries\|alerts` ; V2 `groups` + `dataroom/events` (k≥5 cabinets distincts, `dataroom_enabled` admin, sans `payload`, scope réseau) ; `GET /admin/research/opt-ins\|groups` ; `GET/POST/DELETE /vet/practice/research-opt-in` ; `POST /internal/research-etl/run` — [42](42-RESEARCH.md) |
 
 Handlers : `go/internal/handlers/` (`api.go`, `auth.go`, `billing.go`, `admin.go`, `commercial.go`, `commissions.go`, `research.go`, …).
 
