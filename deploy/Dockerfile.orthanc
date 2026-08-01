@@ -1,18 +1,24 @@
-# Orthanc PACS for petsFollow — PostgreSQL index + GCS storage plugins.
+# Orthanc PACS for petsFollow — PostgreSQL index + GCS storage (image -full).
 # Build: docker build -f deploy/Dockerfile.orthanc -t petsfollow-orthanc .
-# Tag Orthanc Team (full = plugins PG + GCS). Local compose uses :24.12.0 non-full.
+# Local compose uses orthancteam/orthanc:24.12.0 (non-full) + orthanc.local.json.
+#
+# IMPORTANT: keep Orthanc Team ENTRYPOINT (/docker-entrypoint.sh). It symlinks
+# plugins from plugins-available → plugins/ before starting Orthanc. A custom
+# ENTRYPOINT that exec's Orthanc directly leaves an empty plugins dir and falls
+# back to SQLite + /tmp filesystem (data lost on every Cloud Run cold start).
 FROM orthancteam/orthanc:24.12.0-full
 
 USER root
-COPY infra/orthanc/orthanc.json /etc/orthanc/orthanc.json.template
-COPY infra/orthanc/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Non-secret defaults merged by generateConfiguration.py with ORTHANC__* env.
+# GoogleCloudStorage.ServiceAccountFile must match the Cloud Run secret mount
+# (setup-orthanc.sh → /var/run/secrets/petsfollow-gcs-sa.json).
+COPY infra/orthanc/orthanc.json /etc/orthanc/petsfollow.json
 
-# Cloud Run health / traffic on PORT (default 8080).
-ENV PORT=8080 \
-    ORTHANC_TEMPLATE=/etc/orthanc/orthanc.json.template \
-    ORTHANC_CONFIG=/tmp/orthanc.json \
-    VERBOSE_ENABLED=true
+ENV VERBOSE_ENABLED=true \
+    POSTGRESQL_PLUGIN_ENABLED=true \
+    GOOGLE_CLOUD_STORAGE_PLUGIN_ENABLED=true \
+    DICOM_WEB_PLUGIN_ENABLED=true
 
+# Cloud Run --port=8080; HttpPort also set in petsfollow.json / ORTHANC__HTTP_PORT.
 EXPOSE 8080
-ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT + CMD inherited from orthancteam/orthanc (docker-entrypoint.sh /etc/orthanc/)

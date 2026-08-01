@@ -1,39 +1,25 @@
 {
   "Name": "PetsFollowPACS",
   "HttpPort": 8080,
-  "DicomsServerEnabled": false,
+  "DicomServerEnabled": false,
   "RemoteAccessAllowed": true,
-  "AuthenticationEnabled": __AUTH_ENABLED__,
-  "RegisteredUsers": {
-    "__ORTHANC_USER__": "__ORTHANC_PASSWORD__"
-  },
-  "HttpHeaders": {
-    "Access-Control-Allow-Origin": ""
-  },
+  "AuthenticationEnabled": false,
+  "HttpsCACertificates": "/etc/ssl/certs/ca-certificates.crt",
   "HttpTimeout": 60,
   "StableAge": 30,
   "StrictAetComparison": false,
   "StorageCompression": false,
   "MaximumStorageSize": 0,
   "MaximumPatientCount": 0,
-  "Plugins": [
-    "/usr/share/orthanc/plugins",
-    "/usr/local/share/orthanc/plugins"
-  ],
   "GoogleCloudStorage": {
-    "BucketName": "__GCS_DICOM_BUCKET__",
+    "BucketName": "petsfollow-dicom",
     "RootPath": "dicom/",
-    "ServiceAccountFile": "__GCS_SA_FILE__",
-    "EncryptionKey": ""
+    "ServiceAccountFile": "/var/run/secrets/petsfollow-gcs-sa.json"
   },
   "PostgreSQL": {
     "EnableIndex": true,
     "EnableStorage": false,
-    "Host": "__PG_HOST__",
-    "Port": __PG_PORT__,
-    "Database": "__PG_DATABASE__",
-    "Username": "__PG_USERNAME__",
-    "Password": "__PG_PASSWORD__",
+    "Port": 5432,
     "EnableSsl": false,
     "Lock": false,
     "IndexConnectionsCount": 4,

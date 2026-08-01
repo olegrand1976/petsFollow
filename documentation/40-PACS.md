@@ -63,6 +63,12 @@ Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind
 
 **Staging Cloud Build** (`infra/gcp/cloudbuild.yaml`) : build Kaniko **`executor:debug`** (shell `/busybox/sh` pour `_SKIP_ORTHANC`) → image `orthanc:$BUILD_ID` → `deploy-orthanc` (`setup-orthanc.sh`, **best-effort** — échec Orthanc ≠ échec API) → `deploy-api` / `deploy-frontend` résolvent `PACS_ORTHANC_URL` via `orthanc_run_url`. Opt-out build+deploy : `_SKIP_ORTHANC=true`. Re-deploys : mode **deploy-only** auto (pas de reset mot de passe SQL). Orthanc Cloud Run : **`ingress=all` + IAM** (ID token) — `ingress=internal` casse l’appel API→Orthanc quand l’API a `vpc-egress=private-ranges-only`.
 
+**Image Cloud Run** : `orthancteam/orthanc:*-full` avec **ENTRYPOINT Orthanc Team** (`/docker-entrypoint.sh`). Ne pas le remplacer par un `exec Orthanc` custom : sinon `/usr/share/orthanc/plugins` reste vide → fallback **SQLite + `/tmp/OrthancStorage`** (données perdues à chaque cold start / redeploy), bucket `petsfollow-dicom` vide. Plugins activés via `POSTGRESQL_PLUGIN_ENABLED` / `GOOGLE_CLOUD_STORAGE_PLUGIN_ENABLED` / `DICOM_WEB_PLUGIN_ENABLED` + secrets/host `ORTHANC__POSTGRESQL__*` / `ORTHANC__GOOGLE_CLOUD_STORAGE__*` (`setup-orthanc.sh`).
+
+**GCS** : le plugin Orthanc n’accepte **pas** l’ADC — il faut un JSON keyfile (`CreateServiceAccountCredentialsFromJsonFilePath`). `setup-orthanc.sh` crée une fois la clé de `petsfollow-run` → Secret Manager `petsfollow-orthanc-gcs-sa`, montée en fichier Cloud Run `/var/run/secrets/petsfollow-gcs-sa.json` (`ORTHANC__GOOGLE_CLOUD_STORAGE__SERVICE_ACCOUNT_FILE`).
+
+Vérif post-deploy (logs Orthanc) : `Registering` PostgreSQL + `Google Cloud Storage` (pas `SQLite index` / `FilesystemStorage` pour les nouveaux uploads) ; après upload démo → objet sous `gs://petsfollow-dicom/dicom/`.
+
 Manuel :
 
 ```bash
@@ -91,6 +97,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Lien étude ↔ animal : conflit si même `orthanc_study_id` déjà lié à un **autre** pet du cabinet (`409`).
 - Purge RGPD Orthanc : indépendante de `PACS_ENABLED` (dès que `PACS_ORTHANC_URL` est configuré).
 - Proxy preview/file : `Cache-Control: private, no-store`.
+- Client Orthanc Go : le timeout par requête reste actif jusqu’à `Close()` du body (`cancelOnClose`) — un `defer cancel()` trop tôt annulait la lecture → 502 `pacs_error` / `context canceled` alors qu’Orthanc répondait déjà 200 (régression `TestOrthancClientDoKeepsContextAliveUntilBodyClose`).
 
 ## UI
 
@@ -152,4 +159,4 @@ make gcp-smoke                    # smoke API générique staging
 # Filet local : make test-e2e-p0  # 20 / 20b / 20c
 ```
 
-**Ops staging — liens orphelins** : si Orthanc est reset (0 études) alors que Postgres garde des `pet_studies`, les études listées → 502. Remède : wake → **Purger liens orphelins** (`POST /admin/pacs/prune-orphans` / bouton `/admin/pacs`) → `PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/pacs-demo-seed.sh`. Contournement UI (préférer RX) reste utile si un blob GCS manque alors que l’index Orthanc existe encore.
+**Ops staging — liens orphelins** : historiquement causés par Orthanc en SQLite+/tmp (entrypoint custom). Avec PG+GCS corrects, l’index Cloud SQL + blobs GCS survivent aux cold starts. Si l’index Orthanc est quand même vide (reset DB / mauvaise config) alors que `imaging.pet_studies` reste peuplé → études listées 404/502. Remède : wake → **Purger liens orphelins** (`POST /admin/pacs/prune-orphans` / bouton `/admin/pacs`) → `PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/pacs-demo-seed.sh`. Contournement UI (préférer RX) si un blob GCS manque alors que l’index Orthanc existe encore.

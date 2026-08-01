@@ -45,6 +45,9 @@ LOCATION="${GCS_MEDIA_LOCATION:-${GCP_RUN_REGION}}"
 ORTHANC_DB="${ORTHANC_DB_NAME:-orthanc}"
 ORTHANC_DB_USER="${ORTHANC_DB_USER:-orthanc}"
 SQL_INSTANCE_SHORT="${SQL_INSTANCE:-premedica-db-staging}"
+# Plugin GoogleCloudStorage exige un JSON keyfile (pas d'ADC) — voir GoogleStoragePlugin.cpp.
+GCS_SA_SECRET="${GCS_SA_SECRET:-petsfollow-orthanc-gcs-sa}"
+GCS_SA_FILE_PATH="${GCS_SA_FILE_PATH:-/var/run/secrets/petsfollow-gcs-sa.json}"
 
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
 
@@ -97,19 +100,75 @@ for ip in meta.get('ipAddresses') or []:
   echo "$pg_host"
 }
 
+# Crée (une fois) une clé JSON pour ${SA_EMAIL} → Secret Manager, montée en fichier
+# sur Cloud Run. Le plugin Orthanc GoogleCloudStorage n'accepte pas l'ADC.
+ensure_gcs_sa_secret() {
+  if gcloud secrets describe "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    echo "  Secret ${GCS_SA_SECRET} existe"
+  else
+    echo "→ Création clé SA ${SA_EMAIL} → secret ${GCS_SA_SECRET}"
+    local keyfile
+    keyfile="$(mktemp)"
+    if ! gcloud iam service-accounts keys create "$keyfile" \
+      --iam-account="$SA_EMAIL" \
+      --project="$GCP_PROJECT_ID" \
+      --quiet; then
+      rm -f "$keyfile"
+      echo "ERREUR: iam.serviceAccountKeys.create refusé pour ${SA_EMAIL}" >&2
+      echo "  Crée manuellement le secret ${GCS_SA_SECRET} (JSON key) puis relance." >&2
+      exit 1
+    fi
+    gcloud secrets create "$GCS_SA_SECRET" \
+      --project="$GCP_PROJECT_ID" \
+      --data-file="$keyfile" \
+      --replication-policy=automatic \
+      --quiet
+    rm -f "$keyfile"
+    echo "  Secret ${GCS_SA_SECRET} créé"
+  fi
+  if ! gcloud secrets add-iam-policy-binding "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet >/dev/null 2>&1; then
+    echo "  WARN: IAM secretAccessor sur ${GCS_SA_SECRET} ignoré (SA sans setIamPolicy)" >&2
+  fi
+}
+
 deploy_orthanc_run() {
   local pg_host="$1"
   local env_file
+  ensure_gcs_sa_secret
   env_file="$(mktemp)"
+  # Orthanc Team generateConfiguration.py : *_PLUGIN_ENABLED symlink les .so
+  # depuis plugins-available → plugins/. ORTHANC__* surcharge petsfollow.json.
+  # GCS : JSON key monté (${GCS_SA_FILE_PATH}) — pas d'ADC (limitation plugin).
   cat >"$env_file" <<EOF
-ORTHANC_USER: "petsfollow"
-ORTHANC_AUTH_ENABLED: "false"
-GCS_DICOM_BUCKET: "${BUCKET}"
-PG_HOST: "${pg_host}"
-PG_PORT: "5432"
-PG_DATABASE: "${ORTHANC_DB}"
-PG_USERNAME: "${ORTHANC_DB_USER}"
-GCS_SA_FILE: ""
+VERBOSE_ENABLED: "true"
+POSTGRESQL_PLUGIN_ENABLED: "true"
+GOOGLE_CLOUD_STORAGE_PLUGIN_ENABLED: "true"
+DICOM_WEB_PLUGIN_ENABLED: "true"
+ORTHANC__NAME: "PetsFollowPACS"
+ORTHANC__HTTP_PORT: "8080"
+ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+ORTHANC__AUTHENTICATION_ENABLED: "false"
+ORTHANC__DICOM_SERVER_ENABLED: "false"
+ORTHANC__HTTPS_CA_CERTIFICATES: "/etc/ssl/certs/ca-certificates.crt"
+ORTHANC__POSTGRESQL__ENABLE_INDEX: "true"
+ORTHANC__POSTGRESQL__ENABLE_STORAGE: "false"
+ORTHANC__POSTGRESQL__HOST: "${pg_host}"
+ORTHANC__POSTGRESQL__PORT: "5432"
+ORTHANC__POSTGRESQL__DATABASE: "${ORTHANC_DB}"
+ORTHANC__POSTGRESQL__USERNAME: "${ORTHANC_DB_USER}"
+ORTHANC__POSTGRESQL__ENABLE_SSL: "false"
+ORTHANC__POSTGRESQL__LOCK: "false"
+ORTHANC__POSTGRESQL__INDEX_CONNECTIONS_COUNT: "4"
+ORTHANC__POSTGRESQL__MAXIMUM_CONNECTION_RETRIES: "10"
+ORTHANC__POSTGRESQL__CONNECTION_RETRY_INTERVAL: "5"
+ORTHANC__GOOGLE_CLOUD_STORAGE__BUCKET_NAME: "${BUCKET}"
+ORTHANC__GOOGLE_CLOUD_STORAGE__ROOT_PATH: "dicom/"
+ORTHANC__GOOGLE_CLOUD_STORAGE__SERVICE_ACCOUNT_FILE: "${GCS_SA_FILE_PATH}"
 EOF
 
   # ingress=all + IAM (no unauthenticated) : l'API Cloud Run appelle Orthanc via
@@ -133,7 +192,7 @@ EOF
     --vpc-egress=private-ranges-only \
     --set-cloudsql-instances="$CLOUDSQL_INSTANCE" \
     --env-vars-file="$env_file" \
-    --set-secrets="ORTHANC_PASSWORD=petsfollow-orthanc-password:latest,PG_PASSWORD=petsfollow-orthanc-db-password:latest" \
+    --set-secrets="ORTHANC__POSTGRESQL__PASSWORD=petsfollow-orthanc-db-password:latest,ORTHANC_PASSWORD=petsfollow-orthanc-password:latest,${GCS_SA_FILE_PATH}=${GCS_SA_SECRET}:latest" \
     --quiet
   rm -f "$env_file"
 
@@ -264,4 +323,7 @@ echo "  PACS_ORTHANC_PASSWORD=<secret petsfollow-orthanc-password>"
 echo "  PACS_ORTHANC_USE_ID_TOKEN=true"
 echo ""
 echo "Backups : Cloud SQL automated backups + GCS versioning sur gs://${BUCKET}"
-echo "Pooling : IndexConnectionsCount=4 (orthanc.json) — surveiller max_connections Cloud SQL"
+echo "Plugins : POSTGRESQL + GOOGLE_CLOUD_STORAGE + DICOM_WEB (entrypoint Orthanc Team)"
+echo "GCS key : secret ${GCS_SA_SECRET} → ${GCS_SA_FILE_PATH}"
+echo "Pooling : IndexConnectionsCount=4 — surveiller max_connections Cloud SQL"
+echo "Vérif logs : Registering PostgreSQL/GoogleCloud (pas SQLite+/tmp FilesystemStorage)"
