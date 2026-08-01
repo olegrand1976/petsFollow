@@ -281,6 +281,10 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		UPDATE identity.users SET
 			email = 'deleted+' || id || '`+tombstoneEmailSuffix+`',
 			full_name = 'Compte supprimé',
+			first_name = '',
+			last_name = '',
+			address = '',
+			national_registry_number = '',
 			password_hash = NULL,
 			google_sub = NULL,
 			auth_provider = 'password',

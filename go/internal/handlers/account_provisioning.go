@@ -12,11 +12,15 @@ import (
 )
 
 type createClientReq struct {
-	Email        string `json:"email"`
-	Password     string `json:"password"`
-	FullName     string `json:"fullName"`
-	ContactPhone string `json:"contactPhone"`
-	VetUserID    string `json:"vetUserId"`
+	Email                  string `json:"email"`
+	Password               string `json:"password"`
+	FullName               string `json:"fullName"`
+	FirstName              string `json:"firstName"`
+	LastName               string `json:"lastName"`
+	ContactPhone           string `json:"contactPhone"`
+	Address                string `json:"address"`
+	NationalRegistryNumber string `json:"nationalRegistryNumber"`
+	VetUserID              string `json:"vetUserId"`
 }
 
 type createVetAdminReq struct {
@@ -41,13 +45,7 @@ func (a *API) createVetClient(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	clientID, err := a.store.CreateClientForVet(r.Context(), id.UserID, store.CreateClientInput{
-		Email:        req.Email,
-		Password:     req.Password,
-		FullName:     req.FullName,
-		ContactPhone: req.ContactPhone,
-		Locale:       localeOf(r),
-	})
+	clientID, err := a.store.CreateClientForVet(r.Context(), id.UserID, createClientInputFromReq(req, r))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
@@ -59,6 +57,20 @@ func (a *API) createVetClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": clientID, "email": req.Email})
 }
 
+func createClientInputFromReq(req createClientReq, r *http.Request) store.CreateClientInput {
+	return store.CreateClientInput{
+		Email:                  req.Email,
+		Password:               req.Password,
+		FullName:               req.FullName,
+		FirstName:              req.FirstName,
+		LastName:               req.LastName,
+		ContactPhone:           req.ContactPhone,
+		Address:                req.Address,
+		NationalRegistryNumber: req.NationalRegistryNumber,
+		Locale:                 localeOf(r),
+	}
+}
+
 func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireCommercial(w, r)
 	if !ok {
@@ -68,13 +80,7 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	in := store.CreateClientInput{
-		Email:        req.Email,
-		Password:     req.Password,
-		FullName:     req.FullName,
-		ContactPhone: req.ContactPhone,
-		Locale:       localeOf(r),
-	}
+	in := createClientInputFromReq(req, r)
 
 	// Optional vet link: empty vetUserId → standalone client (no practice).
 	if req.VetUserID == "" {
@@ -127,13 +133,7 @@ func (a *API) adminCreateClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")
 		return
 	}
-	clientID, err := a.store.CreateClientForVet(r.Context(), req.VetUserID, store.CreateClientInput{
-		Email:        req.Email,
-		Password:     req.Password,
-		FullName:     req.FullName,
-		ContactPhone: req.ContactPhone,
-		Locale:       localeOf(r),
-	})
+	clientID, err := a.store.CreateClientForVet(r.Context(), req.VetUserID, createClientInputFromReq(req, r))
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -252,17 +252,36 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.FirstName = strings.TrimSpace(req.FirstName)
+	req.LastName = strings.TrimSpace(req.LastName)
+	req.FullName = strings.TrimSpace(req.FullName)
+	if req.FirstName != "" || req.LastName != "" {
+		req.FullName = strings.TrimSpace(req.FirstName + " " + req.LastName)
+	}
 	phone, phoneCode := normalizeContactPhone(req.ContactPhone, false)
 	if phoneCode != "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", phoneCode)
 		return req, false
 	}
 	req.ContactPhone = phone
-	if req.Email == "" || req.Password == "" || req.FullName == "" {
+	addr, addrCode := normalizeClientAddress(req.Address)
+	if addrCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", addrCode)
+		return req, false
+	}
+	req.Address = addr
+	niss, nissCode := normalizeNationalRegistry(req.NationalRegistryNumber)
+	if nissCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", nissCode)
+		return req, false
+	}
+	req.NationalRegistryNumber = niss
+	// Password optional: empty → server generates an opaque temp (never shown to the vet).
+	if req.Email == "" || req.FullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return req, false
 	}
-	if len(req.Password) < 8 {
+	if req.Password != "" && len(req.Password) < 8 {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return req, false
 	}

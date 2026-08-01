@@ -253,3 +253,74 @@ func TestClientContactPhonePatchIgnoresActiveRole(t *testing.T) {
 		t.Fatalf("contactPhone=%v", dataMap(t, env)["contactPhone"])
 	}
 }
+
+func TestClientIdentityCreateWithoutPasswordAndPatch(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	email := fmt.Sprintf("client.identity.%s@petsfollow.test", uuid.NewString()[:8])
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": email,
+		"firstName": "Alice",
+		"lastName": "Dupont",
+		"contactPhone": "0470 55 66 77",
+		"address": "12 rue des Lilas, 1000 Bruxelles",
+		"nationalRegistryNumber": "85.07.30-123.45",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create without password %d %#v", code, env)
+	}
+	clientID, _ := dataMap(t, env)["userId"].(string)
+	if clientID == "" {
+		t.Fatalf("missing userId: %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients/"+clientID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get %d %#v", code, env)
+	}
+	got := dataMap(t, env)
+	if got["firstName"] != "Alice" || got["lastName"] != "Dupont" {
+		t.Fatalf("names=%v %v", got["firstName"], got["lastName"])
+	}
+	if got["fullName"] != "Alice Dupont" {
+		t.Fatalf("fullName=%v", got["fullName"])
+	}
+	if got["address"] != "12 rue des Lilas, 1000 Bruxelles" {
+		t.Fatalf("address=%v", got["address"])
+	}
+	if got["nationalRegistryNumber"] != "85.07.30-123.45" {
+		t.Fatalf("niss=%v", got["nationalRegistryNumber"])
+	}
+	if got["contactPhone"] != "0470 55 66 77" {
+		t.Fatalf("phone=%v", got["contactPhone"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"firstName": "Alicia",
+		"lastName": "Martin",
+		"address": "1 av. Louise",
+		"nationalRegistryNumber": "90010112345",
+		"contactPhone": "0499 11 22 33",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("patch identity %d %#v", code, env)
+	}
+	got = dataMap(t, env)
+	if got["fullName"] != "Alicia Martin" || got["firstName"] != "Alicia" || got["lastName"] != "Martin" {
+		t.Fatalf("patched names %#v", got)
+	}
+	if got["address"] != "1 av. Louise" || got["nationalRegistryNumber"] != "90010112345" {
+		t.Fatalf("patched address/niss %#v", got)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": fmt.Sprintf("client.badniss.%s@petsfollow.test", uuid.NewString()[:8]),
+		"firstName": "Bad",
+		"lastName": "Niss",
+		"nationalRegistryNumber": "abc",
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "national_registry_invalid" {
+		t.Fatalf("bad niss want 400 national_registry_invalid got %d %#v", code, env)
+	}
+}

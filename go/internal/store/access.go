@@ -548,7 +548,10 @@ func (s *Store) CareProMayMessageClient(ctx context.Context, careProID, clientUs
 // ListCareProClients aggregates distinct owners from pet grants + client_access.
 func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
+		SELECT u.id::text, u.email, u.full_name,
+			COALESCE(u.first_name,''), COALESCE(u.last_name,''),
+			COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
+			COALESCE(u.address,''), COALESCE(u.national_registry_number,''),
 			(
 				SELECT COUNT(*)::int FROM pets.pets p
 				WHERE p.owner_user_id=u.id AND (
@@ -585,8 +588,8 @@ func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([
 	defer rows.Close()
 	var out []ClientSummary
 	for rows.Next() {
-		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount); err != nil {
+		c, err := scanClientSummary(rows.Scan)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, c)
