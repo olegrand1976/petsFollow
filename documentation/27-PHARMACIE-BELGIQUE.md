@@ -107,7 +107,7 @@ go/internal/
     └── 000042_pharmacy_jobs_audit.up.sql
 ```
 
-CLI import CNK : sous-commande `import-cnk` sur `cmd/petsfollow-api` (ou binaire dédié `go/cmd/import-cnk/`) — **jamais** dans une requête HTTP Cloud Run.
+CLI import CNK : sous-commande `import-cnk` sur `cmd/petsfollow-api` (triple contrôle, hors requête Cloud Run one-shot). Admin UI staging : `/admin/afmps-imports` (gated `PHARMACY_ENABLED`).
 
 Wiring : `app.New` démarre le serveur Asynq si `REDIS_ADDR` + `PHARMACY_WORKERS_ENABLED=true`.
 
@@ -403,46 +403,70 @@ Retry : backoff exponentiel (ex. 10 s → 1 h, max 10) ; dead-letter → statut 
 
 ## 6. Import dictionnaire CNK / AFMPS
 
-### Source
+### Source (export officiel)
 
-Fichier CSV officiel / dérivé AFMPS (séparateur `;` ou `,` — réutiliser parser `platform/spreadsheet` si pertinent).
+Sur [basededonneesdesmedicaments.be](https://www.basededonneesdesmedicaments.be/) — export **« médicaments autorisés — usage vétérinaire — taille du conditionnement »** (CSV `;`, UTF-8 BOM).
 
-Colonnes minimales attendues (mapping configurable) :
+| Fait | Valeur |
+|------|--------|
+| Grain | 1 ligne = 1 conditionnement |
+| Couverture CNK | ~**27 %** des packs ont un `Code CNK` (~2 700 CNK uniques) — limite amont AFMPS |
+| Autres exports | AMM / documents / vue produit **sans** CNK → hors import V1 (enrichissement ultérieur) |
 
-| Champ logique | Obligatoire |
-|---------------|-------------|
-| `cnk` | oui |
-| `name` | oui |
-| `atc_code` | non |
-| `is_antibiotic` | oui (ou dérivé ATC / liste AFMPS) |
-| `pharmaceutical_form`, `pack_size` | non |
+Colonnes mappées : `Code CNK`, `Nom`, `Code ATC` (1er token), `Forme pharmaceutique`, `Conditionnement`, `Numéro d'autorisation`, `Firme`, + meta (`Espèces cibles`, `Temps d'attente`, `Substance active`, `Mode de délivrance`, `CTI Extended`, `Commercialisé`). Antibiotique dérivé ATC `QJ01*` / `J01*`.
+
+### Triple contrôle (obligatoire)
+
+Aucun upsert silencieux dans `pharmacy.ref_medications`. Staging `pharmacy.afmps_import_*` :
+
+| Gate | Action | Statut job |
+|------|--------|------------|
+| **1 — Validation auto** | Parse + stats (skip CNK vides, dédup, erreurs dures ≤ 5 %, checksum, collisions insert/update/unchanged) | `validated` ou `blocked` |
+| **2 — Revue humaine** | Admin UI ou CLI : KPIs + exclude lignes ; **Marquer revu** | `reviewed` |
+| **3 — Commit** | Confirm `IMPORT AFMPS` (ou `IMPORT_AFMPS`) ; upsert lignes `ready` (transactionnel) ; `afmps_meta` **fusionné** (`\|\|`, clés AFMPS priorisées) ; `--deactivate-missing` **opt-in** après affichage du compteur | `completed` |
+
+Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PHARMACY_ENABLED`) · e2e `23-afmps-admin`.
+
+UI gate 2 : checkbox d’accusé de revue + filtres collision (`insert` / `update` / …) — l’accusé est **UI-only** (CLI/`mark-reviewed` API reste libre pour ops). Commit fusionne `afmps_meta` (clés AFMPS priorisées). Staging rows via `COPY`.
+
+Parse soak (opt-in) : `go test ./internal/pharmacy/ -run TestParseRealAFMPSPackCSV_Smoke -v` si le CSV pack est dans `~/Téléchargements/` (~2738 CNK prêts).
 
 ### Import PDF Compendium (admin, tag `dev`)
 
-Complément du CSV `import-cnk` : UI admin `/admin/compendium-imports`.
+Complément après catalogue AFMPS : UI `/admin/compendium-imports`.
+
+**Ordre ops** : 1) AFMPS CSV (3 gates) · 2) PDF Vetcompendium · 3) extract · 4) revue CNK · 5) commit.
+
+Le PDF Vetcompendium **ne contient pas de CNK** (vérifié sur l’édition FR 2026). L’extraction Gemini remplit la fiche ; le CNK est **proposé par matching flou** sur `pharmacy.ref_medications`. Sans catalogue AFMPS → aucune suggestion (message UI).
 
 1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages).
-2. **Un** appel Gemini (`GenerateJSONWithMedia`, PDF entier + instruction de plage) → staging `pharmacy.compendium_import_*` (lignes valides en `pending`).
-3. Contrôle humain : corriger CNK/nom, **Valider** / bulk `confirm-ready`, exclude — KPI contrôle = lignes human-reviewed (`ready|excluded|upserted`).
-4. Commit → upsert `pharmacy.ref_medications` (`afmps_meta.source=compendium-pdf`).
+2. **Un** appel Gemini → staging `pharmacy.compendium_import_*` + match AFMPS.
+3. Contrôle humain : suggestion / candidat / corriger, **Valider** / bulk `confirm-ready`, exclude.
+4. Commit → upsert (`afmps_meta.source=compendium-pdf`) — **CNK réel obligatoire**.
 
-Prérequis : `PHARMACY_ENABLED` (nav admin gated), `GEMINI_API_KEY`, media store. Lignes sans CNK → statut `error` (pas d’upsert). Re-extract autorisé si job bloqué en `extracting`. Erreurs client = codes stables (`extract_failed`, …) ; détail logué côté API.
+Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store, catalogue AFMPS recommandé. `DELETE` job : staging + PDF ; pas de rollback des upserts ; 409 si `extracting`/`committing`.
 
 ---
 
-### Commande cible
+### Commande cible (CLI)
 
 ```bash
-# local (exemple)
-go run ./cmd/petsfollow-api import-cnk --file=/path/to/afmps.csv --dry-run=false
+# Gate 1 — validation + staging (aucune écriture dictionnaire)
+go run ./cmd/petsfollow-api import-cnk \
+  --file="$HOME/Téléchargements/Export-médicaments autorisés-usage vétérinaire-taille du conditionnement-YYYYMMDD.csv" \
+  --validate
+
+# Gate 2 — revue humaine
+go run ./cmd/petsfollow-api import-cnk --job=<UUID> --mark-reviewed
+
+# Gate 3 — commit (phrase obligatoire ; deactivate opt-in)
+go run ./cmd/petsfollow-api import-cnk \
+  --job=<UUID> --commit --confirm=IMPORT_AFMPS
+# optionnel après lecture du compteur deactivatePreview :
+#   --deactivate-missing
 ```
 
-Comportement :
-
-- Upsert par `cnk` (idempotent).
-- Batch (`COPY` ou multi-VALUES) — hors requête HTTP.
-- Soft-disable : lignes absentes du fichier → `is_active=false` (option `--deactivate-missing`).
-- Log : compteurs inserted / updated / skipped / errors.
+`--dry-run` est un alias de `--validate`. Plus d’upsert direct `--file` sans job.
 
 Critère perf : recherche autocomplete &lt; **100 ms** sur 10–50 k lignes (`EXPLAIN ANALYZE` sur index GIN/trgm).
 
@@ -615,7 +639,7 @@ Ordre strict — chaque étape a un critère **Done when**.
 ### Étape 1 — Dictionnaire CNK & seeding
 
 - Migration `000039_pharmacy_ref`.
-- CLI `import-cnk`.
+- CLI `import-cnk` (3 gates) + admin `/admin/afmps-imports`.
 - API search + page `/medicaments` + `ProCombobox`.
 - **Done when** : import idempotent ; search &lt; 100 ms ; badge antibiotique visible.
 

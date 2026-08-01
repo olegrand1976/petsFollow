@@ -56,7 +56,10 @@ const navItems = computed<ProNavItem[]>(() => {
     { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
     { to: '/admin/client-imports', label: t('nav.adminClientImports'), icon: 'description', section: t('nav.section.ops') },
     ...(pharmacyOn.value
-      ? [{ to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      ? [
+          { to: '/admin/afmps-imports', label: t('nav.adminAfmps'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') },
+          { to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') },
+        ]
       : []),
     { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: t('nav.section.ops') },
     { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },

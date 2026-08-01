@@ -3,40 +3,28 @@ package app
 import (
 	"bytes"
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
+	"path/filepath"
 	"strings"
 
+	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
-// ImportCNKOnly loads a CSV into pharmacy.ref_medications.
-// Usage: petsfollow-api import-cnk --file=path.csv [--deactivate-missing] [--dry-run]
+// ImportCNKOnly runs the AFMPS/CNK CSV pipeline with triple contrôle:
+//
+//	import-cnk --file=path.csv --validate
+//	import-cnk --job=UUID --mark-reviewed
+//	import-cnk --job=UUID --commit --confirm=IMPORT AFMPS [--deactivate-missing]
 func ImportCNKOnly(ctx context.Context, cfg config.Config, args []string) error {
-	filePath, deactivateMissing, dryRun, err := parseImportCNKArgs(args)
+	opts, err := parseImportCNKArgs(args)
 	if err != nil {
 		return err
-	}
-	raw, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("open file: %w", err)
-	}
-	rows, err := ParseCNKCSV(bytes.NewReader(raw))
-	if err != nil {
-		return err
-	}
-	if len(rows) == 0 {
-		return fmt.Errorf("no data rows in CSV (need cnk + name columns)")
-	}
-	if dryRun {
-		fmt.Printf("dry-run: %d rows would be upserted (deactivate-missing=%v)\n", len(rows), deactivateMissing)
-		return nil
 	}
 
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
@@ -49,156 +37,188 @@ func ImportCNKOnly(ctx context.Context, cfg config.Config, args []string) error 
 	}
 	st := store.New(pool)
 
-	var upserted int
-	keep := make([]string, 0, len(rows))
-	for _, row := range rows {
-		if _, err := st.UpsertRefMedication(ctx, row); err != nil {
-			return fmt.Errorf("upsert cnk=%s: %w", row.CNK, err)
-		}
-		upserted++
-		keep = append(keep, row.CNK)
+	switch {
+	case opts.validate:
+		return importCNKValidate(ctx, st, opts)
+	case opts.markReviewed:
+		return importCNKMarkReviewed(ctx, st, opts.jobID)
+	case opts.commit:
+		return importCNKCommit(ctx, st, opts)
+	default:
+		return fmt.Errorf("choose a gate: --validate | --mark-reviewed | --commit (see --help)")
 	}
-	var deactivated int64
-	if deactivateMissing {
-		deactivated, err = st.DeactivateMissingRefMedications(ctx, keep)
-		if err != nil {
-			return fmt.Errorf("deactivate-missing: %w", err)
-		}
-	}
-	fmt.Printf("import-cnk OK: upserted=%d deactivated=%d\n", upserted, deactivated)
-	return nil
 }
 
-func parseImportCNKArgs(args []string) (file string, deactivate, dryRun bool, err error) {
+type importCNKOpts struct {
+	file              string
+	jobID             string
+	validate          bool
+	markReviewed      bool
+	commit            bool
+	confirm           string
+	deactivateMissing bool
+	adminID           string
+}
+
+func parseImportCNKArgs(args []string) (importCNKOpts, error) {
+	var o importCNKOpts
 	for _, a := range args[1:] {
 		switch {
 		case strings.HasPrefix(a, "--file="):
-			file = strings.TrimPrefix(a, "--file=")
+			o.file = strings.TrimPrefix(a, "--file=")
+		case strings.HasPrefix(a, "--job="):
+			o.jobID = strings.TrimPrefix(a, "--job=")
+		case strings.HasPrefix(a, "--confirm="):
+			o.confirm = strings.TrimPrefix(a, "--confirm=")
+		case strings.HasPrefix(a, "--admin-id="):
+			o.adminID = strings.TrimPrefix(a, "--admin-id=")
+		case a == "--validate":
+			o.validate = true
+		case a == "--mark-reviewed":
+			o.markReviewed = true
+		case a == "--commit":
+			o.commit = true
 		case a == "--deactivate-missing":
-			deactivate = true
+			o.deactivateMissing = true
 		case a == "--dry-run":
-			dryRun = true
+			o.validate = true
 		case a == "-h" || a == "--help":
-			err = fmt.Errorf("usage: import-cnk --file=path.csv [--deactivate-missing] [--dry-run]")
-			return
+			return o, fmt.Errorf("%s", importCNKUsage)
 		default:
-			err = fmt.Errorf("unknown arg %q (usage: import-cnk --file=path.csv [--deactivate-missing] [--dry-run])", a)
-			return
+			return o, fmt.Errorf("unknown arg %q\n%s", a, importCNKUsage)
 		}
 	}
-	if strings.TrimSpace(file) == "" {
-		err = fmt.Errorf("missing --file= (usage: import-cnk --file=path.csv [--deactivate-missing] [--dry-run])")
+	n := 0
+	if o.validate {
+		n++
 	}
-	return
+	if o.markReviewed {
+		n++
+	}
+	if o.commit {
+		n++
+	}
+	if n != 1 {
+		return o, fmt.Errorf("exactly one of --validate / --mark-reviewed / --commit required\n%s", importCNKUsage)
+	}
+	if o.validate && strings.TrimSpace(o.file) == "" {
+		return o, fmt.Errorf("missing --file= for --validate")
+	}
+	if (o.markReviewed || o.commit) && strings.TrimSpace(o.jobID) == "" {
+		return o, fmt.Errorf("missing --job=UUID")
+	}
+	if o.commit && !pharmacy.ConfirmAFMPSPhrase(o.confirm) {
+		return o, fmt.Errorf("commit requires --confirm=%q or IMPORT_AFMPS (got %q)", pharmacy.AFMPSConfirmPhrase, o.confirm)
+	}
+	return o, nil
 }
 
-// ParseCNKCSV reads a semicolon- or comma-separated AFMPS-like CSV.
-// Required headers (case-insensitive): cnk, name.
-// Optional: atc_code|atc, is_antibiotic|antibiotic, pharmaceutical_form|form, pack_size|pack.
-func ParseCNKCSV(r io.Reader) ([]store.RefMedicationUpsert, error) {
-	raw, err := io.ReadAll(r)
+const importCNKUsage = `usage:
+  import-cnk --file=path.csv --validate [--admin-id=UUID]
+  import-cnk --job=UUID --mark-reviewed
+  import-cnk --job=UUID --commit --confirm=IMPORT AFMPS [--deactivate-missing]
+Triple contrôle: validate (auto) → mark-reviewed (humain) → commit (écriture ref_medications).`
+
+func importCNKValidate(ctx context.Context, st *store.Store, opts importCNKOpts) error {
+	raw, err := os.ReadFile(opts.file)
 	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	filename := filepath.Base(opts.file)
+	rows, report, parseErr := pharmacy.ParseAndValidateAFMPSCSV(bytes.NewReader(raw), filename)
+	job, err := st.CreateAFMPSImportFromParsed(ctx, opts.adminID, filename, rows, report)
+	if err != nil {
+		return fmt.Errorf("persist staging: %w", err)
+	}
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(map[string]any{
+		"gate":   1,
+		"jobId":  job.ID,
+		"status": job.Status,
+		"report": report,
+		"preview": map[string]any{
+			"insert":            job.InsertCount,
+			"update":            job.UpdateCount,
+			"unchanged":         job.UnchangedCount,
+			"deactivatePreview": job.DeactivatePreview,
+		},
+	})
+	if parseErr != nil || report.Blocked {
+		if parseErr != nil {
+			return fmt.Errorf("gate1 blocked: %w (job=%s)", parseErr, job.ID)
+		}
+		return fmt.Errorf("gate1 blocked: %s (job=%s)", report.BlockReason, job.ID)
+	}
+	fmt.Fprintf(os.Stderr, "gate1 OK → next: import-cnk --job=%s --mark-reviewed\n", job.ID)
+	return nil
+}
+
+func importCNKMarkReviewed(ctx context.Context, st *store.Store, jobID string) error {
+	job, err := st.MarkAFMPSImportReviewed(ctx, jobID)
+	if err == store.ErrNotFound {
+		return fmt.Errorf("job not found")
+	}
+	if err == store.ErrConflict {
+		return fmt.Errorf("job must be status=validated with ready rows (gate 2)")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Printf("gate2 OK job=%s status=%s ready=%d insert=%d update=%d deactivatePreview=%d\n",
+		job.ID, job.Status, job.ReadyCount, job.InsertCount, job.UpdateCount, job.DeactivatePreview)
+	fmt.Fprintf(os.Stderr, "next: import-cnk --job=%s --commit --confirm=%q\n", job.ID, pharmacy.AFMPSConfirmPhrase)
+	if job.DeactivatePreview > 0 {
+		fmt.Fprintf(os.Stderr, "note: --deactivate-missing would soft-disable %d active CNKs not in this file\n", job.DeactivatePreview)
+	}
+	return nil
+}
+
+func importCNKCommit(ctx context.Context, st *store.Store, opts importCNKOpts) error {
+	job, err := st.GetAFMPSImportJob(ctx, opts.jobID)
+	if err == store.ErrNotFound {
+		return fmt.Errorf("job not found")
+	}
+	if err != nil {
+		return err
+	}
+	if opts.deactivateMissing {
+		fmt.Fprintf(os.Stderr, "deactivate-missing preview: %d active CNKs would be disabled\n", job.DeactivatePreview)
+	}
+	result, err := st.CommitAFMPSImport(ctx, opts.jobID, opts.deactivateMissing)
+	if err == store.ErrConflict {
+		return fmt.Errorf("job must be status=reviewed (gate 3)")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Printf("gate3 OK job=%s upserted=%d deactivated=%d\n", opts.jobID, result.Upserted, result.Deactivated)
+	return nil
+}
+
+// ParseCNKCSV reads a semicolon- or comma-separated AFMPS-like CSV into upsert rows
+// (unit-test helper; production path uses ParseAndValidateAFMPSCSV + staging).
+func ParseCNKCSV(r io.Reader) ([]store.RefMedicationUpsert, error) {
+	rows, report, err := pharmacy.ParseAndValidateAFMPSCSV(r, "inline.csv")
+	if err != nil && report.ReadyCount == 0 {
 		return nil, err
 	}
-	firstLine := raw
-	if i := bytes.IndexByte(raw, '\n'); i >= 0 {
-		firstLine = raw[:i]
-	}
-	comma := ','
-	if bytes.Count(firstLine, []byte(";")) > bytes.Count(firstLine, []byte(",")) {
-		comma = ';'
-	}
-
-	br := csv.NewReader(bytes.NewReader(raw))
-	br.Comma = comma
-	br.LazyQuotes = true
-	br.TrimLeadingSpace = true
-	br.FieldsPerRecord = -1
-
-	headers, err := br.Read()
-	if err != nil {
-		return nil, fmt.Errorf("read header: %w", err)
-	}
-	idx := mapCNKHeaders(headers)
-	if idx["cnk"] < 0 || idx["name"] < 0 {
-		return nil, fmt.Errorf("CSV must include cnk and name columns (got %v)", headers)
-	}
-
-	var out []store.RefMedicationUpsert
-	for {
-		rec, err := br.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		row, ok := rowFromCNKRecord(rec, idx)
-		if !ok {
+	out := make([]store.RefMedicationUpsert, 0, report.ReadyCount)
+	for _, row := range rows {
+		if row.Status != "ready" {
 			continue
 		}
-		out = append(out, row)
+		out = append(out, store.RefMedicationUpsert{
+			CNK:                row.CNK,
+			Name:               row.Name,
+			ATCCode:            row.ATCCode,
+			PharmaceuticalForm: row.PharmaceuticalForm,
+			PackSize:           row.PackSize,
+			AMMNumber:          row.AMMNumber,
+			IsAntibiotic:       row.IsAntibiotic,
+			IsActive:           true,
+			AFMPSMeta:          pharmacy.AFMPSMetaJSON(row.Meta),
+		})
 	}
 	return out, nil
-}
-
-func mapCNKHeaders(headers []string) map[string]int {
-	idx := map[string]int{"cnk": -1, "name": -1, "atc": -1, "antibiotic": -1, "form": -1, "pack": -1}
-	for i, h := range headers {
-		key := strings.ToLower(strings.TrimSpace(h))
-		key = strings.ReplaceAll(key, " ", "_")
-		switch key {
-		case "cnk", "code_cnk", "cnk_code":
-			idx["cnk"] = i
-		case "name", "nom", "product_name", "denomination":
-			idx["name"] = i
-		case "atc", "atc_code", "code_atc":
-			idx["atc"] = i
-		case "is_antibiotic", "antibiotic", "antibiotique":
-			idx["antibiotic"] = i
-		case "pharmaceutical_form", "form", "forme":
-			idx["form"] = i
-		case "pack_size", "pack", "conditionnement":
-			idx["pack"] = i
-		}
-	}
-	return idx
-}
-
-func rowFromCNKRecord(rec []string, idx map[string]int) (store.RefMedicationUpsert, bool) {
-	get := func(key string) string {
-		i := idx[key]
-		if i < 0 || i >= len(rec) {
-			return ""
-		}
-		return strings.TrimSpace(rec[i])
-	}
-	cnk := get("cnk")
-	name := get("name")
-	if cnk == "" || name == "" {
-		return store.RefMedicationUpsert{}, false
-	}
-	meta, _ := json.Marshal(map[string]string{"source": "import-cnk"})
-	return store.RefMedicationUpsert{
-		CNK:                cnk,
-		Name:               name,
-		ATCCode:            get("atc"),
-		PharmaceuticalForm: get("form"),
-		PackSize:           get("pack"),
-		IsAntibiotic:       parseBoolish(get("antibiotic")),
-		IsActive:           true,
-		AFMPSMeta:          meta,
-	}, true
-}
-
-func parseBoolish(s string) bool {
-	s = strings.ToLower(strings.TrimSpace(s))
-	switch s {
-	case "1", "true", "t", "yes", "y", "oui", "o":
-		return true
-	}
-	if n, err := strconv.Atoi(s); err == nil {
-		return n != 0
-	}
-	return false
 }

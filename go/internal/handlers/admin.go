@@ -49,6 +49,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Post("/admin/staging/seed", a.adminStagingSeed)
 		a.registerClientImportRoutes(pr)
 		a.registerCompendiumImportRoutes(pr)
+		a.registerAFMPSImportRoutes(pr)
 		a.registerStripeCatalogRoutes(pr)
 	})
 }

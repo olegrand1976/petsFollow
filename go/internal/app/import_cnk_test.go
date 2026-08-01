@@ -26,12 +26,12 @@ func TestParseCNKCSV(t *testing.T) {
 }
 
 func TestParseCNKCSVComma(t *testing.T) {
-	csv := "cnk,name,is_antibiotic\n999,Test Med,0\n"
+	csv := "cnk,name,is_antibiotic\n9999999,Test Med,0\n"
 	rows, err := ParseCNKCSV(strings.NewReader(csv))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) != 1 || rows[0].CNK != "999" || rows[0].IsAntibiotic {
+	if len(rows) != 1 || rows[0].CNK != "9999999" || rows[0].IsAntibiotic {
 		t.Fatalf("%#v", rows)
 	}
 }
