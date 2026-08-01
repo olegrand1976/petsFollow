@@ -45,7 +45,10 @@
               <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneNotesTitle') }}</h3>
               <p class="pro-hint">{{ $t('calendar.reportPaneNotesSubtitle') }}</p>
             </div>
-            <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+            <div
+              v-if="!reportLocked && !dictating && !transcribeInFlight"
+              class="pro-flex-gap visit-report-pane__toolbar"
+            >
               <ProButton
                 :disabled="reportBusy || hydrating"
                 test-id="visit-report-dictate"
@@ -79,10 +82,23 @@
             <ProButton
               variant="secondary"
               test-id="visit-report-dictate-stop"
+              :loading="transcribeInFlight"
               @click="stopDictation"
             >
               {{ $t('calendar.recordingStop') }}
             </ProButton>
+          </div>
+          <div
+            v-else-if="transcribeInFlight"
+            class="visit-report-recording visit-report-recording--busy"
+            data-testid="visit-report-transcribing-banner"
+            role="status"
+            aria-busy="true"
+          >
+            <ProIcon name="progress_activity" :size="24" class="visit-report-recording__mic" />
+            <div class="visit-report-recording__info">
+              <strong>{{ $t('calendar.reportTranscribing') }}</strong>
+            </div>
           </div>
 
           <label class="visually-hidden" for="visit-report-transcript">{{ $t('calendar.reportPaneNotesTitle') }}</label>
@@ -105,14 +121,17 @@
               <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneCrTitle') }}</h3>
               <p class="pro-hint">{{ $t('calendar.reportPaneCrSubtitle') }}</p>
             </div>
-            <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+            <div
+              v-if="!reportLocked && !dictating && !transcribeInFlight"
+              class="pro-flex-gap visit-report-pane__toolbar"
+            >
               <label class="visit-report-lang" data-testid="visit-report-lang">
                 <span class="visually-hidden">{{ $t('calendar.reportTargetLang') }}</span>
                 <select
                   v-model="targetLocale"
                   class="pro-input visit-report-lang__select"
                   data-testid="visit-report-target-locale"
-                  :disabled="reportBusy || hydrating"
+                  :disabled="reportBusy || hydrating || improveInFlight"
                 >
                   <option value="auto">{{ $t('calendar.reportTargetLangAuto') }}</option>
                   <option value="fr">{{ $t('calendar.reportTargetLangFr') }}</option>
@@ -134,6 +153,18 @@
               </ProButton>
             </div>
           </header>
+          <div
+            v-if="improveInFlight"
+            class="visit-report-recording visit-report-recording--busy"
+            data-testid="visit-report-improving-banner"
+            role="status"
+            aria-busy="true"
+          >
+            <ProIcon name="auto_awesome" :size="24" class="visit-report-recording__mic" />
+            <div class="visit-report-recording__info">
+              <strong>{{ $t('calendar.reportImproving') }}</strong>
+            </div>
+          </div>
           <p
             v-if="!readonly && !viewingPeerReport"
             class="pro-hint visit-report-pane__ai-hint"
@@ -374,6 +405,8 @@ const reportIsReference = ref(false)
 const reportBusy = ref(false)
 const saveInFlight = ref(false)
 const improveInFlight = ref(false)
+/** True while Stop→transcribe or file upload transcription is in flight. */
+const transcribeInFlight = ref(false)
 const qualityBusy = ref(false)
 const referenceBusy = ref(false)
 const showAiQualityBar = ref(false)
@@ -717,6 +750,7 @@ async function improveVisitReport() {
   reportBusy.value = true
   improveInFlight.value = true
   reportMsg.value = ''
+  let putSucceeded = false
   try {
     // Persist both panes as-is (do NOT overwrite body with transcript — avoid data loss if IA fails).
     const putRes: any = await $fetch(`/api/visits/${props.visitId}/report`, {
@@ -727,8 +761,9 @@ async function improveVisitReport() {
       },
     })
     // Resync persisted* so a later improve failure does not leave a false dirty / stale hydrate.
+    // Do NOT emit('saved') here — that would unlock Traitements (DAF) before the IA text arrives.
     applyReportPayload(putRes.data ?? putRes)
-    emit('saved')
+    putSucceeded = true
     // Flat BFF path: nested …/report/improve is registered but not matched by rou3
     // when …/report (GET/PUT) is also a leaf — see 03d-visit-report-ai-bff.
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-improve`, {
@@ -745,6 +780,8 @@ async function improveVisitReport() {
     emit('saved')
   } catch (e: any) {
     reportMsg.value = mapError(e)
+    // PUT already persisted — mark saved so leave-guard / Enregistrer stay coherent (DAF OK post-flight).
+    if (putSucceeded) emit('saved')
   } finally {
     improveInFlight.value = false
     reportBusy.value = false
@@ -874,6 +911,7 @@ async function acceptAudioConsent() {
 
 async function transcribeAudio(file: File | Blob, filename: string, durationSec = 0) {
   reportBusy.value = true
+  transcribeInFlight.value = true
   reportMsg.value = ''
   try {
     const form = new FormData()
@@ -893,6 +931,7 @@ async function transcribeAudio(file: File | Blob, filename: string, durationSec 
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
+    transcribeInFlight.value = false
     reportBusy.value = false
   }
 }
@@ -955,6 +994,9 @@ async function stopDictation() {
       stopMediaStream()
       return
     }
+    // Show Arrêter loading before the recording banner swaps to the transcription banner.
+    transcribeInFlight.value = true
+    reportBusy.value = true
     const blob = await new Promise<Blob | null>((resolve) => {
       recorder.onstop = () => {
         resolve(recordChunks.length ? new Blob(recordChunks, { type: recorder.mimeType || 'audio/webm' }) : null)
@@ -972,6 +1014,7 @@ async function stopDictation() {
     dictating.value = false
     stopMediaStream()
     if (!blob) {
+      transcribeInFlight.value = false
       reportBusy.value = false
       return
     }
@@ -981,7 +1024,7 @@ async function stopDictation() {
     if (durationSec <= 0) {
       durationSec = await probeAudioDurationSec(blob)
     }
-    // transcribeAudio owns reportBusy from here (sets true again + clears in finally).
+    // transcribeAudio owns reportBusy / transcribeInFlight from here.
     await transcribeAudio(blob, `dictation.${ext}`, durationSec)
   })().finally(() => {
     stopDictationInFlight = null
@@ -1136,6 +1179,16 @@ watch(
   border-radius: var(--pf-vet-radius, 8px);
   background: color-mix(in srgb, var(--pf-vet-alert) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--pf-vet-alert) 40%, transparent);
+}
+
+.visit-report-recording--busy {
+  background: color-mix(in srgb, var(--pf-vet-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--pf-vet-accent) 40%, transparent);
+}
+
+.visit-report-recording--busy .visit-report-recording__mic,
+.visit-report-recording--busy .visit-report-recording__info {
+  color: var(--pf-vet-accent);
 }
 
 .visit-report-recording__mic {

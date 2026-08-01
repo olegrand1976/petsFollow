@@ -195,6 +195,14 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
 
     let improveSource = ''
     let improveLocale = ''
+    let resolveImprove: (() => void) | null = null
+    const improveGate = new Promise<void>((resolve) => {
+      resolveImprove = resolve
+    })
+    const releaseImproveGate = () => {
+      resolveImprove?.()
+      resolveImprove = null
+    }
     await page.route('**/api/visits/*/report-improve', async (route) => {
       const payload = route.request().postDataJSON() as {
         sourceText?: string
@@ -202,6 +210,7 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
       } | null
       improveSource = String(payload?.sourceText || '')
       improveLocale = String(payload?.targetLocale || '')
+      await improveGate
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -223,11 +232,42 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await page.getByTestId('visit-report-howto').locator('summary').click()
     await expect(page.getByTestId('visit-report-howto-image')).toBeVisible()
 
-    await page.getByTestId('visit-report-improve').click()
-    await expect.poll(() => improveSource, { timeout: 20000 }).toContain(notes)
-    await expect.poll(() => improveLocale, { timeout: 5000 }).toBe('auto')
+    const pharmacyEnv = process.env.NUXT_PUBLIC_PHARMACY_ENABLED
+    const pharmacyFlagOn = pharmacyEnv !== 'false' && pharmacyEnv !== '0'
+
+    try {
+      await page.getByTestId('visit-report-improve').click()
+      await expect.poll(() => improveSource, { timeout: 20000 }).toContain(notes)
+      await expect.poll(() => improveLocale, { timeout: 5000 }).toBe('auto')
+      // Portable: loader visible while IA is gated.
+      await expect(page.getByTestId('visit-report-improving-banner')).toBeVisible({ timeout: 10000 })
+      // Meaningful only when pharmacy UI can mount — otherwise always 0 (false green).
+      if (pharmacyFlagOn) {
+        await expect(page.getByTestId('consultation-treatments')).toHaveCount(0)
+        await expect(page.getByTestId('consultation-daf-steps')).toHaveCount(0)
+      }
+    }
+    finally {
+      releaseImproveGate()
+    }
+
+    await expect(page.getByTestId('visit-report-improving-banner')).toHaveCount(0, { timeout: 10000 })
     await expect(page.getByTestId('visit-report-quality')).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('visit-report-msg')).toBeVisible({ timeout: 15000 })
+    if (pharmacyFlagOn) {
+      const treatments = page.getByTestId('consultation-treatments')
+      if ((await treatments.count()) === 0) {
+        // Flag on but no write ACL — DAF during-flight assert above was still valid (stayed 0).
+        test.info().annotations.push({
+          type: 'note',
+          description: 'pharmacy flag on but treatments panel absent after improve (ACL pharmacy.write?)',
+        })
+      }
+      else {
+        await expect(treatments).toBeVisible({ timeout: 10000 })
+        await expect(page.getByTestId('consultation-daf-steps')).toBeVisible()
+      }
+    }
 
     // Improve switches markdown editor to preview — reopen history only for restore CTAs.
     await setVisitReportHistoryOpen(page, true)
