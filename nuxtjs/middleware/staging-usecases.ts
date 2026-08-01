@@ -11,18 +11,7 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   const role = await resolveProRole()
-  if (role === 'admin') {
-    setPageLayout('admin')
-    return
-  }
-  if (role === 'commercial') {
-    setPageLayout('commercial')
-    return
-  }
-  if (role === 'commercial_manager') {
-    setPageLayout('commercial-manager')
-    return
-  }
+  if (applySalesOpsLayout(role)) return
   if (isProRole(role)) return navigateTo(homePathForRole(role))
   return navigateTo('/login')
 })

@@ -65,6 +65,7 @@ export default defineNuxtConfig({
     '/commercial/usecases/**': { redirect: '/usecases' },
     '/commercial-manager/usecases': { redirect: '/usecases' },
     '/commercial-manager/usecases/**': { redirect: '/usecases' },
+    // Alias /flux : pages thin (préservent ?profile=) — pas de redirect Nitro statique.
     // Le token de partage est dans l'URL : sans no-referrer, un clic vers /register
     // ou /produits (même origine) le transmettrait dans l'en-tête Referer.
     '/dossier/**': {

@@ -87,7 +87,8 @@
     "researchTimeseries": "Series temporales",
     "adminResearch": "Research opt-in",
     "researchGroups": "Grupos",
-    "researchDataroom": "Data room"
+    "researchDataroom": "Data room",
+    "productFlows": "Flujos producto"
   },
   "auth": {
     "login": {
@@ -3992,6 +3993,233 @@
       "ageBand": "Age band",
       "forbiddenTitle": "Data room not allowed",
       "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
+    }
+  },
+  "productFlows": {
+    "title": "Flujos petsFollow",
+    "subtitle": "Recorridos por perfil, funciones clave y vínculos entre las caras del producto.",
+    "howtoTitle": "¿Cómo leer este mapa?",
+    "howto1": "Elija un perfil (vet, cliente, comercial…).",
+    "howto2": "Siga el recorrido paso a paso y las funciones asociadas.",
+    "howto3": "Pulse un vínculo cruzado para pasar al perfil conectado.",
+    "selectProfile": "Perfiles",
+    "flowTitle": "Recorrido",
+    "featuresTitle": "Funciones",
+    "linksTitle": "Vínculos con otros perfiles",
+    "linksBlurb": "Estas flechas muestran cómo la acción de un perfil impacta u abre una superficie para otro.",
+    "linksEmpty": "Sin vínculos cruzados para este perfil.",
+    "usecasesCta": "Abrir guías de prueba",
+    "usecasesCtaHint": "En staging / local: escenarios detallados con cuentas seed y listas de control.",
+    "surface": {
+      "web_pro": "Web Pro",
+      "flutter_client": "App cliente (Flutter)",
+      "flutter_pro_light": "Pro Light (Flutter)"
+    },
+    "profiles": {
+      "vet": {
+        "label": "Veterinario",
+        "mission": "Seguir pacientes, hablar con propietarios, validar mediciones y gestionar la clínica."
+      },
+      "client": {
+        "label": "Propietario",
+        "mission": "Gestionar animales, suscribirse, enviar mediciones y dialogar con la clínica."
+      },
+      "care_pro": {
+        "label": "Care pro (Pro Light)",
+        "mission": "Trabajo de campo (herrador, vet light…) con agenda y notas sincronizadas."
+      },
+      "commercial": {
+        "label": "Comercial",
+        "mission": "Captar clínicas, registrar cuentas, activar pets de pago y seguir comisiones."
+      },
+      "commercial_manager": {
+        "label": "Responsable comercial",
+        "mission": "Dirigir el equipo / rama (KPI, seguimientos) con cartera propia."
+      },
+      "admin": {
+        "label": "Admin",
+        "mission": "Ops de plataforma: users, fuerza de ventas, nómina, flags y módulos."
+      },
+      "practice_staff": {
+        "label": "Equipo clínica",
+        "mission": "Asistentes / recepción: mostrador, mensajería y fichas en el shell Pro compartido."
+      },
+      "research": {
+        "label": "Research",
+        "mission": "Observatorio epidemiológico anonimizado (módulo tag dev)."
+      }
+    },
+    "features": {
+      "onboarding": {
+        "title": "Onboarding",
+        "desc": "Registro, confirmación de e-mail y completar perfil / clínica."
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "desc": "Vista del día: pacientes, alertas, acceso rápido a herramientas."
+      },
+      "messaging": {
+        "title": "Mensajería",
+        "desc": "Hilos cruzados clínica ↔ propietario, con push al cliente."
+      },
+      "hr_vitals": {
+        "title": "Lecturas cardiacas",
+        "desc": "Medidas FC del cliente; validación y seguimiento del vet."
+      },
+      "link_requests": {
+        "title": "Solicitudes de enlace",
+        "desc": "El propietario pide unirse a una clínica; el vet acepta."
+      },
+      "dossier_share": {
+        "title": "Compartir historial",
+        "desc": "Envío temporal del dossier (PHI) a un pro tras consentimiento."
+      },
+      "billing_client": {
+        "title": "Suscripción cliente",
+        "desc": "Planes mensual / anual / trienal vía Stripe; entitlement activo."
+      },
+      "care_horse": {
+        "title": "Care / Horse / hogar",
+        "desc": "Incluidos con entitlement: Care+, Horse, kennel, hogar."
+      },
+      "commissions": {
+        "title": "Comisiones",
+        "desc": "Ledger vet y comercial por activaciones / pagos."
+      },
+      "prospects": {
+        "title": "CRM prospectos",
+        "desc": "Pipeline comercial: clínicas objetivo, seguimientos, estado."
+      },
+      "encode": {
+        "title": "Alta / encoding",
+        "desc": "El comercial crea vet / cliente vinculado / cliente libre."
+      },
+      "network": {
+        "title": "Red / filiación",
+        "desc": "Ramas, sponsor, atribución MLM-ready y vista de red."
+      },
+      "team_kpi": {
+        "title": "Dirección de equipo",
+        "desc": "Dashboard manager: citas, seguimientos, ranking, prospectos del equipo."
+      },
+      "ops_users": {
+        "title": "Ops usuarios",
+        "desc": "Altas, imports, soporte, flags runtime."
+      },
+      "ops_billing": {
+        "title": "Ops nómina y catálogo",
+        "desc": "Pagos, comisiones, catálogo Stripe, facturación SaaS."
+      },
+      "ai_cr": {
+        "title": "Módulo IA de informes",
+        "desc": "Informes asistidos y entrenamiento de pitch (admin / comercial)."
+      },
+      "pro_light_agenda": {
+        "title": "Agenda Pro Light",
+        "desc": "Rondas de campo, fichas y notas care_pro."
+      },
+      "practice_desk": {
+        "title": "Puesto clínica",
+        "desc": "Roles colega / assist / secretaría en el mismo shell Pro."
+      },
+      "research_obs": {
+        "title": "Observatorio Research",
+        "desc": "Opt-in clínica, ETL anonimizado, heatmap / series / alertas."
+      }
+    },
+    "steps": {
+      "vet_register": "Registro + confirmación e-mail",
+      "vet_onboarding": "Onboarding perfil clínica",
+      "vet_dashboard": "Dashboard clientes y solicitudes",
+      "vet_care": "Mensajería, FC, compartir dossier",
+      "vet_earn": "Comisiones y módulos clínica",
+      "client_register": "Register / login (e-mail o Google)",
+      "client_pet": "Crear animal + elegir plan",
+      "client_pay": "Checkout Stripe",
+      "client_active": "Entitlement activo → FC, mensajes, Care/Horse",
+      "client_engage": "Discovery in-app + e-mails educativos",
+      "care_login": "Login care_pro (Pro Light)",
+      "care_agenda": "Agenda / ronda del día",
+      "care_notes": "Notas y fichas",
+      "care_sync": "Sincronización visible en la clínica",
+      "co_login": "Login comercial",
+      "co_overview": "Overview del día",
+      "co_prospects": "CRM prospectos",
+      "co_encode": "Alta vet / cliente",
+      "co_activate": "Activar pets de pago",
+      "co_earn": "Ledger de comisiones",
+      "cm_login": "Login responsable comercial",
+      "cm_team": "Dashboard equipo / rama",
+      "cm_followups": "Citas + seguimientos",
+      "cm_self": "Mi producción privada",
+      "cm_encode": "Encode / CRM personal",
+      "ad_login": "Login admin",
+      "ad_metrics": "Métricas ops",
+      "ad_users": "Users / imports / soporte",
+      "ad_sales": "Fuerza de ventas y ramas",
+      "ad_close": "Cierre comisiones y catálogo",
+      "eq_login": "Login equipo clínica",
+      "eq_desk": "Shell Pro compartido",
+      "eq_clients": "Clientes y animales",
+      "eq_msg": "Mensajería / recepción",
+      "re_optin": "Opt-in Research de la clínica",
+      "re_etl": "ETL de anonimización",
+      "re_login": "Login / cambio a perfil research",
+      "re_obs": "Observatorio (heatmap, alertas…)"
+    },
+    "links": {
+      "msg_vet_client": {
+        "label": "Mensajería cruzada",
+        "desc": "Un mensaje del vet aparece al propietario (push) y al revés."
+      },
+      "link_req_client_vet": {
+        "label": "Solicitud de enlace",
+        "desc": "El cliente pide una clínica; el vet valida en Solicitudes."
+      },
+      "hr_client_vet": {
+        "label": "Lectura → validación",
+        "desc": "El propietario envía FC; el vet la ve y valida."
+      },
+      "pay_client_commissions": {
+        "label": "Pago → comisión comercial",
+        "desc": "Activar un pet de pago acredita al comercial aportador."
+      },
+      "pay_client_vet_commissions": {
+        "label": "Pago → retribución vet",
+        "desc": "La clínica vinculada recibe su retribución del ledger."
+      },
+      "encode_co_vet": {
+        "label": "Alta de clínica",
+        "desc": "El comercial crea la cuenta vet; la clínica inicia el onboarding."
+      },
+      "encode_co_client": {
+        "label": "Alta de cliente",
+        "desc": "El comercial provisiona un cliente (vinculado o libre) para acelerar la activación."
+      },
+      "care_notes_vet": {
+        "label": "Notas de campo → clínica",
+        "desc": "Las notas Pro Light enriquecen el seguimiento en VetPro."
+      },
+      "dossier_client_pro": {
+        "label": "Compartir historial",
+        "desc": "El propietario envía un pack temporal consultable por un pro."
+      },
+      "manager_team_co": {
+        "label": "Dirección → comercial",
+        "desc": "El manager sigue KPI, citas y prospectos de su equipo."
+      },
+      "admin_sales_co": {
+        "label": "Admin → fuerza de ventas",
+        "desc": "El admin crea comerciales, ramas y atribuciones."
+      },
+      "staff_vet_desk": {
+        "label": "Puesto compartido",
+        "desc": "El equipo clínica opera sobre los mismos pacientes que el vet."
+      },
+      "research_vet_optin": {
+        "label": "Opt-in → observatorio",
+        "desc": "La clínica activa Research; los agregados anónimos alimentan el observatorio."
+      }
     }
   }
 }
