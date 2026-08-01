@@ -37,7 +37,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
 | `GET` | `/api/v1/admin/pacs/metrics` | admin |
 | `POST` | `/api/v1/admin/pacs/wake` | admin — cold start Orthanc (même sémantique que `/pacs/wake`) |
-| `POST` | `/api/v1/admin/pacs/prune-orphans` | admin — supprime les lignes `imaging.pet_studies` dont l’étude Orthanc est absente (404) ; Orthanc ready requis |
+| `POST` | `/api/v1/admin/pacs/prune-orphans` | admin — purge les `pet_studies` absents de `GET /studies` Orthanc (1 appel liste) ; `?dryRun=1` sans delete ; plafond 10 000 ; Orthanc ready requis |
 | `GET` | `/api/v1/admin/pacs/playground-pets` | admin — pets seed pour playground (défaut `client.demo@…` ; `ownerEmail` limité à `*@petsfollow.test`) |
 
 ## Démo locale (présentation)

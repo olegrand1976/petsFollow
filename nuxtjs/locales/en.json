@@ -3822,7 +3822,10 @@
       "colEvent": "Event",
       "colMessage": "Message",
       "pruneOrphans": "Prune orphan links",
-      "pruneResult": "{pruned} pruned · {kept} kept · {skipped} skipped"
+      "pruneResult": "{pruned} pruned · {kept} kept · {skipped} skipped",
+      "pruneConfirm": "Prune {n} study link(s) missing from Orthanc? Postgres rows will be deleted (not Orthanc).",
+      "pruneNone": "No orphans — {kept} link(s) still present in Orthanc.",
+      "pruneTruncated": "(list capped at 10,000 — run again if needed)"
     },
     "launch": {
       "title": "PACS launch",

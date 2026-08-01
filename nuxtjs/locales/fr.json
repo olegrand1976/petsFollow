@@ -3823,7 +3823,10 @@
       "colEvent": "Événement",
       "colMessage": "Message",
       "pruneOrphans": "Purger liens orphelins",
-      "pruneResult": "{pruned} lien(s) purgé(s) · {kept} conservé(s) · {skipped} ignoré(s)"
+      "pruneResult": "{pruned} lien(s) purgé(s) · {kept} conservé(s) · {skipped} ignoré(s)",
+      "pruneConfirm": "Purger {n} lien(s) d’études absents d’Orthanc ? Les lignes Postgres seront supprimées (pas Orthanc).",
+      "pruneNone": "Aucun orphelin — {kept} lien(s) encore présents dans Orthanc.",
+      "pruneTruncated": "(liste tronquée à 10 000 — relancer si besoin)"
     },
     "launch": {
       "title": "Décollage du PACS",

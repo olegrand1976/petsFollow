@@ -348,6 +348,7 @@ func (a *API) adminPacsMetrics(w http.ResponseWriter, r *http.Request) {
 
 // adminPacsPruneOrphans deletes imaging.pet_studies rows whose Orthanc study is gone
 // (e.g. Orthanc DB reset while Postgres links remain). Does not touch Orthanc itself.
+// Query dryRun=1 lists candidates without deleting.
 func (a *API) adminPacsPruneOrphans(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
@@ -365,11 +366,27 @@ func (a *API) adminPacsPruneOrphans(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_not_ready")
 		return
 	}
-	rows, err := a.store.ListAllPetStudies(r.Context(), 500)
+	dryRun := r.URL.Query().Get("dryRun") == "1" || strings.EqualFold(r.URL.Query().Get("dryRun"), "true")
+
+	const listCap = 10000
+	aliveIDs, err := client.listStudyIDs(r.Context())
+	if err != nil {
+		a.appendPacsLog(r.Context(), "error", "prune_orphan", "list Orthanc studies failed", err.Error())
+		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")
+		return
+	}
+	alive := make(map[string]struct{}, len(aliveIDs))
+	for _, id := range aliveIDs {
+		alive[id] = struct{}{}
+	}
+
+	rows, err := a.store.ListAllPetStudies(r.Context(), listCap)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	truncated := len(rows) >= listCap
+
 	type prunedRow struct {
 		ID             string `json:"id"`
 		OrthancStudyID string `json:"orthancStudyId"`
@@ -379,34 +396,35 @@ func (a *API) adminPacsPruneOrphans(w http.ResponseWriter, r *http.Request) {
 	kept := 0
 	skipped := 0
 	for _, row := range rows {
-		_, gerr := client.getStudy(r.Context(), row.OrthancStudyID)
-		if gerr == nil {
+		if _, ok := alive[row.OrthancStudyID]; ok {
 			kept++
 			continue
 		}
-		var se *orthancStatusError
-		if errors.As(gerr, &se) && se.Status == http.StatusNotFound {
-			if derr := a.store.DeletePetStudyByID(r.Context(), row.ID); derr != nil {
-				a.appendPacsLog(r.Context(), "error", "prune_orphan", "delete failed", derr.Error())
-				skipped++
-				continue
-			}
-			pruned = append(pruned, prunedRow{
-				ID:             row.ID,
-				OrthancStudyID: row.OrthancStudyID,
-				Description:    row.Description,
-			})
+		candidate := prunedRow{
+			ID:             row.ID,
+			OrthancStudyID: row.OrthancStudyID,
+			Description:    row.Description,
+		}
+		if dryRun {
+			pruned = append(pruned, candidate)
 			continue
 		}
-		a.appendPacsLog(r.Context(), "warn", "prune_orphan", "orthanc lookup failed", gerr.Error())
-		skipped++
+		if derr := a.store.DeletePetStudyByID(r.Context(), row.ID); derr != nil {
+			a.appendPacsLog(r.Context(), "error", "prune_orphan", "delete failed", derr.Error())
+			skipped++
+			continue
+		}
+		pruned = append(pruned, candidate)
 	}
 	a.appendPacsLog(r.Context(), "info", "prune_orphan",
-		fmt.Sprintf("pruned=%d kept=%d skipped=%d", len(pruned), kept, skipped), "")
+		fmt.Sprintf("dryRun=%v pruned=%d kept=%d skipped=%d truncated=%v orthanc=%d",
+			dryRun, len(pruned), kept, skipped, truncated, len(aliveIDs)), "")
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"pruned":  pruned,
-		"kept":    kept,
-		"skipped": skipped,
+		"pruned":    pruned,
+		"kept":      kept,
+		"skipped":   skipped,
+		"dryRun":    dryRun,
+		"truncated": truncated,
 	})
 }
 
@@ -713,6 +731,11 @@ func (a *API) getPacsStudy(w http.ResponseWriter, r *http.Request) {
 	}
 	meta, err := client.getStudy(r.Context(), studyID)
 	if err != nil {
+		var se *orthancStatusError
+		if errors.As(err, &se) && se.Status == http.StatusNotFound {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
 		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")
 		return
 	}

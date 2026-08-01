@@ -3822,7 +3822,10 @@
       "colEvent": "Gebeurtenis",
       "colMessage": "Bericht",
       "pruneOrphans": "Weeskoppelingen opschonen",
-      "pruneResult": "{pruned} opgeschoond · {kept} behouden · {skipped} overgeslagen"
+      "pruneResult": "{pruned} opgeschoond · {kept} behouden · {skipped} overgeslagen",
+      "pruneConfirm": "{n} ontbrekende studiekoppeling(en) opschonen? Postgres-rijen worden verwijderd (niet Orthanc).",
+      "pruneNone": "Geen wezen — {kept} koppeling(en) nog aanwezig in Orthanc.",
+      "pruneTruncated": "(lijst begrensd op 10.000 — opnieuw uitvoeren indien nodig)"
     },
     "launch": {
       "title": "PACS-lancering",

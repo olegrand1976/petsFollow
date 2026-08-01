@@ -1002,6 +1002,12 @@ func TestPacsAdminPruneOrphans(t *testing.T) {
 			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/instances":
 			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies":
+			if studyGone {
+				_, _ = w.Write([]byte(`[]`))
+				return
+			}
+			_, _ = w.Write([]byte(`["` + studyID + `"]`))
 		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
 			if studyGone {
 				http.NotFound(w, r)
@@ -1040,6 +1046,36 @@ func TestPacsAdminPruneOrphans(t *testing.T) {
 	}
 
 	studyGone = true
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pacs/studies/"+studyID, adminTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("missing study proxy want 404 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/prune-orphans?dryRun=1", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("dry-run %d %#v", code, env)
+	}
+	if dataMap(t, env)["dryRun"] != true {
+		t.Fatalf("dryRun flag %#v", env)
+	}
+	if len(dataMap(t, env)["pruned"].([]any)) < 1 {
+		t.Fatalf("dry-run expected candidates %#v", env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/pacs/studies", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list after dry-run %d %#v", code, env)
+	}
+	found := false
+	for _, item := range env["data"].([]any) {
+		m, _ := item.(map[string]any)
+		if m["orthancStudyId"] == studyID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("dry-run must not delete %#v", env)
+	}
+
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/prune-orphans", adminTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("prune orphans %d %#v", code, env)

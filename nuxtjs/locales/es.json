@@ -3791,7 +3791,10 @@
       "colEvent": "Evento",
       "colMessage": "Mensaje",
       "pruneOrphans": "Purgar enlaces huérfanos",
-      "pruneResult": "{pruned} purgado(s) · {kept} conservado(s) · {skipped} omitido(s)"
+      "pruneResult": "{pruned} purgado(s) · {kept} conservado(s) · {skipped} omitido(s)",
+      "pruneConfirm": "¿Purgar {n} enlace(s) de estudio ausentes en Orthanc? Se borrarán filas Postgres (no Orthanc).",
+      "pruneNone": "Sin huérfanos — {kept} enlace(s) aún en Orthanc.",
+      "pruneTruncated": "(lista limitada a 10 000 — vuelva a ejecutar si hace falta)"
     },
     "launch": {
       "title": "Despegue del PACS",

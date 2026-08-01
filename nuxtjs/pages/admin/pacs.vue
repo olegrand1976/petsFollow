@@ -297,14 +297,29 @@ async function pruneOrphans() {
   pruneMsg.value = ''
   loadError.value = ''
   try {
+    const dryRes: any = await $fetch('/api/admin/pacs/prune-orphans', {
+      method: 'POST',
+      body: {},
+      query: { dryRun: '1' },
+    })
+    const dry = dryRes.data ?? dryRes
+    const n = Array.isArray(dry.pruned) ? dry.pruned.length : 0
+    if (n === 0) {
+      pruneMsg.value = t('pacs.admin.pruneNone', { kept: dry.kept ?? 0 })
+      return
+    }
+    if (!confirm(t('pacs.admin.pruneConfirm', { n }))) return
     const res: any = await $fetch('/api/admin/pacs/prune-orphans', { method: 'POST', body: {} })
     const data = res.data ?? res
-    const n = Array.isArray(data.pruned) ? data.pruned.length : 0
+    const pruned = Array.isArray(data.pruned) ? data.pruned.length : 0
     pruneMsg.value = t('pacs.admin.pruneResult', {
-      pruned: n,
+      pruned,
       kept: data.kept ?? 0,
       skipped: data.skipped ?? 0,
     })
+    if (data.truncated) {
+      pruneMsg.value += ` ${t('pacs.admin.pruneTruncated')}`
+    }
     await load()
   } catch (e: any) {
     loadError.value = e?.data?.message || e?.message || 'prune_failed'

@@ -200,6 +200,24 @@ func (c *orthancClient) uploadInstance(ctx context.Context, dicom []byte) (ortha
 	return out, nil
 }
 
+// listStudyIDs returns Orthanc study resource IDs (GET /studies).
+func (c *orthancClient) listStudyIDs(ctx context.Context) ([]string, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/studies", nil, "", 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+	if resp.StatusCode >= 300 {
+		return nil, &orthancStatusError{Resource: "studies", Status: resp.StatusCode}
+	}
+	var ids []string
+	if err := json.Unmarshal(body, &ids); err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
 func (c *orthancClient) getStudy(ctx context.Context, studyID string) (map[string]any, error) {
 	if err := validateOrthancID(studyID); err != nil {
 		return nil, err

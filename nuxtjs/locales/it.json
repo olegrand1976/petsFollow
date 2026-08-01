@@ -3791,7 +3791,10 @@
       "colEvent": "Evento",
       "colMessage": "Messaggio",
       "pruneOrphans": "Pulisci link orfani",
-      "pruneResult": "{pruned} rimossi · {kept} conservati · {skipped} ignorati"
+      "pruneResult": "{pruned} rimossi · {kept} conservati · {skipped} ignorati",
+      "pruneConfirm": "Pulire {n} link di studio assenti in Orthanc? Verranno eliminate le righe Postgres (non Orthanc).",
+      "pruneNone": "Nessun orfano — {kept} link ancora presenti in Orthanc.",
+      "pruneTruncated": "(elenco limitato a 10 000 — rieseguire se necessario)"
     },
     "launch": {
       "title": "Decollo PACS",

@@ -3791,7 +3791,10 @@
       "colEvent": "Sündmus",
       "colMessage": "Sõnum",
       "pruneOrphans": "Puhasta orvlingid",
-      "pruneResult": "{pruned} kustutatud · {kept} säilitatud · {skipped} vahele jäetud"
+      "pruneResult": "{pruned} kustutatud · {kept} säilitatud · {skipped} vahele jäetud",
+      "pruneConfirm": "Puhasta {n} Orthancis puuduvat uuringu linki? Postgresi read kustutatakse (mitte Orthanc).",
+      "pruneNone": "Orbusid pole — {kept} link(i) on Orthancis alles.",
+      "pruneTruncated": "(loend piiratud 10 000-ga — vajadusel käivita uuesti)"
     },
     "launch": {
       "title": "PACS-i start",

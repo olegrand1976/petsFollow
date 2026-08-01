@@ -167,10 +167,11 @@ func (s *Store) FindPetStudyByOrthancSeries(ctx context.Context, practiceID, ort
 	`, practiceID, orthancSeriesID))
 }
 
-// ListAllPetStudies returns recent imaging links (admin ops — prune orphans).
+// ListAllPetStudies returns imaging links (admin ops — prune orphans).
+// Hard cap 10_000; caller should treat len==limit as possibly truncated.
 func (s *Store) ListAllPetStudies(ctx context.Context, limit int) ([]PetStudy, error) {
-	if limit <= 0 || limit > 1000 {
-		limit = 500
+	if limit <= 0 || limit > 10000 {
+		limit = 10000
 	}
 	rows, err := s.pool.Query(ctx, petStudySelect+`
 		ORDER BY created_at DESC
