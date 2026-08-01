@@ -1,4 +1,5 @@
 import { isProRole, parseJwtRole } from '~/composables/useAuth'
+import { applySalesOpsLayout } from '~/utils/applySalesOpsLayout'
 
 /** Pick Pro shell layout for /produits (vet / commercial / admin). */
 export default defineNuxtRouteMiddleware(async () => {
@@ -17,17 +18,7 @@ export default defineNuxtRouteMiddleware(async () => {
   if (!isProRole(role)) {
     return navigateTo('/login')
   }
-  switch (role) {
-    case 'commercial':
-      setPageLayout('commercial')
-      break
-    case 'commercial_manager':
-      setPageLayout('commercial-manager')
-      break
-    case 'admin':
-      setPageLayout('admin')
-      break
-    default:
-      setPageLayout('default')
+  if (!applySalesOpsLayout(role)) {
+    setPageLayout('default')
   }
 })

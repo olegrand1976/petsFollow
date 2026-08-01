@@ -87,7 +87,8 @@
     "researchTimeseries": "Tijdreeksen",
     "adminResearch": "Research opt-in",
     "researchGroups": "Groepen",
-    "researchDataroom": "Data room"
+    "researchDataroom": "Data room",
+    "productFlows": "Productstromen"
   },
   "auth": {
     "login": {
@@ -3976,6 +3977,233 @@
       "ageBand": "Age band",
       "forbiddenTitle": "Data room not allowed",
       "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
+    }
+  },
+  "productFlows": {
+    "title": "petsFollow-stromen",
+    "subtitle": "Trajecten per profiel, kernfuncties en koppelingen tussen productvlakken.",
+    "howtoTitle": "Hoe lees je deze kaart?",
+    "howto1": "Kies een profiel (dierenarts, eigenaar, commercial…).",
+    "howto2": "Volg het traject stap voor stap en bekijk de functies.",
+    "howto3": "Klik op een kruislink om naar het gekoppelde profiel te gaan.",
+    "selectProfile": "Profielen",
+    "flowTitle": "Traject",
+    "featuresTitle": "Functies",
+    "linksTitle": "Koppelingen met andere profielen",
+    "linksBlurb": "Deze pijlen tonen hoe een actie van het ene profiel een ander vlak beïnvloedt.",
+    "linksEmpty": "Geen kruiskoppelingen voor dit profiel.",
+    "usecasesCta": "Testgidsen openen",
+    "usecasesCtaHint": "Op staging / lokaal: gedetailleerde scenario’s met seed-accounts en checklists.",
+    "surface": {
+      "web_pro": "Pro-web",
+      "flutter_client": "Klantapp (Flutter)",
+      "flutter_pro_light": "Pro Light (Flutter)"
+    },
+    "profiles": {
+      "vet": {
+        "label": "Dierenarts",
+        "mission": "Patiënten volgen, met eigenaars chatten, metingen valideren en de praktijk runnen."
+      },
+      "client": {
+        "label": "Eigenaar",
+        "mission": "Dieren beheren, plan kiezen, metingen sturen en met de praktijk praten."
+      },
+      "care_pro": {
+        "label": "Care pro (Pro Light)",
+        "mission": "Veldwerk (hoefsmid, vet light…) met agenda en gesynchroniseerde notities."
+      },
+      "commercial": {
+        "label": "Commercial",
+        "mission": "Praktijken binnenhalen, accounts aanmaken, betaalde pets activeren, commissies volgen."
+      },
+      "commercial_manager": {
+        "label": "Salesmanager",
+        "mission": "Team / branche sturen (KPI’s, opvolging) met eigen portefeuille."
+      },
+      "admin": {
+        "label": "Admin",
+        "mission": "Platform-ops: users, salesforce, payroll, flags en modules."
+      },
+      "practice_staff": {
+        "label": "Praktijkteam",
+        "mission": "Assistenten / receptie: balie, berichten en dossiers in de gedeelde Pro-shell."
+      },
+      "research": {
+        "label": "Research",
+        "mission": "Geanonimiseerd epidemiologisch observatorium (dev-module)."
+      }
+    },
+    "features": {
+      "onboarding": {
+        "title": "Onboarding",
+        "desc": "Registratie, e-mailbevestiging en afronden van profiel / praktijk."
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "desc": "Dagoverzich: patiënten, alerts, snelle toegang tot tools."
+      },
+      "messaging": {
+        "title": "Berichten",
+        "desc": "Threads praktijk ↔ eigenaar, met push bij de klant."
+      },
+      "hr_vitals": {
+        "title": "Hartmetingen",
+        "desc": "HR-metingen bij de eigenaar; validatie bij de dierenarts."
+      },
+      "link_requests": {
+        "title": "Koppelverzoeken",
+        "desc": "Eigenaar vraagt een praktijk; dierenarts aanvaardt."
+      },
+      "dossier_share": {
+        "title": "Dossier delen",
+        "desc": "Tijdelijk dierendossier (PHI) naar een pro na toestemming."
+      },
+      "billing_client": {
+        "title": "Klantabonnement",
+        "desc": "Maand / jaar / 3 jaar via Stripe; actieve pet-entitlement."
+      },
+      "care_horse": {
+        "title": "Care / Horse / gezin",
+        "desc": "Inbegrepen bij entitlement: Care+, Horse, kennel, gezin."
+      },
+      "commissions": {
+        "title": "Commissies",
+        "desc": "Ledger dierenarts en commercial bij activaties / betalingen."
+      },
+      "prospects": {
+        "title": "Prospects-CRM",
+        "desc": "Salespipeline: doelpraktijken, opvolging, status."
+      },
+      "encode": {
+        "title": "Encodering",
+        "desc": "Commercial maakt dierenarts / gekoppelde of losse klant aan."
+      },
+      "network": {
+        "title": "Netwerk / filiatie",
+        "desc": "Branches, sponsor, MLM-ready attributie en netwerkweergave."
+      },
+      "team_kpi": {
+        "title": "Teamsturing",
+        "desc": "Managerdashboard: afspraken, opvolging, ranking, teamprospects."
+      },
+      "ops_users": {
+        "title": "User-ops",
+        "desc": "Registraties, imports, support, runtime-flags."
+      },
+      "ops_billing": {
+        "title": "Payroll & catalogus",
+        "desc": "Betalingen, commissies, Stripe-catalogus, SaaS-facturatie."
+      },
+      "ai_cr": {
+        "title": "AI-verslagmodule",
+        "desc": "Ondersteunde verslagen en pitchtraining (admin / sales)."
+      },
+      "pro_light_agenda": {
+        "title": "Pro Light-agenda",
+        "desc": "Veldronde, dierenfiches en care_pro-notities."
+      },
+      "practice_desk": {
+        "title": "Praktijkbalie",
+        "desc": "Rollen collega / assist / secretariaat op dezelfde Pro-shell."
+      },
+      "research_obs": {
+        "title": "Research-observatorium",
+        "desc": "Opt-in praktijk, geanonimiseerde ETL, heatmap / timeseries / alerts."
+      }
+    },
+    "steps": {
+      "vet_register": "Registratie + e-mailbevestiging",
+      "vet_onboarding": "Onboarding praktijkprofiel",
+      "vet_dashboard": "Dashboard klanten & verzoeken",
+      "vet_care": "Berichten, HR, dossier delen",
+      "vet_earn": "Commissies & praktijkmodules",
+      "client_register": "Register / login (e-mail of Google)",
+      "client_pet": "Dier aanmaken + plan kiezen",
+      "client_pay": "Stripe Checkout",
+      "client_active": "Actieve entitlement → HR, berichten, Care/Horse",
+      "client_engage": "In-app discovery + educatieve e-mails",
+      "care_login": "Login care_pro (Pro Light)",
+      "care_agenda": "Agenda / dagrondte",
+      "care_notes": "Notities & dierenfiches",
+      "care_sync": "Sync zichtbaar bij de praktijk",
+      "co_login": "Login commercial",
+      "co_overview": "Dagoverzich",
+      "co_prospects": "Prospects-CRM",
+      "co_encode": "Dierenarts / klant encoderen",
+      "co_activate": "Betaalde pets activeren",
+      "co_earn": "Commissieledger",
+      "cm_login": "Login salesmanager",
+      "cm_team": "Dashboard team / branche",
+      "cm_followups": "Afspraken + opvolging",
+      "cm_self": "Mijn privéproductie",
+      "cm_encode": "Persoonlijke encode / CRM",
+      "ad_login": "Login admin",
+      "ad_metrics": "Ops-metrics",
+      "ad_users": "Users / imports / support",
+      "ad_sales": "Salesforce & branches",
+      "ad_close": "Commissies & catalogus afsluiten",
+      "eq_login": "Login praktijkteam",
+      "eq_desk": "Gedeelde Pro-shell",
+      "eq_clients": "Klanten & dieren",
+      "eq_msg": "Berichten / balie",
+      "re_optin": "Research opt-in van de praktijk",
+      "re_etl": "Anonimisatie-ETL",
+      "re_login": "Login / switch research-profiel",
+      "re_obs": "Observatorium (heatmap, alerts…)"
+    },
+    "links": {
+      "msg_vet_client": {
+        "label": "Gekruiste berichten",
+        "desc": "Een bericht van de dierenarts verschijnt bij de eigenaar (push) en omgekeerd."
+      },
+      "link_req_client_vet": {
+        "label": "Koppelverzoek",
+        "desc": "Klant vraagt een praktijk; dierenarts bevestigt bij Verzoeken."
+      },
+      "hr_client_vet": {
+        "label": "Meting → validatie",
+        "desc": "Eigenaar stuurt HR; dierenarts ziet en valideert."
+      },
+      "pay_client_commissions": {
+        "label": "Betaling → salescommissie",
+        "desc": "Activatie van een betaalde pet crediteert de commercial."
+      },
+      "pay_client_vet_commissions": {
+        "label": "Betaling → dierenartsvergoeding",
+        "desc": "De gekoppelde praktijk ontvangt haar ledger-vergoeding."
+      },
+      "encode_co_vet": {
+        "label": "Praktijk encoderen",
+        "desc": "Commercial maakt het dierenartsaccount; de praktijk start onboarding."
+      },
+      "encode_co_client": {
+        "label": "Klant encoderen",
+        "desc": "Commercial voorziet een klant (gekoppeld of los) om activatie te versnellen."
+      },
+      "care_notes_vet": {
+        "label": "Veldnotities → praktijk",
+        "desc": "Pro Light-notities verrijken de opvolging in VetPro."
+      },
+      "dossier_client_pro": {
+        "label": "Dossier delen",
+        "desc": "Eigenaar stuurt een tijdelijk pack dat een pro kan openen."
+      },
+      "manager_team_co": {
+        "label": "Sturing → commercial",
+        "desc": "Manager volgt KPI’s, afspraken en teamprospects."
+      },
+      "admin_sales_co": {
+        "label": "Admin → salesforce",
+        "desc": "Admin maakt commercials, branches en attributies aan."
+      },
+      "staff_vet_desk": {
+        "label": "Gedeelde balie",
+        "desc": "Het praktijkteam werkt op dezelfde patiënten als de dierenarts."
+      },
+      "research_vet_optin": {
+        "label": "Opt-in → observatorium",
+        "desc": "Praktijk activeert Research; anonieme aggregaten voeden het observatorium."
+      }
     }
   }
 }
