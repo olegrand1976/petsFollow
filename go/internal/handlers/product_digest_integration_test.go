@@ -69,6 +69,12 @@ func TestProductDigestIngestAndRunWithBranch(t *testing.T) {
 		if err == nil {
 			_ = resp.Body.Close()
 		}
+	} else {
+		// Default test notifier is isDevSMTP (soft-fail) — force hard-fail to assert retry path.
+		api.api.TestReplaceNotifier(email.NewNotifierAuth(
+			"smtp.invalid.petsfollow", 587, "digest@petsfollow.test",
+			"smtp-user", "", "http://localhost:3002", "https://ll-it-sc.be",
+		))
 	}
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/internal/product-digest/run", map[string]any{

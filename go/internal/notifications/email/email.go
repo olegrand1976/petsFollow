@@ -656,7 +656,8 @@ func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, branch, he
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
-	return n.SendVetAlert(to, subject, body)
+	// Hard-fail (sauf isDevSMTP) : le runner efface l'idempotence pour retry SMTP.
+	return n.SendCritical(to, subject, body)
 }
 
 // SendStagingSeedNotice informs internal staff that staging demo data was reset (manual admin action).
