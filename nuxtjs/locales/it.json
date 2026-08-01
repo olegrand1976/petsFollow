@@ -672,7 +672,7 @@
       "emptyDescription": "Scegli una clinica assegnata per iniziare.",
       "colPractice": "Clinica",
       "colStatus": "Stato",
-      "colTrial": "Fine prova",
+      "colTrial": "Fine finestra ROI",
       "frictionTitle": "Avvisi friction",
       "frictionEmpty": "Nessun avviso recente",
       "frictionEmptyDesc": "I segnali (0 uso G7, calo, NPS basso…) compaiono qui.",
@@ -843,7 +843,7 @@
       "terrainTitle": "Pro Light — app campo gratuita",
       "terrain1": "Agenda campo, schede animali, note di visita",
       "terrain2": "Condivisione fascicolo + QR di referral",
-      "terrain3": "Referti vocali (IA se il modulo clinica è attivo)",
+      "terrain3": "Referti vocali e miglioramento IA inclusi in Pro",
       "clientTitle": "App proprietario",
       "client1": "Passaporto / libretto sempre in tasca",
       "client2": "Messaggistica con la clinica + push",
@@ -2135,7 +2135,7 @@
       "emptyDescription": "Attiva una pratica per iniziare la prova.",
       "colPractice": "Ufficio",
       "colStatus": "Stato",
-      "colTrial": "Fine della prova",
+      "colTrial": "Fine finestra ROI",
       "colDays": "D+ / rimanente",
       "convertMonthly": "Segna attivo",
       "convertAnnual": "Segna attivo (annuale)",
@@ -2949,12 +2949,12 @@
       "annual": {
         "name": "Annuale",
         "price": "834,71 € IVA esclusa / anno",
-        "description": "≈ 69,56 € IVA esclusa / mese — passaporto + CR IA inclusi."
+        "description": "≈ 69,56 € IVA esclusa / mese — passaporto + referti IA inclusi."
       },
       "longTerm": {
         "name": "Triennale",
         "price": "2 253,72 € IVA esclusa / 3 anni",
-        "description": "−10 % vs 3× annuale — risparmio 250,41 € (≈ 62,60 € IVA esclusa / mese)."
+        "description": "−10 % vs 3× annuale — risparmio 250,41 € (≈ 62,60 € IVA esclusa / mese) — referti IA inclusi."
       }
     },
     "autofinanceTip": "≈ 8 attivazioni clienti triennali / mese ≈ coprono l’equivalente mensile Pro (≈ 69,56 € IVA esclusa).",
@@ -3025,12 +3025,12 @@
       "annual": {
         "name": "Annuale",
         "price": "834,71 € IVA esclusa / anno",
-        "description": "≈ 69,56 € IVA esclusa / mese."
+        "description": "≈ 69,56 € IVA esclusa / mese — referti IA inclusi."
       },
       "longTerm": {
         "name": "Triennale",
         "price": "2 253,72 € IVA esclusa / 3 anni",
-        "description": "−10 % vs 3× annuale — risparmio 250,41 € (≈ 62,60 € IVA esclusa / mese)."
+        "description": "−10 % vs 3× annuale — risparmio 250,41 € (≈ 62,60 € IVA esclusa / mese) — referti IA inclusi."
       }
     },
     "saasMigration": "Migrazione dati: su preventivo (da 350 € IVA esclusa).",
@@ -3366,7 +3366,7 @@
       "emptyTitle": "Nessuna attivazione ancora",
       "colPractice": "Clinica",
       "colStatus": "Stato",
-      "colTrial": "Fine prova",
+      "colTrial": "Fine finestra ROI",
       "colSignal": "Segnale",
       "colDetail": "Dettaglio",
       "colWhen": "Quando",
@@ -4112,7 +4112,7 @@
       },
       "ai_cr": {
         "title": "Modulo CR IA",
-        "desc": "Report assistiti e training pitch (superfici admin / commerciale)."
+        "desc": "Referti assistiti IA inclusi in Pro — adozione e ROI (admin / commerciale)."
       },
       "pro_light_agenda": {
         "title": "Agenda Pro Light",

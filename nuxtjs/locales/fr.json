@@ -735,7 +735,7 @@
       "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin fenêtre ROI",
       "frictionTitle": "Alertes friction",
       "frictionEmpty": "Aucune alerte récente",
       "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
@@ -888,7 +888,7 @@
       "terrainTitle": "Pro Light — terrain gratuit",
       "terrain1": "Agenda, fiches animaux, notes de visite",
       "terrain2": "Partage de dossier + QR de parrainage",
-      "terrain3": "CR vocaux (IA si le module cabinet est activé)",
+      "terrain3": "CR vocaux & amélioration IA inclus dans Pro",
       "clientTitle": "App propriétaire",
       "client1": "Carnet / passeport toujours en poche",
       "client2": "Messagerie avec le cabinet + push",
@@ -3010,7 +3010,7 @@
       "longTerm": {
         "name": "Triennal",
         "price": "2 253,72 € HTVA / 3 ans",
-        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois)."
+        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois) — CR IA inclus."
       }
     },
     "autofinanceTip": "≈ 8 activations clients triennales / mois ≈ couverture de l’équivalent mensuel Pro (≈ 69,56 € HTVA).",
@@ -3442,7 +3442,7 @@
       "emptyTitle": "Pas encore d’activation",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin fenêtre ROI",
       "colSignal": "Signal",
       "colDetail": "Détail",
       "colWhen": "Quand",
@@ -4144,7 +4144,7 @@
       },
       "ai_cr": {
         "title": "Module CR IA",
-        "desc": "Compte-rendus assistés et entraînement pitch (surfaces admin / commercial)."
+        "desc": "Compte-rendus assistés inclus dans Pro — suivi d’adoption et ROI (surfaces admin / commercial)."
       },
       "pro_light_agenda": {
         "title": "Agenda Pro Light",

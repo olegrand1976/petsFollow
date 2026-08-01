@@ -225,7 +225,7 @@ func RunMassWithOptions(ctx context.Context, pool *pgxpool.Pool, opts MassOption
 			INSERT INTO practice.ai_cr_modules (
 				practice_id, status, activated_at, trial_ends_at, activated_by_user_id,
 				price_plan, baseline_minutes_per_cr, hourly_cost_cents, updated_at
-			) VALUES ($1, 'trial', NOW(), NOW() + INTERVAL '90 days', $2, 'monthly_39', 10, 8000, NOW())
+			) VALUES ($1, 'active', NOW(), NOW() + INTERVAL '90 days', $2, 'monthly_39', 10, 8000, NOW())
 			ON CONFLICT (practice_id) DO NOTHING`, practiceID, vetID); err != nil {
 			return err
 		}

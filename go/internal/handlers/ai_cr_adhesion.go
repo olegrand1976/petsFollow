@@ -179,8 +179,6 @@ func (a *API) aiCrAdhesionVars(ctx context.Context, c store.AiCrAdhesionCandidat
 		"transcribe":   fmt.Sprintf("%d", tr),
 		"improve":      fmt.Sprintf("%d", im),
 		"finalize":     fmt.Sprintf("%d", fi),
-		"priceMonthly": "inclus",
-		"priceAnnual":  "inclus",
 	}
 	roi, err := a.store.ComputeAiCrROI(ctx, c.PracticeID)
 	if err == nil && roi.Unlocked {

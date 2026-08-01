@@ -1568,7 +1568,7 @@
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin ventana ROI",
       "colDays": "J+ / restant",
       "convertMonthly": "Marcar activo",
       "convertAnnual": "Marcar activo (anual)",
@@ -2145,12 +2145,12 @@
       "annual": {
         "name": "Anual",
         "price": "834,71 € sin IVA / año",
-        "description": "≈ 69,56 € sin IVA / mes — pasaporte + CR IA incluidos."
+        "description": "≈ 69,56 € sin IVA / mes — pasaporte + informes IA incluidos."
       },
       "longTerm": {
         "name": "Trienal",
         "price": "2 253,72 € sin IVA / 3 años",
-        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes)."
+        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes) — informes IA incluidos."
       }
     },
     "autofinanceTip": "≈ 8 activaciones cliente trienales / mes ≈ cubren el equivalente mensual Pro (≈ 69,56 € sin IVA).",
@@ -2221,12 +2221,12 @@
       "annual": {
         "name": "Anual",
         "price": "834,71 € sin IVA / año",
-        "description": "≈ 69,56 € sin IVA / mes."
+        "description": "≈ 69,56 € sin IVA / mes — informes IA incluidos."
       },
       "longTerm": {
         "name": "Trienal",
         "price": "2 253,72 € sin IVA / 3 años",
-        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes)."
+        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes) — informes IA incluidos."
       }
     },
     "saasMigration": "Migración de datos: bajo presupuesto (desde 350 € sin IVA).",
@@ -2736,7 +2736,7 @@
       "emptyDescription": "Elige una clínica asignada para empezar.",
       "colPractice": "Clínica",
       "colStatus": "Estado",
-      "colTrial": "Fin prueba",
+      "colTrial": "Fin ventana ROI",
       "frictionTitle": "Alertas de fricción",
       "frictionEmpty": "Sin alertas recientes",
       "frictionEmptyDesc": "Las señales (0 uso D7, caída, NPS bajo…) aparecen aquí.",
@@ -2907,7 +2907,7 @@
       "terrainTitle": "Pro Light — app de campo gratuita",
       "terrain1": "Agenda de campo, fichas, notas de visita",
       "terrain2": "Compartir historial + QR de referidos",
-      "terrain3": "Informes de voz (IA si el módulo clínica está activo)",
+      "terrain3": "Informes de voz y mejora IA incluidos en Pro",
       "clientTitle": "App propietario",
       "client1": "Pasaporte / cartilla siempre en el bolsillo",
       "client2": "Mensajería con la clínica + push",
@@ -3252,7 +3252,7 @@
       "emptyTitle": "Aún sin activaciones",
       "colPractice": "Clínica",
       "colStatus": "Estado",
-      "colTrial": "Fin prueba",
+      "colTrial": "Fin ventana ROI",
       "colSignal": "Señal",
       "colDetail": "Detalle",
       "colWhen": "Cuándo",
@@ -4112,7 +4112,7 @@
       },
       "ai_cr": {
         "title": "Módulo IA de informes",
-        "desc": "Informes asistidos y entrenamiento de pitch (admin / comercial)."
+        "desc": "Informes asistidos por IA incluidos en Pro — adopción y ROI (admin / comercial)."
       },
       "pro_light_agenda": {
         "title": "Agenda Pro Light",

@@ -1599,7 +1599,7 @@
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "ROI window ends",
       "colDays": "J+ / restant",
       "convertMonthly": "Mark active",
       "convertAnnual": "Mark active (annual)",
@@ -2181,7 +2181,7 @@
       "longTerm": {
         "name": "Triennial",
         "price": "€2,253.72 excl. VAT / 3 years",
-        "description": "−10% vs 3× annual — save €250.41 (≈ €62.60 excl. VAT / month)."
+        "description": "−10% vs 3× annual — save €250.41 (≈ €62.60 excl. VAT / month) — AI visit reports included."
       }
     },
     "autofinanceTip": "≈ 8 triennial client activations / month ≈ covers the Pro monthly equivalent (≈ €69.56 excl. VAT).",
@@ -2252,12 +2252,12 @@
       "annual": {
         "name": "Annual",
         "price": "€834.71 excl. VAT / year",
-        "description": "≈ €69.56 excl. VAT / month."
+        "description": "≈ €69.56 excl. VAT / month — AI visit reports included."
       },
       "longTerm": {
         "name": "Triennial",
         "price": "€2,253.72 excl. VAT / 3 years",
-        "description": "−10% vs 3× annual — save €250.41 (≈ €62.60 excl. VAT / month)."
+        "description": "−10% vs 3× annual — save €250.41 (≈ €62.60 excl. VAT / month) — AI visit reports included."
       }
     },
     "saasMigration": "Data migration: on quote (from €350 excl. VAT).",
@@ -2767,7 +2767,7 @@
       "emptyDescription": "Pick an assigned practice to start.",
       "colPractice": "Practice",
       "colStatus": "Status",
-      "colTrial": "Trial ends",
+      "colTrial": "ROI window ends",
       "frictionTitle": "Friction alerts",
       "frictionEmpty": "No recent alerts",
       "frictionEmptyDesc": "Signals (0 usage D7, drop, low NPS…) appear here.",
@@ -2938,7 +2938,7 @@
       "terrainTitle": "Pro Light — free field app",
       "terrain1": "Field calendar, animal cards, visit notes",
       "terrain2": "File sharing + referral QR",
-      "terrain3": "Voice visit reports (AI if the practice module is on)",
+      "terrain3": "Voice visit reports & AI improvement included in Pro",
       "clientTitle": "Owner app",
       "client1": "Passport / health book always in pocket",
       "client2": "Messaging with the practice + push",
@@ -3283,7 +3283,7 @@
       "emptyTitle": "No activations yet",
       "colPractice": "Practice",
       "colStatus": "Status",
-      "colTrial": "Trial ends",
+      "colTrial": "ROI window ends",
       "colSignal": "Signal",
       "colDetail": "Detail",
       "colWhen": "When",
@@ -4143,7 +4143,7 @@
       },
       "ai_cr": {
         "title": "AI visit-report module",
-        "desc": "Assisted reports and pitch training (admin / sales surfaces)."
+        "desc": "AI-assisted visit reports included in Pro — adoption & ROI tracking (admin / sales surfaces)."
       },
       "pro_light_agenda": {
         "title": "Pro Light agenda",

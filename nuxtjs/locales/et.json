@@ -1568,7 +1568,7 @@
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "ROI akna lõpp",
       "colDays": "J+ / restant",
       "convertMonthly": "Märgi aktiivseks",
       "convertAnnual": "Märgi aktiivseks (aastane)",
@@ -2145,12 +2145,12 @@
       "annual": {
         "name": "Aastane",
         "price": "834,71 € KM-ta / aasta",
-        "description": "≈ 69,56 € KM-ta / kuu — pass + AI-CR kaasas."
+        "description": "≈ 69,56 € + KM / kuu — pass + AI-raportid kaasas."
       },
       "longTerm": {
         "name": "Kolmeaastane",
         "price": "2 253,72 € KM-ta / 3 aastat",
-        "description": "−10 % vs 3× aastane — sääst 250,41 € (≈ 62,60 € KM-ta / kuu)."
+        "description": "−10 % vs 3× aastane — sääst 250,41 € (≈ 62,60 € + KM / kuu) — AI-raportid kaasas."
       }
     },
     "autofinanceTip": "≈ 8 kolmeaastast kliendi aktiveerimist / kuu ≈ katab Pro kuu ekvivalendi (≈ 69,56 € KM-ta).",
@@ -2221,12 +2221,12 @@
       "annual": {
         "name": "Aastane",
         "price": "834,71 € km-ta / aasta",
-        "description": "≈ 69,56 € km-ta / kuu."
+        "description": "≈ 69,56 € + KM / kuu — AI-raportid kaasas."
       },
       "longTerm": {
         "name": "Kolmeaastane",
         "price": "2 253,72 € km-ta / 3 aastat",
-        "description": "−10 % vs 3× aastane — kokkuhoid 250,41 € (≈ 62,60 € km-ta / kuu)."
+        "description": "−10 % vs 3× aastane — sääst 250,41 € (≈ 62,60 € + KM / kuu) — AI-raportid kaasas."
       }
     },
     "saasMigration": "Andmete migratsioon: hinnapakkumisel (alates 350 € km-ta).",
@@ -2736,7 +2736,7 @@
       "emptyDescription": "Alustamiseks vali määratud praktika.",
       "colPractice": "Praktika",
       "colStatus": "Olek",
-      "colTrial": "Proovi lõpp",
+      "colTrial": "ROI akna lõpp",
       "frictionTitle": "Hõõrdumishoiatused",
       "frictionEmpty": "Hiljutisi hoiatusi pole",
       "frictionEmptyDesc": "Signaalid (0 kasutust P7, langus, madal NPS…) ilmuvad siia.",
@@ -2907,7 +2907,7 @@
       "terrainTitle": "Pro Light — tasuta väljaäpp",
       "terrain1": "Väljakalender, loomakaardid, visiidimärkmed",
       "terrain2": "Toimiku jagamine + soovitus-QR",
-      "terrain3": "Häälraportid (AI kui kliiniku moodul on aktiivne)",
+      "terrain3": "Häälraportid ja AI-parandus Pro paketis kaasas",
       "clientTitle": "Omaniku äpp",
       "client1": "Pass / terviseraamat alati taskus",
       "client2": "Sõnumside kliinikuga + push",
@@ -3252,7 +3252,7 @@
       "emptyTitle": "Aktiveerimisi pole veel",
       "colPractice": "Praktika",
       "colStatus": "Olek",
-      "colTrial": "Proovi lõpp",
+      "colTrial": "ROI akna lõpp",
       "colSignal": "Signaal",
       "colDetail": "Detail",
       "colWhen": "Millal",
@@ -4112,7 +4112,7 @@
       },
       "ai_cr": {
         "title": "AI raportimoodul",
-        "desc": "Abistatud raportid ja pitch-treening (admin / müük)."
+        "desc": "AI-raportid Pro paketis — kasutuselevõtt ja ROI (admin / müük)."
       },
       "pro_light_agenda": {
         "title": "Pro Light ajakava",

@@ -1599,7 +1599,7 @@
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Einde ROI-venster",
       "colDays": "J+ / restant",
       "convertMonthly": "Markeer actief",
       "convertAnnual": "Markeer actief (jaarlijks)",
@@ -2176,12 +2176,12 @@
       "annual": {
         "name": "Jaarlijks",
         "price": "834,71 € excl. btw / jaar",
-        "description": "≈ 69,56 € excl. btw / maand — paspoort + AI-CR inbegrepen."
+        "description": "≈ €69,56 excl. btw / maand — paspoort + AI-verslagen inbegrepen."
       },
       "longTerm": {
         "name": "Driejarig",
         "price": "2 253,72 € excl. btw / 3 jaar",
-        "description": "−10 % vs 3× jaarlijks — besparing 250,41 € (≈ 62,60 € excl. btw / maand)."
+        "description": "−10 % vs 3× jaarlijks — bespaar €250,41 (≈ €62,60 excl. btw / maand) — AI-verslagen inbegrepen."
       }
     },
     "autofinanceTip": "≈ 8 driejarige cliëntactivaties / maand ≈ dekt het maandelijkse Pro-equivalent (≈ 69,56 € excl. btw).",
@@ -2252,12 +2252,12 @@
       "annual": {
         "name": "Jaarlijks",
         "price": "€834,71 excl. btw / jaar",
-        "description": "≈ €69,56 excl. btw / maand."
+        "description": "≈ €69,56 excl. btw / maand — AI-verslagen inbegrepen."
       },
       "longTerm": {
         "name": "Driejaarlijks",
         "price": "€2.253,72 excl. btw / 3 jaar",
-        "description": "−10 % vs 3× jaarlijks — besparing €250,41 (≈ €62,60 excl. btw / maand)."
+        "description": "−10 % vs 3× jaarlijks — bespaar €250,41 (≈ €62,60 excl. btw / maand) — AI-verslagen inbegrepen."
       }
     },
     "saasMigration": "Datamigratie: op offerte (vanaf €350 excl. btw).",
@@ -2767,7 +2767,7 @@
       "emptyDescription": "Kies een toegewezen praktijk om te starten.",
       "colPractice": "Praktijk",
       "colStatus": "Status",
-      "colTrial": "Einde proef",
+      "colTrial": "Einde ROI-venster",
       "frictionTitle": "Frictie-alerts",
       "frictionEmpty": "Geen recente alerts",
       "frictionEmptyDesc": "Signalen (0 gebruik D7, daling, lage NPS…) verschijnen hier.",
@@ -2938,7 +2938,7 @@
       "terrainTitle": "Pro Light — gratis veld-app",
       "terrain1": "Veldagenda, dierfiches, bezoeknotities",
       "terrain2": "Dossierdeling + doorverwijs-QR",
-      "terrain3": "Spraakverslagen (AI als het praktijkmodule aan staat)",
+      "terrain3": "Spraakverslagen & AI-verbetering inbegrepen in Pro",
       "clientTitle": "Eigenaars-app",
       "client1": "Paspoort / gezondheidsboekje altijd op zak",
       "client2": "Messaging met de praktijk + push",
@@ -3283,7 +3283,7 @@
       "emptyTitle": "Nog geen activaties",
       "colPractice": "Praktijk",
       "colStatus": "Status",
-      "colTrial": "Einde proef",
+      "colTrial": "Einde ROI-venster",
       "colSignal": "Signaal",
       "colDetail": "Detail",
       "colWhen": "Wanneer",
@@ -4143,7 +4143,7 @@
       },
       "ai_cr": {
         "title": "AI-verslagmodule",
-        "desc": "Ondersteunde verslagen en pitchtraining (admin / sales)."
+        "desc": "AI-verslagen inbegrepen in Pro — adoptie- & ROI-opvolging (admin / sales)."
       },
       "pro_light_agenda": {
         "title": "Pro Light-agenda",
