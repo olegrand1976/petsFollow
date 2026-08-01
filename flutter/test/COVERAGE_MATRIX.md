@@ -20,6 +20,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Send pet dossier to pro | · | ✓ | · | `pet_send_dossier_test` (consentement PHI requis ; fiche + dialogue sans débordement en 360 dp clavier ouvert) |
 | View / share consultation PDF | · | ✓ | · | `consultation_view_test` (CTA disponible/en attente sur Consultations + card Visite ; entrée menu fiche `pet_consultations_*` ; CR + share) |
 | Client AI explain CR | · | ✓ | · | `consultation_explain_test` (CTA + cards + disclaimer ; flag `CLIENT_AI_ENABLED`) |
+| Client AI Settings list | · | ✓ | · | `settings_client_ai_test` (section + explain list + flag off) |
 | Client AI triage 24/7 | · | ✓ | · | `triage_chat_test` (send → red CTAs call/book/message) |
 | New pet → save without payment / pay CTA | · | ✓ | ✓ | `pet_form_screen_test` sticky save + skipCheckout + pop/snackbar ; smoke create→list |
 | Edit pet → puce + n° carnet | · | ✓ | · | `pet_edit_screen_test` PUT microchip/healthBook |

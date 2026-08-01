@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -279,6 +280,22 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     return null;
   }
 
+  Widget _consultationLeading({
+    required String visitId,
+    required bool available,
+  }) {
+    final showAi = available && AppEnv.isClientAiEnabled;
+    return CircleAvatar(
+      key: showAi ? Key('visit_consultation_ai_badge_$visitId') : null,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+      child: Icon(
+        showAi ? Icons.auto_awesome_outlined : Icons.description_outlined,
+        color: AppColors.primary,
+        size: 20,
+      ),
+    );
+  }
+
   void _openConsultation(String visitId) {
     Navigator.push<void>(
       context,
@@ -491,9 +508,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               key: Key('visit_consultation_tile_${v.id}'),
-                              leading: CircleAvatar(
-                                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                                child: Icon(Icons.description_outlined, color: AppColors.primary, size: 20),
+                              leading: _consultationLeading(
+                                visitId: v.id,
+                                available: v.consultationAvailable,
                               ),
                               title: Text(l10n.consultationTitle),
                               subtitle: Text(dateFmt.format(v.displayDate)),

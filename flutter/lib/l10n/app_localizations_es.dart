@@ -2001,6 +2001,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'Asistencia IA';
+
+  @override
   String get clientAiExplainCta => 'Entender mi informe';
 
   @override
@@ -2012,6 +2015,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Preparando la explicación…';
+
+  @override
+  String get clientAiExplainListTitle => 'Entender un informe';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Explicación simplificada de un informe finalizado';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'Aún no hay ningún informe finalizado para explicar.';
 
   @override
   String get clientAiTriageTitle => 'Ayuda de urgencia 24/7';

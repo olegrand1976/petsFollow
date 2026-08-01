@@ -2005,6 +2005,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'Assistance IA';
+
+  @override
   String get clientAiExplainCta => 'Comprendre mon compte-rendu';
 
   @override
@@ -2016,6 +2019,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Préparation de l\'explication…';
+
+  @override
+  String get clientAiExplainListTitle => 'Comprendre un compte-rendu';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Explication simplifiée d\'un CR finalisé';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'Aucun compte-rendu finalisé à expliquer pour le moment.';
 
   @override
   String get clientAiTriageTitle => 'Aide d\'urgence 24/7';

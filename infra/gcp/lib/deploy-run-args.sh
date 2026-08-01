@@ -37,7 +37,7 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
-  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled
+  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled client_ai_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -48,6 +48,7 @@ pf_write_api_env_file() {
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
     research_enabled="${RESEARCH_ENABLED:-true}"
+    client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_enabled="${PACS_ENABLED:-true}"
@@ -65,6 +66,7 @@ pf_write_api_env_file() {
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
     pacs_enabled="${PACS_ENABLED:-false}"
     research_enabled="${RESEARCH_ENABLED:-false}"
+    client_ai_enabled="${CLIENT_AI_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
@@ -101,6 +103,7 @@ BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 PACS_ENABLED: "${pacs_enabled}"
 RESEARCH_ENABLED: "${research_enabled}"
+CLIENT_AI_ENABLED: "${client_ai_enabled}"
 PACS_ORTHANC_URL: "${PACS_ORTHANC_URL:-}"
 PACS_ORTHANC_USER: "${PACS_ORTHANC_USER:-petsfollow}"
 PACS_ORTHANC_USE_ID_TOKEN: "${PACS_ORTHANC_USE_ID_TOKEN:-true}"

@@ -4,6 +4,7 @@ import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
+import 'package:petsfollow_mobile/features/client_ai/presentation/explain_reports_list_screen.dart';
 import 'package:petsfollow_mobile/features/client_ai/presentation/triage_chat_screen.dart';
 import 'package:petsfollow_mobile/features/education/presentation/how_to_measure_screen.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
@@ -82,18 +83,52 @@ class SettingsMenuScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const HowToMeasureScreen()),
           ),
         ),
-        if (AppEnv.isClientAiEnabled)
+        if (AppEnv.isClientAiEnabled) ...[
+          Padding(
+            key: const Key('settings_client_ai_section'),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Row(
+              children: [
+                Text(
+                  l10n.clientAiSectionTitle,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(width: 8),
+                Chip(
+                  label: Text(l10n.clientAiDevBadge),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            key: const Key('settings_client_ai_explain'),
+            leading: const Icon(Icons.menu_book_outlined),
+            title: Text(l10n.clientAiExplainListTitle),
+            subtitle: Text(l10n.clientAiExplainListSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ExplainReportsListScreen()),
+            ),
+          ),
           ListTile(
             key: const Key('settings_client_ai_triage'),
             leading: const Icon(Icons.health_and_safety_outlined),
             title: Text(l10n.clientAiTriageTitle),
-            subtitle: Text(l10n.clientAiDevBadge),
+            subtitle: Text(l10n.clientAiTriageSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const TriageChatScreen()),
             ),
           ),
+        ],
         ListTile(
           leading: const Icon(Icons.local_hospital_outlined),
           title: Text(l10n.myVets),
