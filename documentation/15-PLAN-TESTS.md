@@ -506,7 +506,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | R2 | P0 | Timeseries + heatmap | tables chargées (flag on) |
 | R3 | P0 | Admin opt-ins | `/admin/research` liste non vide après seed |
 | R4 | P1 | Flag off | API 404 `research_disabled` |
-| R5 | P0 | Groups + Data room | créer groupe ≠ unlock ; admin `dataroom_enabled` ; events k≥5 cabinets distincts sans city/PII |
+| R5 | P0 | Groups + Data room | créer groupe ≠ unlock ; admin `dataroom_enabled` ; events k≥5 cabinets distincts sans city/PII/`payload` (scope réseau) |
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
