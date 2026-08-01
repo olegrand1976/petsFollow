@@ -817,7 +817,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Image",
       "summaryPlan": "Plan",
-      "summaryStatus": "Status",
+      "summaryStatus": "Subscription status",
       "paymentStatus": {
         "active": "Active",
         "pending": "Pending",

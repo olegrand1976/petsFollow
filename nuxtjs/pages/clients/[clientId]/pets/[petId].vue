@@ -1231,7 +1231,7 @@
 </template>
 
 <script setup lang="ts">
-import { isFoodChainSpecies } from '~/utils/pet-species'
+import { foodChainToYesNo, isFoodChainSpecies, yesNoToFoodChain } from '~/utils/pet-species'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
@@ -1295,13 +1295,6 @@ function formatPetDay(value?: string | null) {
   return formatDate(value)
 }
 
-function foodChainToYesNo(status?: string | null): 'yes' | 'no' {
-  return status === 'food_producing' ? 'yes' : 'no'
-}
-
-function yesNoToFoodChain(v: 'yes' | 'no') {
-  return v === 'yes' ? 'food_producing' : 'companion'
-}
 const sessions = ref<any[]>([])
 const weights = ref<any[]>([])
 const bloodPressures = ref<any[]>([])
@@ -2014,7 +2007,7 @@ async function saveHorseRegulatory() {
   horseRegError.value = ''
   horseRegSaved.value = false
   try {
-    const status = yesNoToFoodChain(horseFoodChainYesNo.value)
+    const status = yesNoToFoodChain(horseFoodChainYesNo.value, pet.value.foodChainStatus)
     const res: any = await $fetch(`/api/vet/pets/${petId}/food-chain`, {
       method: 'PATCH',
       body: {

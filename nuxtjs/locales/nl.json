@@ -817,7 +817,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Afbeelding",
       "summaryPlan": "Formule",
-      "summaryStatus": "Status",
+      "summaryStatus": "Abonnementsstatus",
       "paymentStatus": {
         "active": "Actief",
         "pending": "In afwachting",

@@ -1345,7 +1345,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Immagine",
       "summaryPlan": "Formula",
-      "summaryStatus": "Stato",
+      "summaryStatus": "Stato abbonamento",
       "paymentStatus": {
         "active": "Attivo",
         "pending": "In attesa",

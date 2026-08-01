@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { isFoodChainSpecies, PET_SPECIES_CODES } from '../../utils/pet-species'
+import {
+  foodChainToYesNo,
+  isFoodChainSpecies,
+  PET_SPECIES_CODES,
+  yesNoToFoodChain,
+} from '../../utils/pet-species'
 
 describe('pet-species', () => {
   it('lists production and companion species', () => {
@@ -17,4 +22,15 @@ describe('pet-species', () => {
     expect(isFoodChainSpecies('other')).toBe(false)
     expect(isFoodChainSpecies(undefined)).toBe(false)
   })
+
+  it('maps food-chain yes/no without wiping excluded', () => {
+    expect(foodChainToYesNo('food_producing')).toBe('yes')
+    expect(foodChainToYesNo('companion')).toBe('no')
+    expect(foodChainToYesNo('excluded_from_food_chain')).toBe('no')
+    expect(yesNoToFoodChain('yes')).toBe('food_producing')
+    expect(yesNoToFoodChain('no', 'companion')).toBe('companion')
+    expect(yesNoToFoodChain('no', 'excluded_from_food_chain')).toBe('excluded_from_food_chain')
+    expect(yesNoToFoodChain('no', 'food_producing')).toBe('companion')
+  })
 })
+

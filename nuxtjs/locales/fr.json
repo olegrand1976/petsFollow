@@ -1439,7 +1439,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Image",
       "summaryPlan": "Formule",
-      "summaryStatus": "Statut",
+      "summaryStatus": "Statut abonnement",
       "paymentStatus": {
         "active": "Actif",
         "pending": "En attente",
