@@ -62,11 +62,25 @@
           <p class="pro-hint admin-pacs-playground-hint">{{ $t('pacs.admin.playgroundHint') }}</p>
           <div class="admin-pacs-playground-bar">
             <label class="admin-pacs-pet-label">
+              <span>{{ $t('pacs.admin.clientSelect') }}</span>
+              <select
+                v-model="selectedClientEmail"
+                data-testid="admin-pacs-client-select"
+                :disabled="clientsLoading || !playgroundClients.length"
+                @change="onClientChange"
+              >
+                <option disabled value="">{{ $t('pacs.admin.clientPlaceholder') }}</option>
+                <option v-for="c in playgroundClients" :key="c.email" :value="c.email">
+                  {{ c.fullName || c.email }} · {{ c.petCount }} · {{ c.email }}
+                </option>
+              </select>
+            </label>
+            <label class="admin-pacs-pet-label">
               <span>{{ $t('pacs.admin.petSelect') }}</span>
               <select
                 v-model="selectedPetId"
                 data-testid="admin-pacs-pet-select"
-                :disabled="!playgroundPets.length"
+                :disabled="!selectedClientEmail || petsLoading || !playgroundPets.length"
               >
                 <option disabled value="">{{ $t('pacs.admin.petPlaceholder') }}</option>
                 <option v-for="p in playgroundPets" :key="p.id" :value="p.id">
@@ -74,36 +88,44 @@
                 </option>
               </select>
             </label>
-            <label class="admin-pacs-pet-label">
-              <span>{{ $t('pacs.admin.petIdManual') }}</span>
-              <input
-                v-model="manualPetId"
-                type="text"
-                data-testid="admin-pacs-pet-id-input"
-                :placeholder="$t('pacs.admin.petIdPlaceholder')"
-                autocomplete="off"
-                spellcheck="false"
-              >
-            </label>
-            <ProButton
-              variant="secondary"
-              data-testid="admin-pacs-apply-pet"
-              :disabled="!manualPetId.trim()"
-              @click="applyManualPet"
-            >
-              {{ $t('pacs.admin.applyPet') }}
-            </ProButton>
             <ProButton
               variant="secondary"
               data-testid="admin-pacs-reload-pets"
-              :disabled="petsLoading"
-              @click="loadPlaygroundPets"
+              :disabled="clientsLoading || petsLoading"
+              @click="reloadPicker"
             >
               {{ $t('pacs.admin.reloadPets') }}
             </ProButton>
           </div>
+          <details class="admin-pacs-advanced">
+            <summary>{{ $t('pacs.admin.advancedPetId') }}</summary>
+            <div class="admin-pacs-playground-bar">
+              <label class="admin-pacs-pet-label">
+                <span>{{ $t('pacs.admin.petIdManual') }}</span>
+                <input
+                  v-model="manualPetId"
+                  type="text"
+                  data-testid="admin-pacs-pet-id-input"
+                  :placeholder="$t('pacs.admin.petIdPlaceholder')"
+                  autocomplete="off"
+                  spellcheck="false"
+                >
+              </label>
+              <ProButton
+                variant="secondary"
+                data-testid="admin-pacs-apply-pet"
+                :disabled="!manualPetId.trim()"
+                @click="applyManualPet"
+              >
+                {{ $t('pacs.admin.applyPet') }}
+              </ProButton>
+            </div>
+          </details>
           <p v-if="petsError" class="pro-error" role="alert">{{ petsError }}</p>
-          <p v-if="!activePetId" class="pro-hint" data-testid="admin-pacs-no-pet">
+          <p v-if="!selectedClientEmail" class="pro-hint" data-testid="admin-pacs-no-client">
+            {{ $t('pacs.admin.noClientSelected') }}
+          </p>
+          <p v-else-if="!activePetId" class="pro-hint" data-testid="admin-pacs-no-pet">
             {{ $t('pacs.admin.noPetSelected') }}
           </p>
           <div v-else data-testid="admin-pacs-viewer-mount" class="admin-pacs-viewer-mount">
@@ -196,16 +218,29 @@ const pruneMsg = ref('')
 const metrics = ref<any>(null)
 const logs = ref<any[]>([])
 
-const playgroundPets = ref<{ id: string; name: string; species: string; practiceId: string }[]>([])
+type PlaygroundClient = { userId: string, email: string, fullName: string, petCount: number }
+type PlaygroundPet = { id: string, name: string, species: string, practiceId: string }
+
+const playgroundClients = ref<PlaygroundClient[]>([])
+const selectedClientEmail = ref('')
+const playgroundPets = ref<PlaygroundPet[]>([])
 const selectedPetId = ref('')
 const manualPetId = ref('')
+/** Applied only via « Ouvrir » — typing in the advanced field must not remount the viewer. */
+const appliedManualPetId = ref('')
+const clientsLoading = ref(false)
 const petsLoading = ref(false)
 const petsError = ref('')
+/** Bumps on each pets fetch so a slower older response cannot overwrite a newer client pick. */
+let petsLoadGen = 0
 
-const activePetId = computed(() => selectedPetId.value || manualPetId.value.trim())
+const activePetId = computed(() => selectedPetId.value || appliedManualPetId.value)
 
 watch(selectedPetId, (id) => {
-  if (id) manualPetId.value = id
+  if (id) {
+    manualPetId.value = id
+    appliedManualPetId.value = ''
+  }
 })
 
 const badgeVariant = computed(() => {
@@ -227,30 +262,85 @@ function onViewerDebug(entry: PacsDebugEntry) {
 function applyManualPet() {
   const id = manualPetId.value.trim()
   if (!id) return
-  selectedPetId.value = id
-  if (!playgroundPets.value.some(p => p.id === id)) {
-    // Keep select in sync when the UUID is not in the seed list.
-    manualPetId.value = id
+  if (playgroundPets.value.some(p => p.id === id)) {
+    selectedPetId.value = id
+    appliedManualPetId.value = ''
+    return
+  }
+  selectedPetId.value = ''
+  appliedManualPetId.value = id
+}
+
+async function loadPlaygroundClients() {
+  if (!pacsOn.value) return
+  clientsLoading.value = true
+  petsError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/pacs/playground-clients')
+    const data = res.data ?? res
+    playgroundClients.value = data.clients || []
+    if (!selectedClientEmail.value || !playgroundClients.value.some(c => c.email === selectedClientEmail.value)) {
+      selectedClientEmail.value = data.preferredEmail || playgroundClients.value[0]?.email || ''
+    }
+    if (selectedClientEmail.value) {
+      await loadPlaygroundPets(selectedClientEmail.value)
+    } else {
+      playgroundPets.value = []
+      selectedPetId.value = ''
+      appliedManualPetId.value = ''
+    }
+  } catch (e: any) {
+    petsError.value = e?.data?.message || e?.message || 'clients_failed'
+  } finally {
+    clientsLoading.value = false
   }
 }
 
-async function loadPlaygroundPets() {
-  if (!pacsOn.value) return
+async function loadPlaygroundPets(ownerEmail: string) {
+  if (!pacsOn.value || !ownerEmail) return
+  const gen = ++petsLoadGen
   petsLoading.value = true
   petsError.value = ''
   try {
-    const res: any = await $fetch('/api/admin/pacs/playground-pets')
+    const res: any = await $fetch('/api/admin/pacs/playground-pets', {
+      query: { ownerEmail },
+    })
+    if (gen !== petsLoadGen) return
     const data = res.data ?? res
     playgroundPets.value = data.pets || []
     if (!selectedPetId.value || !playgroundPets.value.some(p => p.id === selectedPetId.value)) {
       selectedPetId.value = data.preferredPetId || playgroundPets.value[0]?.id || ''
     }
-    if (selectedPetId.value) manualPetId.value = selectedPetId.value
+    if (selectedPetId.value) {
+      manualPetId.value = selectedPetId.value
+      appliedManualPetId.value = ''
+    }
   } catch (e: any) {
+    if (gen !== petsLoadGen) return
+    playgroundPets.value = []
+    selectedPetId.value = ''
+    appliedManualPetId.value = ''
     petsError.value = e?.data?.message || e?.message || 'pets_failed'
   } finally {
+    if (gen === petsLoadGen) petsLoading.value = false
+  }
+}
+
+async function onClientChange() {
+  selectedPetId.value = ''
+  manualPetId.value = ''
+  appliedManualPetId.value = ''
+  playgroundPets.value = []
+  petsLoadGen++
+  if (selectedClientEmail.value) {
+    await loadPlaygroundPets(selectedClientEmail.value)
+  } else {
     petsLoading.value = false
   }
+}
+
+async function reloadPicker() {
+  await loadPlaygroundClients()
 }
 
 async function load() {
@@ -331,7 +421,7 @@ async function pruneOrphans() {
 let poll: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   void load()
-  void loadPlaygroundPets()
+  void loadPlaygroundClients()
   poll = setInterval(() => { void load() }, 5000)
 })
 onBeforeUnmount(() => {
@@ -367,6 +457,15 @@ onBeforeUnmount(() => {
   gap: 0.75rem;
   align-items: flex-end;
   margin-bottom: 1rem;
+}
+.admin-pacs-advanced {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+.admin-pacs-advanced summary {
+  cursor: pointer;
+  opacity: 0.85;
+  margin-bottom: 0.5rem;
 }
 .admin-pacs-pet-label {
   display: flex;

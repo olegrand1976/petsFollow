@@ -926,8 +926,8 @@ func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID
 // Idempotent. Called after EnsureDemoOpsVetProfiles + seedResearchDemo.
 func EnsureDemoMultiSwitchProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
 	type target struct {
-		email     string
-		homeRole  kernel.Role
+		email      string
+		homeRole   kernel.Role
 		extraRoles []kernel.Role
 	}
 	// Staff roles handled separately (practice + team_members).

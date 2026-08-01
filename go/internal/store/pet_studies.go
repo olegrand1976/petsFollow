@@ -205,6 +205,43 @@ func (s *Store) DeletePetStudyByID(ctx context.Context, id string) error {
 	return nil
 }
 
+// PlaygroundPacsClient is a seed client (@petsfollow.test) with at least one pet — admin PACS picker.
+type PlaygroundPacsClient struct {
+	UserID   string `json:"userId"`
+	Email    string `json:"email"`
+	FullName string `json:"fullName"`
+	PetCount int    `json:"petCount"`
+}
+
+// ListPlaygroundPacsClients returns demo clients for the admin PACS client→pet picker (no arbitrary PHI).
+func (s *Store) ListPlaygroundPacsClients(ctx context.Context) ([]PlaygroundPacsClient, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT u.id::text, u.email, COALESCE(u.full_name, ''), COUNT(p.id)::int
+		FROM identity.users u
+		JOIN pets.pets p ON p.owner_user_id = u.id
+		WHERE u.role = 'client'
+		  AND u.email LIKE '%@petsfollow.test'
+		  AND u.email NOT LIKE '%@deleted.petsfollow.invalid'
+		GROUP BY u.id, u.email, u.full_name
+		HAVING COUNT(p.id) > 0
+		ORDER BY u.full_name, u.email
+		LIMIT 200
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []PlaygroundPacsClient
+	for rows.Next() {
+		var c PlaygroundPacsClient
+		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.PetCount); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 // PetStudyComment is an append-only clinical note on an imaging.pet_studies row.
 type PetStudyComment struct {
 	ID        string                `json:"id"`

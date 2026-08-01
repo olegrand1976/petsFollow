@@ -1142,7 +1142,21 @@ func TestPacsAdminPlaygroundAccess(t *testing.T) {
 		t.Fatalf("non-seed email expected 400 validation_error got %d %#v", code, env)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets", adminTok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-clients", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("playground-clients %d %#v", code, env)
+	}
+	clientsData := dataMap(t, env)
+	clients, ok := clientsData["clients"].([]any)
+	if !ok || len(clients) == 0 {
+		t.Fatalf("expected seed clients %#v", env)
+	}
+	prefEmail, _ := clientsData["preferredEmail"].(string)
+	if prefEmail != "client.demo@petsfollow.test" {
+		t.Fatalf("preferredEmail=%q want client.demo %#v", prefEmail, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets?ownerEmail="+prefEmail, adminTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("playground-pets %d %#v", code, env)
 	}
@@ -1163,6 +1177,15 @@ func TestPacsAdminPlaygroundAccess(t *testing.T) {
 
 	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-clients", vetTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("vet playground-clients expected 403 got %d", code)
+	}
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets", vetTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("vet playground-pets expected 403 got %d", code)
+	}
+
 	petID := activeDemoPetID(t, api.handler, clientTok)
 	code, env = doAuthPacsUpload(t, api.handler, petID, vetTok, "admin-play.dcm", minimalDicomPayload())
 	if code != http.StatusCreated {
@@ -1175,11 +1198,6 @@ func TestPacsAdminPlaygroundAccess(t *testing.T) {
 	}
 	if dataMap(t, env)["ID"] != studyID {
 		t.Fatalf("admin study proxy body %#v", env)
-	}
-
-	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets", vetTok, nil)
-	if code != http.StatusForbidden {
-		t.Fatalf("vet playground-pets expected 403 got %d", code)
 	}
 }
 

@@ -81,6 +81,7 @@ func (a *API) registerAdminPacsRoutes(pr chi.Router) {
 	pr.Post("/admin/pacs/wake", a.adminPacsWake)
 	pr.Post("/admin/pacs/prune-orphans", a.adminPacsPruneOrphans)
 	pr.Get("/admin/pacs/playground-pets", a.adminPacsPlaygroundPets)
+	pr.Get("/admin/pacs/playground-clients", a.adminPacsPlaygroundClients)
 }
 
 func (a *API) requirePacsEnabled(w http.ResponseWriter, r *http.Request) bool {
@@ -427,6 +428,39 @@ func (a *API) adminPacsPruneOrphans(w http.ResponseWriter, r *http.Request) {
 		"skipped":   skipped,
 		"dryRun":    dryRun,
 		"truncated": truncated,
+	})
+}
+
+// adminPacsPlaygroundClients lists seed clients (*@petsfollow.test) that own pets — step 1 of the PACS picker.
+func (a *API) adminPacsPlaygroundClients(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	items, err := a.store.ListPlaygroundPacsClients(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if items == nil {
+		items = []store.PlaygroundPacsClient{}
+	}
+	preferred := ""
+	const demoEmail = "client.demo@petsfollow.test"
+	for _, c := range items {
+		if c.Email == demoEmail {
+			preferred = demoEmail
+			break
+		}
+	}
+	if preferred == "" && len(items) > 0 {
+		preferred = items[0].Email
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"preferredEmail": preferred,
+		"clients":        items,
 	})
 }
 

@@ -11,7 +11,6 @@ func TestCalculateBPM(t *testing.T) {
 	}
 }
 
-
 func TestSupportsHeartRateControl(t *testing.T) {
 	if !SupportsHeartRateControl("dog") || !SupportsHeartRateControl("cat") || !SupportsHeartRateControl("horse") {
 		t.Fatal("expected dog/cat/horse supported")
@@ -111,27 +110,22 @@ func TestNormalizeDeskIdleMinutes(t *testing.T) {
 }
 
 func TestCanActivateProfile(t *testing.T) {
-	adminOwned := []Role{RoleAdmin, RoleVet, RoleSecretary, RoleCommercial, RoleCommercialManager, RoleResearch, RoleDev}
-	managerOwned := []Role{RoleCommercialManager, RoleCommercial, RoleVet, RoleSecretary, RoleResearch, RoleDev}
-	commercialOwned := []Role{RoleCommercial, RoleVet, RoleSecretary, RoleResearch, RoleDev}
-	vetOwned := []Role{RoleVet, RoleClient, RoleResearch}
-
-	if !CanActivateProfile(adminOwned, RoleSecretary) || !CanActivateProfile(adminOwned, RoleAdmin) {
-		t.Fatal("admin should activate any owned role")
+	if !CanActivateProfile(RoleAdmin, RoleSecretary) || !CanActivateProfile(RoleAdmin, RoleAdmin) {
+		t.Fatal("admin home should activate any role")
 	}
-	if CanActivateProfile(managerOwned, RoleAdmin) {
-		t.Fatal("manager must not activate admin")
+	if CanActivateProfile(RoleCommercialManager, RoleAdmin) {
+		t.Fatal("manager home must not activate admin")
 	}
-	if !CanActivateProfile(managerOwned, RoleCommercial) || !CanActivateProfile(managerOwned, RoleCommercialManager) {
-		t.Fatal("manager should activate commercial and return to manager")
+	if !CanActivateProfile(RoleCommercialManager, RoleCommercial) || !CanActivateProfile(RoleCommercialManager, RoleCommercialManager) {
+		t.Fatal("manager home should activate commercial and return to manager")
 	}
-	if CanActivateProfile(commercialOwned, RoleAdmin) || CanActivateProfile(commercialOwned, RoleCommercialManager) {
-		t.Fatal("commercial must not activate admin or manager")
+	if CanActivateProfile(RoleCommercial, RoleAdmin) || CanActivateProfile(RoleCommercial, RoleCommercialManager) {
+		t.Fatal("commercial home must not activate admin or manager")
 	}
-	if !CanActivateProfile(commercialOwned, RoleSecretary) {
-		t.Fatal("commercial should activate secretary")
+	if !CanActivateProfile(RoleCommercial, RoleSecretary) {
+		t.Fatal("commercial home should activate secretary")
 	}
-	if !CanActivateProfile(vetOwned, RoleResearch) {
-		t.Fatal("non-sales owned profiles unrestricted beyond ownership")
+	if !CanActivateProfile(RoleVet, RoleResearch) {
+		t.Fatal("non-sales home unrestricted beyond ownership")
 	}
 }

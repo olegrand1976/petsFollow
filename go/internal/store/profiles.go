@@ -17,13 +17,13 @@ var (
 )
 
 type Profile struct {
-	ID                     string      `json:"id"`
-	UserID                 string      `json:"userId"`
-	Role                   kernel.Role `json:"role"`
-	PracticeID             string      `json:"practiceId,omitempty"`
-	ProfessionalSpecialty  string      `json:"professionalSpecialty,omitempty"`
-	CreatedAt              time.Time   `json:"createdAt"`
-	Active                 bool        `json:"active"`
+	ID                    string      `json:"id"`
+	UserID                string      `json:"userId"`
+	Role                  kernel.Role `json:"role"`
+	PracticeID            string      `json:"practiceId,omitempty"`
+	ProfessionalSpecialty string      `json:"professionalSpecialty,omitempty"`
+	CreatedAt             time.Time   `json:"createdAt"`
+	Active                bool        `json:"active"`
 }
 
 // EnsureUserProfiles creates the primary profile from users.role and, for pro roles, a personal client profile.
@@ -149,11 +149,11 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 	if err != nil {
 		return Profile{}, err
 	}
-	owned, oerr := s.listOwnedRoles(ctx, userID)
-	if oerr != nil {
-		return Profile{}, oerr
+	home, herr := s.homeSwitchRole(ctx, userID)
+	if herr != nil {
+		return Profile{}, herr
 	}
-	if !kernel.CanActivateProfile(owned, p.Role) {
+	if !kernel.CanActivateProfile(home, p.Role) {
 		return Profile{}, ErrForbidden
 	}
 	if kernel.IsPracticeStaff(p.Role) && p.PracticeID != "" {
@@ -195,21 +195,21 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 	return p, nil
 }
 
-func (s *Store) listOwnedRoles(ctx context.Context, userID string) ([]kernel.Role, error) {
-	rows, err := s.pool.Query(ctx, `SELECT role FROM identity.profiles WHERE user_id=$1`, userID)
+// homeSwitchRole returns the earliest non-client profile role (account primary for switch matrix).
+func (s *Store) homeSwitchRole(ctx context.Context, userID string) (kernel.Role, error) {
+	var role string
+	err := s.pool.QueryRow(ctx, `
+		SELECT role FROM identity.profiles
+		WHERE user_id=$1 AND role <> 'client'
+		ORDER BY created_at ASC, id ASC
+		LIMIT 1`, userID).Scan(&role)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	defer rows.Close()
-	var out []kernel.Role
-	for rows.Next() {
-		var role string
-		if err := rows.Scan(&role); err != nil {
-			return nil, err
-		}
-		out = append(out, kernel.Role(role))
-	}
-	return out, rows.Err()
+	return kernel.Role(role), nil
 }
 
 // syncTeamRoleForStaffProfile aligns team_members.team_role with the active staff profile
@@ -245,8 +245,8 @@ func kernelRoleToTeamRole(role kernel.Role) TeamRole {
 }
 
 type AttachProfileInput struct {
-	Role      kernel.Role
-	Specialty string
+	Role       kernel.Role
+	Specialty  string
 	PracticeID string
 }
 
