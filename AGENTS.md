@@ -28,7 +28,7 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 
 | Rôle | Email | Cabinet |
 |------|-------|---------|
-| Véto | `vet.demo@petsfollow.test` | Cabinet VetPlus Demo |
+| Véto | `vet.demo@petsfollow.test` | Cabinet VetPlus Demo — multi-profil aussi `research` (switch → `/research`) |
 | Véto | `vet.parc@petsfollow.test` | Clinique du Parc |
 | Véto | `vet.lyon@petsfollow.test` | Centre Cardio Animaux Lyon |
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |

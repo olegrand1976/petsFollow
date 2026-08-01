@@ -23,7 +23,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
 | `admin` / commercial* | Nuxt Pro | Inchangé — **seed démo only** : `admin.demo` multi-profils `admin` + `client` + `vet` (+ `research` en démo) (pas d’auto-profil client pour tout admin via `IsProRole`) |
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
-| `research` | Nuxt `/research` | Observatoire épidémio anonymisé (tag `dev`) — associable à `vet` / `admin` · doc [42](42-RESEARCH.md) · seed `research.demo` |
+| `research` | Nuxt `/research` | Observatoire épidémio anonymisé (tag `dev`) — associable à `vet` / `admin` · doc [42](42-RESEARCH.md) · seed `research.demo` **+** profil `research` sur `vet.demo` / `admin.demo` (switch) |
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 

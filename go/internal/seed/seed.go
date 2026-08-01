@@ -765,9 +765,14 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 			return fmt.Errorf("create research group: %w", err)
 		}
 		groupID = g.ID
-		_, _ = st.TryAddResearchGroupMemberByEmail(ctx, researchUserID, g.ID, "admin.demo@petsfollow.test")
 	} else {
 		groupID = groups[0].ID
+	}
+	// Multi-profil démo : vet.demo / admin.demo (profil research) rejoignent le réseau.
+	for _, email := range []string{"admin.demo@petsfollow.test", "vet.demo@petsfollow.test"} {
+		if _, err := st.TryAddResearchGroupMemberByEmail(ctx, researchUserID, groupID, email); err != nil {
+			return fmt.Errorf("add research group member %s: %w", email, err)
+		}
 	}
 	// Admin must enable Data room (prevents solo-group unlock in product paths).
 	if _, err := st.SetResearchGroupDataroomEnabled(ctx, groupID, true); err != nil {
@@ -783,10 +788,7 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 	if err != nil {
 		return fmt.Errorf("research density practice: %w", err)
 	}
-	week := time.Now().UTC().Truncate(24 * time.Hour)
-	for week.Weekday() != time.Monday {
-		week = week.AddDate(0, 0, -1)
-	}
+	week := store.ResearchIsoWeekMonday(time.Now())
 	// Distinct practice_id_hash (≥ k) — wiped on re-seed TRUNCATE; not tied to VetPlus opt-out.
 	for i := 0; i < store.ResearchKAnonymity; i++ {
 		hash := fmt.Sprintf("seed-dataroom-practice-%d", i)

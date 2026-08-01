@@ -119,10 +119,7 @@ func TestResearchGroupsAndDataRoom(t *testing.T) {
 		t.Fatalf("expected dataroomEnabled true: %#v", dataMap(t, env))
 	}
 
-	week := time.Now().UTC().Truncate(24 * time.Hour)
-	for week.Weekday() != time.Monday {
-		week = week.AddDate(0, 0, -1)
-	}
+	week := store.ResearchIsoWeekMonday(time.Now())
 	for i := 0; i < store.ResearchKAnonymity; i++ {
 		_, err := api.pool.Exec(ctx, `
 			INSERT INTO research.anon_events (

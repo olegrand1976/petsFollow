@@ -188,7 +188,10 @@
     "pet_not_in_practice": "L'animale non è collegato a questo studio",
     "pacs_study_other_practice": "Questo studio DICOM è già collegato a un altro studio",
     "pacs_instance_unavailable": "File DICOM assente sul server imaging (storage). Reimporta lo studio o aprine un altro.",
-    "pacs_error": "PACS error"
+    "pacs_error": "PACS error",
+    "research_dataroom_forbidden": "Data room non autorizzata — unisciti a un gruppo attivato da un admin",
+    "research_disabled": "Modulo Research disattivato",
+    "research_anon_salt_required": "Research non configurato (sale di anonimizzazione mancante)"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

@@ -120,6 +120,11 @@ func isoWeekMonday(t time.Time) time.Time {
 	return time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
 }
 
+// ResearchIsoWeekMonday is the exported ISO-week Monday (Europe/Brussels) for seed/tests.
+func ResearchIsoWeekMonday(t time.Time) time.Time {
+	return isoWeekMonday(t)
+}
+
 func ageBandFromBirth(birth *time.Time, at time.Time) string {
 	if birth == nil || birth.IsZero() || birth.After(at) {
 		return "unknown"
@@ -829,16 +834,17 @@ func (s *Store) ResearchHeatmap(ctx context.Context, species, signal, from, to s
 			return nil, fmt.Errorf("invalid_to_date")
 		}
 	}
+	// Gate on distinct practices (same bar as Data room) — volume alone is not enough.
 	q := `
-		SELECT postal_code, country_code, species, signal_type, SUM(event_count)::int
-		FROM research.weekly_aggregates
+		SELECT postal_code, country_code, species, signal_type, COUNT(*)::int
+		FROM research.anon_events
 		WHERE ($1 = '' OR species = $1)
 		  AND ($2 = '' OR signal_type = $2)
 		  AND ($3 = '' OR event_week >= $3::date)
 		  AND ($4 = '' OR event_week <= $4::date)
 		GROUP BY postal_code, country_code, species, signal_type
-		HAVING SUM(event_count) >= $5
-		ORDER BY SUM(event_count) DESC
+		HAVING COUNT(DISTINCT practice_id_hash) >= $5
+		ORDER BY COUNT(*) DESC
 		LIMIT 500`
 	rows, err := s.pool.Query(ctx, q, species, signal, from, to, ResearchKAnonymity)
 	if err != nil {
@@ -889,17 +895,20 @@ func (s *Store) ResearchTimeseries(ctx context.Context, species, signal, country
 }
 
 // ResearchAlerts returns simple z-score spikes vs prior 8 weeks (same CP+species+signal).
+// Current-week cells require ≥ ResearchKAnonymity distinct practice_id_hash.
 func (s *Store) ResearchAlerts(ctx context.Context) ([]ResearchAlert, error) {
 	rows, err := s.pool.Query(ctx, `
 		WITH latest AS (
 		  SELECT MAX(event_week) AS w FROM research.weekly_aggregates
 		),
 		cur AS (
-		  SELECT a.postal_code, a.country_code, a.species, a.signal_type, a.event_week, a.event_count
-		  FROM research.weekly_aggregates a, latest l
-		  WHERE a.event_week = l.w
-		    AND a.signal_type IN ('preconsult_syndrome', 'lab_flag', 'visit_volume')
-		    AND a.event_count >= $1
+		  SELECT e.postal_code, e.country_code, e.species, e.signal_type, e.event_week,
+		         COUNT(*)::int AS event_count
+		  FROM research.anon_events e, latest l
+		  WHERE e.event_week = l.w
+		    AND e.signal_type IN ('preconsult_syndrome', 'lab_flag', 'visit_volume')
+		  GROUP BY e.postal_code, e.country_code, e.species, e.signal_type, e.event_week
+		  HAVING COUNT(DISTINCT e.practice_id_hash) >= $1
 		),
 		base AS (
 		  SELECT a.postal_code, a.country_code, a.species, a.signal_type,

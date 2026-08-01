@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -166,6 +167,78 @@ func TestResearchMultiProfileAttachAdminOnly(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("expected research profile on user, got %#v", profiles)
+	}
+}
+
+func TestResearchHeatmapDistinctPractices(t *testing.T) {
+	t.Setenv("RESEARCH_ENABLED", "true")
+	t.Setenv("RESEARCH_ETL_SECRET", "test-research-etl")
+	t.Setenv("RESEARCH_ANON_SALT", "test-research-salt")
+	t.Setenv("APP_ENV", "test")
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+	ctx := context.Background()
+	ensureResearchDemoUser(t, api, st)
+
+	week := store.ResearchIsoWeekMonday(time.Now())
+	postal := "99119"
+	// Many events from a single practice must not unlock the cell.
+	for i := 0; i < 10; i++ {
+		_, err := api.pool.Exec(ctx, `
+			INSERT INTO research.anon_events (
+				id, event_week, postal_code, city, country_code, species, age_band,
+				signal_type, payload, source_hash, practice_id_hash
+			) VALUES ($1::uuid, $2::date, $3, 'Test', 'BE', 'dog', '1-7',
+				'visit_volume', '{}'::jsonb, $4, 'solo-practice-hash')
+			ON CONFLICT (source_hash) DO NOTHING`,
+			uuid.NewString(), week, postal, "test:heatmap-solo:"+uuid.NewString())
+		if err != nil {
+			t.Fatalf("insert solo: %v", err)
+		}
+	}
+
+	researchTok := loginToken(t, api.handler, "research.demo@petsfollow.test", "ResearchDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/research/heatmap?signal=visit_volume", researchTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("heatmap %d %#v", code, env)
+	}
+	items, _ := dataMap(t, env)["items"].([]any)
+	for _, raw := range items {
+		cell, _ := raw.(map[string]any)
+		if cell["postalCode"] == postal {
+			t.Fatalf("solo-practice cell must be hidden: %#v", cell)
+		}
+	}
+
+	for i := 0; i < store.ResearchKAnonymity; i++ {
+		_, err := api.pool.Exec(ctx, `
+			INSERT INTO research.anon_events (
+				id, event_week, postal_code, city, country_code, species, age_band,
+				signal_type, payload, source_hash, practice_id_hash
+			) VALUES ($1::uuid, $2::date, $3, 'Test', 'BE', 'dog', '1-7',
+				'visit_volume', '{}'::jsonb, $4, $5)
+			ON CONFLICT (source_hash) DO NOTHING`,
+			uuid.NewString(), week, postal, "test:heatmap-k:"+uuid.NewString(), "multi-hash-"+uuid.NewString())
+		if err != nil {
+			t.Fatalf("insert multi: %v", err)
+		}
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/research/heatmap?signal=visit_volume", researchTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("heatmap after density %d %#v", code, env)
+	}
+	found := false
+	items, _ = dataMap(t, env)["items"].([]any)
+	for _, raw := range items {
+		cell, _ := raw.(map[string]any)
+		if cell["postalCode"] == postal {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected heatmap cell for postal %s after ≥%d practices", postal, store.ResearchKAnonymity)
 	}
 }
 
