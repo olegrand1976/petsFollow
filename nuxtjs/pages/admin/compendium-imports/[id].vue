@@ -46,6 +46,13 @@
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-preview">
         <h3 class="pro-mb-md">{{ $t('admin.compendium.previewTitle') }}</h3>
         <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
+        <p
+          v-if="refCatalogCount === 0 && job.status === 'extracted'"
+          class="pro-hint pro-hint--error pro-mb-md"
+          data-testid="admin-compendium-catalog-empty"
+        >
+          {{ $t('admin.compendium.catalogEmpty') }}
+        </p>
         <div v-if="pendingCount > 0 && job.status === 'extracted'" class="pro-flex-gap pro-mb-md">
           <ProButton
             test-id="admin-compendium-confirm-ready"
@@ -61,10 +68,10 @@
             <tr>
               <th>#</th>
               <th>{{ $t('admin.compendium.colCnk') }}</th>
+              <th>{{ $t('admin.compendium.colSuggestedCnk') }}</th>
               <th>{{ $t('admin.compendium.colName') }}</th>
-              <th>{{ $t('admin.compendium.colAtc') }}</th>
+              <th>{{ $t('admin.compendium.colLab') }}</th>
               <th>{{ $t('admin.compendium.colForm') }}</th>
-              <th>{{ $t('admin.compendium.colAb') }}</th>
               <th>{{ $t('admin.compendium.colStatus') }}</th>
               <th>{{ $t('admin.compendium.colActions') }}</th>
             </tr>
@@ -82,6 +89,27 @@
                 <span v-else>{{ row.cnk }}</span>
               </td>
               <td>
+                <template v-if="row.status !== 'upserted' && row.status !== 'excluded' && candidates(row).length">
+                  <select
+                    class="pro-input"
+                    data-testid="admin-compendium-cnk-candidates"
+                    :value="row.cnk || row.suggestedCnk || ''"
+                    @change="onPickCandidate(row, ($event.target as HTMLSelectElement).value)"
+                  >
+                    <option value="">{{ $t('admin.compendium.pickCnk') }}</option>
+                    <option
+                      v-for="c in candidates(row)"
+                      :key="c.cnk"
+                      :value="c.cnk"
+                    >
+                      {{ c.cnk }} — {{ c.name }} ({{ Math.round((c.score || 0) * 100) }}%)
+                    </option>
+                  </select>
+                </template>
+                <span v-else-if="row.suggestedCnk">{{ row.suggestedCnk }}</span>
+                <span v-else>—</span>
+              </td>
+              <td>
                 <input
                   v-if="row.status !== 'upserted' && row.status !== 'excluded'"
                   v-model="row.name"
@@ -90,16 +118,22 @@
                 >
                 <span v-else>{{ row.name }}</span>
               </td>
-              <td>{{ row.atcCode || '—' }}</td>
+              <td>{{ row.manufacturer || '—' }}</td>
               <td>{{ row.pharmaceuticalForm || '—' }}</td>
-              <td>{{ row.isAntibiotic ? '✓' : '—' }}</td>
               <td>
                 <ProBadge :variant="rowStatusVariant(row.status)">{{ statusLabel(row.status) }}</ProBadge>
                 <span v-if="row.errorCode" class="pro-hint"> {{ row.errorCode }}</span>
               </td>
               <td>
                 <ProButton
-                  v-if="row.status === 'pending'"
+                  v-if="row.status === 'pending' && row.suggestedCnk && !row.cnk"
+                  variant="ghost"
+                  @click="patchRow(row, { cnk: row.suggestedCnk })"
+                >
+                  {{ $t('admin.compendium.acceptSuggested') }}
+                </ProButton>
+                <ProButton
+                  v-if="row.status === 'pending' && row.cnk"
                   variant="ghost"
                   @click="patchRow(row, { name: row.name, cnk: row.cnk })"
                 >
@@ -151,10 +185,31 @@ const loading = ref(true)
 const busy = ref(false)
 const job = ref<any>(null)
 const rows = ref<any[]>([])
+const refCatalogCount = ref(0)
 const commitMsg = ref('')
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
-const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending').length)
+const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending' && r.cnk).length)
+
+function candidates (row: any): Array<{ cnk: string; name: string; score?: number }> {
+  const raw = row?.matchCandidates
+  if (Array.isArray(raw)) return raw
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function onPickCandidate (row: any, cnk: string) {
+  if (!cnk) return
+  row.cnk = cnk
+  void patchRow(row, { cnk })
+}
 
 function statusVariant (status: string) {
   switch (status) {
@@ -176,6 +231,7 @@ async function load () {
   const data = res?.data ?? res
   job.value = data?.job ?? data
   rows.value = data?.rows ?? []
+  refCatalogCount.value = Number(data?.refCatalogCount ?? 0)
   loading.value = false
   if (job.value?.status === 'extracting') {
     startPoll()

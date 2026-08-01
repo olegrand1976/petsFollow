@@ -47,6 +47,7 @@
       </form>
     </ProCard>
 
+    <p v-if="deleteError" class="pro-hint pro-hint--error pro-mb-md" data-testid="admin-compendium-delete-error">{{ deleteError }}</p>
     <ProCard>
       <ProTable :empty="!jobs.length" :empty-title="$t('admin.compendium.empty')">
         <thead>
@@ -68,10 +69,18 @@
             <td><ProBadge :variant="statusVariant(j.status)">{{ statusLabel(j.status) }}</ProBadge></td>
             <td>{{ j.extractPct ?? 0 }}%</td>
             <td>{{ j.reviewPct ?? 0 }}%</td>
-            <td>
+            <td class="pro-flex-gap">
               <NuxtLink :to="`/admin/compendium-imports/${j.id}`" class="pro-link">
                 {{ $t('admin.compendium.open') }}
               </NuxtLink>
+              <ProButton
+                variant="ghost"
+                test-id="admin-compendium-delete"
+                :disabled="deletingId === j.id || j.status === 'extracting' || j.status === 'committing'"
+                @click="removeJob(j)"
+              >
+                {{ $t('admin.compendium.delete') }}
+              </ProButton>
             </td>
           </tr>
         </tbody>
@@ -91,6 +100,8 @@ const pageStart = ref(1)
 const pageEnd = ref(2)
 const uploading = ref(false)
 const uploadError = ref('')
+const deletingId = ref('')
+const deleteError = ref('')
 
 function statusVariant (status: string) {
   switch (status) {
@@ -111,6 +122,21 @@ function onFile (e: Event) {
 async function load () {
   const res: any = await $fetch('/api/admin/compendium-imports')
   jobs.value = res?.data?.items ?? res?.items ?? []
+}
+
+async function removeJob (j: { id: string; filename?: string; status?: string }) {
+  if (j.status === 'extracting' || j.status === 'committing') return
+  if (!confirm(t('admin.compendium.deleteConfirm', { file: j.filename || j.id }))) return
+  deletingId.value = j.id
+  deleteError.value = ''
+  try {
+    await $fetch(`/api/admin/compendium-imports/${j.id}`, { method: 'DELETE' })
+    jobs.value = jobs.value.filter(row => row.id !== j.id)
+  } catch (e: any) {
+    deleteError.value = e?.data?.error?.message ?? e?.statusMessage ?? t('admin.compendium.deleteFailed')
+  } finally {
+    deletingId.value = ''
+  }
 }
 
 async function upload () {

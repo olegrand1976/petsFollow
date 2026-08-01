@@ -41,5 +41,10 @@ test.describe('Compendium admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
     await page.getByTestId('admin-compendium-new').click()
     await expect(page.getByTestId('admin-compendium-upload-card')).toBeVisible()
     await expect(page.getByTestId('admin-compendium-file')).toBeVisible()
+
+    const deleteBtn = page.getByTestId('admin-compendium-delete').first()
+    if (await deleteBtn.isVisible().catch(() => false)) {
+      await expect(deleteBtn).toBeEnabled()
+    }
   })
 })

@@ -39,6 +39,7 @@ func (a *API) registerCompendiumImportRoutes(r chi.Router) {
 	r.Post("/admin/compendium-imports", a.adminCreateCompendiumImport)
 	r.Get("/admin/compendium-imports", a.adminListCompendiumImports)
 	r.Get("/admin/compendium-imports/{id}", a.adminGetCompendiumImport)
+	r.Delete("/admin/compendium-imports/{id}", a.adminDeleteCompendiumImport)
 	r.Post("/admin/compendium-imports/{id}/extract", a.adminStartCompendiumExtract)
 	r.Patch("/admin/compendium-imports/{id}/rows/{rowId}", a.adminPatchCompendiumRow)
 	r.Post("/admin/compendium-imports/{id}/confirm-ready", a.adminConfirmCompendiumReady)
@@ -189,6 +190,32 @@ func (a *API) adminGetCompendiumImport(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, detail)
 }
 
+func (a *API) adminDeleteCompendiumImport(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
+		return
+	}
+	id := chi.URLParam(r, "id")
+	key, err := a.store.DeleteCompendiumImportJob(r.Context(), id)
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if errors.Is(err, store.ErrConflict) {
+		writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
+		return
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if a.media != nil && strings.TrimSpace(key) != "" {
+		if err := a.media.Delete(r.Context(), key); err != nil {
+			log.Printf("compendium delete %s: media cleanup %s: %v", id, key, err)
+		}
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
@@ -276,21 +303,54 @@ func (a *API) runCompendiumExtract(jobID string) {
 
 	all := make([]store.CompendiumRowInsert, 0, len(meds))
 	for _, m := range meds {
-		status, code, msg := pharmacy.ClassifyExtractedRow(m, false)
-		raw, _ := json.Marshal(m)
-		sp := m.SourcePage
+		match := pharmacy.CNKMatchResult{}
+		if strings.TrimSpace(m.CNK) == "" && strings.TrimSpace(m.Name) != "" {
+			hits, searchErr := a.store.SearchRefMedications(ctx, m.Name, 10)
+			if searchErr != nil {
+				log.Printf("compendium extract %s: cnk search: %v", jobID, searchErr)
+			} else {
+				refs := make([]pharmacy.RefMedMatchInput, 0, len(hits))
+				for _, h := range hits {
+					refs = append(refs, pharmacy.RefMedMatchInput{
+						CNK:                h.CNK,
+						Name:               h.Name,
+						PharmaceuticalForm: h.PharmaceuticalForm,
+						PackSize:           h.PackSize,
+						Manufacturer:       manufacturerFromAFMPSMeta(h.AFMPSMeta),
+					})
+				}
+				match = pharmacy.SuggestCNK(m, refs)
+			}
+		}
+		classified, status, code, msg := pharmacy.ClassifyAfterMatch(m, match)
+		raw, _ := json.Marshal(classified)
+		candsRaw, _ := json.Marshal(match.Candidates)
+		if len(match.Candidates) == 0 {
+			candsRaw = []byte("[]")
+		}
+		sp := classified.SourcePage
 		if sp == nil {
 			p := job.PageStart
 			sp = &p
 		}
+		var scorePtr *float64
+		if match.Score > 0 || match.SuggestedCNK != "" {
+			sc := match.Score
+			scorePtr = &sc
+		}
 		all = append(all, store.CompendiumRowInsert{
 			SourcePage:         sp,
-			CNK:                m.CNK,
-			Name:               m.Name,
-			ATCCode:            m.ATCCode,
-			PharmaceuticalForm: m.PharmaceuticalForm,
-			PackSize:           m.PackSize,
-			IsAntibiotic:       m.IsAntibiotic,
+			CNK:                classified.CNK,
+			Name:               classified.Name,
+			Manufacturer:       classified.Manufacturer,
+			ActiveSubstance:    classified.ActiveSubstance,
+			ATCCode:            classified.ATCCode,
+			PharmaceuticalForm: classified.PharmaceuticalForm,
+			PackSize:           classified.PackSize,
+			IsAntibiotic:       classified.IsAntibiotic,
+			SuggestedCNK:       match.SuggestedCNK,
+			MatchScore:         scorePtr,
+			MatchCandidates:    candsRaw,
 			RawJSON:            raw,
 			Status:             status,
 			ErrorCode:          code,
@@ -302,6 +362,22 @@ func (a *API) runCompendiumExtract(jobID string) {
 		log.Printf("compendium extract %s: persist: %v", jobID, err)
 		_ = a.store.FailCompendiumImportJob(ctx, jobID, "persist_failed")
 	}
+}
+
+func manufacturerFromAFMPSMeta(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var meta map[string]any
+	if err := json.Unmarshal(raw, &meta); err != nil {
+		return ""
+	}
+	for _, k := range []string{"manufacturer", "lab", "labo", "holder", "titulaire"} {
+		if v, ok := meta[k].(string); ok && strings.TrimSpace(v) != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
 }
 
 func (a *API) adminPatchCompendiumRow(w http.ResponseWriter, r *http.Request) {

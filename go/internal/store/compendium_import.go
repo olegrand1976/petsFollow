@@ -44,10 +44,15 @@ type CompendiumImportRow struct {
 	SourcePage         *int            `json:"sourcePage,omitempty"`
 	CNK                string          `json:"cnk"`
 	Name               string          `json:"name"`
+	Manufacturer       string          `json:"manufacturer,omitempty"`
+	ActiveSubstance    string          `json:"activeSubstance,omitempty"`
 	ATCCode            string          `json:"atcCode"`
 	PharmaceuticalForm string          `json:"pharmaceuticalForm"`
 	PackSize           string          `json:"packSize"`
 	IsAntibiotic       bool            `json:"isAntibiotic"`
+	SuggestedCNK       string          `json:"suggestedCnk,omitempty"`
+	MatchScore         *float64        `json:"matchScore,omitempty"`
+	MatchCandidates    json.RawMessage `json:"matchCandidates,omitempty"`
 	RawJSON            json.RawMessage `json:"rawJson,omitempty"`
 	Status             string          `json:"status"`
 	ErrorCode          string          `json:"errorCode,omitempty"`
@@ -55,8 +60,9 @@ type CompendiumImportRow struct {
 }
 
 type CompendiumImportDetail struct {
-	Job  CompendiumImportJob   `json:"job"`
-	Rows []CompendiumImportRow `json:"rows"`
+	Job             CompendiumImportJob   `json:"job"`
+	Rows            []CompendiumImportRow `json:"rows"`
+	RefCatalogCount int                   `json:"refCatalogCount"`
 }
 
 type CreateCompendiumImportInput struct {
@@ -172,13 +178,23 @@ func (s *Store) GetCompendiumImportDetail(ctx context.Context, id string) (Compe
 	if err != nil {
 		return CompendiumImportDetail{}, err
 	}
-	return CompendiumImportDetail{Job: job, Rows: rows}, nil
+	n, _ := s.CountActiveRefMedications(ctx)
+	return CompendiumImportDetail{Job: job, Rows: rows, RefCatalogCount: n}, nil
+}
+
+func (s *Store) CountActiveRefMedications(ctx context.Context) (int, error) {
+	var n int
+	err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM pharmacy.ref_medications WHERE is_active`).Scan(&n)
+	return n, err
 }
 
 func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]CompendiumImportRow, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
 		FROM pharmacy.compendium_import_rows
 		WHERE job_id = $1
@@ -190,15 +206,18 @@ func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]C
 	out := make([]CompendiumImportRow, 0)
 	for rows.Next() {
 		var r CompendiumImportRow
-		var raw []byte
+		var raw, cands []byte
 		if err := rows.Scan(
 			&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-			&r.CNK, &r.Name, &r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+			&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+			&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+			&r.SuggestedCNK, &r.MatchScore, &cands,
 			&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
 		); err != nil {
 			return nil, err
 		}
 		r.RawJSON = raw
+		r.MatchCandidates = cands
 		out = append(out, r)
 	}
 	return out, rows.Err()
@@ -233,10 +252,15 @@ type CompendiumRowInsert struct {
 	SourcePage         *int
 	CNK                string
 	Name               string
+	Manufacturer       string
+	ActiveSubstance    string
 	ATCCode            string
 	PharmaceuticalForm string
 	PackSize           string
 	IsAntibiotic       bool
+	SuggestedCNK       string
+	MatchScore         *float64
+	MatchCandidates    json.RawMessage
 	RawJSON            json.RawMessage
 	Status             string
 	ErrorCode          string
@@ -260,6 +284,10 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 		if len(raw) == 0 {
 			raw = json.RawMessage(`{}`)
 		}
+		cands := row.MatchCandidates
+		if len(cands) == 0 {
+			cands = json.RawMessage(`[]`)
+		}
 		status := row.Status
 		if status == "" {
 			status = "pending"
@@ -272,17 +300,21 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO pharmacy.compendium_import_rows (
-				id, job_id, row_number, source_page, cnk, name, atc_code,
-				pharmaceutical_form, pack_size, is_antibiotic, raw_json,
-				status, error_code, error_message
+				id, job_id, row_number, source_page, cnk, name,
+				manufacturer, active_substance, atc_code,
+				pharmaceutical_form, pack_size, is_antibiotic,
+				suggested_cnk, match_score, match_candidates,
+				raw_json, status, error_code, error_message
 			) VALUES (
-				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,NULLIF($13,''),NULLIF($14,'')
+				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16::jsonb,$17,NULLIF($18,''),NULLIF($19,'')
 			)`,
 			uuid.NewString(), jobID, i+1, row.SourcePage,
 			strings.TrimSpace(row.CNK), strings.TrimSpace(row.Name),
+			strings.TrimSpace(row.Manufacturer), strings.TrimSpace(row.ActiveSubstance),
 			strings.TrimSpace(row.ATCCode), strings.TrimSpace(row.PharmaceuticalForm),
-			strings.TrimSpace(row.PackSize), row.IsAntibiotic, string(raw),
-			status, row.ErrorCode, row.ErrorMessage,
+			strings.TrimSpace(row.PackSize), row.IsAntibiotic,
+			strings.TrimSpace(row.SuggestedCNK), row.MatchScore, string(cands),
+			string(raw), status, row.ErrorCode, row.ErrorMessage,
 		); err != nil {
 			return err
 		}
@@ -310,6 +342,40 @@ func (s *Store) FailCompendiumImportJob(ctx context.Context, id, msg string) err
 	return err
 }
 
+// DeleteCompendiumImportJob removes a staging job (+ CASCADE rows).
+// Refuses extracting/committing. Does not touch pharmacy.ref_medications.
+// Returns the PDF object key for media cleanup.
+func (s *Store) DeleteCompendiumImportJob(ctx context.Context, id string) (pdfObjectKey string, err error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	var status, key string
+	err = tx.QueryRow(ctx, `
+		SELECT status, pdf_object_key
+		FROM pharmacy.compendium_import_jobs
+		WHERE id = $1
+		FOR UPDATE`, id).Scan(&status, &key)
+	if err == pgx.ErrNoRows {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	if status == "extracting" || status == "committing" {
+		return "", ErrConflict
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.compendium_import_jobs WHERE id = $1`, id); err != nil {
+		return "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return "", err
+	}
+	return key, nil
+}
+
 type PatchCompendiumRowInput struct {
 	CNK                *string
 	Name               *string
@@ -328,16 +394,20 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	defer tx.Rollback(ctx)
 
 	var r CompendiumImportRow
-	var raw []byte
+	var raw, cands []byte
 	err = tx.QueryRow(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
 		FROM pharmacy.compendium_import_rows
 		WHERE id = $1 AND job_id = $2
 		FOR UPDATE`, rowID, jobID).Scan(
 		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-		&r.CNK, &r.Name, &r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+		&r.SuggestedCNK, &r.MatchScore, &cands,
 		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
 	)
 	if err == pgx.ErrNoRows {
@@ -347,6 +417,7 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 		return r, err
 	}
 	r.RawJSON = raw
+	r.MatchCandidates = cands
 	if r.Status == "upserted" {
 		return r, ErrConflict
 	}

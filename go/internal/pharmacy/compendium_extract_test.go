@@ -23,4 +23,9 @@ func TestParseCompendiumExtractJSON(t *testing.T) {
 	if st != "error" || code != "missing_cnk" {
 		t.Fatalf("expected missing_cnk got %s %s", st, code)
 	}
+	raw2 := `{"medications":[{"name":"VETMULIN","manufacturer":"Huvepharma","activeSubstance":"tiamuline","packSize":"sac 1 kg","prescriptionOnly":true}]}`
+	meds2, err := ParseCompendiumExtractJSON(raw2)
+	if err != nil || len(meds2) != 1 || meds2[0].Manufacturer != "Huvepharma" {
+		t.Fatalf("enriched parse %#v %v", meds2, err)
+	}
 }
