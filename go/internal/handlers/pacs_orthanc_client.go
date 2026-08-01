@@ -106,6 +106,20 @@ func newOrthancClient(baseURL, user, password string, useIDToken bool) *orthancC
 	}
 }
 
+// cancelOnClose runs cancel once when the body is closed so a per-request
+// timeout stays alive until the caller finishes reading (not just until Do returns).
+type cancelOnClose struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+	once   sync.Once
+}
+
+func (c *cancelOnClose) Close() error {
+	err := c.ReadCloser.Close()
+	c.once.Do(c.cancel)
+	return err
+}
+
 func (c *orthancClient) do(ctx context.Context, method, path string, body io.Reader, contentType string, timeout time.Duration) (*http.Response, error) {
 	if c == nil {
 		return nil, fmt.Errorf("orthanc_not_configured")
@@ -130,14 +144,23 @@ func (c *orthancClient) do(ctx context.Context, method, path string, body io.Rea
 	} else if c.user != "" {
 		req.SetBasicAuth(c.user, c.password)
 	}
-	doCtx := ctx
 	var cancel context.CancelFunc
 	if timeout > 0 {
+		var doCtx context.Context
 		doCtx, cancel = context.WithTimeout(ctx, timeout)
-		defer cancel()
 		req = req.WithContext(doCtx)
 	}
-	return c.http.Do(req)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
+		return nil, err
+	}
+	if cancel != nil {
+		resp.Body = &cancelOnClose{ReadCloser: resp.Body, cancel: cancel}
+	}
+	return resp, nil
 }
 
 func (c *orthancClient) idTokenSource(ctx context.Context) (oauth2.TokenSource, error) {
