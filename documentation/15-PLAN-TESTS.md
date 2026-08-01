@@ -305,6 +305,7 @@ Compte : `commercial.demo@petsfollow.test`
 | E1.6 | P1 | Activer pet payant | Checkout / mock activation | Commission ledger |
 | E1.7 | P1 | Commissions | `/commercial/commissions` + payout profile | Montants + profil |
 | E1.8 | P2 | Pitch + mémo ASV | `/commercial/pitch` · `/commercial/asv-memo` | Contenu offre + leave-behind ASV (Imprimer / PDF) |
+| E1.8b | P2 | Flux produit | `/flux` (nav Offre) | Profils + parcours + liens croisés ; admin / commercial / manager · Playwright `07-commercial` |
 | E1.9 | P2 | Training IA | `/commercial/training` | Session Gemini (si clé) |
 | E1.10 | P2 | Settings | `/commercial/settings` | Locale / prefs + champ téléphone de contact |
 | E1.12 | P1 | Porte téléphone | Commercial sans `contactPhone` → toute page Pro | Redirection `/complete-contact-phone` ; après saisie, retour au tableau de bord ; pages publiques (`/dossier/**`, `/login`) non impactées |
@@ -497,9 +498,19 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 **PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` (wake inclus) sous `PACS_ENABLED` — Go `TestPacs*` (upload · preview/file via `ParentSeries` · isolation cross-cabinet · `UNIQUE(orthanc_study_id)` 409 · purge Orthanc rétention · admin wake 202 · frame OOR 404) · Vitest `pacsPoll` + `pacs-measure` (calibration mm) · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) + [`20c-pacs-ga-net.spec.ts`](../nuxtjs/tests/e2e/specs/20c-pacs-ga-net.spec.ts) (download + EOF) · doc [40](40-PACS.md) / [40-P2](40-PACS-P2.md). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
 
+**Research observatoire (tag `dev`)** : rôle `research` + opt-in cabinet + ETL anonymisé + UI `/research` + admin `/admin/research` + V2 groups/Data room sous `RESEARCH_ENABLED` — Go `TestResearch*` / `TestResearchGroupsAndDataRoom` / `TestValidateResearch` · Playwright `@p0` [`22-research.spec.ts`](../nuxtjs/tests/e2e/specs/22-research.spec.ts) · doc [42](42-RESEARCH.md). Staging : flags on + secrets ETL/salt + `make gcp-research-etl-scheduler`. Pas de useCase commercial tant que tag `dev`.
+
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
-| C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
+| R1 | P0 | Login research → overview | KPI visibles + badge `dev` |
+| R2 | P0 | Timeseries + heatmap | tables chargées (flag on) |
+| R3 | P0 | Admin opt-ins | `/admin/research` liste non vide après seed |
+| R4 | P1 | Flag off | API 404 `research_disabled` |
+| R5 | P0 | Groups + Data room | créer groupe ≠ unlock ; admin `dataroom_enabled` ; events k≥5 cabinets distincts sans city/PII/`payload` (scope réseau) |
+
+| ID | Prio | Cas | Attendu |
+|----|------|-----|---------|
+| C8.1 | P1 | Créer draft (prescriptions) | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
 | C8.5 | P1 | Prescription → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
@@ -732,7 +743,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
-| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation | `@p1` (filiation) |
+| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / `/flux` / filiation | `@p1` (filiation) |
 | `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
 | `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR | `@p0` (parcours chart/HR) + `@p1` CTA |
@@ -748,6 +759,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `20-pacs-admin` | Admin PACS metrics/logs/playground + **wake clic** (flag on) | `@p0` |
 | `20b-pacs-imaging` | Fiche animal onglet Imagerie + upload (canvas défaut ; Cornerstone si `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone`) | `@p0` |
 | `20c-pacs-ga-net` | P2.3 : download `.dcm` (magic DICM) + preview frame OOR → 404 (+ clamp canvas) | `@p0` |
+| `22-research` | Observatoire Research + admin opt-ins (flag on) | `@p0` |
 
 Local :
 

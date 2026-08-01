@@ -21,6 +21,7 @@ func (a *API) registerResearchRoutes(r chi.Router) {
 	r.Post("/vet/practice/research-opt-in", a.postResearchOptIn)
 	r.Delete("/vet/practice/research-opt-in", a.deleteResearchOptIn)
 	r.Get("/admin/research/opt-ins", a.adminListResearchOptIns)
+	a.registerResearchV2Routes(r)
 }
 
 func (a *API) requireResearchEnabled(w http.ResponseWriter, r *http.Request) bool {

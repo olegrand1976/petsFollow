@@ -406,7 +406,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
 	// ops.support_tickets (+ replies) are intentionally NOT truncated: staging support inbox must survive resets.
-	if _, err := tx.Exec(ctx, `TRUNCATE research.anon_events, research.weekly_aggregates, research.etl_watermarks`); err != nil {
+	if _, err := tx.Exec(ctx, `TRUNCATE research.group_members, research.groups, research.anon_events, research.weekly_aggregates, research.etl_watermarks`); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
@@ -744,6 +744,68 @@ func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) 
 	// Populate observatory KPIs for local demo (idempotent ETL watermarks).
 	if _, err := st.RunResearchETL(ctx, "petsfollow-research-dev-salt"); err != nil {
 		return fmt.Errorf("research seed ETL: %w", err)
+	}
+	if err := seedResearchGroupAndDensity(ctx, pool, st, userID); err != nil {
+		return err
+	}
+	return nil
+}
+
+// seedResearchGroupAndDensity creates a demo collaborative group + enough anon events
+// in one grain for Data room k-anonymity (≥5).
+func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *store.Store, researchUserID string) error {
+	groups, err := st.ListResearchGroupsForUser(ctx, researchUserID)
+	if err != nil {
+		return fmt.Errorf("list research groups: %w", err)
+	}
+	var groupID string
+	if len(groups) == 0 {
+		g, err := st.CreateResearchGroup(ctx, researchUserID, "Réseau démo BE", "Groupe seed — Data room collaborative")
+		if err != nil {
+			return fmt.Errorf("create research group: %w", err)
+		}
+		groupID = g.ID
+		_, _ = st.TryAddResearchGroupMemberByEmail(ctx, researchUserID, g.ID, "admin.demo@petsfollow.test")
+	} else {
+		groupID = groups[0].ID
+	}
+	// Admin must enable Data room (prevents solo-group unlock in product paths).
+	if _, err := st.SetResearchGroupDataroomEnabled(ctx, groupID, true); err != nil {
+		return fmt.Errorf("enable research dataroom: %w", err)
+	}
+	var postal, country string
+	err = pool.QueryRow(ctx, `
+		SELECT COALESCE(pr.postal_code,'1000'), COALESCE(pr.country_code,'BE')
+		FROM practice.practices pr
+		JOIN identity.users u ON u.practice_id = pr.id
+		WHERE u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&postal, &country)
+	if err != nil {
+		return fmt.Errorf("research density practice: %w", err)
+	}
+	week := time.Now().UTC().Truncate(24 * time.Hour)
+	for week.Weekday() != time.Monday {
+		week = week.AddDate(0, 0, -1)
+	}
+	// Distinct practice_id_hash (≥ k) — wiped on re-seed TRUNCATE; not tied to VetPlus opt-out.
+	for i := 0; i < store.ResearchKAnonymity; i++ {
+		hash := fmt.Sprintf("seed-dataroom-practice-%d", i)
+		_, err := pool.Exec(ctx, `
+			INSERT INTO research.anon_events (
+				id, event_week, postal_code, city, country_code, species, age_band,
+				signal_type, payload, source_hash, practice_id_hash
+			) VALUES (
+				$1::uuid, $2::date, $3, 'Bruxelles', $4, 'dog', '1-7',
+				'visit_volume', '{}'::jsonb, $5, $6
+			)
+			ON CONFLICT (source_hash) DO NOTHING`,
+			uuid.NewString(), week, postal, country, fmt.Sprintf("seed:dataroom:%d", i), hash)
+		if err != nil {
+			return fmt.Errorf("research density event: %w", err)
+		}
+	}
+	if err := st.RebuildResearchWeeklyAggregates(ctx); err != nil {
+		return fmt.Errorf("research density aggregates: %w", err)
 	}
 	return nil
 }

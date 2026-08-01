@@ -167,6 +167,42 @@ raise SystemExit(1)
   exit 1
 }
 
+# Crée (une fois) une clé JSON pour ${SA_EMAIL} → Secret Manager, montée en fichier
+# sur Cloud Run. Le plugin Orthanc GoogleCloudStorage n'accepte pas l'ADC.
+ensure_gcs_sa_secret() {
+  if gcloud secrets describe "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    echo "  Secret ${GCS_SA_SECRET} existe"
+  else
+    echo "→ Création clé SA ${SA_EMAIL} → secret ${GCS_SA_SECRET}"
+    local keyfile
+    keyfile="$(mktemp)"
+    if ! gcloud iam service-accounts keys create "$keyfile" \
+      --iam-account="$SA_EMAIL" \
+      --project="$GCP_PROJECT_ID" \
+      --quiet; then
+      rm -f "$keyfile"
+      echo "ERREUR: iam.serviceAccountKeys.create refusé pour ${SA_EMAIL}" >&2
+      echo "  Crée manuellement le secret ${GCS_SA_SECRET} (JSON key) puis relance." >&2
+      exit 1
+    fi
+    gcloud secrets create "$GCS_SA_SECRET" \
+      --project="$GCP_PROJECT_ID" \
+      --data-file="$keyfile" \
+      --replication-policy=automatic \
+      --quiet
+    rm -f "$keyfile"
+    echo "  Secret ${GCS_SA_SECRET} créé"
+  fi
+  if ! gcloud secrets add-iam-policy-binding "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet >/dev/null 2>&1; then
+    echo "  WARN: IAM secretAccessor sur ${GCS_SA_SECRET} ignoré (SA sans setIamPolicy)" >&2
+  fi
+}
+
 deploy_orthanc_run() {
   local pg_host="$1"
   local env_file

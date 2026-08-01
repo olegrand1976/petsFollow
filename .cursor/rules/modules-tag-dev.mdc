@@ -29,5 +29,6 @@ V1 = brouillons + preview PDF uniquement. Ne pas présenter comme produit signé
 - Pharmacie `/medicaments`, `/stock`, `/daf` — `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED`
 - **PACS** onglet Imagerie fiche animal + `/admin/pacs` — `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` — doc [`40-PACS.md`](documentation/40-PACS.md)
 - **AFMPS / Compendium** admin `/admin/afmps-imports` + `/admin/compendium-imports` — même flag `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED` — doc [`27-PHARMACIE-BELGIQUE.md`](documentation/27-PHARMACIE-BELGIQUE.md) (triple contrôle CSV ; PDF + matching CNK)
+- **Research** `/research` (+ `/admin/research` opt-ins) — `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` — doc [`42-RESEARCH.md`](documentation/42-RESEARCH.md)
 
 Retirer le badge `nav.tagDev` **uniquement** au passage GA (décision produit explicite).

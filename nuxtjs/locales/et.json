@@ -83,7 +83,11 @@
     "adminAfmps": "AFMPS import",
     "researchOverview": "Observatoorium",
     "researchHeatmap": "Piirkondlik kaart",
-    "researchAlerts": "Hoiatused"
+    "researchAlerts": "Hoiatused",
+    "researchTimeseries": "Ajaseeriad",
+    "adminResearch": "Research opt-in",
+    "researchGroups": "Grupid",
+    "researchDataroom": "Data room"
   },
   "auth": {
     "login": {
@@ -1859,6 +1863,24 @@
         "unchanged": "Unchanged",
         "error": "Error"
       }
+    },
+    "research": {
+      "title": "Research — opt-in kliinikud",
+      "subtitle": "Anonüümsele observatooriumile panustavad kliinikud (tag dev).",
+      "empty": "Opt-in kliinikuid pole.",
+      "loadError": "Opt-in loendi laadimine ebaõnnestus.",
+      "colName": "Kliinik",
+      "colPostal": "Indeks",
+      "colCity": "Linn",
+      "colCountry": "Riik",
+      "colOptedInAt": "Opt-in",
+      "optInsTitle": "Opted-in practices",
+      "groupsTitle": "Research groups",
+      "groupsHint": "Only an admin can enable the Data room for a group (multi-practice k-anonymity).",
+      "groupsEmpty": "No groups.",
+      "groupsLoadError": "Could not load / update groups.",
+      "enableDataroom": "Enable Data room",
+      "disableDataroom": "Disable Data room"
     }
   },
   "commissions": {
@@ -3853,7 +3875,9 @@
     },
     "filters": {
       "species": "Species (e.g. dog)",
-      "signal": "Signal (e.g. visit_volume)"
+      "signal": "Signal (e.g. visit_volume)",
+      "country": "Riik (nt BE)",
+      "postalCode": "Postiindeks"
     },
     "signals": {
       "preconsult_syndrome": "Preconsult",
@@ -3879,6 +3903,48 @@
     "accountSettings": {
       "title": "Research account",
       "subtitle": "Language and password for the Research profile."
+    },
+    "timeseries": {
+      "title": "Ajaseeriad",
+      "subtitle": "Nädalane koondmaht (liigi / signaali / piirkonna filtrid).",
+      "empty": "Nende filtrite jaoks seeriaid pole.",
+      "week": "Nädal",
+      "count": "Maht"
+    },
+    "groups": {
+      "title": "Research grupid",
+      "subtitle": "Collaborative analysis — Data room access requires group membership.",
+      "createTitle": "New group",
+      "name": "Name",
+      "description": "Description",
+      "create": "Loo",
+      "createError": "Could not create the group.",
+      "empty": "No groups yet.",
+      "members": "Members",
+      "role": "Role",
+      "open": "Open",
+      "back": "Back to groups",
+      "addMember": "Add a Research member",
+      "memberEmail": "Research email",
+      "add": "Add",
+      "memberError": "Could not add/remove (Research profile required).",
+      "noMembers": "No members.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "dataroom": "Data room",
+      "dataroomOn": "Enabled",
+      "dataroomOff": "Disabled"
+    },
+    "dataroom": {
+      "title": "Data room",
+      "subtitle": "Anonüümsed mikro-sündmused opt-in võrgust (k≥5 praktikat). Grupp avab ligipääsu; andmeid ei filtreeri.",
+      "goGroups": "View groups",
+      "kAnonHint": "Ainult terad vähemalt {k} erineva praktikaga. Ilma üksikasjaliku kliinilise payloadita.",
+      "empty": "No eligible events for these filters.",
+      "week": "Week",
+      "ageBand": "Age band",
+      "forbiddenTitle": "Data room not allowed",
+      "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
     }
   }
 }

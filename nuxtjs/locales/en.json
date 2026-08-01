@@ -83,7 +83,11 @@
     "adminAfmps": "AFMPS import",
     "researchOverview": "Observatory",
     "researchHeatmap": "Regional map",
-    "researchAlerts": "Alerts"
+    "researchAlerts": "Alerts",
+    "researchTimeseries": "Timeseries",
+    "adminResearch": "Research opt-in",
+    "researchGroups": "Groups",
+    "researchDataroom": "Data room"
   },
   "auth": {
     "login": {
@@ -1890,6 +1894,24 @@
         "unchanged": "Unchanged",
         "error": "Error"
       }
+    },
+    "research": {
+      "title": "Research — opted-in practices",
+      "subtitle": "Practices contributing to the anonymized observatory (dev tag).",
+      "empty": "No opted-in practices.",
+      "loadError": "Could not load the opt-in list.",
+      "colName": "Practice",
+      "colPostal": "Postcode",
+      "colCity": "City",
+      "colCountry": "Country",
+      "colOptedInAt": "Opted in at",
+      "optInsTitle": "Opted-in practices",
+      "groupsTitle": "Research groups",
+      "groupsHint": "Only an admin can enable the Data room for a group (multi-practice k-anonymity).",
+      "groupsEmpty": "No groups.",
+      "groupsLoadError": "Could not load / update groups.",
+      "enableDataroom": "Enable Data room",
+      "disableDataroom": "Disable Data room"
     }
   },
   "commissions": {
@@ -3884,7 +3906,9 @@
     },
     "filters": {
       "species": "Species (e.g. dog)",
-      "signal": "Signal (e.g. visit_volume)"
+      "signal": "Signal (e.g. visit_volume)",
+      "country": "Country (e.g. BE)",
+      "postalCode": "Postal code"
     },
     "signals": {
       "preconsult_syndrome": "Preconsult",
@@ -3910,6 +3934,48 @@
     "accountSettings": {
       "title": "Research account",
       "subtitle": "Language and password for the Research profile."
+    },
+    "timeseries": {
+      "title": "Timeseries",
+      "subtitle": "Weekly aggregated volume (species / signal / region filters).",
+      "empty": "No series for these filters.",
+      "week": "Week",
+      "count": "Volume"
+    },
+    "groups": {
+      "title": "Research groups",
+      "subtitle": "Collaborative analysis — Data room access requires group membership.",
+      "createTitle": "New group",
+      "name": "Name",
+      "description": "Description",
+      "create": "Create",
+      "createError": "Could not create the group.",
+      "empty": "No groups yet.",
+      "members": "Members",
+      "role": "Role",
+      "open": "Open",
+      "back": "Back to groups",
+      "addMember": "Add a Research member",
+      "memberEmail": "Research email",
+      "add": "Add",
+      "memberError": "Could not add/remove (Research profile required).",
+      "noMembers": "No members.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "dataroom": "Data room",
+      "dataroomOn": "Enabled",
+      "dataroomOff": "Disabled"
+    },
+    "dataroom": {
+      "title": "Data room",
+      "subtitle": "Anonymized micro-events across the opt-in network (k≥5 practices). Group membership unlocks access; it does not filter the dataset.",
+      "goGroups": "View groups",
+      "kAnonHint": "Only grains with at least {k} distinct practices are listed. No detailed clinical payload.",
+      "empty": "No eligible events for these filters.",
+      "week": "Week",
+      "ageBand": "Age band",
+      "forbiddenTitle": "Data room not allowed",
+      "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
     }
   }
 }

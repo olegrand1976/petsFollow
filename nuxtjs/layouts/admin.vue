@@ -31,6 +31,7 @@ const { isStagingLike } = useAppEnv()
 const runtimeConfig = useRuntimeConfig()
 const billitOn = computed(() => isPublicFlagOn(runtimeConfig.public.billitEnabled))
 const pharmacyOn = computed(() => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled))
+const researchOn = computed(() => isPublicFlagOn(runtimeConfig.public.researchEnabled))
 if (!user.value) {
   await fetchUser().catch(() => null)
 }
@@ -49,6 +50,9 @@ const navItems = computed<ProNavItem[]>(() => {
       ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
         ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
         : []),
+      ...(researchOn.value
+        ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+        : []),
     ]
   }
   return [
@@ -66,6 +70,9 @@ const navItems = computed<ProNavItem[]>(() => {
     { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
     ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
       ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      : []),
+    ...(researchOn.value
+      ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
       : []),
     ...(isStagingLike.value
       ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
