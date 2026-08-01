@@ -138,3 +138,11 @@ func (s *Store) RecordProductDigestSend(ctx context.Context, digestDate time.Tim
 	}
 	return tag.RowsAffected() > 0, nil
 }
+
+// ClearProductDigestSend removes a send row so a later run can retry after SMTP failure.
+func (s *Store) ClearProductDigestSend(ctx context.Context, digestDate time.Time, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM ops.product_digest_sends
+		WHERE digest_date = $1::date AND user_id = $2::uuid`, digestDate, userID)
+	return err
+}

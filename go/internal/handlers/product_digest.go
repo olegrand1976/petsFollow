@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -64,8 +65,37 @@ func firstNonEmpty(m map[string]string, prefer string) string {
 }
 
 type productDigestIngestBody struct {
-	Date    string                       `json:"date"`
-	Commits []gemini.ProductDigestCommit `json:"commits"`
+	Date        string                       `json:"date"`
+	Branch      string                       `json:"branch"`
+	Environment string                       `json:"environment"`
+	Commits     []gemini.ProductDigestCommit `json:"commits"`
+}
+
+// digestDisplayLabel prefers deploy environment (staging/production), then git branch, then APP_ENV, else "local".
+func digestDisplayLabel(branch, environment, appEnvFallback string) string {
+	if e := strings.TrimSpace(environment); e != "" {
+		return e
+	}
+	if b := strings.TrimSpace(branch); b != "" {
+		return b
+	}
+	if e := strings.TrimSpace(appEnvFallback); e != "" {
+		return e
+	}
+	return "local"
+}
+
+func digestMetaBranch(meta json.RawMessage, appEnvFallback string) string {
+	if len(meta) == 0 {
+		return digestDisplayLabel("", "", appEnvFallback)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(meta, &m); err != nil {
+		return digestDisplayLabel("", "", appEnvFallback)
+	}
+	branch, _ := m["branch"].(string)
+	env, _ := m["environment"].(string)
+	return digestDisplayLabel(branch, env, appEnvFallback)
 }
 
 func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request) {
@@ -84,8 +114,16 @@ func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	branch := strings.TrimSpace(body.Branch)
+	environment := strings.TrimSpace(body.Environment)
+	source := digestDisplayLabel(branch, environment, os.Getenv("APP_ENV"))
 	commitsJSON, _ := json.Marshal(body.Commits)
-	meta, _ := json.Marshal(map[string]any{"commitCount": len(body.Commits)})
+	meta, _ := json.Marshal(map[string]any{
+		"commitCount": len(body.Commits),
+		"branch":      branch,
+		"environment": environment,
+		"source":      source,
+	})
 
 	if len(body.Commits) == 0 {
 		now := time.Now().UTC()
@@ -108,6 +146,7 @@ func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request
 			"status": "empty",
 			"date":   digestDate.Format("2006-01-02"),
 			"reason": "no_commits",
+			"branch": source,
 		})
 		return
 	}
@@ -134,6 +173,9 @@ func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request
 		"commitCount": len(body.Commits),
 		"empty":       summary.Empty,
 		"reason":      summary.Reason,
+		"branch":      branch,
+		"environment": environment,
+		"source":      source,
 	})
 	if err := a.store.UpsertProductDigest(r.Context(), store.ProductDigest{
 		DigestDate:       digestDate,
@@ -156,6 +198,7 @@ func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request
 		"headline": headlineFR,
 		"empty":    summary.Empty,
 		"reason":   summary.Reason,
+		"branch":   source,
 	})
 }
 
@@ -217,6 +260,7 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dateLabel := digestDate.Format("02/01/2006")
+	branchLabel := digestMetaBranch(digest.Meta, os.Getenv("APP_ENV"))
 	sent := 0
 	skipped := 0
 	failed := 0
@@ -230,8 +274,7 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 		if b := strings.TrimSpace(digest.BodyByLocale[locale]); b != "" {
 			bodyText = b
 		}
-		// Reserve send slot first (idempotent). On mail failure, leave the row so we do not spam retries forever;
-		// count as failed for observability.
+		// Reserve send slot first (idempotent). On SMTP failure, clear the row so a later run can retry.
 		inserted, err := a.store.RecordProductDigestSend(r.Context(), digestDate, recip.ID)
 		if err != nil {
 			failed++
@@ -241,24 +284,36 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 			skipped++
 			continue
 		}
-		if err := a.notifier.SendProductDigest(recip.Email, locale, recip.FullName, dateLabel, headline, bodyText); err != nil {
+		if err := a.notifier.SendProductDigest(recip.Email, locale, recip.FullName, dateLabel, branchLabel, headline, bodyText); err != nil {
+			_ = a.store.ClearProductDigestSend(r.Context(), digestDate, recip.ID)
 			failed++
 			continue
 		}
 		sent++
 	}
 
-	if err := a.store.MarkProductDigestSent(r.Context(), digestDate); err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
+	status := "partial"
+	if sent > 0 && failed == 0 {
+		status = "sent"
+		if err := a.store.MarkProductDigestSent(r.Context(), digestDate); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	} else if sent == 0 && failed > 0 {
+		status = "failed"
+	} else if sent == 0 && skipped > 0 && failed == 0 {
+		// All recipients already recorded from a prior successful send.
+		status = "sent"
+		_ = a.store.MarkProductDigestSent(r.Context(), digestDate)
 	}
 
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"status":   "sent",
+		"status":   status,
 		"date":     digestDate.Format("2006-01-02"),
 		"sent":     sent,
 		"skipped":  skipped,
 		"failed":   failed,
 		"headline": digest.Headline,
+		"branch":   branchLabel,
 	})
 }

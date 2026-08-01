@@ -40,3 +40,28 @@ func TestFirstNonEmpty(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestDigestDisplayLabel(t *testing.T) {
+	if got := digestDisplayLabel("feat/x", "staging", "local"); got != "staging" {
+		t.Fatalf("prefer environment got %q", got)
+	}
+	if got := digestDisplayLabel("staging", "", "local"); got != "staging" {
+		t.Fatalf("prefer branch got %q", got)
+	}
+	if got := digestDisplayLabel("", "", "local"); got != "local" {
+		t.Fatalf("fallback APP_ENV got %q", got)
+	}
+	if got := digestDisplayLabel("", "", ""); got != "local" {
+		t.Fatalf("default got %q", got)
+	}
+}
+
+func TestDigestMetaBranch(t *testing.T) {
+	meta := []byte(`{"branch":"staging","environment":"staging","commitCount":3}`)
+	if got := digestMetaBranch(meta, "local"); got != "staging" {
+		t.Fatalf("got %q", got)
+	}
+	if got := digestMetaBranch([]byte(`{}`), "staging"); got != "staging" {
+		t.Fatalf("fallback got %q", got)
+	}
+}

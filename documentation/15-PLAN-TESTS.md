@@ -161,6 +161,12 @@ Compte : `vet.demo@petsfollow.test`
 | C1.6 | P2 | Prefs email véto | Notifs message / FC / visit | Toggle persist |
 | C1.7 | P2 | Client booking | Activer/désactiver booking client | Flutter BookVisit reflète l’état |
 
+### Digest produit quotidien (interne)
+
+| ID | Pri | Cas | Étapes | Attendu |
+|----|-----|-----|--------|---------|
+| Z-DIGEST | P1 | Email évolutions du jour | GH Action ingest (branche `staging`) → `POST /internal/product-digest/run` 18:00 Brussels | Destinataires `admin` / `commercial` / `commercial_manager` ; sujet/corps avec `[staging]` ; Go `TestProductDigest*` ; MailHog local |
+
 ### C2 — Dashboard, clients, pets
 
 | ID | Pri | Cas | Étapes | Attendu |

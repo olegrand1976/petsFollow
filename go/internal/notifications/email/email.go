@@ -623,11 +623,17 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 }
 
 // SendProductDigest sends the daily functional platform changelog to internal staff.
-func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, headline, bodyText string) error {
+// branch is the git branch / environment label (e.g. staging).
+func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, branch, headline, bodyText string) error {
 	locale = i18n.NormalizeLocale(locale)
+	branch = strings.TrimSpace(branch)
+	if branch == "" {
+		branch = "local"
+	}
 	vars := map[string]string{
 		"fullName": fullName,
 		"date":     dateLabel,
+		"branch":   branch,
 		"headline": headline,
 	}
 	if vars["fullName"] == "" {
