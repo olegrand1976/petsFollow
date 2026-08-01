@@ -35,3 +35,18 @@ export function isFoodChainSpecies(species: string | null | undefined): boolean 
       return false
   }
 }
+
+/** UI oui/non ← API foodChainStatus (excluded counts as « non »). */
+export function foodChainToYesNo(status?: string | null): 'yes' | 'no' {
+  return status === 'food_producing' ? 'yes' : 'no'
+}
+
+/**
+ * UI oui/non → API foodChainStatus.
+ * Preserves excluded_from_food_chain when the UI stays on « non ».
+ */
+export function yesNoToFoodChain(v: 'yes' | 'no', current?: string | null): string {
+  if (v === 'yes') return 'food_producing'
+  if (current === 'excluded_from_food_chain') return 'excluded_from_food_chain'
+  return 'companion'
+}

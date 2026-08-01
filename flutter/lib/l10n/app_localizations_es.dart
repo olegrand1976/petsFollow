@@ -1851,7 +1851,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get proLightAiModuleRequired =>
-      'Módulo CR IA no activado o prueba caducada — contacte a su comercial petsFollow.';
+      'Función CR IA desactivada para esta clínica — contacte con el soporte petsFollow.';
 
   @override
   String proLightAiModuleTrialBanner(int days) {

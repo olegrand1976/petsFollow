@@ -685,7 +685,7 @@
   },
   "proLightAudioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
   "proLightReportAiProposalBanner": "Propuesta de IA — validación veterinaria obligatoria antes de finalizar (incluye diagnóstico / medicación sugeridos).",
-  "proLightAiModuleRequired": "Módulo CR IA no activado o prueba caducada — contacte a su comercial petsFollow.",
+  "proLightAiModuleRequired": "Función CR IA desactivada para esta clínica — contacte con el soporte petsFollow.",
   "proLightAiModuleTrialBanner": "Prueba CR IA — {days} días restantes. Dicte y mejore sus informes.",
   "proLightAiModuleInactiveBanner": "CR IA no activado para este centro. La dictación IA no estará disponible.",
   "proLightAiModuleVisitScopedBanner": "CR IA disponible si el centro de la visita tiene el módulo activado.",

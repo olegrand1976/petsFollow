@@ -14,7 +14,7 @@ func TestAiCrModuleGateAndActivate(t *testing.T) {
 	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
 	vetTok := loginToken(t, api.handler, "vet.onboarding@petsfollow.test", "VetDemo123!")
 
-	// onboarding practice should not be seed-activated (incomplete profile).
+	// CR IA is included in Pro: onboarding vet is allowed without a paid add-on.
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("me ai-module %d %#v", code, env)
@@ -24,19 +24,20 @@ func TestAiCrModuleGateAndActivate(t *testing.T) {
 	if practiceID == "" {
 		t.Fatal("missing practiceId")
 	}
-	// Reset pollution from other AI CR tests sharing the DB.
-	if mod["status"] != "none" && mod["status"] != nil {
-		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+practiceID, adminTok, map[string]any{
-			"status": "disabled",
-		})
+	// Clear kill-switch pollution from prior shared-DB runs.
+	if mod["status"] == "disabled" {
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/activate", adminTok, nil)
+		if code != http.StatusOK {
+			t.Fatalf("clear disable %d %#v", code, env)
+		}
 		code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
 		if code != http.StatusOK {
-			t.Fatalf("me after disable %d %#v", code, env)
+			t.Fatalf("me after clear %d %#v", code, env)
 		}
 		mod = dataMap(t, env)
 	}
-	if mod["allowed"] == true {
-		t.Fatalf("expected inactive module for onboarding vet, got %#v", mod)
+	if mod["allowed"] != true || mod["includedInPro"] != true {
+		t.Fatalf("expected IA included for onboarding vet, got %#v", mod)
 	}
 
 	vetDemo := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
@@ -44,22 +45,36 @@ func TestAiCrModuleGateAndActivate(t *testing.T) {
 	if code != http.StatusOK {
 		t.Fatalf("demo me %d %#v", code, env)
 	}
-	demoMod := dataMap(t, env)
-	if demoMod["allowed"] != true {
-		pid, _ := demoMod["practiceId"].(string)
-		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+pid+"/activate", adminTok, nil)
-		if code != http.StatusOK {
-			t.Fatalf("activate demo %d %#v", code, env)
-		}
+	if dataMap(t, env)["allowed"] != true {
+		t.Fatalf("expected demo vet IA allowed %#v", env)
 	}
 
-	// ROI locked before J60 on freshly activated practice
+	// Explicit disable remains a kill-switch.
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/activate", adminTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("activate onboarding %d %#v", code, env)
 	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+practiceID, adminTok, map[string]any{
+		"status": "disabled",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("disable %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("me after disable %d %#v", code, env)
+	}
+	if dataMap(t, env)["allowed"] == true {
+		t.Fatalf("expected denied when disabled %#v", env)
+	}
+
+	// Re-activate for ROI tracking (usage baseline); ROI still locked before J60.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/activate", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("reactivate %d %#v", code, env)
+	}
 	act := dataMap(t, env)
-	if act["status"] != "trial" || act["allowed"] != true {
+	if act["allowed"] != true {
 		t.Fatalf("unexpected activate %#v", act)
 	}
 	if act["roiUnlocked"] == true {
@@ -74,50 +89,28 @@ func TestAiCrModuleGateAndActivate(t *testing.T) {
 		t.Fatalf("expected ROI locked %#v", env)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("me after %d %#v", code, env)
-	}
-	if dataMap(t, env)["allowed"] != true {
-		t.Fatalf("expected allowed after activate %#v", env)
+	if act["status"] != "active" {
+		t.Fatalf("activate should set active status %#v", act)
 	}
 
+	// Legacy convert endpoint still marks active (no separate billing).
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/convert", adminTok, map[string]any{
 		"pricePlan": "annual_390",
 	})
 	if code != http.StatusOK {
 		t.Fatalf("convert %d %#v", code, env)
 	}
-	if dataMap(t, env)["status"] != "active" || dataMap(t, env)["pricePlan"] != "annual_390" {
+	if dataMap(t, env)["status"] != "active" {
 		t.Fatalf("convert payload %#v", env)
 	}
 }
 
-func TestAiCrImproveRequiresModule(t *testing.T) {
+func TestAiCrImproveDeniedWhenDisabled(t *testing.T) {
 	api := newTestAPI(t)
-	vetTok := loginToken(t, api.handler, "vet.onboarding@petsfollow.test", "VetDemo123!")
 	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
 
-	// Ensure module disabled/absent: force disable if present
-	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("me %d %#v", code, env)
-	}
-	practiceID, _ := dataMap(t, env)["practiceId"].(string)
-	if practiceID == "" {
-		t.Fatal("no practice")
-	}
-	if dataMap(t, env)["status"] != "none" {
-		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+practiceID, adminTok, map[string]any{
-			"status": "disabled",
-		})
-	}
-
-	// Need a visit on this practice — create pet via seed may be empty.
-	// Use demo client pets under VetPlus and confirm gate on vet.demo after disable is harder.
-	// Instead: create visit as onboarding vet if they have pets; else skip via activate then disable path on a fresh visit from vet.demo.
 	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("pets %d", code)
 	}
@@ -130,18 +123,12 @@ func TestAiCrImproveRequiresModule(t *testing.T) {
 	vetDemo := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetDemo, nil)
 	demoPractice, _ := dataMap(t, env)["practiceId"].(string)
+	_, _ = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+demoPractice+"/activate", adminTok, nil)
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+demoPractice, adminTok, map[string]any{
 		"status": "disabled",
 	})
-	if code != http.StatusOK && code != http.StatusNotFound {
-		// activate then disable
-		_, _ = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+demoPractice+"/activate", adminTok, nil)
-		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+demoPractice, adminTok, map[string]any{
-			"status": "disabled",
-		})
-		if code != http.StatusOK {
-			t.Fatalf("disable %d %#v", code, env)
-		}
+	if code != http.StatusOK {
+		t.Fatalf("disable %d %#v", code, env)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetDemo, map[string]any{
@@ -164,14 +151,20 @@ func TestAiCrImproveRequiresModule(t *testing.T) {
 	})
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/improve", vetDemo, nil)
 	if code != http.StatusPaymentRequired {
-		t.Fatalf("improve without module want 402 got %d %#v", code, env)
+		t.Fatalf("improve when disabled want 402 got %d %#v", code, env)
 	}
 	errMap, _ := env["error"].(map[string]any)
 	if errMap["msgKey"] != "ai_module_required" && errMap["messageKey"] != "ai_module_required" {
-		// localized write may use messageKey field name differently
 		if errMap["code"] != "payment_required" {
 			t.Fatalf("unexpected error %#v", env)
 		}
+	}
+
+	// Re-enable (included in Pro) → improve must not be gated by payment.
+	_, _ = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+demoPractice+"/activate", adminTok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/improve", vetDemo, nil)
+	if code == http.StatusPaymentRequired {
+		t.Fatalf("improve included should not be 402 %#v", env)
 	}
 }
 
@@ -216,7 +209,7 @@ func TestAiCrAdhesionDripIdempotent(t *testing.T) {
 		UPDATE practice.ai_cr_modules
 		SET activated_at = NOW() - INTERVAL '3 days',
 		    trial_ends_at = NOW() + INTERVAL '87 days',
-		    status = 'trial',
+		    status = 'active',
 		    updated_at = NOW()
 		WHERE practice_id = $1`, practiceID); err != nil {
 		t.Fatalf("backdate: %v", err)

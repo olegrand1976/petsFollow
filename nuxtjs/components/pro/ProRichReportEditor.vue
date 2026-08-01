@@ -179,10 +179,12 @@ watch(
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+  max-width: 100%;
   position: relative;
 }
 
 .pro-rich-report__toolbar {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
@@ -210,6 +212,8 @@ watch(
 .pro-rich-report__editor {
   min-height: 280px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0;
   overflow: auto;
 }
@@ -219,6 +223,8 @@ watch(
   padding: 0.75rem 1rem;
   outline: none;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pro-rich-report__editor :deep(.ProseMirror p) {

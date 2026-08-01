@@ -68,7 +68,6 @@
             <th>{{ $t('commercial.aiModules.colPractice') }}</th>
             <th>{{ $t('commercial.aiModules.colStatus') }}</th>
             <th>{{ $t('commercial.aiModules.colTrial') }}</th>
-            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -76,23 +75,6 @@
             <td>{{ m.practiceName || m.practiceId }}</td>
             <td>{{ m.status }} · {{ $t('commercial.aiModules.daysSince', { n: m.daysSinceActivation }) }}</td>
             <td>{{ formatDate(m.trialEndsAt) }} ({{ $t('commercial.aiModules.daysRemaining', { n: m.daysRemainingTrial }) }})</td>
-            <td class="pro-flex-gap">
-              <ProButton
-                v-if="m.status === 'trial' || m.status === 'expired'"
-                :disabled="busy"
-                @click="convert(m.practiceId, 'monthly_39')"
-              >
-                39 €/mois
-              </ProButton>
-              <ProButton
-                v-if="m.status === 'trial' || m.status === 'expired'"
-                variant="secondary"
-                :disabled="busy"
-                @click="convert(m.practiceId, 'annual_390')"
-              >
-                390 €/an
-              </ProButton>
-            </td>
           </tr>
         </tbody>
       </ProTable>
@@ -156,22 +138,6 @@ async function activate() {
   try {
     await $fetch(`/api/commercial/ai-modules/${selectedPracticeId.value}/activate`, { method: 'POST' })
     msg.value = t('commercial.aiModules.activatedOk')
-    await load()
-  } catch (e: any) {
-    err.value = mapError(e)
-  } finally {
-    busy.value = false
-  }
-}
-
-async function convert(practiceId: string, pricePlan: string) {
-  busy.value = true
-  err.value = ''
-  try {
-    await $fetch(`/api/commercial/ai-modules/${practiceId}/convert`, {
-      method: 'POST',
-      body: { pricePlan },
-    })
     await load()
   } catch (e: any) {
     err.value = mapError(e)

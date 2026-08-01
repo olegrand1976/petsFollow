@@ -74,6 +74,7 @@ const navItems = computed<ProNavItem[]>(() => {
     ...(researchOn.value
       ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
       : []),
+    productFlowsNavItem(t('nav.productFlows'), t('nav.section.ops')),
     ...(isStagingLike.value
       ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
       : []),

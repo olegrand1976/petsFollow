@@ -1838,7 +1838,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proLightAiModuleRequired =>
-      'AI visit-report module not activated or trial ended — contact your petsFollow sales rep.';
+      'AI visit-report feature disabled for this practice — contact petsFollow support.';
 
   @override
   String proLightAiModuleTrialBanner(int days) {

@@ -67,7 +67,7 @@ func (a *API) runAiCrAdhesionDrip(ctx context.Context) (sent, skipped, scanned i
 		scanned++
 		days := store.AiCrAdhesionDaysSince(c.ActivatedAt, now)
 		usage := a.aiCrUsageCount(ctx, c.PracticeID, c.ActivatedAt)
-		for _, step := range a.aiCrStepsForDay(days, usage, c.Status) {
+		for _, step := range a.aiCrStepsForDay(days, usage) {
 			ok, err := a.sendAiCrAdhesionStep(ctx, c, step, cta, days, usage)
 			if err != nil {
 				log.Printf("ai_cr adhesion %s %s: %v", c.PracticeID, step, err)
@@ -90,7 +90,7 @@ func (a *API) aiCrUsageCount(ctx context.Context, practiceID string, since time.
 	return tr + im + fi
 }
 
-func (a *API) aiCrStepsForDay(days, usage int, status string) []string {
+func (a *API) aiCrStepsForDay(days, usage int) []string {
 	out := make([]string, 0, 4)
 	if days >= 0 {
 		out = append(out, store.AiCrStepJ0Activation)
@@ -116,17 +116,7 @@ func (a *API) aiCrStepsForDay(days, usage int, status string) []string {
 	if days >= 60 {
 		out = append(out, store.AiCrStepJ60ROI)
 	}
-	if status == store.AiCrStatusTrial {
-		if days >= 75 {
-			out = append(out, store.AiCrStepJ75Convert)
-		}
-		if days >= 85 {
-			out = append(out, store.AiCrStepJ85Urgency)
-		}
-		if days >= 90 {
-			out = append(out, store.AiCrStepJ90Last)
-		}
-	}
+	// Paid convert drip (J75/J85/J90) retired: CR IA is included in Pro SaaS.
 	return out
 }
 
@@ -189,8 +179,6 @@ func (a *API) aiCrAdhesionVars(ctx context.Context, c store.AiCrAdhesionCandidat
 		"transcribe":   fmt.Sprintf("%d", tr),
 		"improve":      fmt.Sprintf("%d", im),
 		"finalize":     fmt.Sprintf("%d", fi),
-		"priceMonthly": "39",
-		"priceAnnual":  "390",
 	}
 	roi, err := a.store.ComputeAiCrROI(ctx, c.PracticeID)
 	if err == nil && roi.Unlocked {

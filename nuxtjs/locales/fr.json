@@ -88,7 +88,8 @@
     "researchTimeseries": "Séries temporelles",
     "adminResearch": "Research opt-in",
     "researchGroups": "Groupes",
-    "researchDataroom": "Data room"
+    "researchDataroom": "Data room",
+    "productFlows": "Flux produit"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -722,19 +723,19 @@
     },
     "aiModules": {
       "title": "Module CR IA",
-      "subtitle": "Activez l’essai pour vos cabinets, suivez l’adoption, convertissez à 39 € / 390 €",
+      "subtitle": "CR IA inclus dans Pro — suivez l’adoption et le ROI de vos cabinets",
       "openPlaybook": "Ouvrir le guide / argumentaire",
-      "activateTitle": "Activer un de vos cabinets",
+      "activateTitle": "Activer le suivi ROI d’un cabinet",
       "practice": "Cabinet",
       "practicePlaceholder": "Choisir",
-      "activate": "Activer 90 j offerts",
-      "activatedOk": "Essai activé — le véto a reçu un e-mail",
+      "activate": "Activer le suivi ROI",
+      "activatedOk": "Suivi activé — le véto a reçu un e-mail",
       "listTitle": "Vos modules",
       "emptyTitle": "Pas encore d’activation",
       "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin fenêtre ROI",
       "frictionTitle": "Alertes friction",
       "frictionEmpty": "Aucune alerte récente",
       "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
@@ -752,47 +753,47 @@
       "print": "Imprimer / PDF",
       "linkCopied": "Lien copié",
       "mailSubject": "petsFollow — guide module Compte-rendu IA",
-      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du module Compte-rendu IA petsFollow (essai 90 jours, puis 39 € HT/mois ou 390 € HT/an).",
-      "badge": "90 jours offerts · preuve ROI dès J60",
+      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du Compte-rendu IA petsFollow — inclus dans l’offre Pro (pas d’add-on).",
+      "badge": "Inclus dans Pro · preuve ROI dès J60",
       "docTitle": "Compte-rendu IA petsFollow — mode d’emploi",
-      "promise": "Dictez, structurez, gagnez du temps sur chaque visite — on prouve la valeur en 90 jours avant de facturer.",
-      "priceMonthly": "39 € HT / mois / cabinet",
-      "priceAnnual": "390 € HT / an (−17 %)",
+      "promise": "Dictez, structurez, gagnez du temps sur chaque visite — l’IA est incluse dans votre abonnement Pro.",
+      "priceMonthly": "Inclus dans le SaaS Pro",
+      "priceAnnual": "Pas d’add-on séparé",
       "whoTitle": "Pour qui ?",
-      "whoBody": "Cabinets VetPro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet activé en bénéficient aussi sur ces visites.",
+      "whoBody": "Cabinets Pro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet en bénéficient aussi sur ces visites.",
       "changeTitle": "Ce que ça change",
       "change1": "Avant : CR tapés le soir, dossiers incomplets, fatigue terrain.",
       "change2": "Après : dictée mobile → transcription → CR structuré (anamnèse, examen, diagnostic proposé, plan).",
-      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — argument de conversion clair.",
+      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — preuve de valeur claire.",
       "howtoTitle": "Mode d’emploi en 6 étapes",
-      "step1": "Commercial ou admin active le module (essai 90 j) depuis l’espace petsFollow.",
+      "step1": "Le CR IA est inclus dès l’offre Pro — le commercial peut activer le suivi ROI depuis petsFollow.",
       "step2": "Sur place : obtenir l’accord oral du client (case à cocher) avant d’enregistrer.",
       "step3": "Dicter le CR dans Pro Light (Flutter) ou uploader un fichier audio sur le calendrier Web.",
       "step4": "Lancer « Améliorer » pour structurer le texte, puis éditer si besoin.",
       "step5": "Finaliser = validation exclusive du pro (purge audio).",
       "step6": "À partir de J60, lire le ROI (minutes gagnées) sur le tableau de bord VetPro.",
       "pitchTitle": "Argumentaire terrain",
-      "pitchBody": "« On active 90 jours offerts. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné. Si ça tient, c’est 39 € HT/mois — bien en dessous d’une heure de temps véto. »",
+      "pitchBody": "« Dans Pro, l’IA est incluse. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné — c’est la preuve que le SaaS travaille pour vous. »",
       "objectionsTitle": "Objections fréquentes",
       "obj1q": "« C’est trop cher. »",
-      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. À 80 €/h, 39 € est < 5 % de la valeur basse.",
+      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. L’IA est déjà dans le ticket Pro — pas un second abonnement.",
       "obj2q": "« J’ai déjà Whisper / un dictaphone. »",
       "obj2a": "Ici : consentement, CR structuré métier, dossier animal, ROI cabinet, pas un fichier texte isolé.",
       "obj3q": "« Mes assistants vont s’en servir ? »",
       "obj3a": "Oui si droits write notes. VetLight / care_pro : seulement si le cabinet de la visite est activé.",
       "roiTitle": "Preuve ROI",
-      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. Prix catalogue fixe : pas de promo intro — la preuve suffit.",
-      "calendarTitle": "Calendrier d’adhésion (checklist commercial)",
-      "calJ0": "J0 — activation + 3 premiers CR",
+      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. L’IA est incluse dans Pro — la preuve sert l’adoption, pas une conversion add-on.",
+      "calendarTitle": "Calendrier d’adoption (checklist commercial)",
+      "calJ0": "J0 — premiers CR dictés",
       "calJ14": "J14 — NPS #1",
       "calJ45": "J45 — NPS #2 + tags friction",
       "calJ60": "J60 — bilan ROI ensemble",
-      "calJ75": "J75 — proposition 39 € / 390 €",
-      "calJ90": "J90 — conversion ou coupure IA (CR manuel reste)",
+      "calJ75": "J75 — ancrage habitude (pas de conversion payante)",
+      "calJ90": "J90 — revue adoption ; CR manuel reste toujours possible",
       "frictionTitle": "Quand relancer",
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
-      "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
-      "mailBodyPdf": "Bonjour,\n\nVeuillez trouver ci-joint le mode d’emploi du module Compte-rendu IA petsFollow (PDF via Imprimer / Enregistrer en PDF depuis l’espace commercial).\n\nEssai 90 jours offerts, puis 39 € HT/mois ou 390 € HT/an (facture externe).\n\nCordialement,"
+      "footer": "CR IA inclus dans le SaaS Pro (facture externe). petsFollow — continuité de soins prescrite.",
+      "mailBodyPdf": "Bonjour,\n\nVeuillez trouver ci-joint le mode d’emploi du Compte-rendu IA petsFollow (PDF via Imprimer / Enregistrer en PDF depuis l’espace commercial).\n\nL’IA est incluse dans l’offre Pro — pas d’add-on séparé.\n\nCordialement,"
     },
     "asvMemo": {
       "title": "Mémo ASV",
@@ -887,7 +888,7 @@
       "terrainTitle": "Pro Light — terrain gratuit",
       "terrain1": "Agenda, fiches animaux, notes de visite",
       "terrain2": "Partage de dossier + QR de parrainage",
-      "terrain3": "CR vocaux (IA si le module cabinet est activé)",
+      "terrain3": "CR vocaux & amélioration IA inclus dans Pro",
       "clientTitle": "App propriétaire",
       "client1": "Carnet / passeport toujours en poche",
       "client2": "Messagerie avec le cabinet + push",
@@ -1438,7 +1439,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Image",
       "summaryPlan": "Formule",
-      "summaryStatus": "Statut",
+      "summaryStatus": "Statut abonnement",
       "paymentStatus": {
         "active": "Actif",
         "pending": "En attente",
@@ -1652,6 +1653,9 @@
       "reorderOnHand": "En stock",
       "reorderMin": "Seuil",
       "orderEmail": "E-mail fournisseur",
+      "orderSupplier": "Fournisseur",
+      "orderSupplierPlaceholder": "Choisir un fournisseur…",
+      "orderSupplierName": "Nom fournisseur",
       "orderCreateSend": "Commander par e-mail",
       "orderSent": "Commande envoyée.",
       "errorOrder": "Envoi commande impossible.",
@@ -1741,7 +1745,8 @@
       "email_send_failed": "Échec d’envoi e-mail.",
       "vamreg_enqueue_failed": "Impossible de relancer VAMReg.",
       "not_found": "Ressource introuvable.",
-      "validation_error": "Données invalides."
+      "validation_error": "Données invalides.",
+      "supplier_email_required": "E-mail fournisseur manquant."
     }
   },
   "recommend": {
@@ -2429,21 +2434,21 @@
     },
     "aiModules": {
       "title": "Module CR IA",
-      "subtitle": "Activation VetPro — essai 90 jours, puis 39 € HT/mois ou 390 € HT/an",
-      "activateTitle": "Activer un cabinet",
+      "subtitle": "CR IA inclus dans Pro — suivi d’adoption et ROI (kill-switch admin si besoin)",
+      "activateTitle": "Activer le suivi ROI d’un cabinet",
       "practice": "Cabinet",
       "practicePlaceholder": "Choisir un cabinet",
-      "activate": "Activer l’essai 90 j",
-      "activatedOk": "Module activé (essai 90 jours)",
-      "listTitle": "Modules actifs",
-      "emptyTitle": "Aucun module",
-      "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
+      "activate": "Activer le suivi ROI",
+      "activatedOk": "Suivi ROI activé",
+      "listTitle": "Cabinets suivis",
+      "emptyTitle": "Aucun suivi",
+      "emptyDescription": "Activez un cabinet pour démarrer le suivi ROI.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin fenêtre ROI",
       "colDays": "J+ / restant",
-      "convertMonthly": "Convertir 39 €/mois",
-      "convertAnnual": "Convertir 390 €/an",
+      "convertMonthly": "Marquer actif",
+      "convertAnnual": "Marquer actif (annuel)",
       "disable": "Désactiver"
     },
     "support": {
@@ -2997,8 +3002,8 @@
     "registerCta": "S'inscrire",
     "badge": "Continuité de soins prescrite",
     "heroTitleLine1": "Pas un logiciel de plus.",
-    "heroTitleLine2": "La continuité de soins, prescrite et partagée.",
-    "heroLead": "Nous assurons le lien entre votre cabinet, le propriétaire et les professionnels de santé animal grâce au passeport digital partagé.",
+    "heroTitleLine2": "Le dossier de soins partagé, entre deux consultations.",
+    "heroLead": "Passeport digital entre votre cabinet, les pros terrain et le propriétaire — avec comptes-rendus vocaux et amélioration IA inclus dans Pro. Vos clients paient le suivi de leurs animaux.",
     "heroCta": "Créer mon compte professionnel",
     "heroLogin": "J'ai déjà un compte",
     "actors": {
@@ -3024,7 +3029,7 @@
       "pro": {
         "role": "Pro · Web",
         "title": "Le cabinet pilote",
-        "text": "Vous prescrivez le suivi, lisez la timeline et gardez le lien avec le foyer — le poste de pilotage du passeport."
+        "text": "Vous prescrivez le suivi, lisez la timeline, dictez vos CR avec l'IA et gardez le lien avec le foyer."
       },
       "proLight": {
         "role": "Pro Light · Mobile",
@@ -3058,26 +3063,27 @@
       }
     },
     "ctaTitle": "Ouvrez le passeport de votre cabinet",
-    "ctaText": "Créez votre compte Pro — ou commencez gratuitement avec Pro Light sur le terrain. Vos clients paient le suivi de leurs animaux.",
+    "ctaText": "Créez votre compte Pro — dossier partagé, messagerie et CR IA inclus. Ou commencez gratuitement avec Pro Light sur le terrain. Vos clients paient le suivi de leurs animaux.",
     "ctaButton": "Commencer l'inscription",
     "productsLink": "Produits",
     "productsTitle": "Comment matérialiser le passeport",
-    "productsLead": "Deux faces professionnelles, un abonnement propriétaire. Complémentaire de votre PMS — pas un second logiciel métier.",
+    "productsLead": "Offre Pro (Web + CR IA inclus), Pro Light gratuit, abonnement propriétaire. Complémentaire de votre PMS — pas un second logiciel métier.",
     "productsCta": "Créer mon compte",
+    "recommended": "Recommandé",
     "solutions": {
       "proComplete": {
         "price": "834,71 € HTVA / an",
+        "priceSub": "Mise en place & formation : 320 € HTVA (one-shot) · CR IA inclus",
         "title": "Pro",
-        "text": "Poste de pilotage Web du passeport + app mobile clients. Messagerie, timeline, partage et fidélisation.",
+        "text": "Poste de pilotage Web du passeport + app mobile clients. Messagerie, timeline, partage et comptes-rendus IA inclus.",
         "features": [
+          "Comptes-rendus vocaux & amélioration IA inclus",
           "Passeport digital & timeline partagée",
           "Messagerie sécurisée + push (cabinet ↔ client)",
+          "Relevés cardiaques guidés 15 / 30 / 60 s",
           "Rappels, RDV et observance",
           "Partage de dossier avec care pro / collègues",
-          "Commissions partenaires (facturation externe)",
-          "Rapports vocaux de consultation",
-          "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés",
-          "Module CR IA (add-on) : essai 90 j puis 39 € HT/mois ou 390 € HT/an — ROI dès J60"
+          "Commissions partenaires (facturation externe)"
         ]
       },
       "proLight": {
@@ -3090,13 +3096,33 @@
           "QR code de parrainage",
           "Documents partagés & notes",
           "Partage de dossier avec collègues / pros externes",
-          "Rapports vocaux de consultation",
-          "Amélioration IA des rapports (+ historiques) si cabinet VetPro activé"
+          "Rapports vocaux & IA si le cabinet Pro du dossier est actif"
         ]
       }
     },
+    "saasTitle": "Engagements SaaS Pro (HTVA)",
+    "saasLead": "Facturation hors ligne (commercial / compta) — pas de checkout Stripe cabinet. Steer : engagement 3 ans.",
+    "saas": {
+      "setup": {
+        "name": "Mise en place & formation",
+        "price": "320 € HTVA",
+        "description": "Compte, config, formation, démarrage (one-shot)."
+      },
+      "annual": {
+        "name": "Annuel",
+        "price": "834,71 € HTVA / an",
+        "description": "≈ 69,56 € HTVA / mois — passeport + CR IA inclus."
+      },
+      "longTerm": {
+        "name": "Triennal",
+        "price": "2 253,72 € HTVA / 3 ans",
+        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois) — CR IA inclus."
+      }
+    },
+    "autofinanceTip": "≈ 8 activations clients triennales / mois ≈ couverture de l’équivalent mensuel Pro (≈ 69,56 € HTVA).",
     "clientPlansTitle": "Ce que paient vos clients",
     "clientPlansLead": "Le propriétaire finance le passeport de son animal — trois formules, tout inclus dès l'abonnement actif.",
+    "clientIncludedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés HR 15/30/60 s, Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / mois",
@@ -3110,7 +3136,7 @@
       },
       "triennial": {
         "price": "95 € / 3 ans",
-        "title": "Triennal (recommandé)",
+        "title": "Triennal",
         "text": "≈ 2,6 € / mois — cœur d'offre, passeport complet, −10 % vs 3× annuel."
       }
     },
@@ -3124,20 +3150,21 @@
     "badge": "Support de présentation cabinet",
     "title": "Offre petsFollow",
     "lead": "L’essentiel : offre Pro (Web cabinet), Pro Light et abonnements clients.",
-    "hook": "Continuité de soins prescrite + passeport digital de l’animal, partagé entre cabinet, care pro et propriétaire.",
+    "hook": "Continuité de soins prescrite + passeport digital partagé — CR vocaux et amélioration IA inclus dans Pro.",
     "pro": {
       "name": "Plateforme Web PetsFollow (cabinet)",
       "badge": "Offre Pro",
       "price": "834,71 € HTVA / an",
-      "setup": "≈ 69,56 € HTVA / mois · mise en place & formation : 320 € HTVA (one-shot)",
-      "tagline": "Le poste de pilotage du cabinet : passeport digital, messagerie, rappels, partage et suivi des activations.",
+      "setup": "≈ 69,56 € HTVA / mois · mise en place & formation : 320 € HTVA (one-shot) · CR IA inclus",
+      "tagline": "Le poste de pilotage du cabinet : passeport digital, messagerie, CR IA, rappels, partage et suivi des activations.",
       "features": [
+        "Comptes-rendus vocaux & amélioration IA inclus",
         "Passeport digital + timeline partagée (cabinet / client / care pro)",
         "Messagerie sécurisée client ↔ cabinet + push",
-        "Rappels, prescriptions et demandes de RDV",
+        "Relevés cardiaques guidés 15 / 30 / 60 s",
+        "Rappels et demandes de RDV",
         "Partage de dossier (collègues / care pro)",
-        "Suivi des activations clients et commissions partenaires",
-        "CR vocaux + IA en add-on (essai 90 j → 39 € HTVA/mois ou 390 € HTVA/an)"
+        "Suivi des activations clients et commissions partenaires"
       ],
       "invoiceNote": "Facturation hors ligne (commercial / compta) — pas de paiement SaaS cabinet via Stripe."
     },
@@ -3149,7 +3176,7 @@
       "features": [
         "Agenda terrain, fiches animaux, notes de visite",
         "Partage de dossier + QR de parrainage",
-        "CR vocaux (IA si le cabinet Pro a activé le module)"
+        "CR vocaux & IA si le cabinet Pro du dossier est actif"
       ]
     },
     "clientsTitle": "App client (propriétaires)",
@@ -3180,12 +3207,12 @@
       "annual": {
         "name": "Annuel",
         "price": "834,71 € HTVA / an",
-        "description": "≈ 69,56 € HTVA / mois."
+        "description": "≈ 69,56 € HTVA / mois — CR IA inclus."
       },
       "longTerm": {
         "name": "Triennal",
         "price": "2 253,72 € HTVA / 3 ans",
-        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois)."
+        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois) — CR IA inclus."
       }
     },
     "saasMigration": "Migration de données : sur devis (à partir de 350 € HTVA).",
@@ -3521,7 +3548,7 @@
       "emptyTitle": "Pas encore d’activation",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Fin fenêtre ROI",
       "colSignal": "Signal",
       "colDetail": "Détail",
       "colWhen": "Quand",
@@ -4103,6 +4130,233 @@
       "ageBand": "Tranche d’âge",
       "forbiddenTitle": "Data room non autorisée",
       "forbiddenHint": "Il faut être membre d’un groupe dont l’admin a activé la Data room (créer un groupe seul ne suffit pas)."
+    }
+  },
+  "productFlows": {
+    "title": "Flux petsFollow",
+    "subtitle": "Parcours par profil, fonctionnalités clés et liens entre les faces du produit.",
+    "howtoTitle": "Comment lire cette carte ?",
+    "howto1": "Choisissez un profil (véto, client, commercial…).",
+    "howto2": "Suivez le parcours étape par étape, puis les fonctionnalités associées.",
+    "howto3": "Cliquez un lien croisé pour basculer vers le profil connecté.",
+    "selectProfile": "Profils",
+    "flowTitle": "Parcours",
+    "featuresTitle": "Fonctionnalités",
+    "linksTitle": "Liens avec d’autres profils",
+    "linksBlurb": "Ces flèches montrent comment une action d’un profil impacte ou ouvre une surface pour un autre.",
+    "linksEmpty": "Aucun lien croisé pour ce profil.",
+    "usecasesCta": "Ouvrir les guides de test",
+    "usecasesCtaHint": "Sur staging / local : scénarios détaillés avec comptes seed et check-lists.",
+    "surface": {
+      "web_pro": "Web Pro",
+      "flutter_client": "App client (Flutter)",
+      "flutter_pro_light": "Pro Light (Flutter)"
+    },
+    "profiles": {
+      "vet": {
+        "label": "Vétérinaire",
+        "mission": "Suivre les patients, échanger avec les propriétaires, valider les relevés et piloter le cabinet."
+      },
+      "client": {
+        "label": "Propriétaire",
+        "mission": "Gérer ses animaux, souscrire un plan, envoyer des relevés et dialoguer avec le cabinet."
+      },
+      "care_pro": {
+        "label": "Care pro (Pro Light)",
+        "mission": "Interventions terrain (maréchal, vet light…) avec agenda et notes synchronisées."
+      },
+      "commercial": {
+        "label": "Commercial",
+        "mission": "Apporter des cabinets, encoder les inscriptions, activer les pets payants et suivre ses commissions."
+      },
+      "commercial_manager": {
+        "label": "Responsable commercial",
+        "mission": "Piloter l’équipe / branche (KPI, relances) tout en gardant un portefeuille personnel."
+      },
+      "admin": {
+        "label": "Admin",
+        "mission": "Ops plateforme : users, force de vente, paie, flags et modules transverses."
+      },
+      "practice_staff": {
+        "label": "Équipe cabinet",
+        "mission": "Assistantes / secrétaires : accueil, messagerie et fiches dans le shell Pro partagé."
+      },
+      "research": {
+        "label": "Research",
+        "mission": "Observatoire épidémiologique anonymisé (module tag dev)."
+      }
+    },
+    "features": {
+      "onboarding": {
+        "title": "Onboarding",
+        "desc": "Inscription, confirmation e-mail et complétion du profil / cabinet."
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "desc": "Vue du jour : patients, alertes, accès rapides aux outils métier."
+      },
+      "messaging": {
+        "title": "Messagerie",
+        "desc": "Threads croisés cabinet ↔ propriétaire, avec push côté client."
+      },
+      "hr_vitals": {
+        "title": "Relevés cardiaques",
+        "desc": "Mesures FC côté client ; validation et suivi côté véto."
+      },
+      "link_requests": {
+        "title": "Demandes de liaison",
+        "desc": "Le propriétaire demande à rejoindre un cabinet ; le véto accepte."
+      },
+      "dossier_share": {
+        "title": "Partage de dossier",
+        "desc": "Envoi temporaire du dossier animal (PHI) vers un pro, après consentement."
+      },
+      "billing_client": {
+        "title": "Abonnement client",
+        "desc": "Plans mensuel / annuel / triennal via Stripe ; entitlement animal actif."
+      },
+      "care_horse": {
+        "title": "Care / Horse / foyer",
+        "desc": "Modules inclus dès entitlement : Care+, Horse, kennel, foyer."
+      },
+      "commissions": {
+        "title": "Commissions",
+        "desc": "Ledger véto et commercial déclenché par les activations / paiements clients."
+      },
+      "prospects": {
+        "title": "CRM prospects",
+        "desc": "Pipeline commercial : cabinets cibles, relances, statut."
+      },
+      "encode": {
+        "title": "Encodage",
+        "desc": "Création véto / client lié / client libre par le commercial."
+      },
+      "network": {
+        "title": "Réseau / filiation",
+        "desc": "Branches, sponsor, attribution MLM-ready et vue réseau."
+      },
+      "team_kpi": {
+        "title": "Pilotage équipe",
+        "desc": "Dashboard manager : RDV, relances, classement, prospects d’équipe."
+      },
+      "ops_users": {
+        "title": "Ops utilisateurs",
+        "desc": "Inscriptions, imports, support, flags runtime."
+      },
+      "ops_billing": {
+        "title": "Ops paie & catalogue",
+        "desc": "Paiements, commissions, catalogue Stripe, facturation SaaS."
+      },
+      "ai_cr": {
+        "title": "Module CR IA",
+        "desc": "Compte-rendus assistés inclus dans Pro — suivi d’adoption et ROI (surfaces admin / commercial)."
+      },
+      "pro_light_agenda": {
+        "title": "Agenda Pro Light",
+        "desc": "Tournées terrain, fiches animal et notes care_pro."
+      },
+      "practice_desk": {
+        "title": "Poste cabinet",
+        "desc": "Rôles collègue / assist / secrétaire sur le même shell Pro."
+      },
+      "research_obs": {
+        "title": "Observatoire Research",
+        "desc": "Opt-in cabinet, ETL anonymisé, heatmap / timeseries / alertes."
+      }
+    },
+    "steps": {
+      "vet_register": "Inscription + confirm e-mail",
+      "vet_onboarding": "Onboarding profil cabinet",
+      "vet_dashboard": "Dashboard clients & demandes",
+      "vet_care": "Messagerie, relevés FC, partage dossier",
+      "vet_earn": "Commissions & modules cabinet",
+      "client_register": "Register / login (e-mail ou Google)",
+      "client_pet": "Créer un animal + choisir un plan",
+      "client_pay": "Checkout Stripe",
+      "client_active": "Entitlement actif → FC, messages, Care/Horse",
+      "client_engage": "Discovery in-app + e-mails éducatifs",
+      "care_login": "Login care_pro (Pro Light)",
+      "care_agenda": "Agenda / tournée du jour",
+      "care_notes": "Notes & fiches animal",
+      "care_sync": "Synchro visible côté cabinet",
+      "co_login": "Login commercial",
+      "co_overview": "Overview journée",
+      "co_prospects": "CRM prospects",
+      "co_encode": "Encoder véto / client",
+      "co_activate": "Activer pets payants",
+      "co_earn": "Commissions ledger",
+      "cm_login": "Login responsable commercial",
+      "cm_team": "Dashboard équipe / branche",
+      "cm_followups": "RDV + relances",
+      "cm_self": "Ma production privée",
+      "cm_encode": "Encode / CRM perso",
+      "ad_login": "Login admin",
+      "ad_metrics": "Métriques ops",
+      "ad_users": "Users / imports / support",
+      "ad_sales": "Force de vente & branches",
+      "ad_close": "Clôture commissions & catalogue",
+      "eq_login": "Login équipe cabinet",
+      "eq_desk": "Shell Pro partagé",
+      "eq_clients": "Clients & animaux",
+      "eq_msg": "Messagerie / accueil",
+      "re_optin": "Opt-in Research du cabinet",
+      "re_etl": "ETL anonymisation",
+      "re_login": "Login / switch profil research",
+      "re_obs": "Observatoire (heatmap, alertes…)"
+    },
+    "links": {
+      "msg_vet_client": {
+        "label": "Messagerie croisée",
+        "desc": "Un message véto apparaît chez le propriétaire (push) et inversement."
+      },
+      "link_req_client_vet": {
+        "label": "Demande de liaison",
+        "desc": "Le client demande un cabinet ; le véto valide dans Demandes."
+      },
+      "hr_client_vet": {
+        "label": "Relevé → validation",
+        "desc": "Le propriétaire envoie une FC ; le véto la voit et la valide."
+      },
+      "pay_client_commissions": {
+        "label": "Paiement → commission commercial",
+        "desc": "L’activation d’un pet payant crédite le commercial apporteur."
+      },
+      "pay_client_vet_commissions": {
+        "label": "Paiement → rétribution véto",
+        "desc": "Le cabinet lié perçoit sa rétribution selon les règles du ledger."
+      },
+      "encode_co_vet": {
+        "label": "Encodage cabinet",
+        "desc": "Le commercial crée le compte véto ; le cabinet démarre son onboarding."
+      },
+      "encode_co_client": {
+        "label": "Encodage client",
+        "desc": "Le commercial provisionne un client (lié ou libre) pour accélérer l’activation."
+      },
+      "care_notes_vet": {
+        "label": "Notes terrain → cabinet",
+        "desc": "Les notes Pro Light enrichissent le suivi visible côté VetPro."
+      },
+      "dossier_client_pro": {
+        "label": "Partage de dossier",
+        "desc": "Le propriétaire envoie un pack temporaire consultable par un pro."
+      },
+      "manager_team_co": {
+        "label": "Pilotage → commercial",
+        "desc": "Le manager suit KPI, RDV et prospects de ses commerciaux."
+      },
+      "admin_sales_co": {
+        "label": "Admin → force de vente",
+        "desc": "L’admin crée les commerciaux, branches et attributions."
+      },
+      "staff_vet_desk": {
+        "label": "Poste partagé",
+        "desc": "L’équipe cabinet opère sur les mêmes patients que le véto."
+      },
+      "research_vet_optin": {
+        "label": "Opt-in → observatoire",
+        "desc": "Le cabinet active Research ; les agrégats anonymes alimentent l’observatoire."
+      }
     }
   }
 }

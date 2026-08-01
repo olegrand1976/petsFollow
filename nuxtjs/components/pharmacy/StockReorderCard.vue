@@ -22,22 +22,50 @@
       </tbody>
     </table>
     <div class="stock-form">
-      <div>
-        <label class="pro-label" for="order-email">{{ $t('pharmacy.stock.orderEmail') }}</label>
-        <input
-          id="order-email"
-          :value="email"
-          type="email"
-          class="pro-input"
-          data-testid="stock-order-email"
-          @input="$emit('update:email', ($event.target as HTMLInputElement).value)"
+      <div v-if="suppliers.length">
+        <label class="pro-label" for="order-supplier">{{ $t('pharmacy.stock.orderSupplier') }}</label>
+        <select
+          id="order-supplier"
+          class="pro-select"
+          data-testid="stock-order-supplier"
+          :value="supplierId"
+          @change="$emit('update:supplierId', ($event.target as HTMLSelectElement).value)"
         >
+          <option value="">{{ $t('pharmacy.stock.orderSupplierPlaceholder') }}</option>
+          <option v-for="s in suppliers" :key="s.id" :value="s.id">
+            {{ s.name }} — {{ s.email }}
+          </option>
+        </select>
       </div>
+      <template v-else>
+        <div>
+          <label class="pro-label" for="order-supplier-name">{{ $t('pharmacy.stock.orderSupplierName') }}</label>
+          <input
+            id="order-supplier-name"
+            :value="newSupplierName"
+            type="text"
+            class="pro-input"
+            data-testid="stock-order-supplier-name"
+            @input="$emit('update:newSupplierName', ($event.target as HTMLInputElement).value)"
+          >
+        </div>
+        <div>
+          <label class="pro-label" for="order-email">{{ $t('pharmacy.stock.orderEmail') }}</label>
+          <input
+            id="order-email"
+            :value="email"
+            type="email"
+            class="pro-input"
+            data-testid="stock-order-email"
+            @input="$emit('update:email', ($event.target as HTMLInputElement).value)"
+          >
+        </div>
+      </template>
       <div class="stock-form__actions">
         <ProButton
           variant="primary"
           test-id="stock-order-create-send"
-          :disabled="busy || !email"
+          :disabled="busy || !canSend"
           @click="$emit('send')"
         >
           {{ $t('pharmacy.stock.orderCreateSend') }}
@@ -49,18 +77,28 @@
 </template>
 
 <script setup lang="ts">
-import type { PharmacyReorderAlert } from '~/composables/usePharmacyStockPage'
+import type { PharmacyReorderAlert, PharmacySupplier } from '~/composables/usePharmacyStockPage'
 
-defineProps<{
+const props = defineProps<{
   alerts: PharmacyReorderAlert[]
+  suppliers: PharmacySupplier[]
+  supplierId: string
   email: string
+  newSupplierName: string
   msg: string
   busy: boolean
 }>()
 defineEmits<{
+  'update:supplierId': [value: string]
   'update:email': [value: string]
+  'update:newSupplierName': [value: string]
   send: []
 }>()
+
+const canSend = computed(() => {
+  if (props.suppliers.length) return Boolean(props.supplierId)
+  return Boolean(props.email.trim() && props.newSupplierName.trim())
+})
 </script>
 
 <style scoped>

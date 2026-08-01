@@ -3505,7 +3505,7 @@ abstract class AppLocalizations {
   /// No description provided for @proLightAiModuleRequired.
   ///
   /// In fr, this message translates to:
-  /// **'Module CR IA non activé ou essai expiré — contactez votre commercial petsFollow.'**
+  /// **'Fonction CR IA désactivée pour ce cabinet — contactez le support petsFollow.'**
   String get proLightAiModuleRequired;
 
   /// No description provided for @proLightAiModuleTrialBanner.

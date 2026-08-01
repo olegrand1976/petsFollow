@@ -685,7 +685,7 @@
   },
   "proLightAudioConsentClientCheck": "I have obtained the client's oral consent to record",
   "proLightReportAiProposalBanner": "AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication).",
-  "proLightAiModuleRequired": "AI visit-report module not activated or trial ended — contact your petsFollow sales rep.",
+  "proLightAiModuleRequired": "AI visit-report feature disabled for this practice — contact petsFollow support.",
   "proLightAiModuleTrialBanner": "AI CR trial — {days} days left. Dictate then improve your visit reports.",
   "proLightAiModuleInactiveBanner": "AI CR not activated for this practice. AI dictation will be unavailable.",
   "proLightAiModuleVisitScopedBanner": "AI CR is available when the visit's practice has the module activated.",

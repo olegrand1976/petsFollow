@@ -1,5 +1,7 @@
 # Flux utilisateurs — petsFollow
 
+Carte interactive Pro (admin / commercial / responsable commercial) : **`/flux`** — parcours par profil, fonctionnalités et liens croisés (i18n `productFlows.*`).
+
 ## Rôles
 
 | Rôle | Surface | Mission |

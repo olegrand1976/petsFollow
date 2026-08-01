@@ -1,6 +1,12 @@
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 import { pharmacyErrorMessage } from '~/utils/pharmacy-error'
 
+export type PharmacySupplier = {
+  id: string
+  name: string
+  email: string
+}
+
 export type PharmacyReorderAlert = {
   medicationId: string
   medicationCnk: string
@@ -73,7 +79,10 @@ export function usePharmacyStockPage() {
   const receipt = reactive({ lotNumber: '', expiresOn: '', qty: 1, noteNumber: '', supplierName: '' })
   const batches = ref<PharmacyBatchRow[]>([])
   const reorderAlerts = ref<PharmacyReorderAlert[]>([])
+  const suppliers = ref<PharmacySupplier[]>([])
+  const orderSupplierId = ref('')
   const orderEmail = ref('')
+  const orderSupplierName = ref('')
   const orderMsg = ref('')
   const invSession = ref<PharmacyInvSession | null>(null)
   const invCounts = ref<Record<string, number>>({})
@@ -165,6 +174,44 @@ export function usePharmacyStockPage() {
       reorderAlerts.value = []
       error.value = pharmacyErr(e, 'pharmacy.stock.errorReorderLoad')
     }
+  }
+
+
+  async function loadSuppliers() {
+    try {
+      const res = await $fetch<any>('/api/vet/pharmacy/suppliers')
+      const data = unwrapData<PharmacySupplier[]>(res)
+      suppliers.value = Array.isArray(data) ? data : []
+      if (orderSupplierId.value && !suppliers.value.some(s => s.id === orderSupplierId.value)) {
+        orderSupplierId.value = ''
+      }
+      if (!orderSupplierId.value && suppliers.value.length === 1) {
+        orderSupplierId.value = suppliers.value[0].id
+      }
+    }
+    catch {
+      suppliers.value = []
+    }
+  }
+
+  async function ensureOrderSupplier(): Promise<{ id: string, email: string }> {
+    if (orderSupplierId.value) {
+      const su = suppliers.value.find(s => s.id === orderSupplierId.value)
+      if (!su?.email) throw new Error('supplier')
+      return { id: su.id, email: su.email }
+    }
+    const email = orderEmail.value.trim()
+    const name = orderSupplierName.value.trim()
+    if (!email || !name) throw new Error('supplier')
+    const res = await $fetch<any>('/api/vet/pharmacy/suppliers', {
+      method: 'POST',
+      body: { name, email },
+    })
+    const su = unwrapData<PharmacySupplier>(res)
+    if (!su?.id || !su.email) throw new Error('supplier')
+    await loadSuppliers()
+    orderSupplierId.value = su.id
+    return { id: su.id, email: su.email }
   }
 
   async function loadOpenInventory() {
@@ -291,7 +338,7 @@ export function usePharmacyStockPage() {
     busy.value = true
     error.value = ''
     try {
-      await Promise.all([loadSummary(), loadBatches(), loadReorderAlerts(), loadOpenInventory()])
+      await Promise.all([loadSummary(), loadBatches(), loadReorderAlerts(), loadSuppliers(), loadOpenInventory()])
     }
     catch (e: any) {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorLoad')
@@ -302,22 +349,24 @@ export function usePharmacyStockPage() {
   }
 
   async function createAndSendOrder() {
-    if (!orderEmail.value) return
     busyOrder.value = true
     error.value = ''
     orderMsg.value = ''
     try {
+      const supplier = await ensureOrderSupplier()
       const created = await $fetch<any>('/api/vet/pharmacy/orders', {
         method: 'POST',
-        body: { fromAlerts: true },
+        body: { fromAlerts: true, supplierId: supplier.id },
       })
       const order = unwrapData<{ id?: string }>(created)
       if (!order?.id) throw new Error('no order')
       await $fetch(`/api/vet/pharmacy/orders/${order.id}/send`, {
         method: 'POST',
-        body: { toEmail: orderEmail.value },
+        body: { toEmail: supplier.email, supplierId: supplier.id },
       })
       orderMsg.value = t('pharmacy.stock.orderSent')
+      orderEmail.value = ''
+      orderSupplierName.value = ''
       await loadReorderAlerts()
     }
     catch (e: any) {
@@ -416,7 +465,10 @@ export function usePharmacyStockPage() {
     receipt,
     batches,
     reorderAlerts,
+    suppliers,
+    orderSupplierId,
     orderEmail,
+    orderSupplierName,
     orderMsg,
     invSession,
     invCounts,

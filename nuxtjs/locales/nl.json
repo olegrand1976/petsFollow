@@ -87,7 +87,8 @@
     "researchTimeseries": "Tijdreeksen",
     "adminResearch": "Research opt-in",
     "researchGroups": "Groepen",
-    "researchDataroom": "Data room"
+    "researchDataroom": "Data room",
+    "productFlows": "Productstromen"
   },
   "auth": {
     "login": {
@@ -816,7 +817,7 @@
       "documentTypePdf": "PDF",
       "documentTypeImage": "Afbeelding",
       "summaryPlan": "Formule",
-      "summaryStatus": "Status",
+      "summaryStatus": "Abonnementsstatus",
       "paymentStatus": {
         "active": "Actief",
         "pending": "In afwachting",
@@ -1040,6 +1041,9 @@
       "reorderOnHand": "Op voorraad",
       "reorderMin": "Drempel",
       "orderEmail": "E-mail leverancier",
+      "orderSupplier": "Leverancier",
+      "orderSupplierPlaceholder": "Kies een leverancier…",
+      "orderSupplierName": "Naam leverancier",
       "orderCreateSend": "Bestelling mailen",
       "orderSent": "Bestelling verzonden.",
       "errorOrder": "Bestelling mislukt.",
@@ -1129,7 +1133,8 @@
       "email_send_failed": "Email send failed.",
       "vamreg_enqueue_failed": "Could not retry VAMReg.",
       "not_found": "Not found.",
-      "validation_error": "Invalid data."
+      "validation_error": "Invalid data.",
+      "supplier_email_required": "E-mail leverancier ontbreekt."
     }
   },
   "recommend": {
@@ -1672,21 +1677,21 @@
     },
     "aiModules": {
       "title": "CR IA-module",
-      "subtitle": "Activation VetPro — essai 90 jours, puis 39 € HT/mois ou 390 € HT/an",
+      "subtitle": "AI-CR inbegrepen in Pro — volg adoptie en ROI (admin kill-switch indien nodig)",
       "activateTitle": "Activer un cabinet",
       "practice": "Cabinet",
       "practicePlaceholder": "Choisir un cabinet",
-      "activate": "Activer l’essai 90 j",
-      "activatedOk": "Module activé (essai 90 jours)",
+      "activate": "ROI-opvolging activeren",
+      "activatedOk": "ROI-opvolging geactiveerd",
       "listTitle": "Modules actifs",
       "emptyTitle": "Aucun module",
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
       "colPractice": "Cabinet",
       "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "colTrial": "Einde ROI-venster",
       "colDays": "J+ / restant",
-      "convertMonthly": "Convertir 39 €/mois",
-      "convertAnnual": "Convertir 390 €/an",
+      "convertMonthly": "Markeer actief",
+      "convertAnnual": "Markeer actief (jaarlijks)",
       "disable": "Désactiver"
     },
     "branches": {
@@ -2131,8 +2136,8 @@
     "registerCta": "Registreren",
     "badge": "Voorgeschreven zorgcontinuïteit",
     "heroTitleLine1": "Geen software erbij.",
-    "heroTitleLine2": "Zorgcontinuïteit, voorgeschreven en gedeeld.",
-    "heroLead": "Wij verzekeren de link tussen uw praktijk, de eigenaar en diergezondheidsprofessionals via het gedeelde digitale paspoort.",
+    "heroTitleLine2": "Het gedeelde zorgdossier, tussen consultaties.",
+    "heroLead": "Digitaal paspoort tussen uw praktijk, veldprofessionals en de eigenaar — met vocale verslagen en AI-verbetering inbegrepen in Pro. Uw cliënten betalen de opvolging van hun dieren.",
     "heroCta": "Mijn professioneel account aanmaken",
     "heroLogin": "Ik heb al een account",
     "actors": {
@@ -2158,17 +2163,17 @@
       "pro": {
         "role": "Pro · Web",
         "title": "De praktijk stuurt",
-        "text": "U schrijft de opvolging voor, leest de timeline en blijft verbonden met het huishouden — de cockpit van het paspoort."
+        "text": "U schrijft de opvolging voor, leest de timeline, dicteert CR’s met AI en blijft verbonden met het gezin."
       },
       "proLight": {
         "role": "Pro Light · Mobiel",
-        "title": "Het terrein documenteert",
-        "text": "Vet light en care pro's leggen notities, verslagen en docs vast op hetzelfde dier — zonder chat tussen pros."
+        "title": "Het veld documenteert",
+        "text": "Vet light en care pros voegen notities, CR’s en docs toe op hetzelfde dier — geen chat tussen pros."
       },
       "owner": {
         "role": "Cliënt-app · Mobiel",
         "title": "De eigenaar volgt",
-        "text": "Berichten, Care/Horse-herinneringen, metingen — het huishouden observeert wat u voorschreef."
+        "text": "Berichten, Care/Horse-herinneringen, metingen — het gezin observeert wat u voorschreef."
       }
     },
     "continuityTitle": "Voorgeschreven continuïteit",
@@ -2192,40 +2197,39 @@
       }
     },
     "ctaTitle": "Open het paspoort van uw praktijk",
-    "ctaText": "Maak uw Pro-account aan — of start gratis met Pro Light op het terrein. Uw cliënten betalen de opvolging van hun dieren.",
+    "ctaText": "Maak uw Pro-account — gedeeld dossier, berichten en AI-CR inbegrepen. Of start gratis met Pro Light in het veld. Uw cliënten betalen de opvolging.",
     "ctaButton": "Registratie starten",
     "productsLink": "Producten",
     "productsTitle": "Hoe het paspoort vorm krijgt",
-    "productsLead": "Twee professionele gezichten, één eigenaarabonnement. Complementair aan uw PMS — geen tweede praktijksoftware.",
+    "productsLead": "Pro-aanbod (Web + AI-CR inbegrepen), gratis Pro Light, eigenaarsabonnement. Complementair aan uw PMS — geen tweede praktijksysteem.",
     "productsCta": "Mijn account aanmaken",
     "solutions": {
       "proComplete": {
-        "price": "€834,71 excl. btw / jaar",
+        "price": "834,71 € excl. btw / jaar",
         "title": "Pro",
-        "text": "Web-cockpit van het paspoort + mobiele app voor cliënten. Berichten, timeline, delen en loyaliteit.",
+        "text": "Web-cockpit van het paspoort + mobiele cliënt-app. Berichten, timeline, delen en AI-CR inbegrepen.",
         "features": [
+          "Vocale verslagen & AI-verbetering inbegrepen",
           "Digitaal paspoort & gedeelde timeline",
-          "Veilige berichten + push (praktijk ↔ cliënt)",
+          "Beveiligde berichten + push (praktijk ↔ cliënt)",
+          "Begeleide hartmetingen 15 / 30 / 60 s",
           "Herinneringen, afspraken & therapietrouw",
-          "Dossierdelen met care pro / collega's",
-          "Partnercommissies (externe facturatie)",
-          "Vocale consultatierapporten",
-          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard",
-          "CR IA-add-on: 90 dagen proef dan 39 € excl. btw/maand of 390 €/jaar — ROI vanaf dag 60"
-        ]
+          "Dossierdeling met care pro / collega’s",
+          "Partnercommissies (externe facturatie)"
+        ],
+        "priceSub": "Opzet & opleiding: 320 € excl. btw (eenmalig) · AI-CR inbegrepen"
       },
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "Mobiele app terrein / care pro — notities, verslagen, docs en delen op het paspoort. Met of zonder Web Pro-account.",
+        "text": "Mobiele veld-/care pro-app — notities, CR’s, docs en delen op het paspoort. Met of zonder Web Pro-account.",
         "features": [
-          "Agenda op het terrein & cliëntfiches",
+          "Veldagenda & cliëntdossiers",
           "Diergeschiedenis",
-          "Doorverwijzings-QR-code",
+          "Doorverwijs-QR",
           "Gedeelde documenten & notities",
-          "Dossierdelen met collega's / externe pros",
-          "Vocale consultatierapporten",
-          "AI-verbetering van rapporten (+ geschiedenis) als VetPro-praktijk actief is"
+          "Dossierdeling met collega’s / externe pros",
+          "Vocale verslagen & AI als de Pro-praktijk van het dossier actief is"
         ]
       }
     },
@@ -2233,22 +2237,44 @@
     "clientPlansLead": "De eigenaar financiert het paspoort van zijn dier — drie formules, alles inbegrepen zodra het abonnement actief is.",
     "productHighlights": {
       "monthly": {
-        "price": "€3,50 / maand",
+        "price": "3,50 € / maand",
         "title": "Maandelijks",
-        "text": "Flexibiliteit — paspoort / gezondheidsboekje, berichten, timeline, Care/Horse-herinneringen, huishouden. Geen lange verbintenis."
+        "text": "Flexibiliteit — paspoort / gezondheidsboekje, berichten, timeline, Care/Horse, huishouden. Geen lange verbintenis."
       },
       "annual": {
-        "price": "€35 / jaar",
+        "price": "35 € / jaar",
         "title": "Jaarlijks",
-        "text": "≈ €2,9 / maand — hetzelfde volledige paspoort, betere prijs dan maandelijks."
+        "text": "≈ 2,9 € / maand — hetzelfde volledige paspoort, beter dan maandelijks."
       },
       "triennial": {
-        "price": "€95 / 3 jaar",
-        "title": "Driejaarlijks (aanbevolen)",
-        "text": "≈ €2,6 / maand — kernaanbod, volledig paspoort, −10 % vs 3× jaarlijks."
+        "price": "95 € / 3 jaar",
+        "title": "Driejarig",
+        "text": "≈ 2,6 € / maand — kernaanbod, volledig paspoort, −10 % vs 3× jaarlijks."
       }
     },
-    "footer": "© {year} petsFollow — Zorgcontinuïteit · digitaal paspoort van het dier"
+    "footer": "© {year} petsFollow — Zorgcontinuïteit · digitaal paspoort van het dier",
+    "recommended": "Aanbevolen",
+    "saasTitle": "Pro SaaS-verbintenissen (excl. btw)",
+    "saasLead": "Offline facturatie (commercieel / boekhouding) — geen Stripe-checkout voor de praktijk. Steer: 3 jaar.",
+    "saas": {
+      "setup": {
+        "name": "Opzet & opleiding",
+        "price": "320 € excl. btw",
+        "description": "Account, config, opleiding, start (eenmalig)."
+      },
+      "annual": {
+        "name": "Jaarlijks",
+        "price": "834,71 € excl. btw / jaar",
+        "description": "≈ €69,56 excl. btw / maand — paspoort + AI-verslagen inbegrepen."
+      },
+      "longTerm": {
+        "name": "Driejarig",
+        "price": "2 253,72 € excl. btw / 3 jaar",
+        "description": "−10 % vs 3× jaarlijks — bespaar €250,41 (≈ €62,60 excl. btw / maand) — AI-verslagen inbegrepen."
+      }
+    },
+    "autofinanceTip": "≈ 8 driejarige cliëntactivaties / maand ≈ dekt het maandelijkse Pro-equivalent (≈ 69,56 € excl. btw).",
+    "clientIncludedLine": "Inbegrepen bij elk plan: paspoort, berichten + push, HR 15/30/60 s, Care/Horse, huishouden, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
@@ -2258,20 +2284,21 @@
     "badge": "Presentatieondersteuning praktijk",
     "title": "Aanbod petsFollow",
     "lead": "Het essentiële: Pro-aanbod (Web praktijk), Pro Light en cliëntabonnementen.",
-    "hook": "Voorgeschreven zorgcontinuïteit + digitaal paspoort van het dier, gedeeld tussen praktijk, care pro en eigenaar.",
+    "hook": "Voorgeschreven zorgcontinuïteit + gedeeld digitaal paspoort — vocale CR’s en AI inbegrepen in Pro.",
     "pro": {
       "name": "PetsFollow Webplatform (praktijk)",
       "badge": "Pro-aanbod",
       "price": "€834,71 excl. btw / jaar",
-      "setup": "≈ €69,56 excl. btw / maand · opzet & opleiding: €320 excl. btw (one-shot)",
-      "tagline": "Het cockpit van de praktijk: digitaal paspoort, berichten, herinneringen, delen en activatie-opvolging.",
+      "setup": "≈ 69,56 € excl. btw / maand · opzet & opleiding: 320 € excl. btw (eenmalig) · AI-CR inbegrepen",
+      "tagline": "Cockpit van de praktijk: digitaal paspoort, berichten, AI-CR, herinneringen, delen en activatie-opvolging.",
       "features": [
+        "Vocale verslagen & AI-verbetering inbegrepen",
         "Digitaal paspoort + gedeelde timeline (praktijk / cliënt / care pro)",
-        "Veilige berichten cliënt ↔ praktijk + push",
-        "Herinneringen, voorschriften en afspraakverzoeken",
-        "Dossierdelen (collega's / care pro)",
-        "Opvolging cliëntactivaties en partnercommissies",
-        "Vocale CR + IA-add-on (90 dagen proef → €39 excl. btw/maand of €390/jaar)"
+        "Beveiligde berichten cliënt ↔ praktijk + push",
+        "Begeleide hartmetingen 15 / 30 / 60 s",
+        "Herinneringen en afspraakverzoeken",
+        "Dossierdeling (collega’s / care pro)",
+        "Opvolging cliëntactivaties en partnercommissies"
       ],
       "invoiceNote": "Offline facturatie (sales / boekhouding) — geen praktijk-SaaS-betaling via Stripe."
     },
@@ -2281,9 +2308,9 @@
       "price": "€0",
       "tagline": "Mobiele app terrein / care pro — met of zonder Web Pro-account.",
       "features": [
-        "Terreinagenda, dierfiches, bezoeknotities",
-        "Dossierdelen + doorverwijzings-QR",
-        "Vocale CR (IA als het Pro-kabinet de module activeerde)"
+        "Veldagenda, dierdossiers, bezoeknotities",
+        "Dossierdeling + doorverwijs-QR",
+        "Vocale CR’s & AI als de Pro-praktijk van het dossier actief is"
       ]
     },
     "clientsTitle": "Cliëntapp (eigenaars)",
@@ -2314,12 +2341,12 @@
       "annual": {
         "name": "Jaarlijks",
         "price": "€834,71 excl. btw / jaar",
-        "description": "≈ €69,56 excl. btw / maand."
+        "description": "≈ €69,56 excl. btw / maand — AI-verslagen inbegrepen."
       },
       "longTerm": {
         "name": "Driejaarlijks",
         "price": "€2.253,72 excl. btw / 3 jaar",
-        "description": "−10 % vs 3× jaarlijks — besparing €250,41 (≈ €62,60 excl. btw / maand)."
+        "description": "−10 % vs 3× jaarlijks — bespaar €250,41 (≈ €62,60 excl. btw / maand) — AI-verslagen inbegrepen."
       }
     },
     "saasMigration": "Datamigratie: op offerte (vanaf €350 excl. btw).",
@@ -2817,19 +2844,19 @@
     },
     "aiModules": {
       "title": "AI CR-module",
-      "subtitle": "Activeer de proef voor je praktijken, volg adoptie, converteer voor €39 / €390",
+      "subtitle": "AI-CR inbegrepen in Pro — volg adoptie en ROI van uw praktijken",
       "openPlaybook": "Gids / pitch openen",
       "activateTitle": "Activeer een van je praktijken",
       "practice": "Praktijk",
       "practicePlaceholder": "Kiezen",
-      "activate": "Activeer 90 gratis dagen",
-      "activatedOk": "Proef geactiveerd — de dierenarts ontving een e-mail",
+      "activate": "ROI-opvolging activeren",
+      "activatedOk": "ROI-opvolging geactiveerd",
       "listTitle": "Jouw modules",
       "emptyTitle": "Nog geen activatie",
       "emptyDescription": "Kies een toegewezen praktijk om te starten.",
       "colPractice": "Praktijk",
       "colStatus": "Status",
-      "colTrial": "Einde proef",
+      "colTrial": "Einde ROI-venster",
       "frictionTitle": "Frictie-alerts",
       "frictionEmpty": "Geen recente alerts",
       "frictionEmptyDesc": "Signalen (0 gebruik D7, daling, lage NPS…) verschijnen hier.",
@@ -2847,47 +2874,47 @@
       "print": "Imprimer / PDF",
       "linkCopied": "Lien copié",
       "mailSubject": "petsFollow — guide module Compte-rendu IA",
-      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du module Compte-rendu IA petsFollow (essai 90 jours, puis 39 € HT/mois ou 390 € HT/an).",
-      "badge": "90 jours offerts · preuve ROI dès J60",
+      "mailBody": "Hallo,\n\nHier is de petsFollow AI-CR handleiding — inbegrepen in Pro (geen add-on).",
+      "badge": "Inbegrepen in Pro · ROI-bewijs vanaf dag 60",
       "docTitle": "petsFollow AI visit report — how-to",
-      "promise": "Dictate, structure, save time on every visit — we prove value in 90 days before billing.",
-      "priceMonthly": "€39 excl. VAT / month / practice",
-      "priceAnnual": "€390 excl. VAT / year (−17%)",
+      "promise": "Dicteren, structureren, tijd winnen bij elk bezoek — AI zit in uw Pro-abonnement.",
+      "priceMonthly": "Inbegrepen in Pro SaaS",
+      "priceAnnual": "Geen aparte add-on",
       "whoTitle": "Pour qui ?",
       "whoBody": "Cabinets VetPro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet activé en bénéficient aussi sur ces visites.",
       "changeTitle": "Ce que ça change",
       "change1": "Avant : CR tapés le soir, dossiers incomplets, fatigue terrain.",
       "change2": "Après : dictée mobile → transcription → CR structuré (anamnèse, examen, diagnostic proposé, plan).",
-      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — argument de conversion clair.",
+      "change3": "Op dag 60: tijdwinst op het dashboard — duidelijke waardebewijs.",
       "howtoTitle": "Mode d’emploi en 6 étapes",
-      "step1": "Commercial ou admin active le module (essai 90 j) depuis l’espace petsFollow.",
+      "step1": "AI-CR is inbegrepen bij Pro — commercial kan ROI-opvolging activeren in petsFollow.",
       "step2": "Sur place : obtenir l’accord oral du client (case à cocher) avant d’enregistrer.",
       "step3": "Dicter le CR dans Pro Light (Flutter) ou uploader un fichier audio sur le calendrier Web.",
       "step4": "Lancer « Améliorer » pour structurer le texte, puis éditer si besoin.",
       "step5": "Finaliser = validation exclusive du pro (purge audio).",
       "step6": "À partir de J60, lire le ROI (minutes gagnées) sur le tableau de bord VetPro.",
       "pitchTitle": "Argumentaire terrain",
-      "pitchBody": "« On active 90 jours offerts. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné. Si ça tient, c’est 39 € HT/mois — bien en dessous d’une heure de temps véto. »",
+      "pitchBody": "« In Pro zit AI inbegrepen. U dicteert op het veld, AI structureert het dossier. Op dag 60 bekijken we samen de tijdwinst — bewijs dat de SaaS voor u werkt. »",
       "objectionsTitle": "Objections fréquentes",
       "obj1q": "« C’est trop cher. »",
-      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. À 80 €/h, 39 € est < 5 % de la valeur basse.",
+      "obj1a": "Anker op tijd: 5–7 min/CR × 10 CR/dag ≈ 1 u/dag. AI zit al in het Pro-ticket — geen tweede abonnement.",
       "obj2q": "« J’ai déjà Whisper / un dictaphone. »",
       "obj2a": "Ici : consentement, CR structuré métier, dossier animal, ROI cabinet, pas un fichier texte isolé.",
       "obj3q": "« Mes assistants vont s’en servir ? »",
       "obj3a": "Oui si droits write notes. VetLight / care_pro : seulement si le cabinet de la visite est activé.",
       "roiTitle": "Preuve ROI",
-      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. Prix catalogue fixe : pas de promo intro — la preuve suffit.",
-      "calendarTitle": "Calendrier d’adhésion (checklist commercial)",
-      "calJ0": "J0 — activation + 3 premiers CR",
+      "roiBody": "Formule: AI-CR × (baseline 10 min − 4 min AI). Vanaf dag 60. AI inbegrepen in Pro — bewijs voor adoptie, geen add-onconversie.",
+      "calendarTitle": "Adoptiekalender (checklist commercial)",
+      "calJ0": "J0 — eerste gedicteerde CR",
       "calJ14": "J14 — NPS #1",
       "calJ45": "J45 — NPS #2 + tags friction",
       "calJ60": "J60 — bilan ROI ensemble",
-      "calJ75": "J75 — proposition 39 € / 390 €",
-      "calJ90": "J90 — conversion ou coupure IA (CR manuel reste)",
+      "calJ75": "J75 — gewoonte verankeren (geen betaalde conversie)",
+      "calJ90": "J90 — adoptiereview; manuele CR altijd mogelijk",
       "frictionTitle": "Quand relancer",
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
-      "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
-      "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+      "footer": "AI-CR inbegrepen in Pro SaaS (externe factuur). petsFollow — voorgeschreven zorgcontinuïteit.",
+      "mailBodyPdf": "Hallo,\n\nIn bijlage de petsFollow AI-CR handleiding (PDF via Afdrukken / Opslaan als PDF vanuit het commercial-gebied).\n\nAI is inbegrepen in Pro — geen aparte add-on.\n\nMet vriendelijke groeten,"
     },
     "network": {
       "title": "Mijn netwerk",
@@ -3000,7 +3027,7 @@
       "terrainTitle": "Pro Light — gratis veld-app",
       "terrain1": "Veldagenda, dierfiches, bezoeknotities",
       "terrain2": "Dossierdeling + doorverwijs-QR",
-      "terrain3": "Spraakverslagen (AI als het praktijkmodule aan staat)",
+      "terrain3": "Spraakverslagen & AI-verbetering inbegrepen in Pro",
       "clientTitle": "Eigenaars-app",
       "client1": "Paspoort / gezondheidsboekje altijd op zak",
       "client2": "Messaging met de praktijk + push",
@@ -3362,7 +3389,7 @@
       "emptyTitle": "Nog geen activaties",
       "colPractice": "Praktijk",
       "colStatus": "Status",
-      "colTrial": "Einde proef",
+      "colTrial": "Einde ROI-venster",
       "colSignal": "Signaal",
       "colDetail": "Detail",
       "colWhen": "Wanneer",
@@ -4102,6 +4129,233 @@
       "ageBand": "Age band",
       "forbiddenTitle": "Data room not allowed",
       "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
+    }
+  },
+  "productFlows": {
+    "title": "petsFollow-stromen",
+    "subtitle": "Trajecten per profiel, kernfuncties en koppelingen tussen productvlakken.",
+    "howtoTitle": "Hoe lees je deze kaart?",
+    "howto1": "Kies een profiel (dierenarts, eigenaar, commercial…).",
+    "howto2": "Volg het traject stap voor stap en bekijk de functies.",
+    "howto3": "Klik op een kruislink om naar het gekoppelde profiel te gaan.",
+    "selectProfile": "Profielen",
+    "flowTitle": "Traject",
+    "featuresTitle": "Functies",
+    "linksTitle": "Koppelingen met andere profielen",
+    "linksBlurb": "Deze pijlen tonen hoe een actie van het ene profiel een ander vlak beïnvloedt.",
+    "linksEmpty": "Geen kruiskoppelingen voor dit profiel.",
+    "usecasesCta": "Testgidsen openen",
+    "usecasesCtaHint": "Op staging / lokaal: gedetailleerde scenario’s met seed-accounts en checklists.",
+    "surface": {
+      "web_pro": "Pro-web",
+      "flutter_client": "Klantapp (Flutter)",
+      "flutter_pro_light": "Pro Light (Flutter)"
+    },
+    "profiles": {
+      "vet": {
+        "label": "Dierenarts",
+        "mission": "Patiënten volgen, met eigenaars chatten, metingen valideren en de praktijk runnen."
+      },
+      "client": {
+        "label": "Eigenaar",
+        "mission": "Dieren beheren, plan kiezen, metingen sturen en met de praktijk praten."
+      },
+      "care_pro": {
+        "label": "Care pro (Pro Light)",
+        "mission": "Veldwerk (hoefsmid, vet light…) met agenda en gesynchroniseerde notities."
+      },
+      "commercial": {
+        "label": "Commercial",
+        "mission": "Praktijken binnenhalen, accounts aanmaken, betaalde pets activeren, commissies volgen."
+      },
+      "commercial_manager": {
+        "label": "Salesmanager",
+        "mission": "Team / branche sturen (KPI’s, opvolging) met eigen portefeuille."
+      },
+      "admin": {
+        "label": "Admin",
+        "mission": "Platform-ops: users, salesforce, payroll, flags en modules."
+      },
+      "practice_staff": {
+        "label": "Praktijkteam",
+        "mission": "Assistenten / receptie: balie, berichten en dossiers in de gedeelde Pro-shell."
+      },
+      "research": {
+        "label": "Research",
+        "mission": "Geanonimiseerd epidemiologisch observatorium (dev-module)."
+      }
+    },
+    "features": {
+      "onboarding": {
+        "title": "Onboarding",
+        "desc": "Registratie, e-mailbevestiging en afronden van profiel / praktijk."
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "desc": "Dagoverzich: patiënten, alerts, snelle toegang tot tools."
+      },
+      "messaging": {
+        "title": "Berichten",
+        "desc": "Threads praktijk ↔ eigenaar, met push bij de klant."
+      },
+      "hr_vitals": {
+        "title": "Hartmetingen",
+        "desc": "HR-metingen bij de eigenaar; validatie bij de dierenarts."
+      },
+      "link_requests": {
+        "title": "Koppelverzoeken",
+        "desc": "Eigenaar vraagt een praktijk; dierenarts aanvaardt."
+      },
+      "dossier_share": {
+        "title": "Dossier delen",
+        "desc": "Tijdelijk dierendossier (PHI) naar een pro na toestemming."
+      },
+      "billing_client": {
+        "title": "Klantabonnement",
+        "desc": "Maand / jaar / 3 jaar via Stripe; actieve pet-entitlement."
+      },
+      "care_horse": {
+        "title": "Care / Horse / gezin",
+        "desc": "Inbegrepen bij entitlement: Care+, Horse, kennel, gezin."
+      },
+      "commissions": {
+        "title": "Commissies",
+        "desc": "Ledger dierenarts en commercial bij activaties / betalingen."
+      },
+      "prospects": {
+        "title": "Prospects-CRM",
+        "desc": "Salespipeline: doelpraktijken, opvolging, status."
+      },
+      "encode": {
+        "title": "Encodering",
+        "desc": "Commercial maakt dierenarts / gekoppelde of losse klant aan."
+      },
+      "network": {
+        "title": "Netwerk / filiatie",
+        "desc": "Branches, sponsor, MLM-ready attributie en netwerkweergave."
+      },
+      "team_kpi": {
+        "title": "Teamsturing",
+        "desc": "Managerdashboard: afspraken, opvolging, ranking, teamprospects."
+      },
+      "ops_users": {
+        "title": "User-ops",
+        "desc": "Registraties, imports, support, runtime-flags."
+      },
+      "ops_billing": {
+        "title": "Payroll & catalogus",
+        "desc": "Betalingen, commissies, Stripe-catalogus, SaaS-facturatie."
+      },
+      "ai_cr": {
+        "title": "AI-verslagmodule",
+        "desc": "AI-verslagen inbegrepen in Pro — adoptie- & ROI-opvolging (admin / sales)."
+      },
+      "pro_light_agenda": {
+        "title": "Pro Light-agenda",
+        "desc": "Veldronde, dierenfiches en care_pro-notities."
+      },
+      "practice_desk": {
+        "title": "Praktijkbalie",
+        "desc": "Rollen collega / assist / secretariaat op dezelfde Pro-shell."
+      },
+      "research_obs": {
+        "title": "Research-observatorium",
+        "desc": "Opt-in praktijk, geanonimiseerde ETL, heatmap / timeseries / alerts."
+      }
+    },
+    "steps": {
+      "vet_register": "Registratie + e-mailbevestiging",
+      "vet_onboarding": "Onboarding praktijkprofiel",
+      "vet_dashboard": "Dashboard klanten & verzoeken",
+      "vet_care": "Berichten, HR, dossier delen",
+      "vet_earn": "Commissies & praktijkmodules",
+      "client_register": "Register / login (e-mail of Google)",
+      "client_pet": "Dier aanmaken + plan kiezen",
+      "client_pay": "Stripe Checkout",
+      "client_active": "Actieve entitlement → HR, berichten, Care/Horse",
+      "client_engage": "In-app discovery + educatieve e-mails",
+      "care_login": "Login care_pro (Pro Light)",
+      "care_agenda": "Agenda / dagrondte",
+      "care_notes": "Notities & dierenfiches",
+      "care_sync": "Sync zichtbaar bij de praktijk",
+      "co_login": "Login commercial",
+      "co_overview": "Dagoverzich",
+      "co_prospects": "Prospects-CRM",
+      "co_encode": "Dierenarts / klant encoderen",
+      "co_activate": "Betaalde pets activeren",
+      "co_earn": "Commissieledger",
+      "cm_login": "Login salesmanager",
+      "cm_team": "Dashboard team / branche",
+      "cm_followups": "Afspraken + opvolging",
+      "cm_self": "Mijn privéproductie",
+      "cm_encode": "Persoonlijke encode / CRM",
+      "ad_login": "Login admin",
+      "ad_metrics": "Ops-metrics",
+      "ad_users": "Users / imports / support",
+      "ad_sales": "Salesforce & branches",
+      "ad_close": "Commissies & catalogus afsluiten",
+      "eq_login": "Login praktijkteam",
+      "eq_desk": "Gedeelde Pro-shell",
+      "eq_clients": "Klanten & dieren",
+      "eq_msg": "Berichten / balie",
+      "re_optin": "Research opt-in van de praktijk",
+      "re_etl": "Anonimisatie-ETL",
+      "re_login": "Login / switch research-profiel",
+      "re_obs": "Observatorium (heatmap, alerts…)"
+    },
+    "links": {
+      "msg_vet_client": {
+        "label": "Gekruiste berichten",
+        "desc": "Een bericht van de dierenarts verschijnt bij de eigenaar (push) en omgekeerd."
+      },
+      "link_req_client_vet": {
+        "label": "Koppelverzoek",
+        "desc": "Klant vraagt een praktijk; dierenarts bevestigt bij Verzoeken."
+      },
+      "hr_client_vet": {
+        "label": "Meting → validatie",
+        "desc": "Eigenaar stuurt HR; dierenarts ziet en valideert."
+      },
+      "pay_client_commissions": {
+        "label": "Betaling → salescommissie",
+        "desc": "Activatie van een betaalde pet crediteert de commercial."
+      },
+      "pay_client_vet_commissions": {
+        "label": "Betaling → dierenartsvergoeding",
+        "desc": "De gekoppelde praktijk ontvangt haar ledger-vergoeding."
+      },
+      "encode_co_vet": {
+        "label": "Praktijk encoderen",
+        "desc": "Commercial maakt het dierenartsaccount; de praktijk start onboarding."
+      },
+      "encode_co_client": {
+        "label": "Klant encoderen",
+        "desc": "Commercial voorziet een klant (gekoppeld of los) om activatie te versnellen."
+      },
+      "care_notes_vet": {
+        "label": "Veldnotities → praktijk",
+        "desc": "Pro Light-notities verrijken de opvolging in VetPro."
+      },
+      "dossier_client_pro": {
+        "label": "Dossier delen",
+        "desc": "Eigenaar stuurt een tijdelijk pack dat een pro kan openen."
+      },
+      "manager_team_co": {
+        "label": "Sturing → commercial",
+        "desc": "Manager volgt KPI’s, afspraken en teamprospects."
+      },
+      "admin_sales_co": {
+        "label": "Admin → salesforce",
+        "desc": "Admin maakt commercials, branches en attributies aan."
+      },
+      "staff_vet_desk": {
+        "label": "Gedeelde balie",
+        "desc": "Het praktijkteam werkt op dezelfde patiënten als de dierenarts."
+      },
+      "research_vet_optin": {
+        "label": "Opt-in → observatorium",
+        "desc": "Praktijk activeert Research; anonieme aggregaten voeden het observatorium."
+      }
     }
   }
 }

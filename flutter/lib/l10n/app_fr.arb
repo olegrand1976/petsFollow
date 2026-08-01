@@ -748,7 +748,7 @@
   },
   "proLightAudioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
   "proLightReportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus).",
-  "proLightAiModuleRequired": "Module CR IA non activé ou essai expiré — contactez votre commercial petsFollow.",
+  "proLightAiModuleRequired": "Fonction CR IA désactivée pour ce cabinet — contactez le support petsFollow.",
   "proLightAiModuleTrialBanner": "Essai CR IA — {days} j restants. Dictez puis améliorez vos comptes rendus.",
   "@proLightAiModuleTrialBanner": {
     "placeholders": {
