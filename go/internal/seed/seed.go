@@ -765,9 +765,14 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 			return fmt.Errorf("create research group: %w", err)
 		}
 		groupID = g.ID
-		_, _ = st.TryAddResearchGroupMemberByEmail(ctx, researchUserID, g.ID, "admin.demo@petsfollow.test")
 	} else {
 		groupID = groups[0].ID
+	}
+	// Multi-profil démo : vet.demo / admin.demo (profil research) rejoignent le réseau.
+	for _, email := range []string{"admin.demo@petsfollow.test", "vet.demo@petsfollow.test"} {
+		if _, err := st.TryAddResearchGroupMemberByEmail(ctx, researchUserID, groupID, email); err != nil {
+			return fmt.Errorf("add research group member %s: %w", email, err)
+		}
 	}
 	// Admin must enable Data room (prevents solo-group unlock in product paths).
 	if _, err := st.SetResearchGroupDataroomEnabled(ctx, groupID, true); err != nil {
