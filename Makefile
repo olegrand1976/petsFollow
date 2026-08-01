@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -43,6 +43,7 @@ help:
 	@echo "  make gcp-saas-invoices-scheduler  Scheduler mensuel brouillons SaaS Flux A C1"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
+	@echo "  make gcp-research-etl-scheduler Scheduler 6h ETL Research (RESEARCH_ETL_SECRET=… RESEARCH_ANON_SALT=…)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make up-pacs && make migrate && make seed && make api-dev"
@@ -209,6 +210,9 @@ gcp-sales-branches-scheduler:
 
 gcp-pharmacy-expiry-scheduler:
 	bash infra/gcp/setup-pharmacy-expiry-scheduler.sh
+
+gcp-research-etl-scheduler:
+	bash infra/gcp/setup-research-etl-scheduler.sh
 
 # Alias obsolète → suppression du job Scheduler (plus de reset auto).
 gcp-seed-scheduler: gcp-delete-seed-scheduler

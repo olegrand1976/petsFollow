@@ -62,6 +62,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	if err := cfg.ValidateVamreg(); err != nil {
 		return nil, err
 	}
+	if err := cfg.ValidateResearch(); err != nil {
+		return nil, err
+	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err

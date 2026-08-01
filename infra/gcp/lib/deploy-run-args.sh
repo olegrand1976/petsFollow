@@ -37,7 +37,7 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
-  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled
+  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -47,6 +47,7 @@ pf_write_api_env_file() {
     pharmacy_enabled="${PHARMACY_ENABLED:-true}"
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
+    research_enabled="${RESEARCH_ENABLED:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_enabled="${PACS_ENABLED:-true}"
@@ -63,6 +64,7 @@ pf_write_api_env_file() {
     billit_enabled="${BILLIT_ENABLED:-false}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
     pacs_enabled="${PACS_ENABLED:-false}"
+    research_enabled="${RESEARCH_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
@@ -98,6 +100,7 @@ BILLIT_ENABLED: "${billit_enabled}"
 BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 PACS_ENABLED: "${pacs_enabled}"
+RESEARCH_ENABLED: "${research_enabled}"
 PACS_ORTHANC_URL: "${PACS_ORTHANC_URL:-}"
 PACS_ORTHANC_USER: "${PACS_ORTHANC_USER:-petsfollow}"
 PACS_ORTHANC_USE_ID_TOKEN: "${PACS_ORTHANC_USE_ID_TOKEN:-true}"
@@ -129,7 +132,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub pacs_pub
+  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -138,6 +141,7 @@ pf_write_frontend_env_file() {
     pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-true}"
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
+    research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-true}"
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-true}"
     else
@@ -148,6 +152,7 @@ pf_write_frontend_env_file() {
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
     pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
+    research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-}"
   fi
   if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PHARMACY_ENABLED: \"true\"
@@ -163,6 +168,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$pacs_pub" == "true" || "$pacs_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PACS_ENABLED: \"true\"
+"
+  fi
+  if [[ "$research_pub" == "true" || "$research_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_RESEARCH_ENABLED: \"true\"
 "
   fi
   cat >"$path" <<EOF
@@ -221,6 +230,15 @@ pf_api_secrets() {
   if gcloud secrets versions access latest \
     --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
+  fi
+  # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-research-etl-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},RESEARCH_ETL_SECRET=petsfollow-research-etl-secret:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-research-anon-salt --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},RESEARCH_ANON_SALT=petsfollow-research-anon-salt:latest"
   fi
   # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
   # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.

@@ -239,6 +239,28 @@ func Load() Config {
 	}
 }
 
+// ValidateResearch refuses RESEARCH_ENABLED without salt + ETL secret outside seedable envs.
+func (c Config) ValidateResearch() error {
+	if !c.ResearchEnabled {
+		return nil
+	}
+	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	switch env {
+	case "local", "development", "dev", "test":
+		return nil
+	}
+	if c.DevSeedEnabled {
+		return nil
+	}
+	if strings.TrimSpace(c.ResearchAnonSalt) == "" {
+		return errors.New("RESEARCH_ANON_SALT required when RESEARCH_ENABLED outside local/dev/test")
+	}
+	if strings.TrimSpace(c.ResearchEtlSecret) == "" {
+		return errors.New("RESEARCH_ETL_SECRET required when RESEARCH_ENABLED outside local/dev/test")
+	}
+	return nil
+}
+
 // ValidateBillit refuses unsafe Billit configs outside DEV_SEED (prod/staging).
 func (c Config) ValidateBillit() error {
 	if !c.BillitEnabled {

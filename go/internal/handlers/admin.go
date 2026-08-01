@@ -614,6 +614,7 @@ func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
 		"pharmacyWorkersEnabled":  a.cfg.PharmacyWorkersEnabled,
 		"prescriptionsEnabled":    a.cfg.PrescriptionsEnabled,
 		"pacsEnabled":             a.cfg.PacsEnabled,
+		"researchEnabled":         a.cfg.ResearchEnabled,
 		"billitEnabled":           a.cfg.BillitEnabled,
 		"billitMockEnabled":       a.cfg.BillitMockEnabled,
 		"mlmOrgEnabled":           a.cfg.MLMOrgEnabled,

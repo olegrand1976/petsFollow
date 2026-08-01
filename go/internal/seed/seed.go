@@ -741,6 +741,10 @@ func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) 
 	if err != nil {
 		return fmt.Errorf("research opt-in vetplus: %w", err)
 	}
+	// Populate observatory KPIs for local demo (idempotent ETL watermarks).
+	if _, err := st.RunResearchETL(ctx, "petsfollow-research-dev-salt"); err != nil {
+		return fmt.Errorf("research seed ETL: %w", err)
+	}
 	return nil
 }
 

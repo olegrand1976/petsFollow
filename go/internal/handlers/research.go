@@ -20,6 +20,7 @@ func (a *API) registerResearchRoutes(r chi.Router) {
 	r.Get("/vet/practice/research-opt-in", a.getResearchOptIn)
 	r.Post("/vet/practice/research-opt-in", a.postResearchOptIn)
 	r.Delete("/vet/practice/research-opt-in", a.deleteResearchOptIn)
+	r.Get("/admin/research/opt-ins", a.adminListResearchOptIns)
 }
 
 func (a *API) requireResearchEnabled(w http.ResponseWriter, r *http.Request) bool {
@@ -165,6 +166,21 @@ func (a *API) deleteResearchOptIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, st)
+}
+
+func (a *API) adminListResearchOptIns(w http.ResponseWriter, r *http.Request) {
+	if !a.requireResearchEnabled(w, r) {
+		return
+	}
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	items, err := a.store.ListResearchOptInPractices(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
 }
 
 func (a *API) internalRunResearchETL(w http.ResponseWriter, r *http.Request) {

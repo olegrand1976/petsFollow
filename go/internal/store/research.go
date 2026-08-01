@@ -99,13 +99,25 @@ func HashPracticeID(salt, practiceID string) string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+// researchWeekLoc is Europe/Brussels for ISO week boundaries (tzdata embedded in API binary).
+var researchWeekLoc = func() *time.Location {
+	loc, err := time.LoadLocation("Europe/Brussels")
+	if err != nil {
+		return time.UTC
+	}
+	return loc
+}()
+
+// isoWeekMonday returns the Monday 00:00 of the ISO week containing t, as a DATE
+// (UTC midnight of the Brussels calendar day — matches Postgres DATE semantics).
 func isoWeekMonday(t time.Time) time.Time {
-	t = t.UTC()
-	weekday := int(t.Weekday())
+	local := t.In(researchWeekLoc)
+	weekday := int(local.Weekday())
 	if weekday == 0 {
 		weekday = 7
 	}
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, -(weekday - 1))
+	day := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, researchWeekLoc).AddDate(0, 0, -(weekday - 1))
+	return time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
 }
 
 func ageBandFromBirth(birth *time.Time, at time.Time) string {
@@ -129,6 +141,42 @@ func normalizeResearchSpecies(species string) string {
 		return "unknown"
 	}
 	return s
+}
+
+// ResearchOptInPractice is an admin-facing row (no practice_id_hash).
+type ResearchOptInPractice struct {
+	PracticeID  string    `json:"practiceId"`
+	Name        string    `json:"name"`
+	PostalCode  string    `json:"postalCode"`
+	City        string    `json:"city"`
+	CountryCode string    `json:"countryCode"`
+	OptedInAt   time.Time `json:"optedInAt"`
+}
+
+func (s *Store) ListResearchOptInPractices(ctx context.Context) ([]ResearchOptInPractice, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, COALESCE(name,''), COALESCE(postal_code,''), COALESCE(city,''),
+		       COALESCE(country_code,'BE'), research_opt_in_at
+		FROM practice.practices
+		WHERE research_opt_in_at IS NOT NULL
+		ORDER BY research_opt_in_at DESC, name ASC
+		LIMIT 500`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []ResearchOptInPractice
+	for rows.Next() {
+		var p ResearchOptInPractice
+		if err := rows.Scan(&p.PracticeID, &p.Name, &p.PostalCode, &p.City, &p.CountryCode, &p.OptedInAt); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	if out == nil {
+		out = []ResearchOptInPractice{}
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) GetResearchOptIn(ctx context.Context, practiceID string) (ResearchOptInStatus, error) {
@@ -222,6 +270,43 @@ func (s *Store) RebuildResearchWeeklyAggregates(ctx context.Context) error {
 	return tx.Commit(ctx)
 }
 
+// refreshResearchWeeklyAggregatesForWeeks rebuilds only the given calendar weeks (incremental ETL).
+func (s *Store) refreshResearchWeeklyAggregatesForWeeks(ctx context.Context, weeks []time.Time) error {
+	if len(weeks) == 0 {
+		return nil
+	}
+	uniq := make(map[string]time.Time, len(weeks))
+	for _, w := range weeks {
+		key := w.UTC().Format("2006-01-02")
+		uniq[key] = time.Date(w.Year(), w.Month(), w.Day(), 0, 0, 0, 0, time.UTC)
+	}
+	list := make([]time.Time, 0, len(uniq))
+	for _, w := range uniq {
+		list = append(list, w)
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(context.Background()) }()
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(87231401)`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM research.weekly_aggregates WHERE event_week = ANY($1::date[])`, list); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO research.weekly_aggregates (event_week, postal_code, country_code, species, signal_type, event_count, updated_at)
+		SELECT event_week, postal_code, country_code, species, signal_type, COUNT(*)::int, NOW()
+		FROM research.anon_events
+		WHERE event_week = ANY($1::date[])
+		GROUP BY event_week, postal_code, country_code, species, signal_type`, list); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
 func (s *Store) getETLCursor(ctx context.Context, key string) (etlCursor, error) {
 	var c etlCursor
 	err := s.pool.QueryRow(ctx, `
@@ -265,7 +350,7 @@ type anonEventRow struct {
 	PracticeIDHash string
 }
 
-func (s *Store) upsertAnonEvents(ctx context.Context, salt string, rows []anonEventRow) (inserted, skipped int, err error) {
+func (s *Store) upsertAnonEvents(ctx context.Context, salt string, rows []anonEventRow) (inserted, skipped int, weeks []time.Time, err error) {
 	for _, row := range rows {
 		payload, _ := json.Marshal(row.Payload)
 		if payload == nil {
@@ -288,16 +373,17 @@ func (s *Store) upsertAnonEvents(ctx context.Context, salt string, rows []anonEv
 			row.PracticeID,
 		)
 		if err != nil {
-			return inserted, skipped, err
+			return inserted, skipped, weeks, err
 		}
 		if tag.RowsAffected() > 0 {
 			inserted++
+			weeks = append(weeks, row.EventWeek)
 		} else {
 			skipped++
 		}
 	}
 	_ = salt
-	return inserted, skipped, nil
+	return inserted, skipped, weeks, nil
 }
 
 // RunResearchETL ingests anonymized signals from opted-in practices since watermarks.
@@ -306,9 +392,10 @@ func (s *Store) RunResearchETL(ctx context.Context, salt string) (ResearchETLRes
 		return ResearchETLResult{}, fmt.Errorf("research_anon_salt_required")
 	}
 	var total ResearchETLResult
+	var weeksTouched []time.Time
 	steps := []struct {
 		key string
-		fn  func(context.Context, string, etlCursor) (int, int, etlCursor, error)
+		fn  func(context.Context, string, etlCursor) (int, int, etlCursor, []time.Time, error)
 	}{
 		{"preconsult", s.etlPreconsult},
 		{"visits", s.etlVisits},
@@ -322,12 +409,13 @@ func (s *Store) RunResearchETL(ctx context.Context, salt string) (ResearchETLRes
 		if err != nil {
 			return total, err
 		}
-		ins, skip, newCur, err := step.fn(ctx, salt, cur)
+		ins, skip, newCur, weeks, err := step.fn(ctx, salt, cur)
 		if err != nil {
 			return total, fmt.Errorf("%s: %w", step.key, err)
 		}
 		total.Inserted += ins
 		total.Skipped += skip
+		weeksTouched = append(weeksTouched, weeks...)
 		if cursorAfter(newCur, cur) {
 			if err := s.setETLCursor(ctx, step.key, newCur); err != nil {
 				return total, err
@@ -335,14 +423,14 @@ func (s *Store) RunResearchETL(ctx context.Context, salt string) (ResearchETLRes
 		}
 	}
 	if total.Inserted > 0 {
-		if err := s.RebuildResearchWeeklyAggregates(ctx); err != nil {
+		if err := s.refreshResearchWeeklyAggregatesForWeeks(ctx, weeksTouched); err != nil {
 			return total, err
 		}
 	}
 	return total, nil
 }
 
-func (s *Store) etlPreconsult(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlPreconsult(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT pi.id::text, pi.updated_at, pi.answers,
 		       pr.id::text, COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -356,7 +444,7 @@ func (s *Store) etlPreconsult(ctx context.Context, salt string, since etlCursor)
 		ORDER BY pi.updated_at ASC, pi.id ASC
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -367,7 +455,7 @@ func (s *Store) etlPreconsult(ctx context.Context, salt string, since etlCursor)
 		var answersRaw []byte
 		var birth *time.Time
 		if err := rows.Scan(&id, &updated, &answersRaw, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		c := etlCursor{At: updated, ID: id}
 		if cursorAfter(c, maxCur) {
@@ -396,13 +484,13 @@ func (s *Store) etlPreconsult(ctx context.Context, salt string, since etlCursor)
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
-func (s *Store) etlVisits(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlVisits(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT v.id::text, v.created_at, pr.id::text,
 		       COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -415,7 +503,7 @@ func (s *Store) etlVisits(ctx context.Context, salt string, since etlCursor) (in
 		ORDER BY v.created_at ASC, v.id ASC
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -425,7 +513,7 @@ func (s *Store) etlVisits(ctx context.Context, salt string, since etlCursor) (in
 		var created time.Time
 		var birth *time.Time
 		if err := rows.Scan(&id, &created, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		c := etlCursor{At: created, ID: id}
 		if cursorAfter(c, maxCur) {
@@ -446,13 +534,13 @@ func (s *Store) etlVisits(ctx context.Context, salt string, since etlCursor) (in
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
-func (s *Store) etlLabFlags(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlLabFlags(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT lp.id::text, lr.analyte_code, lp.updated_at, lr.flag, pr.id::text,
 		       COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -467,7 +555,7 @@ func (s *Store) etlLabFlags(ctx context.Context, salt string, since etlCursor) (
 		ORDER BY lp.updated_at ASC, lp.id ASC, lr.analyte_code ASC
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -477,7 +565,7 @@ func (s *Store) etlLabFlags(ctx context.Context, salt string, since etlCursor) (
 		var updated time.Time
 		var birth *time.Time
 		if err := rows.Scan(&panelID, &analyte, &updated, &flag, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		cursorID := panelID + ":" + analyte
 		c := etlCursor{At: updated, ID: cursorID}
@@ -499,13 +587,13 @@ func (s *Store) etlLabFlags(ctx context.Context, salt string, since etlCursor) (
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
-func (s *Store) etlCare(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlCare(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT c.id::text, c.updated_at, c.type, pr.id::text,
 		       COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -519,7 +607,7 @@ func (s *Store) etlCare(ctx context.Context, salt string, since etlCursor) (int,
 		ORDER BY c.updated_at ASC, c.id ASC
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -529,7 +617,7 @@ func (s *Store) etlCare(ctx context.Context, salt string, since etlCursor) (int,
 		var at time.Time
 		var birth *time.Time
 		if err := rows.Scan(&id, &at, &careType, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		c := etlCursor{At: at, ID: id}
 		if cursorAfter(c, maxCur) {
@@ -550,13 +638,13 @@ func (s *Store) etlCare(ctx context.Context, salt string, since etlCursor) (int,
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
-func (s *Store) etlAntibioticDAF(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlAntibioticDAF(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT d.id::text, d.updated_at, pr.id::text,
 		       COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -571,9 +659,9 @@ func (s *Store) etlAntibioticDAF(ctx context.Context, salt string, since etlCurs
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
-			return 0, 0, since, nil
+			return 0, 0, since, nil, nil
 		}
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -584,7 +672,7 @@ func (s *Store) etlAntibioticDAF(ctx context.Context, salt string, since etlCurs
 		var updated time.Time
 		var birth *time.Time
 		if err := rows.Scan(&id, &updated, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		c := etlCursor{At: updated, ID: id}
 		if cursorAfter(c, maxCur) {
@@ -609,13 +697,13 @@ func (s *Store) etlAntibioticDAF(ctx context.Context, salt string, since etlCurs
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
-func (s *Store) etlHRAlerts(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, error) {
+func (s *Store) etlHRAlerts(ctx context.Context, salt string, since etlCursor) (int, int, etlCursor, []time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT hs.id::text, hs.validated_at, pr.id::text,
 		       COALESCE(pr.postal_code,''), COALESCE(pr.city,''), COALESCE(pr.country_code,'BE'),
@@ -631,7 +719,7 @@ func (s *Store) etlHRAlerts(ctx context.Context, salt string, since etlCursor) (
 		ORDER BY hs.validated_at ASC, hs.id ASC
 		LIMIT $3`, since.At, since.ID, researchETLBatch)
 	if err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
 	defer rows.Close()
 	var out []anonEventRow
@@ -641,7 +729,7 @@ func (s *Store) etlHRAlerts(ctx context.Context, salt string, since etlCursor) (
 		var at time.Time
 		var birth *time.Time
 		if err := rows.Scan(&id, &at, &practiceID, &postal, &city, &country, &species, &birth); err != nil {
-			return 0, 0, since, err
+			return 0, 0, since, nil, err
 		}
 		c := etlCursor{At: at, ID: id}
 		if cursorAfter(c, maxCur) {
@@ -662,10 +750,10 @@ func (s *Store) etlHRAlerts(ctx context.Context, salt string, since etlCursor) (
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return 0, 0, since, err
+		return 0, 0, since, nil, err
 	}
-	ins, skip, err := s.upsertAnonEvents(ctx, salt, out)
-	return ins, skip, maxCur, err
+	ins, skip, weeks, err := s.upsertAnonEvents(ctx, salt, out)
+	return ins, skip, maxCur, weeks, err
 }
 
 func (s *Store) ResearchOverview(ctx context.Context) (ResearchOverview, error) {
