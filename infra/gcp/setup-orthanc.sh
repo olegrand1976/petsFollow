@@ -75,29 +75,96 @@ echo "Service: ${ORTHANC_SERVICE}"
 echo "Bucket: gs://${BUCKET}"
 echo "Mode: $([[ "$DEPLOY_ONLY" == "1" || "$DEPLOY_ONLY" == "true" ]] && echo deploy-only || echo bootstrap)"
 
+# Même convention que l'API (setup-gcp.sh DATABASE_URL) : socket Unix Cloud SQL
+# monté par --set-cloudsql-instances. L'IP publique PRIMARY timeout avec
+# vpc-egress=private-ranges-only, et cette instance n'a pas d'IP PRIVATE.
 resolve_pg_host() {
-  local pg_host private_ip
-  pg_host="$(gcloud sql instances describe "$SQL_INSTANCE_SHORT" \
-    --project="$GCP_PROJECT_ID" \
-    --format='value(ipAddresses[0].ipAddress)' 2>/dev/null || true)"
-  private_ip="$(gcloud sql instances describe "$SQL_INSTANCE_SHORT" \
-    --project="$GCP_PROJECT_ID" \
-    --format=json | python3 -c "
-import json,sys
-meta=json.load(sys.stdin)
-for ip in meta.get('ipAddresses') or []:
-  if ip.get('type')=='PRIVATE':
-    print(ip.get('ipAddress') or '')
-    break
-")"
-  if [[ -n "$private_ip" ]]; then
-    pg_host="$private_ip"
-  fi
-  if [[ -z "$pg_host" ]]; then
-    echo "ERREUR: impossible de résoudre l'IP Cloud SQL" >&2
+  if [[ -z "${CLOUDSQL_INSTANCE:-}" ]]; then
+    echo "ERREUR: CLOUDSQL_INSTANCE vide" >&2
     exit 1
   fi
-  echo "$pg_host"
+  echo "/cloudsql/${CLOUDSQL_INSTANCE}"
+}
+
+# Crée (une fois) une clé JSON pour ${SA_EMAIL} → Secret Manager, montée en fichier
+# sur Cloud Run. Le plugin Orthanc GoogleCloudStorage n'accepte pas l'ADC.
+ensure_gcs_sa_secret() {
+  if gcloud secrets describe "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    echo "  Secret ${GCS_SA_SECRET} existe"
+  else
+    echo "→ Création clé SA ${SA_EMAIL} → secret ${GCS_SA_SECRET}"
+    local keyfile
+    keyfile="$(mktemp)"
+    if ! gcloud iam service-accounts keys create "$keyfile" \
+      --iam-account="$SA_EMAIL" \
+      --project="$GCP_PROJECT_ID" \
+      --quiet; then
+      rm -f "$keyfile"
+      echo "ERREUR: iam.serviceAccountKeys.create refusé pour ${SA_EMAIL}" >&2
+      echo "  Crée manuellement le secret ${GCS_SA_SECRET} (JSON key) puis relance." >&2
+      exit 1
+    fi
+    gcloud secrets create "$GCS_SA_SECRET" \
+      --project="$GCP_PROJECT_ID" \
+      --data-file="$keyfile" \
+      --replication-policy=automatic \
+      --quiet
+    rm -f "$keyfile"
+    echo "  Secret ${GCS_SA_SECRET} créé"
+  fi
+  # Fail hard si la SA runtime ne peut pas lire le secret (sinon Orthanc boote
+  # mais GCS → FilesystemStorage /tmp). Ne pas se fier à la seule policy
+  # ressource : secretAccessor est souvent au niveau projet.
+  gcloud secrets add-iam-policy-binding "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet >/dev/null 2>&1 || true
+
+  if gcloud secrets versions access latest \
+    --secret="$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" \
+    --impersonate-service-account="$SA_EMAIL" \
+    >/dev/null 2>&1; then
+    echo "  Accès effectif ${GCS_SA_SECRET} OK (impersonate ${SA_EMAIL})"
+    return 0
+  fi
+
+  # Fallback si impersonation indisponible (pas de TokenCreator sur l'appelant) :
+  # binding ressource OU rôle projet qui implique secretAccessor.
+  if gcloud secrets get-iam-policy "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" --format=json | python3 -c "
+import json, sys
+want = 'serviceAccount:' + sys.argv[1]
+roles = {'roles/secretmanager.secretAccessor', 'roles/secretmanager.admin', 'roles/owner'}
+pol = json.load(sys.stdin)
+for b in pol.get('bindings') or []:
+    if b.get('role') in roles and want in (b.get('members') or []):
+        raise SystemExit(0)
+raise SystemExit(1)
+" "$SA_EMAIL"; then
+    echo "  IAM secretAccessor ressource OK sur ${GCS_SA_SECRET}"
+    return 0
+  fi
+
+  if gcloud projects get-iam-policy "$GCP_PROJECT_ID" --format=json | python3 -c "
+import json, sys
+want = 'serviceAccount:' + sys.argv[1]
+roles = {'roles/secretmanager.secretAccessor', 'roles/secretmanager.admin', 'roles/owner'}
+pol = json.load(sys.stdin)
+for b in pol.get('bindings') or []:
+    if b.get('role') in roles and want in (b.get('members') or []):
+        raise SystemExit(0)
+raise SystemExit(1)
+" "$SA_EMAIL"; then
+    echo "  IAM secretAccessor/admin projet OK (${SA_EMAIL})"
+    return 0
+  fi
+
+  echo "ERREUR: ${SA_EMAIL} ne peut pas lire ${GCS_SA_SECRET}" >&2
+  echo "  Accorde roles/secretmanager.secretAccessor (secret ou projet) puis relance." >&2
+  exit 1
 }
 
 # Crée (une fois) une clé JSON pour ${SA_EMAIL} → Secret Manager, montée en fichier

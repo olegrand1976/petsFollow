@@ -20,21 +20,18 @@ func TestOrthancClientDoKeepsContextAliveUntilBodyClose(t *testing.T) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.WriteHeader(http.StatusOK)
 		flusher, _ := w.(http.Flusher)
-		chunk := make([]byte, 4096)
-		copy(chunk, []byte(payload))
-		remaining := len(payload)
-		for remaining > 0 {
-			n := len(chunk)
-			if n > remaining {
-				n = remaining
+		const chunkSize = 4096
+		for off := 0; off < len(payload); off += chunkSize {
+			end := off + chunkSize
+			if end > len(payload) {
+				end = len(payload)
 			}
-			if _, err := w.Write([]byte(payload[len(payload)-remaining : len(payload)-remaining+n])); err != nil {
+			if _, err := w.Write([]byte(payload[off:end])); err != nil {
 				return
 			}
 			if flusher != nil {
 				flusher.Flush()
 			}
-			remaining -= n
 			time.Sleep(2 * time.Millisecond)
 		}
 	}))
