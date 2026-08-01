@@ -12,11 +12,13 @@ Environnement : **staging** (ou seed local).
 | Care pro (Pro Light) | `CareProDemo123!` |
 | Commercial / manager | `CommercialDemo123!` |
 | Admin / DEV | `AdminDemo123!` |
+| Research | `ResearchDemo123!` |
 
 ## Comptes utilisés dans les UC
 
 | Profil | Email | Surface | UC typiques |
 |--------|-------|---------|-------------|
+| Research (tag `dev`) | `research.demo@petsfollow.test` | Web `/research` | *(pas d’UC commercial tant que tag `dev`)* |
 | Véto VetPlus | `vet.demo@petsfollow.test` | Web VetPro | VP-*, X-01…06, EQ-01 |
 | Onboarding | `vet.onboarding@petsfollow.test` | Web VetPro | VP-02 (**Destructif**) |
 | Collègue | `vet.colleague@petsfollow.test` | Web VetPro | EQ-01 |

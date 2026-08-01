@@ -1996,4 +1996,75 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Acepto compartir este informe con este veterinario.';
+
+  @override
+  String get bloodPressureShort => 'TA';
+
+  @override
+  String get recordBloodPressureTitle => 'Registrar tensión';
+
+  @override
+  String get bpSystolicLabel => 'Sistólica (mmHg)';
+
+  @override
+  String get bpDiastolicLabel => 'Diastólica (mmHg)';
+
+  @override
+  String get bpMethodLabel => 'Método';
+
+  @override
+  String get bpMethodDoppler => 'Doppler';
+
+  @override
+  String get bpMethodOscillometric => 'Oscilométrico';
+
+  @override
+  String get bpMethodUnknown => 'Sin especificar';
+
+  @override
+  String get bloodPressureInvalid => 'Indique una TA válida (SYS ≥ DIA)';
+
+  @override
+  String get bloodPressureSaved => 'Tensión registrada';
+
+  @override
+  String get labsTitle => 'Analíticas';
+
+  @override
+  String get labsEmpty => 'Sin analíticas';
+
+  @override
+  String get labsResults => 'Resultados';
+
+  @override
+  String labsAbnormalCount(int count) {
+    return '$count fuera de rango';
+  }
+
+  @override
+  String get labsOpen => 'Ver analíticas';
+
+  @override
+  String get labsFlagLow => 'Bajo';
+
+  @override
+  String get labsFlagHigh => 'Alto';
+
+  @override
+  String get labsFlagNormal => 'Normal';
+
+  @override
+  String get labsOpenDocument => 'Abrir documento';
+
+  @override
+  String get bpMethodInvasive => 'Invasivo';
+
+  @override
+  String get bpSiteLabel => 'Sitio (opcional)';
+
+  @override
+  String get bpCommentLabel => 'Comentario (opcional)';
+
+  @override
+  String get bloodPressureSave => 'Guardar';
 }

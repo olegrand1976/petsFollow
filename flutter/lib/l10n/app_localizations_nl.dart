@@ -1991,4 +1991,75 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Ik ga ermee akkoord dit verslag met deze dierenarts te delen.';
+
+  @override
+  String get bloodPressureShort => 'RR';
+
+  @override
+  String get recordBloodPressureTitle => 'Bloeddruk registreren';
+
+  @override
+  String get bpSystolicLabel => 'Systolisch (mmHg)';
+
+  @override
+  String get bpDiastolicLabel => 'Diastolisch (mmHg)';
+
+  @override
+  String get bpMethodLabel => 'Methode';
+
+  @override
+  String get bpMethodDoppler => 'Doppler';
+
+  @override
+  String get bpMethodOscillometric => 'Oscillometrisch';
+
+  @override
+  String get bpMethodUnknown => 'Niet gespecificeerd';
+
+  @override
+  String get bloodPressureInvalid => 'Geldige RR invoeren (SYS ≥ DIA)';
+
+  @override
+  String get bloodPressureSaved => 'Bloeddruk opgeslagen';
+
+  @override
+  String get labsTitle => 'Labresultaten';
+
+  @override
+  String get labsEmpty => 'Geen labresultaten';
+
+  @override
+  String get labsResults => 'Resultaten';
+
+  @override
+  String labsAbnormalCount(int count) {
+    return '$count buiten bereik';
+  }
+
+  @override
+  String get labsOpen => 'Labresultaten bekijken';
+
+  @override
+  String get labsFlagLow => 'Laag';
+
+  @override
+  String get labsFlagHigh => 'Hoog';
+
+  @override
+  String get labsFlagNormal => 'Normaal';
+
+  @override
+  String get labsOpenDocument => 'Document openen';
+
+  @override
+  String get bpMethodInvasive => 'Invasief';
+
+  @override
+  String get bpSiteLabel => 'Meetplaats (optioneel)';
+
+  @override
+  String get bpCommentLabel => 'Opmerking (optioneel)';
+
+  @override
+  String get bloodPressureSave => 'Opslaan';
 }

@@ -786,14 +786,18 @@
   "consultationTitleWithPet": "Consultazione — {petName}",
   "@consultationTitleWithPet": {
     "placeholders": {
-      "petName": { "type": "String" }
+      "petName": {
+        "type": "String"
+      }
     }
   },
   "consultationVisitMeta": "Visita",
   "consultationReportBy": "Referto di {author}",
   "@consultationReportBy": {
     "placeholders": {
-      "author": { "type": "String" }
+      "author": {
+        "type": "String"
+      }
     }
   },
   "consultationReportFallback": "Referto",
@@ -807,5 +811,35 @@
   "sendConsultationSuccess": "Consultazione inviata — link valido 24 ore.",
   "sendConsultationInvalidEmail": "Indirizzo email non valido.",
   "sendConsultationPhiWarning": "Questo referto contiene dati sanitari. Il link resta valido 24 ore e chiunque lo possieda potrà scaricare il PDF.",
-  "sendConsultationPhiConsent": "Accetto di condividere questo referto con questo veterinario."
+  "sendConsultationPhiConsent": "Accetto di condividere questo referto con questo veterinario.",
+  "bloodPressureShort": "PA",
+  "recordBloodPressureTitle": "Registra pressione",
+  "bpSystolicLabel": "Sistolica (mmHg)",
+  "bpDiastolicLabel": "Diastolica (mmHg)",
+  "bpMethodLabel": "Metodo",
+  "bpMethodDoppler": "Doppler",
+  "bpMethodOscillometric": "Oscillometrico",
+  "bpMethodUnknown": "Non specificato",
+  "bloodPressureInvalid": "Inserire una PA valida (SYS ≥ DIA)",
+  "bloodPressureSaved": "Pressione salvata",
+  "labsTitle": "Analisi",
+  "labsEmpty": "Nessuna analisi",
+  "labsResults": "Risultati",
+  "labsAbnormalCount": "{count} fuori norma",
+  "@labsAbnormalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labsOpen": "Vedi analisi",
+  "labsFlagLow": "Basso",
+  "labsFlagHigh": "Alto",
+  "labsFlagNormal": "Normale",
+  "labsOpenDocument": "Apri documento",
+  "bpMethodInvasive": "Invasivo",
+  "bpSiteLabel": "Sito (facoltativo)",
+  "bpCommentLabel": "Commento (facoltativo)",
+  "bloodPressureSave": "Salva"
 }

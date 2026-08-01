@@ -1992,4 +1992,75 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Nõustun jagama seda aruannet selle loomaarstiga.';
+
+  @override
+  String get bloodPressureShort => 'RR';
+
+  @override
+  String get recordBloodPressureTitle => 'Salvesta vererõhk';
+
+  @override
+  String get bpSystolicLabel => 'Süstoolne (mmHg)';
+
+  @override
+  String get bpDiastolicLabel => 'Diastoolne (mmHg)';
+
+  @override
+  String get bpMethodLabel => 'Meetod';
+
+  @override
+  String get bpMethodDoppler => 'Doppler';
+
+  @override
+  String get bpMethodOscillometric => 'Ostsillomeetriline';
+
+  @override
+  String get bpMethodUnknown => 'Määramata';
+
+  @override
+  String get bloodPressureInvalid => 'Sisesta kehtiv RR (SYS ≥ DIA)';
+
+  @override
+  String get bloodPressureSaved => 'Vererõhk salvestatud';
+
+  @override
+  String get labsTitle => 'Analüüsid';
+
+  @override
+  String get labsEmpty => 'Analüüse pole';
+
+  @override
+  String get labsResults => 'Tulemused';
+
+  @override
+  String labsAbnormalCount(int count) {
+    return '$count normist väljas';
+  }
+
+  @override
+  String get labsOpen => 'Vaata analüüse';
+
+  @override
+  String get labsFlagLow => 'Madal';
+
+  @override
+  String get labsFlagHigh => 'Kõrge';
+
+  @override
+  String get labsFlagNormal => 'Normaalne';
+
+  @override
+  String get labsOpenDocument => 'Ava dokument';
+
+  @override
+  String get bpMethodInvasive => 'Invasiivne';
+
+  @override
+  String get bpSiteLabel => 'Koht (valikuline)';
+
+  @override
+  String get bpCommentLabel => 'Kommentaar (valikuline)';
+
+  @override
+  String get bloodPressureSave => 'Salvesta';
 }

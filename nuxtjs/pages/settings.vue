@@ -59,6 +59,45 @@
       >
         {{ $t('settings.aclDenied') }}
       </p>
+
+      <ProCard
+        v-if="canManagePractice && researchFlagOn"
+        :title="$t('research.settings.title')"
+        class="pro-settings-card"
+        data-testid="settings-research-opt-in"
+      >
+        <div class="pro-flex-row pro-mb-sm">
+          <ProBadge variant="warning">{{ $t('research.settings.devBadge') }}</ProBadge>
+        </div>
+        <p class="pro-hint">{{ $t('research.settings.hint') }}</p>
+        <p class="pro-mb-sm" data-testid="settings-research-status">
+          <template v-if="researchStatusKnown">
+            {{ researchOptedIn ? $t('research.settings.optedIn') : $t('research.settings.optedOut') }}
+          </template>
+          <template v-else>{{ $t('research.settings.statusUnknown') }}</template>
+        </p>
+        <p v-if="researchSaved" class="text-muted" role="status">{{ $t('research.settings.saved') }}</p>
+        <p v-if="researchError" class="pro-field-error" role="alert">{{ researchError }}</p>
+        <div class="pro-flex-row">
+          <ProButton
+            v-if="researchStatusKnown && !researchOptedIn"
+            :loading="researchBusy"
+            data-testid="settings-research-opt-in-btn"
+            @click="setResearchOptIn(true)"
+          >
+            {{ $t('research.settings.optIn') }}
+          </ProButton>
+          <ProButton
+            v-else-if="researchStatusKnown && researchOptedIn"
+            variant="secondary"
+            :loading="researchBusy"
+            data-testid="settings-research-opt-out-btn"
+            @click="confirmResearchOptOut"
+          >
+            {{ $t('research.settings.optOut') }}
+          </ProButton>
+        </div>
+      </ProCard>
     </div>
 
     <div
@@ -382,6 +421,7 @@ import {
   DEFAULT_DESK_IDLE_MINUTES,
   normalizeDeskIdleMinutes,
 } from '~/utils/deskIdleMinutes'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -390,9 +430,16 @@ const { mapError } = useApiError()
 const { saveLocale: persistLocale, supportedLocales } = useLocaleSync()
 const { user, fetchUser } = useProUser()
 const { canPractice } = usePracticePerms()
+const runtimeConfig = useRuntimeConfig()
 const canManagePractice = computed(() => canPractice('practice.settings'))
 const canManageCalendar = computed(() => canPractice('calendar.manage'))
 const canMessage = computed(() => canPractice('messaging'))
+const researchFlagOn = computed(() => isPublicFlagOn(runtimeConfig.public.researchEnabled))
+const researchOptedIn = ref(false)
+const researchStatusKnown = ref(false)
+const researchBusy = ref(false)
+const researchSaved = ref(false)
+const researchError = ref('')
 
 const activeTab = ref('profile')
 const settingsTabs = computed(() => {
@@ -569,6 +616,30 @@ function mapFromApi(data: any): PracticeProfileForm {
   return mapPracticeProfileFromApi(data)
 }
 
+async function setResearchOptIn(optIn: boolean) {
+  researchBusy.value = true
+  researchError.value = ''
+  researchSaved.value = false
+  try {
+    const res: any = await $fetch('/api/vet/practice/research-opt-in', {
+      method: optIn ? 'POST' : 'DELETE',
+    })
+    const data = res.data ?? res
+    researchOptedIn.value = !!data.optedIn
+    researchStatusKnown.value = true
+    researchSaved.value = true
+  } catch (e: any) {
+    researchError.value = mapError(e) || t('research.settings.error')
+  } finally {
+    researchBusy.value = false
+  }
+}
+
+function confirmResearchOptOut() {
+  if (!window.confirm(t('research.settings.optOutConfirm'))) return
+  void setResearchOptIn(false)
+}
+
 onMounted(async () => {
   if (route.hash === '#calendar' && (canManageCalendar.value || canMessage.value)) {
     activeTab.value = 'calendar'
@@ -596,6 +667,20 @@ onMounted(async () => {
       profileLoaded.value = true
     } catch (e: any) {
       profileError.value = mapError(e) || t('settings.profileLoadFailed')
+    }
+    if (researchFlagOn.value) {
+      try {
+        const ro: any = await $fetch('/api/vet/practice/research-opt-in')
+        const data = ro.data ?? ro
+        researchOptedIn.value = !!data.optedIn
+        researchStatusKnown.value = true
+      } catch (e: any) {
+        researchStatusKnown.value = false
+        const code = e?.data?.error?.code
+        if (code !== 'research_disabled') {
+          researchError.value = mapError(e) || t('research.settings.error')
+        }
+      }
     }
   }
 

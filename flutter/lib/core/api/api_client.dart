@@ -1121,6 +1121,46 @@ class ApiClient {
     return res.data['data'] as List<dynamic>;
   }
 
+  Future<Map<String, dynamic>> createBloodPressureReading(
+    String petId, {
+    required int systolicMmHg,
+    required int diastolicMmHg,
+    String method = 'unknown',
+    String? site,
+    String? comment,
+  }) async {
+    final data = <String, dynamic>{
+      'systolicMmHg': systolicMmHg,
+      'diastolicMmHg': diastolicMmHg,
+      'method': method,
+    };
+    final trimmedSite = site?.trim();
+    if (trimmedSite != null && trimmedSite.isNotEmpty) {
+      data['site'] = trimmedSite;
+    }
+    final trimmedComment = comment?.trim();
+    if (trimmedComment != null && trimmedComment.isNotEmpty) {
+      data['comment'] = trimmedComment;
+    }
+    final res = await dio.post('/api/v1/pets/$petId/blood-pressure', data: data);
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<List<dynamic>> getBloodPressureReadings(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/blood-pressure');
+    return (res.data['data'] as List?) ?? const [];
+  }
+
+  Future<List<dynamic>> getLabPanels(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/lab-panels');
+    return (res.data['data'] as List?) ?? const [];
+  }
+
+  Future<Map<String, dynamic>> getLabPanel(String petId, String panelId) async {
+    final res = await dio.get('/api/v1/pets/$petId/lab-panels/$panelId');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
   Future<List<dynamic>> getTimeline(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/timeline');
     return res.data['data'] as List<dynamic>;

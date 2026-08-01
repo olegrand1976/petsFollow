@@ -10,9 +10,11 @@ void main() {
   const petId = 'pet-1';
   late Interceptor mockInterceptor;
   Map<String, dynamic>? lastWeightBody;
+  Map<String, dynamic>? lastBpBody;
 
   setUp(() {
     lastWeightBody = null;
+    lastBpBody = null;
     ApiClient.instance.dio.interceptors.clear();
     mockInterceptor = InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -30,6 +32,29 @@ void main() {
                   'id': 'w-1',
                   'petId': petId,
                   'weightKg': lastWeightBody!['weightKg'],
+                  'recordedAt': DateTime.now().toUtc().toIso8601String(),
+                },
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'POST' &&
+            options.path.contains('/pets/$petId/blood-pressure')) {
+          lastBpBody = Map<String, dynamic>.from(
+            options.data as Map<String, dynamic>,
+          );
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 201,
+              data: {
+                'data': {
+                  'id': 'bp-1',
+                  'petId': petId,
+                  'systolicMmHg': lastBpBody!['systolicMmHg'],
+                  'diastolicMmHg': lastBpBody!['diastolicMmHg'],
+                  'method': lastBpBody!['method'],
                   'recordedAt': DateTime.now().toUtc().toIso8601String(),
                 },
               },
@@ -74,8 +99,10 @@ void main() {
     final l10n = AppLocalizationsFr();
     expect(find.byKey(Key('pet_action_heartrate_$petId')), findsOneWidget);
     expect(find.byKey(Key('pet_action_weight_$petId')), findsOneWidget);
+    expect(find.byKey(Key('pet_action_bp_$petId')), findsOneWidget);
     expect(find.text(l10n.heartRateShort), findsOneWidget);
     expect(find.text(l10n.weightShort), findsOneWidget);
+    expect(find.text(l10n.bloodPressureShort), findsOneWidget);
 
     await tester.tap(find.byKey(Key('pet_action_heartrate_$petId')));
     await tester.pump();
@@ -148,5 +175,53 @@ void main() {
     expect(lastWeightBody?['comment'], 'après balade');
     expect(saved, isTrue);
     expect(find.text(l10n.weightSentToVet), findsOneWidget);
+  });
+
+  testWidgets('bp sheet rejects invalid and saves valid SYS/DIA', (tester) async {
+    var saved = false;
+    final l10n = AppLocalizationsFr();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: PetQuickActions(
+            petId: petId,
+            onBloodPressureRecorded: () => saved = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(Key('pet_action_bp_$petId')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('bp_sheet')), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('bp_sys_field')), '80');
+    await tester.enterText(find.byKey(const Key('bp_dia_field')), '120');
+    await tester.tap(find.byKey(const Key('bp_save_btn')));
+    await tester.pump();
+    expect(find.byKey(const Key('bp_error')), findsOneWidget);
+    expect(find.text(l10n.bloodPressureInvalid), findsOneWidget);
+    expect(lastBpBody, isNull);
+
+    await tester.enterText(find.byKey(const Key('bp_sys_field')), '140');
+    await tester.enterText(find.byKey(const Key('bp_dia_field')), '90');
+    await tester.enterText(find.byKey(const Key('bp_site_field')), 'queue');
+    await tester.enterText(find.byKey(const Key('bp_comment_field')), 'repos');
+    await tester.tap(find.byKey(const Key('bp_save_btn')));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(lastBpBody?['systolicMmHg'], 140);
+    expect(lastBpBody?['diastolicMmHg'], 90);
+    expect(lastBpBody?['method'], 'doppler');
+    expect(lastBpBody?['site'], 'queue');
+    expect(lastBpBody?['comment'], 'repos');
+    expect(saved, isTrue);
+    expect(find.text(l10n.bloodPressureSaved), findsOneWidget);
   });
 }

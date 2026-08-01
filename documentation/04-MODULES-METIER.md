@@ -18,6 +18,10 @@ Liste clients Pro (invitations link-requests dans l’en-tête), dossier animal,
 
 Sessions 15/30/60 s (config cabinet) — détail [09-RELEVE-CARDIAQUE.md](09-RELEVE-CARDIAQUE.md).
 
+## Tension & prises de sang
+
+Relevés tension (client owner premium + staff clinique) et panels labo structurés (Pro only) — dossier pet onglet vitals, timeline, seed Rex — [41-TENSION-LABOS.md](41-TENSION-LABOS.md).
+
 ## Messagerie
 
 Threads client↔véto, messages texte + media, read/read-all, mode indisponible — [08-MESSAGERIE-NOTIFICATIONS.md](08-MESSAGERIE-NOTIFICATIONS.md).

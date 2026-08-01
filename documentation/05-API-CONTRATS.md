@@ -19,7 +19,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Me | `GET/PATCH /me`, avatar, password, locale, vets, household, discovery, device-tokens |
 | Véto | `/clients`, `/vet/*` (profile, availability messagerie, overview, link-requests, prospects, commissions, prefs) |
 | Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`), `GET/PUT /visits/{id}/preconsult` |
-| Pets / FC / poids | `/pets`, heartrate sessions, `GET/POST /pets/{id}/weights`, timeline, photo, care-reminders, visits, horse-* |
+| Pets / FC / poids / tension / labos | `/pets`, heartrate sessions, `GET/POST /pets/{id}/weights`, `GET/POST /pets/{id}/blood-pressure`, `GET/POST/PATCH/DELETE /pets/{id}/lab-panels`, `GET …/lab-analytes/{code}/trend`, timeline, photo, care-reminders, visits, horse-* — [41](41-TENSION-LABOS.md) |
 | Messaging | `/messaging/threads…` |
 | Billing | `GET /billing/plans` (monthly / annual / triennial), webhook Stripe, checkout/portal pet ; `/billing/addons` + `my-addons` = **legacy** (plus vendus, entitlements existants) |
 | Commercial | `/commercial/overview`, `/vets`, `/prospects`, `/commissions`, `GET/PATCH /commercial/me/payout-profile` (aussi accessible `commercial_manager` pour portefeuille perso) |
@@ -29,8 +29,9 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Admin commissions véto | `GET /admin/commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid`, `PUT /admin/commissions/tiers`, `GET/PUT /admin/commissions/settings` (PUT rejette : taux commercial = constantes plan) |
 | Admin commissions commercial | `GET /admin/commercial-commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid` |
 | Admin SPIFF | `GET /admin/commercial-bonuses?periodYm&trendMonths&status&commercialId`, `POST /admin/commercial-bonuses/{id}/mark-paid` |
+| Research (dev) | `GET /research/overview\|heatmap\|timeseries\|alerts` (rôle `research`) ; `GET/POST/DELETE /vet/practice/research-opt-in` ; `POST /internal/research-etl/run` + `X-Research-Etl-Secret` — [42](42-RESEARCH.md) |
 
-Handlers : `go/internal/handlers/` (`api.go`, `auth.go`, `billing.go`, `admin.go`, `commercial.go`, `commissions.go`, …).
+Handlers : `go/internal/handlers/` (`api.go`, `auth.go`, `billing.go`, `admin.go`, `commercial.go`, `commissions.go`, `research.go`, …).
 
 ## Billing webhook
 

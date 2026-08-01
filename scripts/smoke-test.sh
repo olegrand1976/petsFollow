@@ -108,6 +108,39 @@ if not found:
 
 curl -sf "$API/api/v1/pets/$PET_ID/timeline" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
 
+# Tension (client) + panel labo (véto) — C2.4b smoke
+SMOKE_BP_COMMENT="smoke bp $(date +%s)"
+curl -sf -X POST "$API/api/v1/pets/$PET_ID/blood-pressure" \
+  -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"systolicMmHg\":135,\"diastolicMmHg\":85,\"method\":\"doppler\",\"comment\":\"$SMOKE_BP_COMMENT\"}" >/dev/null
+BPS=$(curl -sf "$API/api/v1/pets/$PET_ID/blood-pressure" -H "Authorization: Bearer $CLIENT_TOKEN")
+SMOKE_BP_COMMENT="$SMOKE_BP_COMMENT" python3 -c '
+import json, os, sys
+want = os.environ["SMOKE_BP_COMMENT"]
+rows = json.load(sys.stdin).get("data") or []
+if not any((r.get("comment") or "") == want for r in rows):
+    raise SystemExit("blood pressure smoke reading missing")
+' <<<"$BPS"
+
+SMOKE_LAB_NAME="Smoke Lab $(date +%s)"
+LAB_CREATE=$(curl -sf -X POST "$API/api/v1/pets/$PET_ID/lab-panels" \
+  -H "Authorization: Bearer $VET_TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"labName\":\"$SMOKE_LAB_NAME\",\"results\":[{\"analyteCode\":\"crea\",\"valueNum\":2.1,\"unit\":\"mg/dL\",\"refLow\":0.5,\"refHigh\":1.5},{\"analyteCode\":\"alat\",\"valueText\":\"N\",\"unit\":\"U/L\"}]}")
+LAB_PANEL_ID=$(echo "$LAB_CREATE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('id') or '')")
+test -n "$LAB_PANEL_ID"
+curl -sf "$API/api/v1/pets/$PET_ID/lab-panels/$LAB_PANEL_ID" -H "Authorization: Bearer $CLIENT_TOKEN" \
+  | python3 -c '
+import json, sys
+p = json.load(sys.stdin).get("data") or {}
+results = p.get("results") or []
+codes = {r.get("analyteCode") for r in results}
+if "crea" not in codes or "alat" not in codes:
+    raise SystemExit("lab panel smoke results incomplete")
+if not any((r.get("valueText") or "") == "N" for r in results):
+    raise SystemExit("lab panel smoke valueText missing")
+'
+curl -sf "$API/api/v1/pets/$PET_ID/lab-analytes/crea/trend" -H "Authorization: Bearer $VET_TOKEN" >/dev/null
+
 # Auth register → confirm → forgot → reset (emails uniques).
 # confirmPath/resetPath ne sont exposés que si DEV_SEED_ENABLED=true (local/CI) ;
 # sur staging/prod le register doit aboutir SANS fuiter les tokens → flux confirm/reset skippé.

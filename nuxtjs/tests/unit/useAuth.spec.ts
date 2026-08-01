@@ -198,6 +198,7 @@ describe('useAuth helpers', () => {
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
     expect(isProRole('admin')).toBe(true)
     expect(isProRole('dev')).toBe(true)
+    expect(isProRole('research')).toBe(true)
     expect(isProRole('vet')).toBe(true)
     expect(isProRole('vet_assistant')).toBe(true)
     expect(isProRole('secretary')).toBe(true)
@@ -216,6 +217,7 @@ describe('useAuth helpers', () => {
   it('homePathForRole route chaque rôle Pro', () => {
     expect(homePathForRole('admin')).toBe('/admin')
     expect(homePathForRole('dev')).toBe('/admin')
+    expect(homePathForRole('research')).toBe('/research')
     expect(homePathForRole('commercial')).toBe('/commercial')
     expect(homePathForRole('commercial_manager')).toBe('/commercial-manager')
     expect(homePathForRole('vet')).toBe('/dashboard')

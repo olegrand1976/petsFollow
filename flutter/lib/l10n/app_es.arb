@@ -723,14 +723,18 @@
   "consultationTitleWithPet": "Consulta — {petName}",
   "@consultationTitleWithPet": {
     "placeholders": {
-      "petName": { "type": "String" }
+      "petName": {
+        "type": "String"
+      }
     }
   },
   "consultationVisitMeta": "Visita",
   "consultationReportBy": "Informe de {author}",
   "@consultationReportBy": {
     "placeholders": {
-      "author": { "type": "String" }
+      "author": {
+        "type": "String"
+      }
     }
   },
   "consultationReportFallback": "Informe",
@@ -744,5 +748,35 @@
   "sendConsultationSuccess": "Consulta enviada — enlace válido 24 h.",
   "sendConsultationInvalidEmail": "Email no válido.",
   "sendConsultationPhiWarning": "Este informe contiene datos de salud. El enlace es válido 24 h y cualquiera que lo tenga podrá descargar el PDF.",
-  "sendConsultationPhiConsent": "Acepto compartir este informe con este veterinario."
+  "sendConsultationPhiConsent": "Acepto compartir este informe con este veterinario.",
+  "bloodPressureShort": "TA",
+  "recordBloodPressureTitle": "Registrar tensión",
+  "bpSystolicLabel": "Sistólica (mmHg)",
+  "bpDiastolicLabel": "Diastólica (mmHg)",
+  "bpMethodLabel": "Método",
+  "bpMethodDoppler": "Doppler",
+  "bpMethodOscillometric": "Oscilométrico",
+  "bpMethodUnknown": "Sin especificar",
+  "bloodPressureInvalid": "Indique una TA válida (SYS ≥ DIA)",
+  "bloodPressureSaved": "Tensión registrada",
+  "labsTitle": "Analíticas",
+  "labsEmpty": "Sin analíticas",
+  "labsResults": "Resultados",
+  "labsAbnormalCount": "{count} fuera de rango",
+  "@labsAbnormalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labsOpen": "Ver analíticas",
+  "labsFlagLow": "Bajo",
+  "labsFlagHigh": "Alto",
+  "labsFlagNormal": "Normal",
+  "labsOpenDocument": "Abrir documento",
+  "bpMethodInvasive": "Invasivo",
+  "bpSiteLabel": "Sitio (opcional)",
+  "bpCommentLabel": "Comentario (opcional)",
+  "bloodPressureSave": "Guardar"
 }

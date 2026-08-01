@@ -106,6 +106,12 @@ type Config struct {
 	PacsOrthancPassword string
 	// PacsOrthancUseIDToken sends a Google identity token (Cloud Run IAM invoker).
 	PacsOrthancUseIDToken bool
+	// ResearchEnabled enables petsFollow Research observatory (anonymized epi aggregates) — default off.
+	ResearchEnabled bool
+	// ResearchEtlSecret protects POST /internal/research-etl/run.
+	ResearchEtlSecret string
+	// ResearchAnonSalt salts practice_id_hash in research.anon_events (never exposed via API).
+	ResearchAnonSalt string
 
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
@@ -210,6 +216,9 @@ func Load() Config {
 		PacsOrthancUser:         envOr("PACS_ORTHANC_USER", "petsfollow"),
 		PacsOrthancPassword:     envOr("PACS_ORTHANC_PASSWORD", ""),
 		PacsOrthancUseIDToken:   envBool("PACS_ORTHANC_USE_ID_TOKEN"),
+		ResearchEnabled:         envBool("RESEARCH_ENABLED"),
+		ResearchEtlSecret:       envOr("RESEARCH_ETL_SECRET", ""),
+		ResearchAnonSalt:        envOr("RESEARCH_ANON_SALT", ""),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
 		BillitEnabled:              envBool("BILLIT_ENABLED"),

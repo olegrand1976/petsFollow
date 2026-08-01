@@ -9,6 +9,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 - **Sophie** — propriétaire chien senior, app mobile pets (self-inscription possible)
 - **Léa** — commerciale / apporteuse, espace Pro commercial
 - **Marc** — maréchal-ferrant (`care_pro` / `farrier`), agenda terrain + CR ferrage
+- **Dr Nora** — expert Research (`research`), Observatoire épidémio anonymisé (opt-in cabinets) — tag `dev` — voir [42](42-RESEARCH.md)
 - Autres care pro : physio, comportementaliste, toiletteur, éleveur — voir [28](28-MULTI-PROFILS-PRO.md)
 
 ## Périmètre cœur (continuité + passeport)
@@ -45,6 +46,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 - Simulation prospection admin 10 ans → [16](16-ADMIN-SIMULATION-10ANS.md) (**non livré**)
 - Export / emails Care avancés (features incluses — plus de roadmap « addon Care+ »)
 - Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (**livré** — axes passeport ; messagerie care_pro Pro Light livrée)
+- petsFollow Research (observatoire anonymisé, rôle `research`) → [42](42-RESEARCH.md) (**tag `dev`**)
 
 ## Comptes seed
 

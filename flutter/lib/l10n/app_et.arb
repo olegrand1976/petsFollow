@@ -723,14 +723,18 @@
   "consultationTitleWithPet": "Konsultatsioon — {petName}",
   "@consultationTitleWithPet": {
     "placeholders": {
-      "petName": { "type": "String" }
+      "petName": {
+        "type": "String"
+      }
     }
   },
   "consultationVisitMeta": "Külastus",
   "consultationReportBy": "Aruanne: {author}",
   "@consultationReportBy": {
     "placeholders": {
-      "author": { "type": "String" }
+      "author": {
+        "type": "String"
+      }
     }
   },
   "consultationReportFallback": "Aruanne",
@@ -744,5 +748,35 @@
   "sendConsultationSuccess": "Konsultatsioon saadetud — link kehtib 24 tundi.",
   "sendConsultationInvalidEmail": "Vigane e-posti aadress.",
   "sendConsultationPhiWarning": "See aruanne sisaldab terviseandmeid. Link kehtib 24 tundi ja igaüks, kellel see on, saab PDF-i alla laadida.",
-  "sendConsultationPhiConsent": "Nõustun jagama seda aruannet selle loomaarstiga."
+  "sendConsultationPhiConsent": "Nõustun jagama seda aruannet selle loomaarstiga.",
+  "bloodPressureShort": "RR",
+  "recordBloodPressureTitle": "Salvesta vererõhk",
+  "bpSystolicLabel": "Süstoolne (mmHg)",
+  "bpDiastolicLabel": "Diastoolne (mmHg)",
+  "bpMethodLabel": "Meetod",
+  "bpMethodDoppler": "Doppler",
+  "bpMethodOscillometric": "Ostsillomeetriline",
+  "bpMethodUnknown": "Määramata",
+  "bloodPressureInvalid": "Sisesta kehtiv RR (SYS ≥ DIA)",
+  "bloodPressureSaved": "Vererõhk salvestatud",
+  "labsTitle": "Analüüsid",
+  "labsEmpty": "Analüüse pole",
+  "labsResults": "Tulemused",
+  "labsAbnormalCount": "{count} normist väljas",
+  "@labsAbnormalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labsOpen": "Vaata analüüse",
+  "labsFlagLow": "Madal",
+  "labsFlagHigh": "Kõrge",
+  "labsFlagNormal": "Normaalne",
+  "labsOpenDocument": "Ava dokument",
+  "bpMethodInvasive": "Invasiivne",
+  "bpSiteLabel": "Koht (valikuline)",
+  "bpCommentLabel": "Kommentaar (valikuline)",
+  "bloodPressureSave": "Salvesta"
 }

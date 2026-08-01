@@ -139,6 +139,8 @@ function itemTitle(item: TimelineHistoryItem) {
   const keyByType: Record<string, string> = {
     heartrate: 'clients.pet.timelineTypeHeartrate',
     weight: 'clients.pet.timelineTypeWeight',
+    blood_pressure: 'clients.pet.timelineTypeBloodPressure',
+    lab_panel: 'clients.pet.timelineTypeLabPanel',
     message: 'clients.pet.timelineTypeMessage',
     care: 'clients.pet.timelineTypeCare',
     visit: 'clients.pet.timelineTypeVisit',
@@ -155,6 +157,10 @@ function iconForType(type?: string) {
       return 'favorite'
     case 'weight':
       return 'monitor_weight'
+    case 'blood_pressure':
+      return 'monitor_heart'
+    case 'lab_panel':
+      return 'science'
     case 'message':
       return 'chat'
     case 'care':

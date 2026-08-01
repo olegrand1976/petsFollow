@@ -1,0 +1,120 @@
+# 42 — petsFollow Research (observatoire épidémio anonymisé)
+
+Module **tag `dev`** : profil `research` + couche de données anonymisées (opt-in cabinet) + Observatoire Pro (agrégats régionaux). Objectif produit : offrir aux vétérinaires / experts une **donnée de masse** pour statistiques et détection précoce de signaux par région et espèce — sans PII.
+
+## Décisions V1
+
+| Choix | Valeur |
+|-------|--------|
+| Rôle | `research` (multi-profil, associable à `vet` / `admin`) |
+| Contribution | **Opt-in cabinet** (`practice.practices.research_opt_in_at`) |
+| Accès | Observatoire agrégé uniquement (pas d’export micro-données) ; k-anonymité ≥ 5 heatmap/alerts |
+| Flags | `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` |
+| Surface | Nuxt Pro `/research` — pas de shell Flutter Research |
+
+## Architecture
+
+```
+Sources cliniques (opt-in practice)
+  → ETL interne (anonymisation)
+  → research.anon_events + research.weekly_aggregates
+  → API /research/* (rôle research)
+  → UI Observatoire Nuxt
+```
+
+- Géolocalisation : **code postal + ville + pays du cabinet** (pas d’adresse client).
+- Identifiants : `practice_id_hash` salé (purge opt-out) — **jamais** exposé à l’API Research.
+- Textes libres (CR, `chiefComplaint`) : **exclus** V1.
+
+## Rôle & multi-profil
+
+- Migration CHECK : `identity.users` + `identity.profiles` incluent `research`.
+- Kernel : `RoleResearch` — **hors** `IsPracticeStaff` / `IsSalesForce` / `IsOpsRole` ; **hors** `IsProRole` Go (pas d’auto-profil client).
+- Nuxt : `isProRole('research')` + `homePathForRole` → `/research`.
+- Attach admin : `POST /admin/users/{id}/profiles` avec `role=research`.
+- Seed : `research.demo@petsfollow.test` (+ profil `research` sur `vet.demo` / `admin.demo`).
+
+## Schéma `research`
+
+| Table | Grain |
+|-------|--------|
+| `anon_events` | événement anonymisé (semaine ISO, CP, pays, espèce, age_band, signal_type, payload JSONB, source_hash, practice_id_hash) |
+| `weekly_aggregates` | `week × postal_code × country × species × signal_type` + `event_count` |
+| `etl_watermarks` | curseurs incrémentaux par source |
+
+### Signaux V1
+
+| `signal_type` | Source | Payload |
+|---------------|--------|---------|
+| `preconsult_syndrome` | préconsult | urgency, appetite, thirst, behavior, duration (**pas** chiefComplaint) |
+| `visit_volume` | visits | — |
+| `lab_flag` | labs (flag ≠ normal) | analyte, flag |
+| `care_preventive` | care completed | type (vaccination / deworming / fecal_egg) |
+| `antibiotic_daf` | DAF `has_antibiotic` | — |
+| `hr_alert` | heartrate `is_alert` | — |
+
+## Flags
+
+| Env | Défaut |
+|-----|--------|
+| `RESEARCH_ENABLED` | off · `make api-dev` → `true` |
+| `NUXT_PUBLIC_RESEARCH_ENABLED` | idem (`make nuxtjs-dev`) |
+| `RESEARCH_ETL_SECRET` | protège `POST /internal/research-etl/run` |
+| `RESEARCH_ANON_SALT` | sel HMAC `practice_id_hash` (**obligatoire** hors local/test ; jamais dérivé du secret ETL ; `make api-dev` pose un sel local) |
+
+404 `research_disabled` si flag off.
+
+## Endpoints API
+
+| Méthode | Path | Accès |
+|---------|------|-------|
+| `GET` | `/api/v1/research/overview` | `research` |
+| `GET` | `/api/v1/research/heatmap` | `research` |
+| `GET` | `/api/v1/research/timeseries` | `research` |
+| `GET` | `/api/v1/research/alerts` | `research` |
+| `GET` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
+| `POST` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
+| `DELETE` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
+| `POST` | `/api/v1/internal/research-etl/run` | secret `X-Research-Etl-Secret` |
+
+## RGPD
+
+- Finalité **distincte** de la continuité de soins (observatoire / santé publique vétérinaire). Base légale à valider juridiquement (intérêt légitime + contrat opt-in cabinet recommandé).
+- Minimisation : pas de nom, email, microchip, rue, UUID pet/user dans les payloads API.
+- Opt-out : stop ingest + purge `anon_events` par `practice_id_hash` ; rebuild agrégats.
+- `GET /me/export` : **ne pas** inclure les agrégats research (pas de donnée personnelle).
+- Voir aussi [36-RGPD.md](36-RGPD.md).
+
+## Limites V1 (honnêteté produit)
+
+- Pas de diagnostic / pathogène / maladie à déclaration.
+- Pas de température / symptômes respiratoires structurés.
+- Labs V1 sans sérologie/PCR.
+- Biais géo « cabinet » (pas domicile animal).
+- Densité limitée aux cabinets opt-in petsFollow.
+
+## V2 (spécifié, non livré)
+
+- `research.groups` + memberships (analyse collaborative).
+- Data room : API micro-événements avec k-anonymity ≥ 5.
+- Signaux amont (fièvre, respiratoire, diagnostic codé).
+- Flutter lecture seule optionnelle.
+- Use cases commerciaux (`useCase/`) **uniquement à la GA** (règle modules tag `dev`).
+
+## Démo locale
+
+```bash
+make up-infra && make migrate && make seed
+make api-dev          # RESEARCH_ENABLED=true
+make nuxtjs-dev       # NUXT_PUBLIC_RESEARCH_ENABLED=true
+# Login research.demo@petsfollow.test / ResearchDemo123!
+# ou switch profil research depuis vet.demo / admin.demo
+curl -X POST http://localhost:8291/api/v1/internal/research-etl/run \
+  -H "X-Research-Etl-Secret: $RESEARCH_ETL_SECRET"
+```
+
+## Tests
+
+- Go : `TestResearch*` (flag, opt-in, ETL, overview sans PII, multi-profil).
+- Playwright : smoke login → `/research` (flag on).
+- Plan : [15-PLAN-TESTS.md](15-PLAN-TESTS.md).

@@ -20,6 +20,8 @@ import 'package:petsfollow_mobile/features/messaging/presentation/messaging_scre
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_edit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/blood_pressure_chart.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/lab_panels_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/weight_chart.dart';
@@ -44,6 +46,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   String? vetsLoadError;
   List<({DateTime date, int bpm, bool isAlert})> hrPoints = [];
   List<({DateTime date, double kg})> weightPoints = [];
+  List<({DateTime date, int sys, int dia})> bpPoints = [];
+  int labPanelCount = 0;
 
   @override
   void initState() {
@@ -81,37 +85,71 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   }
 
   Future<void> _loadCharts() async {
+    List<({DateTime date, int bpm, bool isAlert})>? nextHr;
+    List<({DateTime date, double kg})>? nextWeight;
+    List<({DateTime date, int sys, int dia})>? nextBp;
+    int? nextLabCount;
+
     try {
       final sessions = await ApiClient.instance.getHeartRateSessions(pet.id);
-      final weights = await ApiClient.instance.getWeightReadings(pet.id);
-      if (!mounted) return;
-      setState(() {
-        hrPoints = sessions
-            .whereType<Map>()
-            .map((e) {
-              final bpm = e['bpm'];
-              final started = DateTime.tryParse('${e['startedAt'] ?? e['endedAt'] ?? ''}');
-              if (bpm is! num || started == null) return null;
-              return (
-                date: started,
-                bpm: bpm.round(),
-                isAlert: e['isAlert'] == true,
-              );
-            })
-            .whereType<({DateTime date, int bpm, bool isAlert})>()
-            .toList();
-        weightPoints = weights
-            .whereType<Map>()
-            .map((e) {
-              final kg = e['weightKg'];
-              final at = DateTime.tryParse('${e['recordedAt'] ?? ''}');
-              if (kg is! num || at == null) return null;
-              return (date: at, kg: kg.toDouble());
-            })
-            .whereType<({DateTime date, double kg})>()
-            .toList();
-      });
+      nextHr = sessions
+          .whereType<Map>()
+          .map((e) {
+            final bpm = e['bpm'];
+            final started =
+                DateTime.tryParse('${e['startedAt'] ?? e['endedAt'] ?? ''}');
+            if (bpm is! num || started == null) return null;
+            return (
+              date: started,
+              bpm: bpm.round(),
+              isAlert: e['isAlert'] == true,
+            );
+          })
+          .whereType<({DateTime date, int bpm, bool isAlert})>()
+          .toList();
     } catch (_) {}
+
+    try {
+      final weights = await ApiClient.instance.getWeightReadings(pet.id);
+      nextWeight = weights
+          .whereType<Map>()
+          .map((e) {
+            final kg = e['weightKg'];
+            final at = DateTime.tryParse('${e['recordedAt'] ?? ''}');
+            if (kg is! num || at == null) return null;
+            return (date: at, kg: kg.toDouble());
+          })
+          .whereType<({DateTime date, double kg})>()
+          .toList();
+    } catch (_) {}
+
+    try {
+      final bps = await ApiClient.instance.getBloodPressureReadings(pet.id);
+      nextBp = bps
+          .whereType<Map>()
+          .map((e) {
+            final sys = e['systolicMmHg'];
+            final dia = e['diastolicMmHg'];
+            final at = DateTime.tryParse('${e['recordedAt'] ?? ''}');
+            if (sys is! num || dia is! num || at == null) return null;
+            return (date: at, sys: sys.round(), dia: dia.round());
+          })
+          .whereType<({DateTime date, int sys, int dia})>()
+          .toList();
+    } catch (_) {}
+
+    try {
+      final labs = await ApiClient.instance.getLabPanels(pet.id);
+      nextLabCount = labs.length;
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      if (nextHr != null) hrPoints = nextHr;
+      if (nextWeight != null) weightPoints = nextWeight;
+      if (nextBp != null) bpPoints = nextBp;
+      if (nextLabCount != null) labPanelCount = nextLabCount;
+    });
   }
 
   Future<void> _loadVets() async {
@@ -446,7 +484,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               domicileLocation: pet.domicileLocation,
             ),
           ],
-          if (hrPoints.isNotEmpty || weightPoints.isNotEmpty) ...[
+          if (hrPoints.isNotEmpty || weightPoints.isNotEmpty || bpPoints.isNotEmpty) ...[
             const SizedBox(height: 24),
             if (hrPoints.isNotEmpty) ...[
               Text(l10n.heartRateShort, style: Theme.of(context).textTheme.titleMedium),
@@ -458,7 +496,29 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               Text(l10n.weightShort, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               WeightChart(points: weightPoints, height: 180),
+              const SizedBox(height: 16),
             ],
+            if (bpPoints.isNotEmpty) ...[
+              Text(l10n.bloodPressureShort, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              BloodPressureChart(points: bpPoints, height: 180),
+            ],
+          ],
+          if (labPanelCount > 0) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              key: Key('pet_labs_open_${pet.id}'),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LabPanelsScreen(petId: pet.id),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.science_outlined, size: 18),
+              label: Text(l10n.labsOpen),
+            ),
           ],
           const SizedBox(height: 24),
           if (pet.isOwner && pet.isActive) ...[
@@ -481,6 +541,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                   : null,
               onWeightRecorded: () async {
                 await _reloadPet();
+              },
+              onBloodPressureRecorded: () async {
+                await _loadCharts();
               },
             ),
             const SizedBox(height: 8),

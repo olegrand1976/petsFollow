@@ -1,0 +1,11 @@
+import { proxyApi } from '~/server/utils/api'
+
+export default defineEventHandler(async (event) => {
+  const petId = getRouterParam(event, 'petId')
+  const panelId = getRouterParam(event, 'panelId')
+  const body = await readBody(event)
+  return proxyApi(event, `/api/v1/pets/${petId}/lab-panels/${panelId}`, {
+    method: 'PATCH',
+    body,
+  })
+})

@@ -14,6 +14,7 @@ const (
 	passwordDev        = passwordAdmin // demo ops account; same seed secret as admin
 	passwordCommercial = "CommercialDemo123!"
 	passwordCarePro    = "CareProDemo123!"
+	passwordResearch   = "ResearchDemo123!"
 
 	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
 	demoEmailConfirmToken = "demo-confirm-email"
@@ -42,6 +43,30 @@ type weightReadingDef struct {
 	kg      float64
 	comment string
 	age     time.Duration
+}
+
+type bloodPressureDef struct {
+	sys     int
+	dia     int
+	method  string
+	site    string
+	comment string
+	age     time.Duration
+}
+
+type labResultDef struct {
+	code    string
+	value   float64
+	unit    string
+	refLow  *float64
+	refHigh *float64
+}
+
+type labPanelDef struct {
+	labName string
+	notes   string
+	age     time.Duration
+	results []labResultDef
 }
 
 type dossierEventDef struct {
@@ -78,11 +103,13 @@ type petDef struct {
 	billingMode   billing.BillingMode
 	entitlement   billing.EntitlementStatus
 	messages      []messageDef
-	heartRates    []heartRateDef
-	weights       []weightReadingDef
-	dossierEvents []dossierEventDef
-	careReminders []careReminderDef
-	visits        []visitDef
+	heartRates      []heartRateDef
+	weights         []weightReadingDef
+	bloodPressures  []bloodPressureDef
+	labPanels       []labPanelDef
+	dossierEvents   []dossierEventDef
+	careReminders   []careReminderDef
+	visits          []visitDef
 }
 
 type clientDef struct {
@@ -166,6 +193,32 @@ var demoPractices = []practiceDef{
 							{kg: 33.2, comment: "Après vacances", age: -60 * 24 * time.Hour},
 							{kg: 32.8, age: -30 * 24 * time.Hour},
 							{kg: 32.5, comment: "Poids de forme", age: -7 * 24 * time.Hour},
+						},
+						bloodPressures: []bloodPressureDef{
+							{sys: 145, dia: 95, method: "doppler", site: "queue", comment: "à domicile", age: -45 * 24 * time.Hour},
+							{sys: 138, dia: 88, method: "doppler", comment: "repos", age: -20 * 24 * time.Hour},
+							{sys: 130, dia: 80, method: "oscillometric", site: "patte", comment: "cabinet", age: -5 * 24 * time.Hour},
+						},
+						labPanels: []labPanelDef{
+							{
+								labName: "BioVet Demo",
+								notes:   "Contrôle rénal post-op",
+								age:     -12 * 24 * time.Hour,
+								results: []labResultDef{
+									{code: "crea", value: 2.4, unit: "mg/dL", refLow: f64ptr(0.5), refHigh: f64ptr(1.5)},
+									{code: "alat", value: 45, unit: "U/L", refLow: f64ptr(10), refHigh: f64ptr(100)},
+									{code: "urea", value: 45, unit: "mg/dL", refLow: f64ptr(15), refHigh: f64ptr(50)},
+								},
+							},
+							{
+								labName: "BioVet Demo",
+								notes:   "Suivi 3 mois",
+								age:     -3 * 24 * time.Hour,
+								results: []labResultDef{
+									{code: "crea", value: 1.8, unit: "mg/dL", refLow: f64ptr(0.5), refHigh: f64ptr(1.5)},
+									{code: "alat", value: 38, unit: "U/L", refLow: f64ptr(10), refHigh: f64ptr(100)},
+								},
+							},
 						},
 						dossierEvents: []dossierEventDef{
 							{authorRole: "vet", eventType: "note", content: "Suivi cardiaque post-op. Fréquence stable.", age: -14 * 24 * time.Hour},
@@ -451,3 +504,5 @@ var demoPractices = []practiceDef{
 		seedPasswordReset: true,
 	},
 }
+
+func f64ptr(v float64) *float64 { return &v }

@@ -76,8 +76,12 @@ async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> 
     headers: { Authorization: `Bearer ${vetTok}` },
   })
   if (!petsRes.ok) throw new Error(`client pets ${petsRes.status}`)
-  const pets = (await petsRes.json()).data as Array<{ id: string; paymentStatus?: string }>
-  const pet = pets.find((p) => p.paymentStatus === 'active') ?? pets[0]
+  const pets = (await petsRes.json()).data as Array<{ id: string; name?: string; paymentStatus?: string }>
+  // Prefer Rex (seed BP + labs) when active, else any active pet.
+  const pet =
+    pets.find((p) => p.paymentStatus === 'active' && /Rex/i.test(p.name || ''))
+    ?? pets.find((p) => p.paymentStatus === 'active')
+    ?? pets[0]
   if (!pet?.id) throw new Error('demo pet not found')
   return { clientId: client.userId, petId: pet.id }
 }
@@ -302,6 +306,69 @@ test('pet detail — suivi poids chart + tableau', async ({ page }) => {
     timeout: 15000,
   })
   await expect(page.getByText(`${kg} kg`).first()).toBeVisible()
+})
+
+test('pet detail — tension + panel labo @p1', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(90000)
+  const { clientId, petId } = await demoClientAndPet()
+  const clientTok = await apiLogin('client.demo@petsfollow.test', 'ClientDemo123!')
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  const stamp = Date.now()
+
+  const bpRes = await fetch(`${API}/api/v1/pets/${petId}/blood-pressure`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${clientTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      systolicMmHg: 142,
+      diastolicMmHg: 91,
+      method: 'doppler',
+      comment: `e2e bp ${stamp}`,
+    }),
+  })
+  if (!bpRes.ok) throw new Error(`create bp ${bpRes.status} ${await bpRes.text()}`)
+
+  const labRes = await fetch(`${API}/api/v1/pets/${petId}/lab-panels`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${vetTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      labName: `E2E Lab ${stamp}`,
+      notes: 'e2e panel',
+      results: [
+        { analyteCode: 'crea', valueNum: 2.2, unit: 'mg/dL', refLow: 0.5, refHigh: 1.5 },
+        { analyteCode: 'alat', valueNum: 40, unit: 'U/L', refLow: 10, refHigh: 100 },
+      ],
+    }),
+  })
+  if (!labRes.ok) throw new Error(`create lab ${labRes.status} ${await labRes.text()}`)
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`, { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
+  // Deep-link ?tab= can race with hydration — force vitals tab like a user click.
+  await page.getByTestId('section-tab-vitals').click()
+  const vitals = page.getByTestId('pet-tab-vitals')
+  await expect(vitals).toBeVisible({ timeout: 15000 })
+  await expect(vitals.getByTestId('pet-bp-table-card')).toBeVisible({ timeout: 15000 })
+  await expect(vitals.getByTestId('pet-bp-table-card').getByText('142/91')).toBeVisible()
+  await expect(vitals.getByTestId('pet-labs-card')).toBeVisible()
+  await expect(vitals.getByTestId('pet-labs-card').getByText(`E2E Lab ${stamp}`)).toBeVisible()
+  await vitals.getByTestId('pet-lab-panel-row').filter({ hasText: `E2E Lab ${stamp}` }).click()
+  await expect(page.getByTestId('pet-lab-detail')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByTestId('pet-lab-detail').getByText(/crea|CREA|Créatinine/i)).toBeVisible()
+
+  await page.getByTestId('pet-lab-edit').click()
+  await expect(page.getByTestId('pet-lab-edit-form')).toBeVisible()
+  const creaValue = page.getByTestId('pet-lab-edit-value').first()
+  await creaValue.fill('2.8')
+  await page.getByTestId('pet-lab-save-results').click()
+  await expect(page.getByTestId('pet-lab-edit-form')).toBeHidden({ timeout: 10000 })
+  await expect(page.getByTestId('pet-lab-detail').getByText('2.8')).toBeVisible()
 })
 
 test('heartrate — durées cabinet exposées au client + BPM sur 15s', async () => {

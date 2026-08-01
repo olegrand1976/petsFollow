@@ -1983,4 +1983,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'I agree to share this report with this veterinarian.';
+
+  @override
+  String get bloodPressureShort => 'BP';
+
+  @override
+  String get recordBloodPressureTitle => 'Record blood pressure';
+
+  @override
+  String get bpSystolicLabel => 'Systolic (mmHg)';
+
+  @override
+  String get bpDiastolicLabel => 'Diastolic (mmHg)';
+
+  @override
+  String get bpMethodLabel => 'Method';
+
+  @override
+  String get bpMethodDoppler => 'Doppler';
+
+  @override
+  String get bpMethodOscillometric => 'Oscillometric';
+
+  @override
+  String get bpMethodUnknown => 'Unspecified';
+
+  @override
+  String get bloodPressureInvalid => 'Enter a valid BP (SYS ≥ DIA)';
+
+  @override
+  String get bloodPressureSaved => 'Blood pressure saved';
+
+  @override
+  String get labsTitle => 'Lab results';
+
+  @override
+  String get labsEmpty => 'No lab results available';
+
+  @override
+  String get labsResults => 'Results';
+
+  @override
+  String labsAbnormalCount(int count) {
+    return '$count out of range';
+  }
+
+  @override
+  String get labsOpen => 'View lab results';
+
+  @override
+  String get labsFlagLow => 'Low';
+
+  @override
+  String get labsFlagHigh => 'High';
+
+  @override
+  String get labsFlagNormal => 'Normal';
+
+  @override
+  String get labsOpenDocument => 'Open document';
+
+  @override
+  String get bpMethodInvasive => 'Invasive';
+
+  @override
+  String get bpSiteLabel => 'Site (optional)';
+
+  @override
+  String get bpCommentLabel => 'Comment (optional)';
+
+  @override
+  String get bloodPressureSave => 'Save';
 }

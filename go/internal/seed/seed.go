@@ -98,6 +98,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := EnsureDemoOpsVetProfiles(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedResearchDemo(ctx, pool, st); err != nil {
+		return err
+	}
 	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
 		return err
 	}
@@ -403,6 +406,9 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
 	// ops.support_tickets (+ replies) are intentionally NOT truncated: staging support inbox must survive resets.
+	if _, err := tx.Exec(ctx, `TRUNCATE research.anon_events, research.weekly_aggregates, research.etl_watermarks`); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.commercial_bonus_awards,
 		billing.addon_entitlements, sales.prospects,
@@ -681,6 +687,63 @@ func seedDev(ctx context.Context, tx pgx.Tx) error {
 	return err
 }
 
+// seedResearchDemo creates research.demo + attaches research profile on vet.demo / admin.demo,
+// and opts VetPlus into the research network for local demos.
+func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordResearch), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	researchID := uuid.NewString()
+	_, err = pool.Exec(ctx, `
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, 'research.demo@petsfollow.test', $2, 'Nora Research', 'research', NULL, NOW(), false)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'research',
+			practice_id = NULL,
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			must_change_password = false`,
+		researchID, string(hash))
+	if err != nil {
+		return fmt.Errorf("seed research user: %w", err)
+	}
+	var userID string
+	if err := pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email = 'research.demo@petsfollow.test'`).Scan(&userID); err != nil {
+		return err
+	}
+	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+		return fmt.Errorf("research profiles: %w", err)
+	}
+	if _, err := st.EnsureRoleProfile(ctx, userID, kernel.RoleResearch, "", ""); err != nil {
+		return fmt.Errorf("research role profile: %w", err)
+	}
+	for _, email := range []string{"vet.demo@petsfollow.test", "admin.demo@petsfollow.test"} {
+		var uid string
+		if err := pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email = $1`, email).Scan(&uid); err != nil {
+			return fmt.Errorf("%s: %w", email, err)
+		}
+		if _, err := st.EnsureRoleProfile(ctx, uid, kernel.RoleResearch, "", ""); err != nil {
+			return fmt.Errorf("%s research profile: %w", email, err)
+		}
+	}
+	// Opt-in VetPlus demo practice for ETL demos.
+	_, err = pool.Exec(ctx, `
+		UPDATE practice.practices pr
+		SET research_opt_in_at = COALESCE(pr.research_opt_in_at, NOW()),
+		    research_opt_in_by = (
+		      SELECT id FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1
+		    )
+		WHERE pr.id = (
+		  SELECT practice_id FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1
+		)`)
+	if err != nil {
+		return fmt.Errorf("research opt-in vetplus: %w", err)
+	}
+	return nil
+}
+
 // EnsureDemoOpsVetProfiles is idempotent — used by seed.Run and integration tests.
 // Demo ops (admin.demo / dev.demo): vet VetPlus + team ; client via IsProRole(dev) ou
 // EnsureRoleProfile explicite pour admin (pas IsProRole).
@@ -949,6 +1012,16 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 			return err
 		}
 	}
+	for _, bp := range pet.bloodPressures {
+		if err := insertBloodPressure(ctx, tx, petID, clientID, reg.practiceID, bp); err != nil {
+			return err
+		}
+	}
+	for _, panel := range pet.labPanels {
+		if err := insertLabPanel(ctx, tx, petID, reg.practiceID, reg.vetID, panel); err != nil {
+			return err
+		}
+	}
 	for _, ev := range pet.dossierEvents {
 		authorID := reg.vetID
 		if ev.authorRole == "client" {
@@ -1052,6 +1125,60 @@ func insertWeightReading(ctx context.Context, tx pgx.Tx, petID, ownerID, practic
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		uuid.NewString(), petID, ownerID, ownerID, practiceID, w.kg, comment, recordedAt)
 	return err
+}
+
+func insertBloodPressure(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID string, bp bloodPressureDef) error {
+	recordedAt := time.Now().Add(bp.age)
+	method := strings.TrimSpace(bp.method)
+	if method == "" {
+		method = "unknown"
+	}
+	var site, comment *string
+	if s := strings.TrimSpace(bp.site); s != "" {
+		site = &s
+	}
+	if c := strings.TrimSpace(bp.comment); c != "" {
+		comment = &c
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO pets.blood_pressure_readings (
+			id, pet_id, owner_user_id, author_user_id, practice_id,
+			systolic_mmhg, diastolic_mmhg, method, site, comment, recorded_at
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+		uuid.NewString(), petID, ownerID, ownerID, practiceID,
+		bp.sys, bp.dia, method, site, comment, recordedAt)
+	return err
+}
+
+func insertLabPanel(ctx context.Context, tx pgx.Tx, petID, practiceID, authorID string, panel labPanelDef) error {
+	panelID := uuid.NewString()
+	collectedAt := time.Now().Add(panel.age)
+	_, err := tx.Exec(ctx, `
+		INSERT INTO labs.panels (
+			id, pet_id, practice_id, author_user_id, collected_at, lab_name, notes, created_at, updated_at
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$5,$5)`,
+		panelID, petID, practiceID, authorID, collectedAt, panel.labName, panel.notes)
+	if err != nil {
+		return err
+	}
+	for _, r := range panel.results {
+		flag := "unknown"
+		if r.refLow != nil && r.value < *r.refLow {
+			flag = "low"
+		} else if r.refHigh != nil && r.value > *r.refHigh {
+			flag = "high"
+		} else if r.refLow != nil || r.refHigh != nil {
+			flag = "normal"
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO labs.panel_results (
+				id, panel_id, analyte_code, value_num, unit, ref_low, ref_high, flag
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+			uuid.NewString(), panelID, r.code, r.value, r.unit, r.refLow, r.refHigh, flag); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func insertDossierEvent(ctx context.Context, tx pgx.Tx, petID, authorID string, ev dossierEventDef) error {
@@ -1301,6 +1428,7 @@ func logSummary() {
 	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
 	log.Println("Admin  : admin.demo@petsfollow.test (switch profils client/vet)")
 	log.Println("DEV    : dev.demo@petsfollow.test (support IT — switch profils client/vet)")
+	log.Println("Research: research.demo@petsfollow.test (observatoire — switch aussi sur vet.demo/admin.demo)")
 	log.Println("Manager: commercial.manager@petsfollow.test")
 	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
 	log.Println("Commerc: commercial.demo2@petsfollow.test (vet.parc assigné, 5 prospects Nord, rattaché manager)")

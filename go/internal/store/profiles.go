@@ -194,6 +194,7 @@ func (s *Store) AttachProfile(ctx context.Context, actorUserID, targetUserID str
 	if actorUserID == targetUserID {
 		return Profile{}, ErrCannotModifyOwnProfiles
 	}
+	// Admin/dev cannot be attached via this path; research is attachable (observatory profile).
 	if !kernel.ValidRole(in.Role) || in.Role == kernel.RoleAdmin || in.Role == kernel.RoleDev {
 		return Profile{}, ErrValidation
 	}

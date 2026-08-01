@@ -12,6 +12,7 @@ import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/consultation_view_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/lab_panels_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -163,6 +164,10 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         return Icons.favorite_outline;
       case 'weight':
         return Icons.monitor_weight_outlined;
+      case 'blood_pressure':
+        return Icons.monitor_heart_outlined;
+      case 'lab_panel':
+        return Icons.science_outlined;
       case 'message':
         return Icons.chat_bubble_outline;
       case 'care':
@@ -182,6 +187,10 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         return AppColors.alert;
       case 'weight':
         return AppColors.brandTeal;
+      case 'blood_pressure':
+        return AppColors.primary;
+      case 'lab_panel':
+        return AppColors.gold;
       case 'message':
         return AppColors.primary;
       case 'care':
@@ -199,6 +208,10 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         return l10n.timelineTypeHeartrate;
       case 'weight':
         return l10n.timelineTypeWeight;
+      case 'blood_pressure':
+        return l10n.bloodPressureShort;
+      case 'lab_panel':
+        return l10n.labsTitle;
       case 'message':
         return l10n.timelineTypeMessage;
       case 'care':
@@ -548,13 +561,28 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 ].join(' · '),
                               ),
                               trailing: visitId == null
-                                  ? null
+                                  ? (type == 'lab_panel'
+                                      ? const Icon(Icons.chevron_right)
+                                      : null)
                                   : _consultationCta(
                                       l10n: l10n,
                                       visitId: visitId,
                                       available: openReport,
                                       pending: pendingReport,
                                     ),
+                              onTap: type == 'lab_panel'
+                                  ? () {
+                                      Navigator.push<void>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => LabPanelsScreen(
+                                            petId: widget.petId,
+                                            initialPanelId: rowId,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  : null,
                             ),
                           );
                         }),

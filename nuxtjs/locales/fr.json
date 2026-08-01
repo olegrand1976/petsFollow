@@ -68,7 +68,8 @@
       "clinic": "Clinique",
       "finance": "Finance",
       "practice": "Cabinet",
-      "account": "Compte"
+      "account": "Compte",
+      "research": "Research"
     },
     "adminSupport": "Support",
     "commercialFiliation": "Filiation",
@@ -80,7 +81,10 @@
     "prescriptions": "Prescriptions",
     "adminRuntimeFlags": "Flags runtime",
     "adminPacs": "PACS",
-    "adminAfmps": "Import AFMPS"
+    "adminAfmps": "Import AFMPS",
+    "researchOverview": "Observatoire",
+    "researchHeatmap": "Carte régionale",
+    "researchAlerts": "Alertes"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -450,7 +454,8 @@
         "subscription": "Abonnement",
         "one_time": "Paiement unique"
       }
-    }
+    },
+    "refresh": "Actualiser"
   },
   "commercial": {
     "dashboard": {
@@ -3139,7 +3144,8 @@
       "profileRole_commercial": "Commercial",
       "profileRole_commercial_manager": "Manager commercial",
       "profileRole_care_pro": "Care pro",
-      "profileRole_client": "Client"
+      "profileRole_client": "Client",
+      "profileRole_research": "Research"
     },
     "table": {
       "emptyTitle": "Aucune donnée"
@@ -3839,5 +3845,69 @@
     "seriesOption": "Série {n} · {id}",
     "downloadError": "Téléchargement DICOM impossible.",
     "instanceUnavailable": "Fichier DICOM introuvable sur le serveur d’imagerie. Réimportez l’étude (ex. RX démo) ou choisissez une autre."
+  },
+  "research": {
+    "disabledTitle": "Module Research désactivé",
+    "disabledHint": "Activez NUXT_PUBLIC_RESEARCH_ENABLED pour accéder à l’observatoire.",
+    "loadError": "Impossible de charger les agrégats Research.",
+    "overview": {
+      "title": "petsFollow Research",
+      "subtitle": "Agrégats anonymisés (opt-in cabinets) — statistiques et signaux régionaux.",
+      "optInPractices": "Cabinets opt-in",
+      "events": "Événements",
+      "weeks": "Semaines couvertes",
+      "latestWeek": "Dernière semaine",
+      "bySignal": "Par signal",
+      "bySpecies": "Par espèce",
+      "emptySignals": "Aucun signal agrégé pour l’instant (lancer l’ETL).",
+      "emptySpecies": "Aucune donnée espèce."
+    },
+    "heatmap": {
+      "title": "Carte régionale",
+      "subtitle": "Volumes par code postal × espèce × signal (k-anonymité ≥ 5).",
+      "empty": "Aucun agrégat pour ces filtres.",
+      "postalCode": "Code postal",
+      "country": "Pays",
+      "species": "Espèce",
+      "signal": "Signal",
+      "count": "Volume"
+    },
+    "alerts": {
+      "title": "Alertes précoces",
+      "subtitle": "Pics simples vs baseline 8 semaines (z-score).",
+      "empty": "Aucune alerte active.",
+      "week": "Semaine",
+      "baseline": "Baseline",
+      "zScore": "Z-score"
+    },
+    "filters": {
+      "species": "Espèce (ex. dog)",
+      "signal": "Signal (ex. visit_volume)"
+    },
+    "signals": {
+      "preconsult_syndrome": "Préconsult",
+      "visit_volume": "Visites",
+      "lab_flag": "Labs (flag)",
+      "care_preventive": "Care préventif",
+      "antibiotic_daf": "DAF antibiotique",
+      "hr_alert": "Alerte FC"
+    },
+    "settings": {
+      "title": "petsFollow Research",
+      "hint": "Partage anonymisé (CP cabinet × semaine × espèce) pour l’observatoire. Aucune donnée nominative.",
+      "optedIn": "Cabinet contributeur",
+      "optedOut": "Non contributeur",
+      "statusUnknown": "Statut de contribution indisponible.",
+      "optIn": "Activer la contribution",
+      "optOut": "Désactiver et purger",
+      "optOutConfirm": "Désactiver la contribution Research et purger les événements anonymisés de ce cabinet ? Action irréversible.",
+      "saved": "Préférence Research enregistrée.",
+      "error": "Impossible de mettre à jour l’opt-in Research.",
+      "devBadge": "dev"
+    },
+    "accountSettings": {
+      "title": "Compte Research",
+      "subtitle": "Langue et mot de passe du profil Research."
+    }
   }
 }

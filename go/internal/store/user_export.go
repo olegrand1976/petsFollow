@@ -30,6 +30,14 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			FROM heartrate.sessions h JOIN pets.pets p ON p.id = h.pet_id WHERE p.owner_user_id = $1`,
 		"weightReadings": `SELECT COALESCE(jsonb_agg(to_jsonb(w) ORDER BY w.recorded_at), '[]'::jsonb)
 			FROM pets.weight_readings w JOIN pets.pets p ON p.id = w.pet_id WHERE p.owner_user_id = $1`,
+		"bloodPressureReadings": `SELECT COALESCE(jsonb_agg(to_jsonb(b) ORDER BY b.recorded_at), '[]'::jsonb)
+			FROM pets.blood_pressure_readings b JOIN pets.pets p ON p.id = b.pet_id WHERE p.owner_user_id = $1`,
+		"labPanels": `SELECT COALESCE(jsonb_agg(to_jsonb(lp) ORDER BY lp.collected_at), '[]'::jsonb)
+			FROM labs.panels lp JOIN pets.pets p ON p.id = lp.pet_id WHERE p.owner_user_id = $1`,
+		"labPanelResults": `SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY r.analyte_code), '[]'::jsonb)
+			FROM labs.panel_results r
+			JOIN labs.panels lp ON lp.id = r.panel_id
+			JOIN pets.pets p ON p.id = lp.pet_id WHERE p.owner_user_id = $1`,
 		"visits": `SELECT COALESCE(jsonb_agg(to_jsonb(v) ORDER BY v.created_at), '[]'::jsonb)
 			FROM visits.visits v JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id = $1`,
 		"preconsultIntakes": `SELECT COALESCE(jsonb_agg(to_jsonb(i) ORDER BY i.created_at), '[]'::jsonb)

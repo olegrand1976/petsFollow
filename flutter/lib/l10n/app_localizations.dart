@@ -3759,6 +3759,144 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'J\'accepte de partager ce compte-rendu avec ce vétérinaire.'**
   String get sendConsultationPhiConsent;
+
+  /// No description provided for @bloodPressureShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tension'**
+  String get bloodPressureShort;
+
+  /// No description provided for @recordBloodPressureTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer la tension'**
+  String get recordBloodPressureTitle;
+
+  /// No description provided for @bpSystolicLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Systolique (mmHg)'**
+  String get bpSystolicLabel;
+
+  /// No description provided for @bpDiastolicLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diastolique (mmHg)'**
+  String get bpDiastolicLabel;
+
+  /// No description provided for @bpMethodLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Méthode'**
+  String get bpMethodLabel;
+
+  /// No description provided for @bpMethodDoppler.
+  ///
+  /// In fr, this message translates to:
+  /// **'Doppler'**
+  String get bpMethodDoppler;
+
+  /// No description provided for @bpMethodOscillometric.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oscillométrique'**
+  String get bpMethodOscillometric;
+
+  /// No description provided for @bpMethodUnknown.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non précisée'**
+  String get bpMethodUnknown;
+
+  /// No description provided for @bloodPressureInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez une tension valide (SYS ≥ DIA)'**
+  String get bloodPressureInvalid;
+
+  /// No description provided for @bloodPressureSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tension enregistrée'**
+  String get bloodPressureSaved;
+
+  /// No description provided for @labsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Analyses'**
+  String get labsTitle;
+
+  /// No description provided for @labsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune analyse disponible'**
+  String get labsEmpty;
+
+  /// No description provided for @labsResults.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats'**
+  String get labsResults;
+
+  /// No description provided for @labsAbnormalCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} hors norme'**
+  String labsAbnormalCount(int count);
+
+  /// No description provided for @labsOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les analyses'**
+  String get labsOpen;
+
+  /// No description provided for @labsFlagLow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bas'**
+  String get labsFlagLow;
+
+  /// No description provided for @labsFlagHigh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Haut'**
+  String get labsFlagHigh;
+
+  /// No description provided for @labsFlagNormal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Normal'**
+  String get labsFlagNormal;
+
+  /// No description provided for @labsOpenDocument.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le document'**
+  String get labsOpenDocument;
+
+  /// No description provided for @bpMethodInvasive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invasive'**
+  String get bpMethodInvasive;
+
+  /// No description provided for @bpSiteLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Site (optionnel)'**
+  String get bpSiteLabel;
+
+  /// No description provided for @bpCommentLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commentaire (optionnel)'**
+  String get bpCommentLabel;
+
+  /// No description provided for @bloodPressureSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get bloodPressureSave;
 }
 
 class _AppLocalizationsDelegate

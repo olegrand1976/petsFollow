@@ -10,6 +10,8 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Accept terms (provisionné) | · | ✓ | · | `accept_terms_screen_test` (checkbox + POST) |
 | Home HR / poids keys | · | ✓ | · | `pet_quick_actions_test` |
 | Weight sheet validate/save | ✓ | ✓ | ✓ | min 0.01 + POST mock + smoke |
+| BP sheet validate/save | · | ✓ | · | `pet_quick_actions_test` (SYS≥DIA + POST mock) |
+| LabPanelsScreen list/detail | · | ✓ | · | `lab_panels_screen_test` (+ `initialPanelId`) |
 | Pet.weightKg parse | ✓ | · | · | `pet_weight_test` |
 | HR start/taps | · | ✓ | ✓ | flow + smoke cancel |
 | HR keys start/validate | · | ✓ | · | `heart_rate_validate_keys_test` |

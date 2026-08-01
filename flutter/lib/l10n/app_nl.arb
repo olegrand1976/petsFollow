@@ -723,14 +723,18 @@
   "consultationTitleWithPet": "Consultatie — {petName}",
   "@consultationTitleWithPet": {
     "placeholders": {
-      "petName": { "type": "String" }
+      "petName": {
+        "type": "String"
+      }
     }
   },
   "consultationVisitMeta": "Bezoek",
   "consultationReportBy": "Verslag door {author}",
   "@consultationReportBy": {
     "placeholders": {
-      "author": { "type": "String" }
+      "author": {
+        "type": "String"
+      }
     }
   },
   "consultationReportFallback": "Verslag",
@@ -744,5 +748,35 @@
   "sendConsultationSuccess": "Consultatie verstuurd — link 24 uur geldig.",
   "sendConsultationInvalidEmail": "Ongeldig e-mailadres.",
   "sendConsultationPhiWarning": "Dit verslag bevat gezondheidsgegevens. De link blijft 24 uur geldig en iedereen die hem heeft, kan de PDF downloaden.",
-  "sendConsultationPhiConsent": "Ik ga ermee akkoord dit verslag met deze dierenarts te delen."
+  "sendConsultationPhiConsent": "Ik ga ermee akkoord dit verslag met deze dierenarts te delen.",
+  "bloodPressureShort": "RR",
+  "recordBloodPressureTitle": "Bloeddruk registreren",
+  "bpSystolicLabel": "Systolisch (mmHg)",
+  "bpDiastolicLabel": "Diastolisch (mmHg)",
+  "bpMethodLabel": "Methode",
+  "bpMethodDoppler": "Doppler",
+  "bpMethodOscillometric": "Oscillometrisch",
+  "bpMethodUnknown": "Niet gespecificeerd",
+  "bloodPressureInvalid": "Geldige RR invoeren (SYS ≥ DIA)",
+  "bloodPressureSaved": "Bloeddruk opgeslagen",
+  "labsTitle": "Labresultaten",
+  "labsEmpty": "Geen labresultaten",
+  "labsResults": "Resultaten",
+  "labsAbnormalCount": "{count} buiten bereik",
+  "@labsAbnormalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labsOpen": "Labresultaten bekijken",
+  "labsFlagLow": "Laag",
+  "labsFlagHigh": "Hoog",
+  "labsFlagNormal": "Normaal",
+  "labsOpenDocument": "Document openen",
+  "bpMethodInvasive": "Invasief",
+  "bpSiteLabel": "Meetplaats (optioneel)",
+  "bpCommentLabel": "Opmerking (optioneel)",
+  "bloodPressureSave": "Opslaan"
 }

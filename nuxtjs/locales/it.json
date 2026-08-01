@@ -62,7 +62,8 @@
       "clinic": "Clinica",
       "finance": "Finanze",
       "practice": "Studio",
-      "account": "Account"
+      "account": "Account",
+      "research": "Research"
     },
     "managerAiModules": "CR IA — team",
     "adminSupport": "Supporto",
@@ -79,7 +80,10 @@
     "adminRuntimeFlags": "Flag runtime",
     "adminPacs": "PACS",
     "adminCompendium": "Compendio PDF",
-    "adminAfmps": "Import AFMPS"
+    "adminAfmps": "Import AFMPS",
+    "researchOverview": "Osservatorio",
+    "researchHeatmap": "Mappa regionale",
+    "researchAlerts": "Avvisi"
   },
   "training": {
     "title": "Allenamento AI",
@@ -405,7 +409,8 @@
         "one_time": "Pagamento unico"
       }
     },
-    "stagingEnv": "Ambiente staging"
+    "stagingEnv": "Ambiente staging",
+    "refresh": "Aggiorna"
   },
   "commercial": {
     "dashboard": {
@@ -3063,7 +3068,8 @@
       "profileRole_commercial": "Commerciale",
       "profileRole_commercial_manager": "Manager commerciale",
       "profileRole_care_pro": "Care pro",
-      "profileRole_client": "Cliente"
+      "profileRole_client": "Cliente",
+      "profileRole_research": "Research"
     },
     "table": {
       "emptyTitle": "Nessun dato"
@@ -3807,5 +3813,69 @@
     "seriesOption": "Serie {n} · {id}",
     "downloadError": "Download DICOM non riuscito.",
     "instanceUnavailable": "DICOM assente sul server. Reimporta lo studio o scegline un altro."
+  },
+  "research": {
+    "disabledTitle": "Research module disabled",
+    "disabledHint": "Enable NUXT_PUBLIC_RESEARCH_ENABLED to open the observatory.",
+    "loadError": "Could not load Research aggregates.",
+    "overview": {
+      "title": "petsFollow Research",
+      "subtitle": "Anonymized aggregates (practice opt-in) — stats and regional signals.",
+      "optInPractices": "Opted-in practices",
+      "events": "Events",
+      "weeks": "Weeks covered",
+      "latestWeek": "Latest week",
+      "bySignal": "By signal",
+      "bySpecies": "By species",
+      "emptySignals": "No aggregates yet (run the ETL).",
+      "emptySpecies": "No species data."
+    },
+    "heatmap": {
+      "title": "Regional map",
+      "subtitle": "Volumes by postal code × species × signal (k-anonymity ≥ 5).",
+      "empty": "No aggregates for these filters.",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "species": "Species",
+      "signal": "Signal",
+      "count": "Volume"
+    },
+    "alerts": {
+      "title": "Early alerts",
+      "subtitle": "Simple spikes vs 8-week baseline (z-score).",
+      "empty": "No active alerts.",
+      "week": "Week",
+      "baseline": "Baseline",
+      "zScore": "Z-score"
+    },
+    "filters": {
+      "species": "Species (e.g. dog)",
+      "signal": "Signal (e.g. visit_volume)"
+    },
+    "signals": {
+      "preconsult_syndrome": "Preconsult",
+      "visit_volume": "Visits",
+      "lab_flag": "Lab flags",
+      "care_preventive": "Preventive care",
+      "antibiotic_daf": "Antibiotic DAF",
+      "hr_alert": "HR alert"
+    },
+    "settings": {
+      "title": "petsFollow Research",
+      "hint": "Anonymized sharing (practice postcode × week × species) for the observatory. No nominative data.",
+      "optedIn": "Contributing practice",
+      "optedOut": "Not contributing",
+      "statusUnknown": "Contribution status unavailable.",
+      "optIn": "Enable contribution",
+      "optOut": "Disable and purge",
+      "optOutConfirm": "Disable Research contribution and purge this practice’s anonymized events? This cannot be undone.",
+      "saved": "Research preference saved.",
+      "error": "Could not update Research opt-in.",
+      "devBadge": "dev"
+    },
+    "accountSettings": {
+      "title": "Research account",
+      "subtitle": "Language and password for the Research profile."
+    }
   }
 }

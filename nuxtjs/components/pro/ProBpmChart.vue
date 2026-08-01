@@ -67,6 +67,15 @@
       </text>
 
       <polyline
+        v-if="plottedSecondary.length > 1"
+        :points="polylineSecondary"
+        fill="none"
+        stroke="var(--pf-vet-primary)"
+        stroke-width="2"
+        stroke-linejoin="round"
+        stroke-dasharray="4 3"
+      />
+      <polyline
         v-if="plotted.length > 1"
         :points="polyline"
         fill="none"
@@ -74,6 +83,14 @@
         stroke-width="2"
         stroke-linejoin="round"
       />
+      <g v-for="(p, i) in plottedSecondary" :key="`s-${i}`">
+        <circle
+          :cx="p.x"
+          :cy="p.y"
+          r="3"
+          fill="var(--pf-vet-primary)"
+        />
+      </g>
       <g v-for="(p, i) in plotted" :key="i">
         <circle
           :cx="p.x"
@@ -94,14 +111,26 @@
       </g>
     </svg>
     <ul v-if="!hideLegend" class="pro-bpm-chart-legend" :aria-label="$t('clients.pet.chartLegend')">
-      <li>
-        <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--ok" aria-hidden="true" />
-        {{ $t('clients.pet.chartLegendOk') }}
-      </li>
-      <li>
-        <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--alert" aria-hidden="true" />
-        {{ $t('clients.pet.chartLegendAlert') }}
-      </li>
+      <template v-if="hasSecondary">
+        <li>
+          <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--ok" aria-hidden="true" />
+          {{ secondaryPrimaryLabel }}
+        </li>
+        <li>
+          <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--secondary" aria-hidden="true" />
+          {{ secondarySecondaryLabel }}
+        </li>
+      </template>
+      <template v-else>
+        <li>
+          <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--ok" aria-hidden="true" />
+          {{ $t('clients.pet.chartLegendOk') }}
+        </li>
+        <li>
+          <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--alert" aria-hidden="true" />
+          {{ $t('clients.pet.chartLegendAlert') }}
+        </li>
+      </template>
     </ul>
   </div>
 </template>
@@ -109,6 +138,10 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   values: number[]
+  /** Optional second series (e.g. diastolic) sharing the same dates. */
+  secondaryValues?: number[]
+  secondaryPrimaryLabel?: string
+  secondarySecondaryLabel?: string
   alerts?: boolean[]
   dates?: string[]
   domainStart?: string
@@ -127,6 +160,9 @@ const { t } = useI18n()
 const { dateLocale } = useFormatters()
 
 const axisTitleLabel = computed(() => props.axisTitle || t('clients.pet.chartAxisBpm'))
+const hasSecondary = computed(() => (props.secondaryValues?.length ?? 0) > 0)
+const secondaryPrimaryLabel = computed(() => props.secondaryPrimaryLabel || t('clients.pet.bpSystolic'))
+const secondarySecondaryLabel = computed(() => props.secondarySecondaryLabel || t('clients.pet.bpDiastolic'))
 
 const width = 420
 const height = 200
@@ -155,7 +191,7 @@ function formatAxisDate(value: Date, withYear: boolean) {
 }
 
 const scale = computed(() => {
-  const vals = props.values
+  const vals = [...props.values, ...(props.secondaryValues ?? [])]
   const rawMax = vals.length ? Math.max(...vals) : (props.autoYDomain ? 10 : 80)
   const rawMin = vals.length ? Math.min(...vals) : (props.autoYDomain ? 0 : 40)
   let yMax: number
@@ -246,6 +282,23 @@ const plotted = computed(() => {
 })
 
 const polyline = computed(() => plotted.value.map(p => `${p.x},${p.y}`).join(' '))
+
+const plottedSecondary = computed(() => {
+  const vals = props.secondaryValues ?? []
+  if (!vals.length) return []
+  const { yMin, yRange, domainStartMs, tSpan } = scale.value
+  return vals.map((v, i) => {
+    const t = parseTime(props.dates?.[i]) ?? domainStartMs
+    const ratio = Math.min(1, Math.max(0, (t - domainStartMs) / tSpan))
+    return {
+      x: plotLeft + ratio * plotW,
+      y: plotBottom - ((v - yMin) / yRange) * plotH,
+      value: v,
+    }
+  })
+})
+
+const polylineSecondary = computed(() => plottedSecondary.value.map(p => `${p.x},${p.y}`).join(' '))
 </script>
 
 <style scoped>
@@ -321,5 +374,9 @@ const polyline = computed(() => plotted.value.map(p => `${p.x},${p.y}`).join(' '
 
 .pro-bpm-chart-swatch--alert {
   background: var(--pf-vet-alert);
+}
+
+.pro-bpm-chart-swatch--secondary {
+  background: var(--pf-vet-primary);
 }
 </style>

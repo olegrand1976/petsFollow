@@ -964,6 +964,47 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			jsonb_build_object('weight_kg', weight_kg, 'comment', comment)
 		FROM pets.weight_readings WHERE pet_id=$1
 		UNION ALL
+		SELECT id::text, 'blood_pressure', 'Tension',
+			CASE
+				WHEN comment IS NOT NULL AND btrim(comment) <> ''
+					THEN CONCAT(systolic_mmhg::text, '/', diastolic_mmhg::text, ' — ', comment)
+				ELSE CONCAT(systolic_mmhg::text, '/', diastolic_mmhg::text, ' · ', initcap(method))
+			END,
+			recorded_at,
+			jsonb_build_object(
+				'systolic_mmhg', systolic_mmhg,
+				'diastolic_mmhg', diastolic_mmhg,
+				'mean_mmhg', mean_mmhg,
+				'method', method,
+				'site', site,
+				'comment', comment
+			)
+		FROM pets.blood_pressure_readings WHERE pet_id=$1
+		UNION ALL
+		SELECT p.id::text, 'lab_panel',
+			CASE WHEN btrim(p.lab_name) <> '' THEN CONCAT('Prise de sang — ', p.lab_name) ELSE 'Prise de sang' END,
+			CASE
+				WHEN COALESCE(ab.cnt, 0) > 0
+					THEN CONCAT(ab.cnt::text, ' valeur(s) hors norme')
+				ELSE CONCAT(COALESCE(rc.cnt, 0)::text, ' analyte(s)')
+			END,
+			p.collected_at,
+			jsonb_build_object(
+				'lab_name', p.lab_name,
+				'abnormal_count', COALESCE(ab.cnt, 0),
+				'result_count', COALESCE(rc.cnt, 0),
+				'document_id', p.document_id
+			)
+		FROM labs.panels p
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*)::int AS cnt FROM labs.panel_results r
+			WHERE r.panel_id = p.id AND r.flag IN ('low','high')
+		) ab ON true
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*)::int AS cnt FROM labs.panel_results r WHERE r.panel_id = p.id
+		) rc ON true
+		WHERE p.pet_id=$1
+		UNION ALL
 		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb
 		FROM pets.dossier_events WHERE pet_id=$1
 		UNION ALL

@@ -62,6 +62,11 @@
         :trend="kpiWeightDelta || undefined"
       />
       <ProKpi
+        icon="monitor_heart"
+        :value="kpiLastBp"
+        :label="$t('clients.pet.kpi.lastBp')"
+      />
+      <ProKpi
         icon="medical_services"
         :value="kpiOverdueCare"
         :label="$t('clients.pet.kpi.overdueCare')"
@@ -221,7 +226,7 @@
         </ProButton>
       </ProCard>
       <details
-        v-if="hasChartData || hasWeightChartData"
+        v-if="hasChartData || hasWeightChartData || hasBpChartData"
         class="pro-pet-charts-details"
         open
         data-testid="pet-overview-charts"
@@ -232,8 +237,10 @@
             layout="grid"
             :chart-range="chartRange"
             :weight-chart-range="weightChartRange"
+            :bp-chart-range="bpChartRange"
             :has-chart-data="hasChartData"
             :has-weight-chart-data="hasWeightChartData"
+            :has-bp-chart-data="hasBpChartData"
             :chart-values="chartValues"
             :chart-alerts="chartAlerts"
             :chart-dates="chartDates"
@@ -243,8 +250,14 @@
             :weight-chart-dates="weightChartDates"
             :weight-domain-start="weightChartDomain.start"
             :weight-domain-end="weightChartDomain.end"
+            :bp-chart-sys-values="bpChartSysValues"
+            :bp-chart-dia-values="bpChartDiaValues"
+            :bp-chart-dates="bpChartDates"
+            :bp-domain-start="bpChartDomain.start"
+            :bp-domain-end="bpChartDomain.end"
             @update:chart-range="chartRange = $event"
             @update:weight-chart-range="weightChartRange = $event"
+            @update:bp-chart-range="bpChartRange = $event"
           />
         </div>
       </details>
@@ -265,8 +278,10 @@
       <ProPetVitalsCharts
         :chart-range="chartRange"
         :weight-chart-range="weightChartRange"
+        :bp-chart-range="bpChartRange"
         :has-chart-data="hasChartData"
         :has-weight-chart-data="hasWeightChartData"
+        :has-bp-chart-data="hasBpChartData"
         :chart-values="chartValues"
         :chart-alerts="chartAlerts"
         :chart-dates="chartDates"
@@ -276,8 +291,14 @@
         :weight-chart-dates="weightChartDates"
         :weight-domain-start="weightChartDomain.start"
         :weight-domain-end="weightChartDomain.end"
+        :bp-chart-sys-values="bpChartSysValues"
+        :bp-chart-dia-values="bpChartDiaValues"
+        :bp-chart-dates="bpChartDates"
+        :bp-domain-start="bpChartDomain.start"
+        :bp-domain-end="bpChartDomain.end"
         @update:chart-range="chartRange = $event"
         @update:weight-chart-range="weightChartRange = $event"
+        @update:bp-chart-range="bpChartRange = $event"
       />
 
       <ProCard :title="$t('clients.pet.heartrateTitle')">
@@ -383,6 +404,425 @@
           </tr>
         </tbody>
       </ProTable>
+      </ProCard>
+
+      <ProCard :title="$t('clients.pet.bpTitle')" data-testid="pet-bp-table-card" class="pro-mb-lg">
+        <form
+          v-if="canWriteClinical"
+          class="pro-pet-inline-form"
+          data-testid="pet-bp-form"
+          @submit.prevent="createBloodPressure"
+        >
+          <input
+            id="pet-bp-sys"
+            v-model.number="bpDraft.systolicMmHg"
+            class="pro-input"
+            type="number"
+            min="20"
+            max="400"
+            required
+            :aria-label="$t('clients.pet.bpSystolic')"
+            :placeholder="$t('clients.pet.bpSystolic')"
+            data-testid="pet-bp-sys"
+          />
+          <input
+            id="pet-bp-dia"
+            v-model.number="bpDraft.diastolicMmHg"
+            class="pro-input"
+            type="number"
+            min="10"
+            max="300"
+            required
+            :aria-label="$t('clients.pet.bpDiastolic')"
+            :placeholder="$t('clients.pet.bpDiastolic')"
+            data-testid="pet-bp-dia"
+          />
+          <select v-model="bpDraft.method" class="pro-input" :aria-label="$t('clients.pet.bpMethod')">
+            <option value="doppler">{{ $t('clients.pet.bpMethodDoppler') }}</option>
+            <option value="oscillometric">{{ $t('clients.pet.bpMethodOscillometric') }}</option>
+            <option value="invasive">{{ $t('clients.pet.bpMethodInvasive') }}</option>
+            <option value="unknown">{{ $t('clients.pet.bpMethodUnknown') }}</option>
+          </select>
+          <input
+            v-model="bpDraft.site"
+            class="pro-input"
+            :aria-label="$t('clients.pet.bpSite')"
+            :placeholder="$t('clients.pet.bpSite')"
+            maxlength="80"
+          />
+          <input
+            v-model="bpDraft.comment"
+            class="pro-input"
+            :aria-label="$t('clients.pet.bpComment')"
+            :placeholder="$t('clients.pet.bpComment')"
+            data-testid="pet-bp-comment"
+            maxlength="500"
+          />
+          <ProButton type="submit" :disabled="bpBusy" test-id="pet-bp-save">
+            {{ $t('clients.pet.bpAdd') }}
+          </ProButton>
+        </form>
+        <p v-if="bpError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ bpError }}</p>
+        <ProTable
+          :empty="!bloodPressures.length"
+          :empty-title="$t('clients.pet.bpEmptyTitle')"
+          :empty-description="$t('clients.pet.bpEmptyDescription')"
+        >
+          <thead>
+            <tr>
+              <th>{{ $t('clients.pet.columnDate') }}</th>
+              <th>{{ $t('clients.pet.bpTitle') }}</th>
+              <th>{{ $t('clients.pet.bpMethod') }}</th>
+              <th>{{ $t('clients.pet.bpSite') }}</th>
+              <th>{{ $t('clients.pet.columnComment') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="bp in bloodPressures" :key="bp.id">
+              <td>{{ formatDate(bp.recordedAt) }}</td>
+              <td><code>{{ bp.systolicMmHg }}/{{ bp.diastolicMmHg }}</code></td>
+              <td>{{ bpMethodLabel(bp.method) }}</td>
+              <td>{{ bp.site || '—' }}</td>
+              <td>
+                <span v-if="bp.comment" class="pro-pet-reading-comment" :title="bp.comment">{{ bp.comment }}</span>
+                <span v-else class="text-muted">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </ProTable>
+      </ProCard>
+
+      <ProCard :title="$t('clients.pet.labsTitle')" data-testid="pet-labs-card">
+        <form
+          v-if="canWriteClinical"
+          class="pro-pet-labs-form"
+          data-testid="pet-labs-form"
+          @submit.prevent="createLabPanel"
+        >
+          <div class="pro-pet-inline-form">
+            <input
+              v-model="labDraft.labName"
+              class="pro-input"
+              :aria-label="$t('clients.pet.labsLabName')"
+              :placeholder="$t('clients.pet.labsLabName')"
+              data-testid="pet-labs-name"
+            />
+            <input
+              v-model="labDraft.collectedAt"
+              class="pro-input"
+              type="datetime-local"
+              :aria-label="$t('clients.pet.labsCollectedAt')"
+            />
+            <input
+              v-model="labDraft.notes"
+              class="pro-input"
+              :aria-label="$t('clients.pet.labsNotes')"
+              :placeholder="$t('clients.pet.labsNotes')"
+            />
+            <select
+              v-model="labDraft.documentId"
+              class="pro-input"
+              data-testid="pet-labs-document"
+              :aria-label="$t('clients.pet.labsDocument')"
+            >
+              <option value="">{{ $t('clients.pet.labsDocumentNone') }}</option>
+              <option v-for="d in documents" :key="d.id" :value="d.id">
+                {{ d.title || d.fileName }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-for="(row, idx) in labDraft.results"
+            :key="idx"
+            class="pro-pet-inline-form"
+          >
+            <select
+              v-model="row.analyteCode"
+              class="pro-input"
+              required
+              :aria-label="$t('clients.pet.labsAnalyte')"
+            >
+              <option disabled value="">{{ $t('clients.pet.labsAnalyte') }}</option>
+              <option v-for="code in labAnalyteCodes" :key="code" :value="code">
+                {{ labAnalyteLabel(code) }}
+              </option>
+            </select>
+            <input
+              v-model.number="row.valueNum"
+              class="pro-input"
+              type="number"
+              step="any"
+              :aria-label="$t('clients.pet.labsValue')"
+              :placeholder="$t('clients.pet.labsValue')"
+            />
+            <input
+              v-model="row.valueText"
+              class="pro-input"
+              :aria-label="$t('clients.pet.labsValueText')"
+              :placeholder="$t('clients.pet.labsValueText')"
+              maxlength="64"
+            />
+            <input
+              v-model="row.unit"
+              class="pro-input"
+              :aria-label="$t('clients.pet.labsUnit')"
+              :placeholder="$t('clients.pet.labsUnit')"
+            />
+            <input
+              v-model.number="row.refLow"
+              class="pro-input"
+              type="number"
+              step="any"
+              :aria-label="$t('clients.pet.labsRef')"
+              :placeholder="$t('clients.pet.labsRef') + ' ↓'"
+            />
+            <input
+              v-model.number="row.refHigh"
+              class="pro-input"
+              type="number"
+              step="any"
+              :aria-label="$t('clients.pet.labsRef')"
+              :placeholder="$t('clients.pet.labsRef') + ' ↑'"
+            />
+            <ProButton
+              v-if="labDraft.results.length > 1"
+              type="button"
+              variant="ghost"
+              :aria-label="$t('clients.pet.labsRemoveRow')"
+              @click="labDraft.results.splice(idx, 1)"
+            >
+              ×
+            </ProButton>
+          </div>
+          <div class="pro-pet-inline-form">
+            <ProButton type="button" variant="secondary" @click="addLabResultRow">
+              + {{ $t('clients.pet.labsAddRow') }}
+            </ProButton>
+            <ProButton type="submit" :disabled="labBusy" test-id="pet-labs-save">
+              {{ $t('clients.pet.labsAdd') }}
+            </ProButton>
+          </div>
+        </form>
+        <p v-if="labError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ labError }}</p>
+
+        <div v-if="labPanels.length" class="pro-pet-labs-trend pro-mb-lg">
+          <label class="pro-label">{{ $t('clients.pet.labsTrend') }}</label>
+          <select
+            v-model="labTrendAnalyte"
+            class="pro-input"
+            data-testid="pet-labs-trend-select"
+            @change="loadLabTrend"
+          >
+            <option value="">{{ $t('clients.pet.labsTrendSelect') }}</option>
+            <option v-for="code in labAnalyteCodes" :key="code" :value="code">
+              {{ labAnalyteLabel(code) }}
+            </option>
+          </select>
+          <ProBpmChart
+            v-if="labTrendValues.length"
+            :values="labTrendValues"
+            :dates="labTrendDates"
+            :domain-start="labTrendDomain.start"
+            :domain-end="labTrendDomain.end"
+            auto-y-domain
+            hide-legend
+            :axis-title="labTrendAnalyte ? labAnalyteLabel(labTrendAnalyte) : ''"
+            :aria-label="$t('clients.pet.labsTrend')"
+          />
+        </div>
+
+        <ProTable
+          :empty="!labPanels.length"
+          :empty-title="$t('clients.pet.labsEmptyTitle')"
+          :empty-description="$t('clients.pet.labsEmptyDescription')"
+        >
+          <thead>
+            <tr>
+              <th>{{ $t('clients.pet.columnDate') }}</th>
+              <th>{{ $t('clients.pet.labsLabName') }}</th>
+              <th>{{ $t('clients.pet.labsFlag') }}</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="panel in labPanels"
+              :key="panel.id"
+              class="pro-table-row--clickable"
+              data-testid="pet-lab-panel-row"
+              role="button"
+              tabindex="0"
+              :aria-label="$t('clients.pet.labsResults')"
+              @click="openLabPanel(panel.id)"
+              @keydown.enter.prevent="openLabPanel(panel.id)"
+              @keydown.space.prevent="openLabPanel(panel.id)"
+            >
+              <td>{{ formatDate(panel.collectedAt) }}</td>
+              <td>{{ panel.labName || '—' }}</td>
+              <td>
+                <ProBadge v-if="panel.abnormalCount > 0" variant="danger">
+                  {{ $t('clients.pet.labsAbnormal', { n: panel.abnormalCount }) }}
+                </ProBadge>
+                <span v-else class="text-muted">—</span>
+              </td>
+              <td>
+                <ProButton
+                  v-if="canWriteClinical"
+                  type="button"
+                  variant="ghost"
+                  test-id="pet-lab-delete"
+                  @click.stop="deleteLabPanel(panel.id)"
+                >
+                  {{ $t('clients.pet.labsDelete') }}
+                </ProButton>
+              </td>
+            </tr>
+          </tbody>
+        </ProTable>
+
+        <div v-if="labDetail" class="pro-pet-lab-detail" data-testid="pet-lab-detail">
+          <div class="pro-pet-inline-form pro-mb-md">
+            <h3>{{ $t('clients.pet.labsResults') }} — {{ formatDate(labDetail.collectedAt) }}</h3>
+            <ProButton
+              v-if="canWriteClinical && !labEditing"
+              type="button"
+              variant="secondary"
+              test-id="pet-lab-edit"
+              @click="startLabEdit"
+            >
+              {{ $t('clients.pet.labsEdit') }}
+            </ProButton>
+          </div>
+          <p v-if="labDetail.notes" class="text-muted">{{ labDetail.notes }}</p>
+          <p v-if="labDetailDocument" class="pro-mb-md">
+            <a
+              :href="labDetailDocument.fileUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="pet-lab-document-link"
+            >
+              {{ $t('clients.pet.labsDocument') }} — {{ labDetailDocument.title || labDetailDocument.fileName }}
+            </a>
+          </p>
+
+          <form
+            v-if="labEditing"
+            class="pro-pet-labs-form"
+            data-testid="pet-lab-edit-form"
+            @submit.prevent="saveLabEdit"
+          >
+            <div
+              v-for="(row, idx) in labEditDraft.results"
+              :key="idx"
+              class="pro-pet-inline-form"
+            >
+              <select
+                v-model="row.analyteCode"
+                class="pro-input"
+                required
+                :aria-label="$t('clients.pet.labsAnalyte')"
+              >
+                <option disabled value="">{{ $t('clients.pet.labsAnalyte') }}</option>
+                <option v-for="code in labAnalyteCodes" :key="code" :value="code">
+                  {{ labAnalyteLabel(code) }}
+                </option>
+              </select>
+              <input
+                v-model.number="row.valueNum"
+                class="pro-input"
+                type="number"
+                step="any"
+                :aria-label="$t('clients.pet.labsValue')"
+                :placeholder="$t('clients.pet.labsValue')"
+                data-testid="pet-lab-edit-value"
+              />
+              <input
+                v-model="row.valueText"
+                class="pro-input"
+                :aria-label="$t('clients.pet.labsValueText')"
+                :placeholder="$t('clients.pet.labsValueText')"
+                maxlength="64"
+                data-testid="pet-lab-edit-value-text"
+              />
+              <input
+                v-model="row.unit"
+                class="pro-input"
+                :aria-label="$t('clients.pet.labsUnit')"
+                :placeholder="$t('clients.pet.labsUnit')"
+              />
+              <input
+                v-model.number="row.refLow"
+                class="pro-input"
+                type="number"
+                step="any"
+                :aria-label="$t('clients.pet.labsRef')"
+                :placeholder="$t('clients.pet.labsRef') + ' ↓'"
+              />
+              <input
+                v-model.number="row.refHigh"
+                class="pro-input"
+                type="number"
+                step="any"
+                :aria-label="$t('clients.pet.labsRef')"
+                :placeholder="$t('clients.pet.labsRef') + ' ↑'"
+              />
+              <ProButton
+                v-if="labEditDraft.results.length > 1"
+                type="button"
+                variant="ghost"
+                :aria-label="$t('clients.pet.labsRemoveRow')"
+                @click="labEditDraft.results.splice(idx, 1)"
+              >
+                ×
+              </ProButton>
+            </div>
+            <div class="pro-pet-inline-form">
+              <ProButton type="button" variant="ghost" @click="addLabEditRow">
+                + {{ $t('clients.pet.labsAddRow') }}
+              </ProButton>
+              <ProButton type="submit" :disabled="labBusy" test-id="pet-lab-save-results">
+                {{ $t('clients.pet.labsSaveResults') }}
+              </ProButton>
+              <ProButton
+                type="button"
+                variant="secondary"
+                :disabled="labBusy"
+                test-id="pet-lab-cancel-edit"
+                @click="cancelLabEdit"
+              >
+                {{ $t('clients.pet.labsCancelEdit') }}
+              </ProButton>
+            </div>
+          </form>
+
+          <ProTable v-else>
+            <thead>
+              <tr>
+                <th>{{ $t('clients.pet.labsAnalyte') }}</th>
+                <th>{{ $t('clients.pet.labsValue') }}</th>
+                <th>{{ $t('clients.pet.labsUnit') }}</th>
+                <th>{{ $t('clients.pet.labsRef') }}</th>
+                <th>{{ $t('clients.pet.labsFlag') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in labDetail.results || []" :key="r.id">
+                <td>{{ labAnalyteLabel(r.analyteCode) }}</td>
+                <td><code>{{ r.valueNum ?? r.valueText ?? '—' }}</code></td>
+                <td>{{ r.unit || '—' }}</td>
+                <td>
+                  <span v-if="r.refLow != null || r.refHigh != null">
+                    {{ r.refLow ?? '…' }} – {{ r.refHigh ?? '…' }}
+                  </span>
+                  <span v-else>—</span>
+                </td>
+                <td>
+                  <ProBadge :variant="labFlagVariant(r.flag)">{{ labFlagLabel(r.flag) }}</ProBadge>
+                </td>
+              </tr>
+            </tbody>
+          </ProTable>
+        </div>
       </ProCard>
     </div>
 
@@ -787,6 +1227,9 @@ const horseRegError = ref('')
 const horseRegSaved = ref(false)
 const sessions = ref<any[]>([])
 const weights = ref<any[]>([])
+const bloodPressures = ref<any[]>([])
+const labPanels = ref<any[]>([])
+const labDetail = ref<any | null>(null)
 const timeline = ref<any[]>([])
 const careReminders = ref<any[]>([])
 const visits = ref<any[]>([])
@@ -794,6 +1237,55 @@ const documents = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
 const chartRange = ref<'3m' | '6m' | '1y'>('3m')
 const weightChartRange = ref<'3m' | '6m' | '1y'>('3m')
+const bpChartRange = ref<'3m' | '6m' | '1y'>('3m')
+const bpBusy = ref(false)
+const bpError = ref('')
+const bpDraft = reactive({
+  systolicMmHg: 120,
+  diastolicMmHg: 80,
+  method: 'doppler',
+  site: '',
+  comment: '',
+})
+const labEditing = ref(false)
+const labEditDraft = reactive({
+  results: [] as Array<{
+    analyteCode: string
+    valueNum: number | null
+    valueText: string
+    unit: string
+    refLow: number | null
+    refHigh: number | null
+  }>,
+})
+const labBusy = ref(false)
+const labError = ref('')
+const labTrendAnalyte = ref('')
+const labTrendPoints = ref<any[]>([])
+const labAnalyteCodes = [
+  'crea', 'urea', 'bun', 'alat', 'alt', 'asat', 'ast', 'alp', 'ggt',
+  'hct', 'wbc', 'plt', 'glucose', 'tp', 'protein',
+] as const
+const labDraft = reactive({
+  labName: '',
+  collectedAt: '',
+  notes: '',
+  documentId: '',
+  results: [{
+    analyteCode: 'crea',
+    valueNum: null as number | null,
+    valueText: '',
+    unit: 'mg/dL',
+    refLow: null as number | null,
+    refHigh: null as number | null,
+  }],
+})
+
+const labDetailDocument = computed(() => {
+  const id = labDetail.value?.documentId
+  if (!id) return null
+  return documents.value.find((d: any) => d.id === id) || null
+})
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
@@ -922,6 +1414,16 @@ const kpiWeightDelta = computed(() => {
   return `${sign}${delta.toFixed(1)} kg`
 })
 
+const sortedBloodPressures = computed(() =>
+  [...bloodPressures.value].sort((a, b) => +new Date(b.recordedAt) - +new Date(a.recordedAt)),
+)
+
+const kpiLastBp = computed(() => {
+  const bp = sortedBloodPressures.value[0]
+  if (!bp) return '—'
+  return `${bp.systolicMmHg}/${bp.diastolicMmHg}`
+})
+
 const kpiOverdueCare = computed(() =>
   careReminders.value.filter(c => isCareOverdue(c)).length,
 )
@@ -968,6 +1470,267 @@ async function loadSessions(markSeenAfter = false) {
 async function loadWeights() {
   const res: any = await $fetch(`/api/pets/${petId}/weights`)
   weights.value = res.data ?? res ?? []
+}
+
+async function loadBloodPressures() {
+  const res: any = await $fetch(`/api/pets/${petId}/blood-pressure`)
+  bloodPressures.value = res.data ?? res ?? []
+}
+
+async function loadLabPanels() {
+  const res: any = await $fetch(`/api/pets/${petId}/lab-panels`)
+  labPanels.value = res.data ?? res ?? []
+}
+
+function bpMethodLabel(method: string) {
+  switch (method) {
+    case 'doppler': return t('clients.pet.bpMethodDoppler')
+    case 'oscillometric': return t('clients.pet.bpMethodOscillometric')
+    case 'invasive': return t('clients.pet.bpMethodInvasive')
+    default: return t('clients.pet.bpMethodUnknown')
+  }
+}
+
+function labAnalyteLabel(code: string) {
+  const key = `clients.pet.labsAnalyte${code.charAt(0).toUpperCase()}${code.slice(1)}`
+  const translated = t(key)
+  return translated !== key ? translated : code.toUpperCase()
+}
+
+function labFlagLabel(flag: string) {
+  switch (flag) {
+    case 'low': return t('clients.pet.labsFlagLow')
+    case 'high': return t('clients.pet.labsFlagHigh')
+    case 'normal': return t('clients.pet.labsFlagNormal')
+    default: return t('clients.pet.labsFlagUnknown')
+  }
+}
+
+function labFlagVariant(flag: string): 'danger' | 'success' | 'neutral' {
+  if (flag === 'low' || flag === 'high') return 'danger'
+  if (flag === 'normal') return 'success'
+  return 'neutral'
+}
+
+function addLabResultRow() {
+  labDraft.results.push({
+    analyteCode: '',
+    valueNum: null,
+    valueText: '',
+    unit: '',
+    refLow: null,
+    refHigh: null,
+  })
+}
+
+async function createBloodPressure() {
+  if (!canWriteClinical.value) return
+  const sys = Number(bpDraft.systolicMmHg)
+  const dia = Number(bpDraft.diastolicMmHg)
+  if (!Number.isFinite(sys) || !Number.isFinite(dia) || dia > sys || sys < 20 || dia < 10) {
+    bpError.value = t('clients.pet.bpInvalid')
+    return
+  }
+  bpBusy.value = true
+  bpError.value = ''
+  try {
+    await $fetch(`/api/pets/${petId}/blood-pressure`, {
+      method: 'POST',
+      body: {
+        systolicMmHg: sys,
+        diastolicMmHg: dia,
+        method: bpDraft.method,
+        site: bpDraft.site.trim() || undefined,
+        comment: bpDraft.comment.trim() || undefined,
+      },
+    })
+    bpDraft.site = ''
+    bpDraft.comment = ''
+    await Promise.all([loadBloodPressures(), loadTimeline()])
+  } catch (e: any) {
+    bpError.value = mapError(e)
+  } finally {
+    bpBusy.value = false
+  }
+}
+
+async function createLabPanel() {
+  if (!canWriteClinical.value) return
+  labBusy.value = true
+  labError.value = ''
+  try {
+    const results: Array<Record<string, unknown>> = []
+    for (const r of labDraft.results) {
+      if (!r.analyteCode) continue
+      const text = (r.valueText || '').trim()
+      const hasNum = r.valueNum != null && Number.isFinite(Number(r.valueNum))
+      if (!hasNum && !text) continue
+      const row: Record<string, unknown> = {
+        analyteCode: r.analyteCode,
+        unit: r.unit || undefined,
+        refLow: r.refLow != null && r.refLow !== ('' as any) ? Number(r.refLow) : undefined,
+        refHigh: r.refHigh != null && r.refHigh !== ('' as any) ? Number(r.refHigh) : undefined,
+      }
+      if (hasNum) row.valueNum = Number(r.valueNum)
+      if (text) row.valueText = text
+      results.push(row)
+    }
+    if (!results.length) {
+      labError.value = t('clients.pet.labsNeedResults')
+      return
+    }
+    const body: Record<string, any> = {
+      labName: labDraft.labName,
+      notes: labDraft.notes,
+      results,
+    }
+    if (labDraft.collectedAt) {
+      body.collectedAt = new Date(labDraft.collectedAt).toISOString()
+    }
+    if (labDraft.documentId) {
+      body.documentId = labDraft.documentId
+    }
+    await $fetch(`/api/pets/${petId}/lab-panels`, { method: 'POST', body })
+    labDraft.labName = ''
+    labDraft.notes = ''
+    labDraft.collectedAt = ''
+    labDraft.documentId = ''
+    labDraft.results = [{
+      analyteCode: 'crea',
+      valueNum: null,
+      valueText: '',
+      unit: 'mg/dL',
+      refLow: null,
+      refHigh: null,
+    }]
+    labDetail.value = null
+    await Promise.all([loadLabPanels(), loadTimeline()])
+  } catch (e: any) {
+    labError.value = mapError(e)
+  } finally {
+    labBusy.value = false
+  }
+}
+
+async function openLabPanel(panelId: string) {
+  if (labEditing.value) {
+    if (!confirm(t('clients.pet.labsUnsavedConfirm'))) return
+  }
+  labEditing.value = false
+  labEditDraft.results = []
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/lab-panels/${panelId}`)
+    labDetail.value = res.data ?? res
+  } catch (e: any) {
+    labError.value = mapError(e)
+  }
+}
+
+function emptyLabEditRow() {
+  return {
+    analyteCode: 'crea',
+    valueNum: null as number | null,
+    valueText: '',
+    unit: 'mg/dL',
+    refLow: null as number | null,
+    refHigh: null as number | null,
+  }
+}
+
+function startLabEdit() {
+  if (!labDetail.value || !canWriteClinical.value) return
+  const rows = (labDetail.value.results || []).map((r: any) => ({
+    analyteCode: String(r.analyteCode || ''),
+    valueNum: r.valueNum != null ? Number(r.valueNum) : null,
+    valueText: String(r.valueText || ''),
+    unit: String(r.unit || ''),
+    refLow: r.refLow != null ? Number(r.refLow) : null,
+    refHigh: r.refHigh != null ? Number(r.refHigh) : null,
+  }))
+  labEditDraft.results = rows.length ? rows : [emptyLabEditRow()]
+  labEditing.value = true
+}
+
+function cancelLabEdit() {
+  labEditing.value = false
+  labEditDraft.results = []
+}
+
+function addLabEditRow() {
+  labEditDraft.results.push(emptyLabEditRow())
+}
+
+async function saveLabEdit() {
+  if (!canWriteClinical.value || !labDetail.value?.id) return
+  const results: Array<Record<string, unknown>> = []
+  for (const r of labEditDraft.results) {
+    if (!r.analyteCode) continue
+    const text = r.valueText.trim()
+    const hasNum = r.valueNum != null && Number.isFinite(Number(r.valueNum))
+    if (!hasNum && !text) continue
+    const row: Record<string, unknown> = {
+      analyteCode: r.analyteCode,
+      unit: r.unit.trim() || undefined,
+      refLow: r.refLow != null && Number.isFinite(Number(r.refLow)) ? Number(r.refLow) : undefined,
+      refHigh: r.refHigh != null && Number.isFinite(Number(r.refHigh)) ? Number(r.refHigh) : undefined,
+    }
+    if (hasNum) row.valueNum = Number(r.valueNum)
+    if (text) row.valueText = text
+    results.push(row)
+  }
+  if (!results.length) {
+    labError.value = t('clients.pet.labsNeedResults')
+    return
+  }
+  labBusy.value = true
+  labError.value = ''
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/lab-panels/${labDetail.value.id}`, {
+      method: 'PATCH',
+      body: { results },
+    })
+    labDetail.value = res.data ?? res
+    labEditing.value = false
+    labEditDraft.results = []
+    await Promise.all([loadLabPanels(), loadTimeline()])
+  } catch (e: any) {
+    labError.value = mapError(e)
+  } finally {
+    labBusy.value = false
+  }
+}
+
+async function deleteLabPanel(panelId: string) {
+  if (!canWriteClinical.value) return
+  if (!confirm(t('clients.pet.labsDeleteConfirm'))) return
+  labBusy.value = true
+  try {
+    await $fetch(`/api/pets/${petId}/lab-panels/${panelId}`, { method: 'DELETE' })
+    if (labDetail.value?.id === panelId) labDetail.value = null
+    await Promise.all([loadLabPanels(), loadTimeline()])
+  } catch (e: any) {
+    labError.value = mapError(e)
+  } finally {
+    labBusy.value = false
+  }
+}
+
+async function loadLabTrend() {
+  if (!labTrendAnalyte.value) {
+    labTrendPoints.value = []
+    return
+  }
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/lab-analytes/${labTrendAnalyte.value}/trend`)
+    labTrendPoints.value = res.data ?? res ?? []
+  } catch {
+    labTrendPoints.value = []
+  }
+}
+
+async function loadTimeline() {
+  const res: any = await $fetch(`/api/pets/${petId}/timeline`)
+  timeline.value = res.data ?? res ?? []
 }
 
 function careTypeLabel(type: string) {
@@ -1059,6 +1822,51 @@ const weightChartReadings = computed(() => {
 })
 const weightChartValues = computed(() => weightChartReadings.value.map(w => Number(w.weightKg)))
 const weightChartDates = computed(() => weightChartReadings.value.map(w => w.recordedAt as string))
+
+const bpRangeMonths = computed(() =>
+  bpChartRange.value === '3m' ? 3 : bpChartRange.value === '6m' ? 6 : 12,
+)
+
+const bpChartDomain = computed(() => {
+  const end = new Date()
+  const start = new Date(end.getTime())
+  start.setTime(end.getTime() - bpRangeMonths.value * 30 * 24 * 60 * 60 * 1000)
+  return { start: start.toISOString(), end: end.toISOString() }
+})
+
+const hasBpChartData = computed(() =>
+  bloodPressures.value.some(bp => bp.systolicMmHg != null && bp.recordedAt),
+)
+
+const bpChartReadings = computed(() => {
+  const cutoff = new Date(bpChartDomain.value.start)
+  return [...bloodPressures.value]
+    .filter(bp =>
+      bp.systolicMmHg != null
+      && bp.diastolicMmHg != null
+      && bp.recordedAt
+      && new Date(bp.recordedAt) >= cutoff,
+    )
+    .sort((a, b) => +new Date(a.recordedAt) - +new Date(b.recordedAt))
+})
+const bpChartSysValues = computed(() => bpChartReadings.value.map(bp => Number(bp.systolicMmHg)))
+const bpChartDiaValues = computed(() => bpChartReadings.value.map(bp => Number(bp.diastolicMmHg)))
+const bpChartDates = computed(() => bpChartReadings.value.map(bp => bp.recordedAt as string))
+
+const labTrendSeries = computed(() =>
+  labTrendPoints.value.filter(p => Number.isFinite(Number(p.valueNum))),
+)
+const labTrendValues = computed(() =>
+  labTrendSeries.value.map(p => Number(p.valueNum)),
+)
+const labTrendDates = computed(() =>
+  labTrendSeries.value.map(p => p.collectedAt as string),
+)
+const labTrendDomain = computed(() => {
+  const end = new Date()
+  const start = new Date(end.getTime() - 365 * 24 * 60 * 60 * 1000)
+  return { start: start.toISOString(), end: end.toISOString() }
+})
 
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }
@@ -1391,10 +2199,13 @@ onMounted(async () => {
           })
       : Promise.resolve()
 
-    const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
-    timeline.value = timelineRes.data ?? timelineRes ?? []
+    await loadTimeline().catch(() => { timeline.value = [] })
     await loadSessions(true)
-    await loadWeights()
+    await Promise.all([
+      loadWeights().catch(() => { weights.value = [] }),
+      loadBloodPressures().catch(() => { bloodPressures.value = [] }),
+      loadLabPanels().catch(() => { labPanels.value = [] }),
+    ])
     sessionsPollTimer = setInterval(() => {
       loadSessions(true).catch(() => {})
     }, 8000)

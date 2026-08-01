@@ -63,10 +63,11 @@ Ordre pour un commercial sur staging :
 2. [`UC-VP-04`](01-vetpro/UC-VP-04-nouvelle-consultation.md) — consultation rapide (CR → DAF / facture)  
 3. [`UC-X-01`](10-interactions/UC-X-01-messagerie-vet-client.md) — messagerie véto ↔ client *(couvre aussi VP-03)*  
 4. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé cardiaque *(couvre aussi CL-03)*  
-5. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
-6. [`UC-PL-01`](03-pro-light/UC-PL-01-agenda-terrain.md) — Pro Light  
-7. [`UC-CL-02`](02-client/UC-CL-02-activation-paiement.md) — activation payante *(si temps — **Destructif**)*  
-8. [`UC-CO-02`](04-commercial/UC-CO-02-encode-activation.md) — encode + commission *(si temps — **Destructif** ; ou `UC-X-07` pour le funnel complet)*
+5. [`UC-X-10`](10-interactions/UC-X-10-tension-labos.md) — tension & prise de sang *(couvre aussi CL-04)*  
+6. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
+7. [`UC-PL-01`](03-pro-light/UC-PL-01-agenda-terrain.md) — Pro Light  
+8. [`UC-CL-02`](02-client/UC-CL-02-activation-paiement.md) — activation payante *(si temps — **Destructif**)*  
+9. [`UC-CO-02`](04-commercial/UC-CO-02-encode-activation.md) — encode + commission *(si temps — **Destructif** ; ou `UC-X-07` pour le funnel complet)*
 
 ---
 
@@ -88,6 +89,7 @@ Ordre pour un commercial sur staging :
 | UC-CL-01 | [Parcours accueil](02-client/UC-CL-01-parcours-accueil.md) | Démo |
 | UC-CL-02 | [Activation + paiement](02-client/UC-CL-02-activation-paiement.md) | Démo — **Destructif** |
 | UC-CL-03 | [Relevé cardiaque solo](02-client/UC-CL-03-releve-cardiaque.md) | Démo — skip si X-02 |
+| UC-CL-04 | [Tension artérielle solo](02-client/UC-CL-04-tension-arterielle.md) | Démo — skip si X-10 |
 
 ### Pro Light — [`03-pro-light/`](03-pro-light/)
 
@@ -136,6 +138,7 @@ Ordre pour un commercial sur staging :
 | UC-X-07 | [Funnel commercial complet](10-interactions/UC-X-07-funnel-commercial-complet.md) | Démo — **Destructif** |
 | UC-X-08 | [Envoi dossier animal → pro (lien 24 h)](10-interactions/UC-X-08-envoi-dossier-pro.md) | Démo |
 | UC-X-09 | [Consultation client → partage PDF (lien 24 h)](10-interactions/UC-X-09-consultation-partage-pdf.md) | Démo |
+| UC-X-10 | [Tension & prise de sang](10-interactions/UC-X-10-tension-labos.md) | Démo |
 
 ---
 

@@ -10,10 +10,23 @@
 | `commercial` | Pro | Apporter cabinets, prospects, activations — mappe un **distributeur** MLM |
 | `commercial_manager` | Pro | Piloter l’équipe / **branche** (KPI, suivi, quotas) + portefeuille perso — mappe un **upline L1** |
 | `admin` | Pro | Ops plateforme, commissions flat, commercials, **branches** (prép. MLM) |
+| `dev` | Pro | Support IT (ops léger, sans billing/seed) |
+| `research` | Pro `/research` | Observatoire épidémio anonymisé (tag `dev`) — [42](42-RESEARCH.md) |
 
 Préparation intégration MLM (branches, sponsor, stubs réseau) : [31-MLM-ORG-PREP.md](31-MLM-ORG-PREP.md).
 
 Détail multi-profils / ACL : [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md).
+
+## Parcours Research (tag `dev`)
+
+```mermaid
+flowchart TD
+  OptIn[Cabinet opt-in Research] --> ETL[ETL anonymisation]
+  ETL --> Agg[Agrégats hebdo CP x espèce]
+  LoginR[Login / switch profil research] --> Obs[Observatoire /research]
+  Agg --> Obs
+  Obs --> Heat[Heatmap / timeseries / alertes]
+```
 
 ## Parcours véto
 

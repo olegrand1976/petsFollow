@@ -31,7 +31,8 @@
       "items": [
         "UC-CL-01",
         "UC-CL-02",
-        "UC-CL-03"
+        "UC-CL-03",
+        "UC-CL-04"
       ]
     },
     {
@@ -97,7 +98,8 @@
         "UC-X-06",
         "UC-X-07",
         "UC-X-08",
-        "UC-X-09"
+        "UC-X-09",
+        "UC-X-10"
       ]
     }
   ],
@@ -424,6 +426,41 @@
       "checklist": [
         "Démarrage FC",
         "Validation",
+        "Historique client"
+      ]
+    },
+    "UC-CL-04": {
+      "id": "UC-CL-04",
+      "folderId": "client",
+      "slug": "UC-CL-04-tension-arterielle",
+      "title": "Tension artérielle (côté client)",
+      "duration": "~8 min",
+      "priority": "Démo",
+      "surface": "Flutter Client",
+      "destructive": false,
+      "objective": "Saisir une tension artérielle (SYS/DIA) depuis la fiche animal et la voir dans l’historique.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Animal avec suivi actif (seed client.demo)."
+      ],
+      "steps": [
+        "Se connecter en client.demo.",
+        "Ouvrir un animal → action Tension.",
+        "Saisir SYS / DIA (ex. 140 / 90), méthode Doppler, enregistrer.",
+        "Vérifier le snackbar de confirmation et la courbe / timeline."
+      ],
+      "expected": [
+        "Tension enregistrée immédiatement (pas de validation type FC).",
+        "Visible dans l’historique client."
+      ],
+      "checklist": [
+        "Saisie tension",
         "Historique client"
       ]
     },
@@ -1249,6 +1286,51 @@
         "E-mail + tél. commercial",
         "PDF brandé",
         "Expiry 24 h"
+      ]
+    },
+    "UC-X-10": {
+      "id": "UC-X-10",
+      "folderId": "interactions",
+      "slug": "UC-X-10-tension-labos",
+      "title": "Tension & prise de sang (client ↔ VetPro)",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Flutter Client → Web VetPro",
+      "destructive": false,
+      "objective": "Enregistrer une tension côté client, puis côté cabinet saisir un panel de prise de sang et vérifier timeline + lecture client.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Animal seed actif côté client.demo / VetPlus."
+      ],
+      "steps": [
+        "App — login client.demo → animal → Tension → 140/90 Doppler → enregistrer.",
+        "Web — login vet.demo → Clients → même animal → onglet Vitals.",
+        "Vérifier KPI / chart / tableau tension (valeur client).",
+        "Ajouter une tension cabinet (ex. 130/80 oscillométrique).",
+        "Créer un panel labo (labo « BioVet », créatinine hors norme + ALAT normale).",
+        "Ouvrir le détail panel ; vérifier badge hors norme + timeline.",
+        "App — rouvrir l’animal → Voir les analyses → détail du panel."
+      ],
+      "expected": [
+        "Tension client + Pro visibles côté Pro.",
+        "Panel labo Pro-only en écriture ; client en lecture seule.",
+        "Timeline : types tension et prise de sang."
+      ],
+      "checklist": [
+        "Tension client → Pro",
+        "Panel labo Pro",
+        "Lecture client analyses"
       ]
     }
   }

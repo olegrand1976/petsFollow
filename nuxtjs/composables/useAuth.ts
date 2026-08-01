@@ -55,7 +55,12 @@ export function isPracticeStaffRole(role: string | null | undefined): boolean {
 
 /** Rôles autorisés sur la face Pro (Nuxt). */
 export function isProRole(role: string | null | undefined): boolean {
-  return role === 'admin' || role === 'dev' || isPracticeStaffRole(role) || isSalesForceRole(role)
+  return role === 'admin' || role === 'dev' || role === 'research' || isPracticeStaffRole(role) || isSalesForceRole(role)
+}
+
+/** Observatoire petsFollow Research. */
+export function isResearchRole(role: string | null | undefined): boolean {
+  return role === 'research'
 }
 
 /** Ops plateforme : admin full + DEV support IT. */
@@ -69,6 +74,8 @@ export function homePathForRole(role: string | null | undefined, opts?: { profil
     case 'admin':
     case 'dev':
       return '/admin'
+    case 'research':
+      return '/research'
     case 'commercial_manager':
       return '/commercial-manager'
     case 'commercial':

@@ -189,8 +189,14 @@ func (a *API) attachProfileFor(w http.ResponseWriter, r *http.Request, actor aut
 		writeErr(w, r, http.StatusBadRequest, "validation", "validation")
 		return
 	}
+	role := kernel.Role(req.Role)
+	// Research observatory access is admin-only (not commercial attach).
+	if role == kernel.RoleResearch && actor.Role != kernel.RoleAdmin {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
 	p, err := a.store.AttachProfile(r.Context(), actor.UserID, targetID, store.AttachProfileInput{
-		Role:       kernel.Role(req.Role),
+		Role:       role,
 		Specialty:  req.Specialty,
 		PracticeID: req.PracticeID,
 	})

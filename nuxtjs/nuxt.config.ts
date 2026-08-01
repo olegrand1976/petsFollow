@@ -44,6 +44,8 @@ export default defineNuxtConfig({
       pacsEnabled: publicFeatureFlag('NUXT_PUBLIC_PACS_ENABLED'),
       /** PACS viewer engine: canvas (default) | cornerstone (P2.1 opt-in). */
       pacsViewerEngine: process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas',
+      /** petsFollow Research observatory — mirror RESEARCH_ENABLED. */
+      researchEnabled: publicFeatureFlag('NUXT_PUBLIC_RESEARCH_ENABLED'),
     },
   },
   vite: {

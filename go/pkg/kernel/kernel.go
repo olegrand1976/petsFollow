@@ -12,6 +12,7 @@ const (
 	RoleCarePro           Role = "care_pro"
 	RoleVetAssistant      Role = "vet_assistant"
 	RoleSecretary         Role = "secretary"
+	RoleResearch          Role = "research"
 )
 
 type ProfessionalSpecialty string
@@ -27,11 +28,16 @@ const (
 
 func ValidRole(role Role) bool {
 	switch role {
-	case RoleVet, RoleClient, RoleAdmin, RoleDev, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
+	case RoleVet, RoleClient, RoleAdmin, RoleDev, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary, RoleResearch:
 		return true
 	default:
 		return false
 	}
+}
+
+// IsResearchRole reports the petsFollow Research observatory role.
+func IsResearchRole(role Role) bool {
+	return role == RoleResearch
 }
 
 // IsOpsRole reports platform ops roles (admin full + DEV support IT).
@@ -88,12 +94,14 @@ const (
 type TimelineType string
 
 const (
-	TimelineMessage   TimelineType = "message"
-	TimelineHeartRate TimelineType = "heartrate"
-	TimelineWeight    TimelineType = "weight"
-	TimelineEvent     TimelineType = "event"
-	TimelineCare      TimelineType = "care"
-	TimelineVisit     TimelineType = "visit"
+	TimelineMessage       TimelineType = "message"
+	TimelineHeartRate     TimelineType = "heartrate"
+	TimelineWeight        TimelineType = "weight"
+	TimelineBloodPressure TimelineType = "blood_pressure"
+	TimelineLabPanel      TimelineType = "lab_panel"
+	TimelineEvent         TimelineType = "event"
+	TimelineCare          TimelineType = "care"
+	TimelineVisit         TimelineType = "visit"
 )
 
 func CalculateBPM(tapCount, durationSec int) int {

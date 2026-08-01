@@ -50,6 +50,7 @@ Aligner périodiquement les pages légales (`nuxtjs/locales/*/legal.privacy`, Fl
 | Audio CR | Compte rendu | Consentement oral horodaté | Tant que le CR ; purge audio avant finalize si échec | Pro, Pro Light |
 | FCM tokens | Notifications | Consentement éclairé (pré-dialogue) | Jusqu’à logout / delete device / tombstone | Flutter |
 | Clients provisionnés / import | Onboarding cabinet | Exécution contrat cabinet ; **CGU acceptées à l’activation** (`POST /me/accept-terms`) | Idem compte | Pro crée → Flutter active |
+| Research (agrégats anonymisés) | Observatoire épidémio / stats | Opt-in cabinet + finalité distincte (à valider juridiquement) — [42](42-RESEARCH.md) | Purge ciblée à l’opt-out (`practice_id_hash`) | Rôle `research` ; **hors** `GET /me/export` |
 
 ## 4. Droits (chemins produit)
 

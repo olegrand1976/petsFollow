@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS labs.panel_results;
+DROP TABLE IF EXISTS labs.panels;
+DROP SCHEMA IF EXISTS labs;
