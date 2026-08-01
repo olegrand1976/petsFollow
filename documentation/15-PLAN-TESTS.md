@@ -759,7 +759,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `20-pacs-admin` | Admin PACS metrics/logs/playground + **wake clic** (flag on) | `@p0` |
 | `20b-pacs-imaging` | Fiche animal onglet Imagerie + upload (canvas défaut ; Cornerstone si `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone`) | `@p0` |
 | `20c-pacs-ga-net` | P2.3 : download `.dcm` (magic DICM) + preview frame OOR → 404 (+ clamp canvas) | `@p0` |
-| `22-research` | Observatoire Research + admin opt-ins (flag on) | `@p0` |
+| `22-research` | Observatoire Research + admin opt-ins + toggle Data room (flag on) | `@p0` |
 
 Local :
 
