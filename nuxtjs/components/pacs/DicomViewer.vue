@@ -74,8 +74,19 @@ function refreshEffectiveSpacing(img: HTMLImageElement | null) {
     img.naturalWidth,
     img.naturalHeight,
   )
-  effectiveSpacing.value = scaled
-  previewResized.value = Boolean(scaled)
+  if (scaled) {
+    effectiveSpacing.value = scaled
+    previewResized.value = true
+    return
+  }
+  // Orthanc staging may omit Rows/Columns in simplified-tags — still trust PixelSpacing.
+  if (metaSpacing.value) {
+    effectiveSpacing.value = metaSpacing.value
+    previewResized.value = false
+    return
+  }
+  effectiveSpacing.value = null
+  previewResized.value = false
 }
 
 type Pane = {
