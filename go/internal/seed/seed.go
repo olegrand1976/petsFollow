@@ -728,7 +728,8 @@ func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) 
 			return fmt.Errorf("%s research profile: %w", email, err)
 		}
 	}
-	// Opt-in VetPlus demo practice for ETL demos.
+	// Opt-in VetPlus demo practice for ETL demos (via profil vet — pas users.practice_id,
+	// qui est NULL si un smoke a laissé active_profile=research).
 	_, err = pool.Exec(ctx, `
 		UPDATE practice.practices pr
 		SET research_opt_in_at = COALESCE(pr.research_opt_in_at, NOW()),
@@ -736,7 +737,11 @@ func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) 
 		      SELECT id FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1
 		    )
 		WHERE pr.id = (
-		  SELECT practice_id FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1
+		  SELECT p.practice_id
+		  FROM identity.profiles p
+		  JOIN identity.users u ON u.id = p.user_id
+		  WHERE u.email = 'vet.demo@petsfollow.test' AND p.role = 'vet' AND p.practice_id IS NOT NULL
+		  LIMIT 1
 		)`)
 	if err != nil {
 		return fmt.Errorf("research opt-in vetplus: %w", err)
@@ -748,7 +753,40 @@ func seedResearchDemo(ctx context.Context, pool *pgxpool.Pool, st *store.Store) 
 	if err := seedResearchGroupAndDensity(ctx, pool, st, userID); err != nil {
 		return err
 	}
+	// Multi-profil : le profil research reste disponible via switch, mais le login
+	// e2e/smoke attend role=vet|admin (clients 403 sinon). Réactive les profils primaires.
+	if err := restoreVetDemoActiveProfile(ctx, pool); err != nil {
+		return err
+	}
+	if err := EnsureDemoOpsVetProfiles(ctx, pool, st); err != nil {
+		return fmt.Errorf("restore ops after research: %w", err)
+	}
 	return nil
+}
+
+// restoreVetDemoActiveProfile force vet.demo sur son profil vet (practice VetPlus).
+func restoreVetDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool) error {
+	var userID, practiceID, vetProfileID string
+	err := pool.QueryRow(ctx, `
+		SELECT u.id::text, COALESCE(p.practice_id::text, ''), p.id::text
+		FROM identity.users u
+		JOIN identity.profiles p ON p.user_id = u.id AND p.role = 'vet'
+		WHERE u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&userID, &practiceID, &vetProfileID)
+	if err != nil {
+		return fmt.Errorf("vet.demo vet profile: %w", err)
+	}
+	if practiceID == "" {
+		return fmt.Errorf("vet.demo vet profile missing practice_id")
+	}
+	_, err = pool.Exec(ctx, `
+		UPDATE identity.users SET
+			active_profile_id = $2::uuid,
+			role = 'vet',
+			practice_id = $3::uuid,
+			professional_specialty = NULL
+		WHERE id = $1`, userID, vetProfileID, practiceID)
+	return err
 }
 
 // seedResearchGroupAndDensity creates a demo collaborative group + enough anon events
@@ -782,7 +820,8 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 	err = pool.QueryRow(ctx, `
 		SELECT COALESCE(pr.postal_code,'1000'), COALESCE(pr.country_code,'BE')
 		FROM practice.practices pr
-		JOIN identity.users u ON u.practice_id = pr.id
+		JOIN identity.profiles p ON p.practice_id = pr.id AND p.role = 'vet'
+		JOIN identity.users u ON u.id = p.user_id
 		WHERE u.email = 'vet.demo@petsfollow.test'
 		LIMIT 1`).Scan(&postal, &country)
 	if err != nil {

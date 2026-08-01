@@ -69,7 +69,36 @@ export async function login(
   if (opts?.expectStatus != null) {
     expect(res.status()).toBe(opts.expectStatus)
   }
+  // Multi-profil démo (research attaché) : un smoke peut laisser active_profile=research
+  // → clients 403 / pas de /dashboard. Réactive le rôle primaire attendu.
+  if (res.status() === 200) {
+    const primary = demoPrimaryRole(email)
+    if (primary) await ensureActiveRole(page, primary)
+  }
   return { status: res.status() }
+}
+
+function demoPrimaryRole(email: string): string | null {
+  const e = email.trim().toLowerCase()
+  if (e === 'vet.demo@petsfollow.test') return 'vet'
+  if (e === 'admin.demo@petsfollow.test') return 'admin'
+  if (e === 'dev.demo@petsfollow.test') return 'dev'
+  return null
+}
+
+/** Si un smoke a laissé active_profile=research, bascule vers le rôle attendu (évite clients 403). */
+async function ensureActiveRole(page: Page, role: string) {
+  const me = await page.request.get('/api/me')
+  if (!me.ok()) return
+  const meBody = unwrapData(await me.json())
+  if (meBody.role === role) return
+  const profilesRes = await page.request.get('/api/me/profiles')
+  if (!profilesRes.ok()) return
+  const body = await profilesRes.json()
+  const list = Array.isArray(body) ? body : ((body as { data?: Array<{ id: string; role: string }> }).data ?? [])
+  const target = list.find((p: { id: string; role: string }) => p.role === role)
+  if (!target?.id) return
+  await page.request.post('/api/me/profiles/switch', { data: { profileId: target.id } })
 }
 
 export async function loginAsVet(page: Page, email = 'vet.demo@petsfollow.test', password = 'VetDemo123!') {
