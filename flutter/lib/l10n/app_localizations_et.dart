@@ -1847,7 +1847,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get proLightAiModuleRequired =>
-      'CR IA moodul pole aktiveeritud või proov lõppenud — võtke ühendust petsFollow müügiga.';
+      'AI-CR funktsioon on selle praktika jaoks välja lülitatud — võtke ühendust petsFollow toega.';
 
   @override
   String proLightAiModuleTrialBanner(int days) {

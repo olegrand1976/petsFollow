@@ -32,13 +32,14 @@ type AiCrAdhesionCandidate struct {
 	TrialEndsAt  time.Time
 }
 
-// ListAiCrAdhesionCandidates returns trial modules eligible for drip emails.
+// ListAiCrAdhesionCandidates returns modules eligible for adoption drip emails.
+// Includes active (IA included in Pro) and legacy trial rows.
 func (s *Store) ListAiCrAdhesionCandidates(ctx context.Context) ([]AiCrAdhesionCandidate, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT m.practice_id::text, COALESCE(p.name,''), m.status, m.activated_at, m.trial_ends_at
 		FROM practice.ai_cr_modules m
 		JOIN practice.practices p ON p.id = m.practice_id
-		WHERE m.status = 'trial'`)
+		WHERE m.status IN ('trial', 'active')`)
 	if err != nil {
 		return nil, err
 	}

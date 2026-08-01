@@ -685,7 +685,7 @@
   },
   "proLightAudioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
   "proLightReportAiProposalBanner": "Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid).",
-  "proLightAiModuleRequired": "CR IA moodul pole aktiveeritud või proov lõppenud — võtke ühendust petsFollow müügiga.",
+  "proLightAiModuleRequired": "AI-CR funktsioon on selle praktika jaoks välja lülitatud — võtke ühendust petsFollow toega.",
   "proLightAiModuleTrialBanner": "CR IA proov — {days} päeva jäänud. Dikteerige ja parandage aruandeid.",
   "proLightAiModuleInactiveBanner": "CR IA pole selle kabineti jaoks aktiveeritud. AI dikteerimine pole saadaval.",
   "proLightAiModuleVisitScopedBanner": "CR IA on saadaval, kui visiidi kabinetil on moodul aktiveeritud.",

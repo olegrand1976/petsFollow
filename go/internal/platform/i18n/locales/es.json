@@ -152,7 +152,7 @@
     "invalid_thirst": "Sed no válida",
     "invalid_elimination": "Heces / orina no válidas",
     "invalid_urgency": "Urgencia no válida",
-    "ai_module_required": "Módulo CR IA no activado o prueba caducada — contacte a su comercial",
+    "ai_module_required": "Función CR IA desactivada para esta clínica — contacte con soporte",
     "ai_module_not_found": "Módulo CR IA no encontrado para este centro",
     "self_referral": "No se permite el autopadrinazgo",
     "invalid_counterparty": "Datos del cliente / fiscales no válidos",

@@ -12,9 +12,8 @@ Le relevé cardiaque (tap, 15 / 30 / 60 s dans l’app) est une **feature** parm
 
 | Qui | Rôle | Surface | Tarif |
 |-----|------|---------|-------|
-| Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **834,71 € HTVA / an** (ou **2 253,72 € / 3 ans**, −10 %) + setup 320 € HTVA — **facturation externe** |
-| Cabinet véto | Add-on CR IA | Dictée / improve Gemini | **39 € HT/mois** ou **390 € HT/an** — essai **90 j**, ROI dès J60 — [32](32-MODULE-IA-CR.md) |
-| Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** (CR IA si cabinet activé) |
+| Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **834,71 € HTVA / an** (ou **2 253,72 € / 3 ans**, −10 %) + setup 320 € HTVA — **CR IA inclus** — **facturation externe** |
+| Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** (CR IA si cabinet Pro du dossier actif) |
 | Propriétaire | Payeur (B2B2C) | App mobile pets | 3,50 / 35 / 95 € TTC (Stripe) |
 | Commercial | Apporteur | Pro web (espace commercial) | — |
 
@@ -29,7 +28,7 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 - Partage de dossier (`pet_access` / `client_access`) : collègue / care pro / pro externe — notes, CR, docs
 - Relevé cardiaque **15 / 30 / 60 s** (tap dans l’app) — feature différenciante
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
-- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — **module add-on** 39 € HT/mois ou 390 € HT/an après essai 90 j ([32](32-MODULE-IA-CR.md))
+- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — **inclus dans Pro** ([32](32-MODULE-IA-CR.md))
 - Agenda terrain (Pro Light) + calendrier cabinet (Pro)
 - Langues **FR / NL / EN / ES / ET / IT**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
@@ -61,7 +60,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. Pro 834,71 € HTVA / an (hors ligne ; −10 % en triennal), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. » |
+| **Véto (30 s)** | « petsFollow : continuité de soins prescrite — un passeport digital partagé entre votre cabinet, les pros terrain et le propriétaire. Web Pro avec CR IA inclus, Pro Light gratuit, app client. Pro 834,71 € HTVA / an (hors ligne ; −10 % en triennal), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. » |
 | **Client (via véto)** | « Le passeport digital de votre animal — messages avec le cabinet, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. » |
 | **Vous (interne)** | « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = passeport multi-acteurs · Web + 2 mobiles. » |
 
