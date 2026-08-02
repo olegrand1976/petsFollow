@@ -574,6 +574,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle (défaut 2 min, `deskIdleMinutes` cabinet — roster serveur prime sur localStorage ; Vitest `deskIdleMinutes.spec.ts`) / force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
 | L8 | P0 | `shares.read` vs manage | Secrétaire / assist : onglet partages visible, pas de create/revoke ; GET OK / POST 403 |
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
+| L10 | P0 | `consultations.history.read` | Cap distinct de `calendar.manage` ; secrétaire OFF par défaut (nav + `/consultations` + `GET /vet/consultations` 403) ; soft-delete = history.read ∧ write_clinical ; ASV/véto ON ; tip Équipe Agenda ≠ historique ; e2e `13-team-staff-smoke` B2b |
 
 ## M — Concurrence commerciale
 
@@ -792,7 +793,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
-| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly | `@p0` |
+| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly + histo. consultations OFF secrétaire | `@p0` |
 | `13b-desk-switch` | Switch poste partagé + veille (lock overlay) + reprise consultation mid-veille (scénario G) | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |

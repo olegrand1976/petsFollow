@@ -13,11 +13,12 @@ func TestMePracticePermissionsSeedRoles(t *testing.T) {
 		wantCommissions       bool
 		wantWriteClinical     bool
 		wantSharesManage      bool
+		wantConsultHistory    bool
 	}{
-		{"reference_vet", "vet.demo@petsfollow.test", "VetDemo123!", true, true, true},
-		{"colleague_vet", "vet.colleague@petsfollow.test", "VetDemo123!", false, true, true},
-		{"assistant", "vet.assist@petsfollow.test", "VetDemo123!", false, true, false},
-		{"secretary", "secretary.demo@petsfollow.test", "VetDemo123!", false, false, false},
+		{"reference_vet", "vet.demo@petsfollow.test", "VetDemo123!", true, true, true, true},
+		{"colleague_vet", "vet.colleague@petsfollow.test", "VetDemo123!", false, true, true, true},
+		{"assistant", "vet.assist@petsfollow.test", "VetDemo123!", false, true, false, true},
+		{"secretary", "secretary.demo@petsfollow.test", "VetDemo123!", false, false, false, false},
 	}
 
 	for _, tc := range cases {
@@ -52,6 +53,9 @@ func TestMePracticePermissionsSeedRoles(t *testing.T) {
 			}
 			if got, _ := raw["pharmacy.write"].(bool); got != tc.wantWriteClinical {
 				t.Fatalf("pharmacy.write: want %v got %v (%#v)", tc.wantWriteClinical, got, raw)
+			}
+			if got, _ := raw["consultations.history.read"].(bool); got != tc.wantConsultHistory {
+				t.Fatalf("consultations.history.read: want %v got %v (%#v)", tc.wantConsultHistory, got, raw)
 			}
 		})
 	}

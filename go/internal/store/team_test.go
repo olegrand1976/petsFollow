@@ -15,9 +15,19 @@ func TestDefaultTeamPermissions(t *testing.T) {
 	if sec["pets.write_clinical"] || sec["pharmacy.write"] || sec["shares.manage"] || !sec["shares.read"] || !sec["pharmacy.read"] || !sec["calendar.manage"] {
 		t.Fatalf("secretary defaults: %#v", sec)
 	}
+	if sec["consultations.history.read"] {
+		t.Fatalf("secretary must not have consultations.history.read by default: %#v", sec)
+	}
 	asst := DefaultTeamPermissions(TeamRoleAssistant)
 	if asst["shares.manage"] || !asst["care.manage"] || !asst["pharmacy.write"] || !asst["shares.read"] {
 		t.Fatalf("assistant defaults: %#v", asst)
+	}
+	if !asst["consultations.history.read"] {
+		t.Fatalf("assistant must have consultations.history.read: %#v", asst)
+	}
+	vet := DefaultTeamPermissions(TeamRoleVet)
+	if !vet["consultations.history.read"] {
+		t.Fatalf("vet must have consultations.history.read: %#v", vet)
 	}
 }
 

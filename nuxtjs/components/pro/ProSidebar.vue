@@ -192,6 +192,7 @@ function iconName(name: ProNavIcon) {
 function navTestId(to: string) {
   // Stable aliases for existing e2e selectors.
   if (to === '/calendar') return 'nav-calendar'
+  if (to === '/consultations') return 'nav-consultations'
   if (to === '/clients') return 'nav-clients'
   if (to === '/pets') return 'nav-pets'
   if (to === '/messages') return 'nav-messages'

@@ -31,14 +31,14 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 2. Vérifier la liste des membres (collègue, assistante, secrétaire).
 3. Vérifier que les **droits** affichent des libellés clairs (ex. « Voir les clients ») avec info-bulle au survol — pas de codes techniques.
 4. Se déconnecter → se connecter en `vet.colleague` : accès cabinet cohérent.
-5. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits).
-6. Se connecter en `secretary.demo` : idem, focus secrétariat (agenda / clients selon l’écran).
+5. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits) — **Histo. consultations** visible.
+6. Se connecter en `secretary.demo` : focus secrétariat (**Agenda** + clients) ; **pas** d’entrée **Histo. consultations** dans le menu (droit `consultations.history.read` OFF par défaut ; réactivable via Équipe).
 
 ## Résultat attendu
 
-- Page Équipe lisible côté véto référence (droits compréhensibles).
+- Page Équipe lisible côté véto référence (droits compréhensibles ; tip Agenda ≠ historique).
 - Chaque rôle se connecte ; l’espace **Admin** reste inaccessible.
-- Différences de droits **perceptibles** (même sommaires) entre assistante / secrétaire / collègue.
+- Différences de droits **perceptibles** entre assistante / secrétaire / collègue (dont historique consultations).
 
 ## Checklist
 

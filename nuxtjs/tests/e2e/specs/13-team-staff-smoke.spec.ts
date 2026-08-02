@@ -78,6 +78,16 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByTestId('nav-clients')).toBeVisible({ timeout: 10000 })
   })
 
+  test('B2b: secretary — agenda OK, pas d’historique consultations', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await expect(page.getByTestId('nav-calendar')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('nav-consultations')).toHaveCount(0)
+    await expect(page.locator('a[href="/consultations"]')).toHaveCount(0)
+    await page.goto('/consultations', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL((url) => !url.pathname.includes('/consultations'), { timeout: 15000 })
+    await expect(page.getByTestId('consultations-page')).toHaveCount(0)
+  })
+
   test('B3: secretary — /prescriptions/nouveau redirect (no write_clinical)', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
     await page.goto('/prescriptions/nouveau', { waitUntil: 'domcontentloaded' })

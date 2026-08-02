@@ -3604,7 +3604,15 @@
       "calendar": {
         "manage": {
           "label": "Calendar",
-          "tip": "Manage appointments and the practice calendar."
+          "tip": "Manage appointments and the practice calendar (not consultation history)."
+        }
+      },
+      "consultations": {
+        "history": {
+          "read": {
+            "label": "Consultation history",
+            "tip": "View the walk-in consultation list and open visit reports."
+          }
         }
       },
       "care": {
@@ -3643,12 +3651,12 @@
       },
       "pharmacy": {
         "read": {
-          "label": "View pharmacy",
-          "tip": "Read medications, stock and DAF."
+          "label": "View pharmacy (clinic)",
+          "tip": "Read access to Clinic section: medications, practice stock and DAF."
         },
         "write": {
-          "label": "Write pharmacy",
-          "tip": "Stock receipts, quarantine, create and finalize DAF."
+          "label": "Write pharmacy (clinic)",
+          "tip": "Write access to Clinic section: stock receipts, quarantine, create and finalize DAF."
         }
       }
     }

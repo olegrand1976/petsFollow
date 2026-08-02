@@ -3649,7 +3649,15 @@
       "calendar": {
         "manage": {
           "label": "Agenda",
-          "tip": "Gérer les rendez-vous et le calendrier du cabinet."
+          "tip": "Gérer les rendez-vous et le calendrier du cabinet (sans l’historique des consultations)."
+        }
+      },
+      "consultations": {
+        "history": {
+          "read": {
+            "label": "Historique des consultations",
+            "tip": "Voir la liste des consultations walk-in (Histo. consultations) et ouvrir les comptes-rendus."
+          }
         }
       },
       "care": {
@@ -3688,12 +3696,12 @@
       },
       "pharmacy": {
         "read": {
-          "label": "Voir la pharmacie",
-          "tip": "Accéder aux médicaments, stock et DAF en lecture."
+          "label": "Voir la pharmacie (clinique)",
+          "tip": "Accès lecture section Clinique : médicaments, stock cabinet et DAF."
         },
         "write": {
-          "label": "Écrire la pharmacie",
-          "tip": "Réceptions stock, quarantaine, création et finalisation DAF."
+          "label": "Écrire la pharmacie (clinique)",
+          "tip": "Écriture section Clinique : réceptions stock, quarantaine, création et finalisation DAF."
         }
       }
     }

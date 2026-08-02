@@ -87,6 +87,7 @@ const TEAM_PERM_KEYS = [
   'heartrate.validate',
   'messaging',
   'calendar.manage',
+  'consultations.history.read',
   'care.manage',
   'shares.read',
   'shares.manage',

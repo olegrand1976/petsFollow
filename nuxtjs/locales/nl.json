@@ -3604,7 +3604,15 @@
       "calendar": {
         "manage": {
           "label": "Agenda",
-          "tip": "Afspraken en de praktijkagenda beheren."
+          "tip": "Afspraken en de praktijkagenda beheren (zonder consultatiegeschiedenis)."
+        }
+      },
+      "consultations": {
+        "history": {
+          "read": {
+            "label": "Consultatiegeschiedenis",
+            "tip": "Walk-in consultaties bekijken en verslagen openen."
+          }
         }
       },
       "care": {
@@ -3643,12 +3651,12 @@
       },
       "pharmacy": {
         "read": {
-          "label": "Apotheek bekijken",
-          "tip": "Medicijnen, voorraad en DAF raadplegen."
+          "label": "Apotheek bekijken (kliniek)",
+          "tip": "Leestoegang sectie Kliniek: geneesmiddelen, voorraad en DAF."
         },
         "write": {
-          "label": "Apotheek schrijven",
-          "tip": "Ontvangsten, quarantaine, DAF aanmaken/finaliseren."
+          "label": "Apotheek schrijven (kliniek)",
+          "tip": "Schrijfrecht sectie Kliniek: ontvangsten, quarantaine, DAF aanmaken/finaliseren."
         }
       }
     }

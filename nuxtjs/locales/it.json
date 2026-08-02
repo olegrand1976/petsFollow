@@ -3573,7 +3573,15 @@
       "calendar": {
         "manage": {
           "label": "Agenda",
-          "tip": "Gestire appuntamenti e calendario della struttura."
+          "tip": "Gestire appuntamenti e calendario della struttura (senza lo storico consultazioni)."
+        }
+      },
+      "consultations": {
+        "history": {
+          "read": {
+            "label": "Storico consultazioni",
+            "tip": "Vedere l'elenco delle consultazioni walk-in e aprire i referti."
+          }
         }
       },
       "care": {
@@ -3612,12 +3620,12 @@
       },
       "pharmacy": {
         "read": {
-          "label": "Vedere farmacia",
-          "tip": "Consultare farmaci, stock e DAF."
+          "label": "Vedere farmacia (clinica)",
+          "tip": "Lettura sezione Clinica: farmaci, stock e DAF."
         },
         "write": {
-          "label": "Scrivere farmacia",
-          "tip": "Ricezioni, quarantena, creare e finalizzare DAF."
+          "label": "Scrivere farmacia (clinica)",
+          "tip": "Scrittura sezione Clinica: ricezioni, quarantena, creare e finalizzare DAF."
         }
       }
     }

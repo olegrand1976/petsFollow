@@ -147,7 +147,7 @@
                   @click="openReport(row)"
                 />
                 <ProIconAction
-                  v-if="canManageCalendar"
+                  v-if="canDeleteConsultation"
                   icon="delete"
                   :label="$t('consultations.delete')"
                   :test-id="`consultation-delete-${row.id}`"
@@ -246,7 +246,7 @@
 <script setup lang="ts">
 import { formatAudioClock } from '~/utils/audioDuration'
 
-definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'calendar.manage' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'consultations.history.read' })
 
 type ConsultationRow = {
   id: string
@@ -268,7 +268,10 @@ const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
-const canManageCalendar = computed(() => canPractice('calendar.manage'))
+/** Aligné API softDeleteVisit : consultations.history.read ∧ pets.write_clinical. */
+const canDeleteConsultation = computed(
+  () => canPractice('consultations.history.read') && canWriteClinical.value,
+)
 
 const rows = ref<ConsultationRow[]>([])
 const staleDafDrafts = ref<Record<string, string>>({})

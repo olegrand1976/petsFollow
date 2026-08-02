@@ -12,6 +12,7 @@ describe('canPracticeCapability', () => {
     expect(canPracticeCapability('pharmacy.read', 'secretary', null)).toBe(true)
     expect(canPracticeCapability('messaging', 'secretary', null)).toBe(true)
     expect(canPracticeCapability('calendar.manage', 'vet', null)).toBe(false)
+    expect(canPracticeCapability('consultations.history.read', 'vet', null)).toBe(false)
     expect(canPracticeCapability('shares.manage', 'vet', null)).toBe(false)
     expect(canPracticeCapability('pharmacy.write', 'vet', null)).toBe(false)
     expect(canPracticeCapability('clients.write', 'vet', null)).toBe(false)

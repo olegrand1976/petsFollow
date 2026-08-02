@@ -9,6 +9,7 @@ export const PRACTICE_CAPABILITIES = [
   'heartrate.validate',
   'messaging',
   'calendar.manage',
+  'consultations.history.read',
   'care.manage',
   'shares.read',
   'shares.manage',

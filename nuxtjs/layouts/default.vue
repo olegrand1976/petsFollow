@@ -84,6 +84,8 @@ const navItems = computed<ProNavItem[]>(() => {
   ]
   if (canPractice('calendar.manage')) {
     items.push({ to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value, section: day })
+  }
+  if (canPractice('consultations.history.read')) {
     items.push({ to: '/consultations', label: t('nav.consultations'), icon: 'clinical_notes', section: day })
   }
   if (canPractice('messaging')) {

@@ -70,6 +70,54 @@ func TestSoftDeleteConsultationHiddenFromList(t *testing.T) {
 	}
 }
 
+func TestSecretaryCannotListConsultationsHistory(t *testing.T) {
+	api := newTestAPI(t)
+	secTok := loginToken(t, api.handler, "secretary.demo@petsfollow.test", "VetDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/consultations", secTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("secretary consultations list want 403 got %d %#v", code, env)
+	}
+}
+
+func TestSecretaryCannotSoftDeleteConsultation(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	secTok := loginToken(t, api.handler, "secretary.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+
+	slot := time.Now().UTC().Add(21 * time.Minute).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         slot,
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"notes":               "secretary soft-delete deny probe",
+	})
+	if code == http.StatusBadRequest {
+		t.Skipf("consultation create blocked: %#v", env)
+	}
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, secTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("secretary soft-delete want 403 got %d %#v", code, env)
+	}
+}
+
 func consultationsContain(env map[string]any, visitID string) bool {
 	items, _ := env["data"].([]any)
 	for _, raw := range items {

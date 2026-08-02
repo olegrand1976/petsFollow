@@ -3573,7 +3573,15 @@
       "calendar": {
         "manage": {
           "label": "Kalender",
-          "tip": "Vastuvõttude ja kliiniku kalendri haldamine."
+          "tip": "Vastuvõttude ja kliiniku kalendri haldamine (ilma konsultatsioonide ajaloota)."
+        }
+      },
+      "consultations": {
+        "history": {
+          "read": {
+            "label": "Konsultatsioonide ajalugu",
+            "tip": "Walk-in konsultatsioonide loendi vaatamine ja aruannete avamine."
+          }
         }
       },
       "care": {
@@ -3612,12 +3620,12 @@
       },
       "pharmacy": {
         "read": {
-          "label": "Apteegi vaatamine",
-          "tip": "Ravimid, varu ja DAF lugemiseks."
+          "label": "Apteegi vaatamine (kliinika)",
+          "tip": "Kliinika sektsiooni lugemine: ravimid, varu ja DAF."
         },
         "write": {
-          "label": "Apteegi kirjutamine",
-          "tip": "Vastuvõtud, karantiin, DAF loomine/lõpetamine."
+          "label": "Apteegi kirjutamine (kliinika)",
+          "tip": "Kliinika sektsiooni kirjutamine: vastuvõtud, karantiin, DAF loomine/lõpetamine."
         }
       }
     }

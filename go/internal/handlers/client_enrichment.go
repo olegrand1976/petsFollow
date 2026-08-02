@@ -772,7 +772,7 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listVetConsultations(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	id, ok := a.requirePracticePerm(w, r, "consultations.history.read")
 	if !ok {
 		return
 	}
@@ -1152,8 +1152,8 @@ func (a *API) softDeleteVisit(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
-	// Soft-delete removes clinical history visibility — need calendar + clinical write.
-	if !a.checkPracticePerm(w, r, id, "calendar.manage") {
+	// Soft-delete removes clinical history visibility — need history read + clinical write.
+	if !a.checkPracticePerm(w, r, id, "consultations.history.read") {
 		return
 	}
 	if !a.checkPracticePerm(w, r, id, "pets.write_clinical") {
