@@ -105,7 +105,6 @@ import {
 
 const { t, tm, rt } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const { user } = useProUser()
 const { isStagingLike } = useAppEnv()
 
@@ -159,19 +158,22 @@ function pointIcon(i: number) {
   return POINT_ICONS[i % POINT_ICONS.length] ?? 'check_circle'
 }
 
-function go(id: PresentationStepId) {
-  if (stepId.value === id && route.query.step === id) return
-  void router.replace({ path: '/presentation', query: { step: id } })
+async function go(id: PresentationStepId) {
+  const current = parsePresentationStepId(route.query.step) ?? 'welcome'
+  if (current === id) return
+  await navigateTo({ path: '/presentation', query: { step: id } }, { replace: true })
 }
 
-function next() {
-  const i = stepIndex.value
-  if (i < steps.length - 1) go(steps[i + 1]!)
+async function next() {
+  const current = parsePresentationStepId(route.query.step) ?? 'welcome'
+  const i = steps.indexOf(current)
+  if (i >= 0 && i < steps.length - 1) await go(steps[i + 1]!)
 }
 
-function prev() {
-  const i = stepIndex.value
-  if (i > 0) go(steps[i - 1]!)
+async function prev() {
+  const current = parsePresentationStepId(route.query.step) ?? 'welcome'
+  const i = steps.indexOf(current)
+  if (i > 0) await go(steps[i - 1]!)
 }
 
 function onCloseCta() {

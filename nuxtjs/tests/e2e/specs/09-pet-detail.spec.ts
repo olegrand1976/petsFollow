@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { loginAsVet } from '../helpers/auth'
+import { loginAsVet, nativeClick } from '../helpers/auth'
 
 const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
 
@@ -288,9 +288,10 @@ test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' },
   await seedHeartRateComment(petId)
 
   await loginAsVet(page)
-  // Cloud Run runners are often en-US; this assertion is about FR copy.
-  const origin = new URL(page.url()).origin
-  await page.context().addCookies([{ name: 'pf_locale', value: 'fr', url: origin }])
+  // Cloud Run runners are often en-US; pin FR via settings (same path as 02-locale).
+  await page.goto('/settings', { waitUntil: 'networkidle' })
+  await nativeClick(page, 'settings-locale-fr')
+  await nativeClick(page, 'settings-locale-save')
   await page.goto('/pets', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
   const row = page.getByTestId(`pet-row-${petId}`)
