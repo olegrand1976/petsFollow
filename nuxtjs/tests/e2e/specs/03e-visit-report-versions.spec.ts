@@ -349,10 +349,26 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('visit-report-improve')).toHaveCount(0)
     await expect(page.getByTestId('visit-report-dictate')).toHaveCount(0)
 
+    // History <details> + fill layout can cover the reference checkbox (pointer intercept).
+    await setVisitReportHistoryOpen(page, false)
     await expect(page.getByTestId('visit-report-reference')).toBeVisible({ timeout: 10000 })
-    await page.getByTestId('visit-report-reference-check').check()
+    const refCheck = page.getByTestId('visit-report-reference-check')
+    await refCheck.evaluate((el) => {
+      const pane = el.closest('.visit-report-pane') as HTMLElement | null
+      const scroll = el.closest('.pro-visit-report__scroll') as HTMLElement | null
+      const target = pane || scroll
+      if (target) {
+        const er = el.getBoundingClientRect()
+        const sr = target.getBoundingClientRect()
+        target.scrollTop += er.top - sr.top - sr.height / 2 + er.height / 2
+      }
+      else {
+        el.scrollIntoView({ block: 'center', inline: 'nearest' })
+      }
+      ;(el as HTMLInputElement).click()
+    })
     await expect.poll(() => referencePatched, { timeout: 10000 }).toBe(true)
-    await expect(page.getByTestId('visit-report-reference-check')).toBeChecked()
+    await expect(refCheck).toBeChecked()
 
     await page.unroute('**/api/visits/*/report-improve')
     await page.unroute('**/api/visits/*/report-finalize')
