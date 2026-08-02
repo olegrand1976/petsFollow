@@ -58,11 +58,10 @@ test('commercial voit pitch et commissions', async ({ page }) => {
   await page.goto('/commercial/pitch-deck', { waitUntil: 'domcontentloaded' })
   await expect(page).toHaveURL(/\/presentation\?step=welcome/, { timeout: 20000 })
   await expect(page.getByTestId('presentation-wizard')).toBeVisible({ timeout: 20000 })
-  // TOC nav is the stable path (same go(); footer Next is covered in unit-ish 25 deep-links).
-  await Promise.all([
-    page.waitForURL(/[?&]step=pain(?:&|$)/, { timeout: 15000 }),
-    page.getByTestId('presentation-toc-pain').click(),
-  ])
+  // Client-side step nav after pitch-deck redirect is flaky on Cloud Run; deep-link instead (25 covers TOC).
+  await page.goto('/presentation?step=pain', { waitUntil: 'domcontentloaded' })
+  await expect(page).toHaveURL(/[?&]step=pain(?:&|$)/, { timeout: 15000 })
+  await expect(page.getByTestId('presentation-wizard')).toBeVisible({ timeout: 10000 })
   await page.goto('/commercial/commissions', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('commercial-commissions-page')).toBeVisible()
   // Bonus cards are always visible (no details disclosure on this page).

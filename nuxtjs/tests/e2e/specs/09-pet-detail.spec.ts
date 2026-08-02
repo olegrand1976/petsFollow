@@ -288,12 +288,21 @@ test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' },
   await seedHeartRateComment(petId)
 
   await loginAsVet(page)
-  // Cloud Run runners are often en-US; pin FR via settings (same path as 02-locale).
-  await page.goto('/settings?tab=account', { waitUntil: 'networkidle' })
-  await expect(page.getByTestId('settings-locale-fr')).toBeVisible({ timeout: 15000 })
-  await nativeClick(page, 'settings-locale-fr')
+  // Cloud Run runners are often en-US; pin FR like 02-locale (wait preferredLocale init).
+  await page.goto('/settings?tab=account')
+  const activeLocale = page.locator('[data-testid^="settings-locale-"].pro-toggle-btn--active')
+  await expect(activeLocale).toBeVisible({ timeout: 15000 })
+  await expect(async () => {
+    await nativeClick(page, 'settings-locale-fr')
+    await expect(page.getByTestId('settings-locale-fr')).toHaveClass(/pro-toggle-btn--active/, {
+      timeout: 2000,
+    })
+  }).toPass({ timeout: 15000 })
   await nativeClick(page, 'settings-locale-save')
-  await page.goto('/pets', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('settings-locale-fr')).toHaveClass(/pro-toggle-btn--active/, {
+    timeout: 15000,
+  })
+  await page.goto('/pets', { waitUntil: 'domcontentloaded' })
   await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
   const row = page.getByTestId(`pet-row-${petId}`)
   await expect(row).toBeVisible({ timeout: 15000 })
