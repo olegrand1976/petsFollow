@@ -1,7 +1,7 @@
 # Vision produit — petsFollow
 
 **Promesse** : continuité de soins prescrite, matérialisée en **passeport digital** de l’animal — Web cabinet · mobile ProLight / care pro · mobile particulier.  
-Le relevé cardiaque est un **module** différenciant, pas l’identité produit. Positionnement → [14](14-POSITIONNEMENT-MARKETING.md).
+Le relevé respiratoire est un **module** différenciant, pas l’identité produit. Positionnement → [14](14-POSITIONNEMENT-MARKETING.md).
 
 ## Personas
 
@@ -19,7 +19,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 3. Messagerie interne + mode indisponible véto (véto ↔ propriétaire — **pas** care_pro)
 4. Timeline historique (messages, relevés validés, événements)
 5. Partage multi-acteurs (ACL `pet_access` / `client_access`) — collègue / care pro / notes / CR / docs
-6. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client) — **feature**
+6. Relevé respiratoire (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client) — **feature**
 
 ## Livré au-delà du MVP initial
 
@@ -35,7 +35,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 | Link-requests client → véto (`/requests`) | Livré |
 | Care reminders + Horse pack (inclus entitlement animal actif ; plus vendus en addon) | Livré |
 | Médias (avatars / photos / messages) local + GCS staging | Livré |
-| Préférences email véto, durées FC configurables, changement MDP | Livré |
+| Préférences email véto, durées FR configurables, changement MDP | Livré |
 | Reset mot de passe email (forgot/reset) | Livré |
 
 ## Post-MVP / backlog

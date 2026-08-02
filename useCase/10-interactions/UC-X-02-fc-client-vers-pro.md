@@ -1,4 +1,4 @@
-# UC-X-02 — Relevé cardiaque client → VetPro
+# UC-X-02 — Relevé respiratoire (FR) client → VetPro
 
 | | |
 |--|--|
@@ -25,7 +25,7 @@ Valider un relevé côté propriétaire et le voir apparaître dans le dossier a
 
 ## Étapes
 
-1. **App** — login `client.demo` → animal → relevé cardiaque → taps → **valider** + commentaire (ex. `UC-X-02 repos`).
+1. **App** — login `client.demo` → animal → relevé respiratoire → taps → **valider** + commentaire (ex. `UC-X-02 repos`).
 2. Noter l’heure / BPM approximatif.
 3. **Web** — login `vet.demo` → Clients → même animal.
 4. Vérifier le relevé dans le tableau / chart / historique.

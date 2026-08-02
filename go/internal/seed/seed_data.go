@@ -145,7 +145,7 @@ type practiceDef struct {
 //
 // Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ · vet.unverified@ · vet.reset@ (reset MDP)
 // Admin : admin.demo@
-// Clients : client.demo@ · client.marie@ · client.paul@ · client.julie@ · client.thomas@ · client.vide@ (sans animal)
+// Clients : client.demo@ · client.vide@ · client.marie@ · client.paul@ · client.julie@ · client.thomas@ · client.nouveau@ (Lyon, pending VetPlus)
 
 var demoPractices = []practiceDef{
 	{
@@ -182,7 +182,7 @@ var demoPractices = []practiceDef{
 							{senderRole: "client", body: "Bonjour docteur, Rex tousse un peu depuis hier soir.", age: -72 * time.Hour, read: true},
 							{senderRole: "vet", body: "Bonjour Sophie. Pas de fièvre ni de fatigue ? Je peux vous recevoir demain matin.", age: -70 * time.Hour, read: true},
 							{senderRole: "client", body: "Non, il mange normalement. Demain 10h convient.", age: -68 * time.Hour, read: true},
-							{senderRole: "vet", body: "Parfait, rendez-vous confirmé. Continuez le suivi cardiaque en attendant.", age: -67 * time.Hour, read: false},
+							{senderRole: "vet", body: "Parfait, rendez-vous confirmé. Continuez le suivi respiratoire en attendant.", age: -67 * time.Hour, read: false},
 						},
 						heartRates: []heartRateDef{
 							{status: kernel.SessionValidated, tapCount: 72, duration: 60, bpm: 72, age: -7 * 24 * time.Hour},
@@ -314,7 +314,7 @@ var demoPractices = []practiceDef{
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Mimi a moins d'appétit depuis 2 jours.", age: -48 * time.Hour, read: true},
-							{senderRole: "vet", body: "Merci pour l'info. Le dernier relevé cardiaque est dans la norme. Surveillez l'hydratation.", age: -46 * time.Hour, read: true},
+							{senderRole: "vet", body: "Merci pour l'info. Le dernier relevé respiratoire est dans la norme. Surveillez l'hydratation.", age: -46 * time.Hour, read: true},
 						},
 						heartRates: []heartRateDef{
 							{status: kernel.SessionValidated, tapCount: 110, duration: 60, bpm: 110, age: -10 * 24 * time.Hour},
@@ -454,6 +454,27 @@ var demoPractices = []practiceDef{
 						messages: []messageDef{
 							{senderRole: "client", body: "Je finalise le paiement pour Nico cette semaine.", age: -2 * 24 * time.Hour, read: true},
 							{senderRole: "vet", body: "Pas de souci, le dossier sera activé dès confirmation Stripe.", age: -47 * time.Hour, read: false},
+						},
+					},
+				},
+			},
+			{
+				// Cabinet primaire Lyon ; demande pending → VetPlus (/requests vet.demo).
+				email:        "client.nouveau@petsfollow.test",
+				fullName:     "Nina Dupont",
+				contactPhone: "0470 00 00 07",
+				pets: []petDef{
+					{
+						name:          "Buddy",
+						species:       "dog",
+						breed:         "Mixte",
+						weightKg:      15.0,
+						paymentStatus: "active",
+						plan:          billing.PlanAnnual,
+						billingMode:   billing.ModeSubscription,
+						entitlement:   billing.StatusActive,
+						messages: []messageDef{
+							{senderRole: "client", body: "Bonjour, je souhaite aussi suivre Buddy chez VetPlus.", age: -4 * time.Hour, read: false},
 						},
 					},
 				},

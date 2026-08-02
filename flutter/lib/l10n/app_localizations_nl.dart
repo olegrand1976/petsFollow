@@ -563,7 +563,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get startMeasurement => 'METING STARTEN';
 
   @override
-  String get heartRateShort => 'Hart';
+  String get heartRateShort => 'Ademhaling';
 
   @override
   String get weightShort => 'Gewicht';
@@ -609,7 +609,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get howToMeasure => 'Hoe meten?';
 
   @override
-  String get howToMeasureIntro => 'Meet de hartslag van uw huisdier in rust.';
+  String get howToMeasureIntro =>
+      'Meet de ademhalingsfrequentie van uw huisdier in rust.';
 
   @override
   String get howToMeasureStep1 =>
@@ -617,7 +618,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get howToMeasureStep2 =>
-      '2. Leg uw hand op de borst en tik bij elke slag gedurende de aangegeven tijd.';
+      '2. Leg uw hand op de borst en tik bij elke ademhaling gedurende de aangegeven tijd.';
 
   @override
   String get howToMeasureStep3 =>
@@ -628,14 +629,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get howToMeasureWhyBody =>
-      'Regelmatige hartslagmonitoring helpt veranderingen op te sporen en de behandeling met uw dierenarts aan te passen.';
+      'Regelmatige ademhalingsmonitoring helpt veranderingen op te sporen en de behandeling met uw dierenarts aan te passen.';
 
   @override
   String get reminders => 'Herinneringen';
 
   @override
   String get remindersHint =>
-      'Ontvang een dagelijkse herinnering voor een hartslagmeting.';
+      'Ontvang een dagelijkse herinnering voor een ademhalingsmeting.';
 
   @override
   String get remindersEnabled => 'Herinneringen inschakelen';
@@ -660,11 +661,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app biedt eigenaars voorgeschreven opvolging (berichten, Care/Horse-herinneringen, hartslagmetingen), geschiedenis en communicatie met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement (betalingen via Stripe).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/terms\n\nLaatst bijgewerkt: juli 2026';
+      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app biedt eigenaars voorgeschreven opvolging (berichten, Care/Horse-herinneringen, ademhalingsmetingen), geschiedenis en communicatie met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement (betalingen via Stripe).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/terms\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google) en, in de cliënt-app (experimentele module), om afgeronde verslagen uit te leggen en conversatie-triage bij spoedgevallen te bieden.\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@petsfollow.app.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), ademhalingsmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief ademhalingsmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google) en, in de cliënt-app (experimentele module), om afgeronde verslagen uit te leggen en conversatie-triage bij spoedgevallen te bieden.\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@petsfollow.app.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -740,7 +741,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get manageSubscription => 'Abonnement beheren';
 
   @override
-  String get heartRate => 'Hartslagmeting';
+  String get heartRate => 'Ademhalingsmeting';
 
   @override
   String get history => 'Geschiedenis';
@@ -922,11 +923,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Tik bij elke hartslag gedurende de tijd die uw dierenarts heeft ingesteld.';
+      'Tik bij elke ademhaling gedurende de tijd die uw dierenarts heeft ingesteld.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
-    return 'Tik bij elke hartslag gedurende $seconds seconden.';
+    return 'Tik bij elke ademhaling gedurende $seconds seconden.';
   }
 
   @override
@@ -935,7 +936,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get heartRateNotSupported =>
-      'Hartslagmeting is niet beschikbaar voor deze diersoort';
+      'Ademhalingsmeting is niet beschikbaar voor deze diersoort';
 
   @override
   String get start => 'Starten';
@@ -947,11 +948,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String beatsCount(int count) {
-    return '$count slagen';
+    return '$count ademhalingen';
   }
 
   @override
-  String get tapHere => 'Tik hier bij elke slag';
+  String get tapHere => 'Tik hier bij elke ademhaling';
 
   @override
   String bpmLabel(String bpm) {
@@ -960,7 +961,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String beatsLabel(int count) {
-    return 'Slagen: $count';
+    return 'Ademhalingen: $count';
   }
 
   @override
@@ -1057,14 +1058,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Maak het profiel van uw huisdier aan en ontdek de app — berichten, herinneringen en metingen (inclusief hartslag).';
+      'Maak het profiel van uw huisdier aan en ontdek de app — berichten, herinneringen en metingen (inclusief ademhaling).';
 
   @override
   String get discoveryDay2Title => 'Stap 2 — Eerste meting';
 
   @override
   String get discoveryDay2Body =>
-      'Doe uw eerste hartslagmeting en oefen de techniek.';
+      'Doe uw eerste ademhalingsmeting en oefen de techniek.';
 
   @override
   String get discoveryDay4Title => 'Stap 3 — Routine';
@@ -1191,7 +1192,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notificationHrBody =>
-      'Tijd voor een hartslagmeting van uw huisdier';
+      'Tijd voor een ademhalingsmeting van uw huisdier';
 
   @override
   String get reviewAskTitle => 'Bevalt petsFollow?';
@@ -1279,7 +1280,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notificationPrefsSaved => 'Voorkeuren opgeslagen';
 
   @override
-  String get notificationPrefHr => 'Hartslagmetingen';
+  String get notificationPrefHr => 'Ademhalingsmetingen';
 
   @override
   String get notificationPrefCare => 'Zorgherinneringen';
@@ -1372,7 +1373,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get timelineTypeHeartrate => 'Hartslag';
+  String get timelineTypeHeartrate => 'Ademhalingsfrequentie';
 
   @override
   String get timelineTypeWeight => 'Gewicht';

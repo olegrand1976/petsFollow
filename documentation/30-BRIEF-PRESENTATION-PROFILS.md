@@ -30,7 +30,7 @@ Tu es un designer de pitch deck B2B santé animale. À partir du brief ci-dessou
 1. Produis **12 à 18 slides** (titre + 3–6 bullets max, ou schéma simple).
 2. Organisation obligatoire : **Vue d’ensemble → VetPro (Web) → Focus IA (CR inclus + automatisations) → VetLight (mobile) → Client (mobile) → Écosystème → Offre & modèle → Différenciation → Closing**.
 3. Langue : **français**. Style : clair, confiant, concrêt (bénéfices avant features).
-4. **Identité produit = continuité de soins prescrite + passeport digital de l’animal** via **trois apps** : Web cabinet · mobile ProLight / care pro · mobile particulier. Le relevé cardiaque est **une feature parmi d’autres** — ne jamais présenter petsFollow comme « une app cardiaque ».
+4. **Identité produit = continuité de soins prescrite + passeport digital de l’animal** via **trois apps** : Web cabinet · mobile ProLight / care pro · mobile particulier. Le relevé respiratoire est **une feature parmi d’autres** — ne jamais présenter petsFollow comme « une app cardiaque ».
 5. **Ne pas centrer le pitch sur « sans boîtier »** — parler des surfaces logicielles (Web + mobile). Ne promets **jamais** : chat WebSocket temps réel, messagerie entre care pro, addons payants Family/Care+/Horse, ni un appareil à vendre. Pitch care pro = **partage de dossier / CR / notes**.
 6. Steer commercial client : plan **triennial 95 € / 3 ans**.
 7. Inclure **2 slides IA** : (a) comment le CR IA est intégré dans VetPro ; (b) automatisations d’adoption / ROI J60.
@@ -80,7 +80,7 @@ Modèle : **B2B2C + SaaS cabinet** — le véto prescrit, le client paie le suiv
    └──────────────────┘              └──────────────────┘
 ```
 
-**Flux de valeur** : Commercial ouvre le cabinet → VetPro (Web) onboard → VetLight (mobile terrain) → Client (mobile) active un animal payant → messagerie + Care/Horse/foyer + relevés cardiaques **inclus**.
+**Flux de valeur** : Commercial ouvre le cabinet → VetPro (Web) onboard → VetLight (mobile terrain) → Client (mobile) active un animal payant → messagerie + Care/Horse/foyer + relevés respiratoires **inclus**.
 
 ---
 
@@ -98,7 +98,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 - Gérer clients & animaux
 - Échanger en **messagerie** avec le propriétaire
 - Voir l’**historique** (timeline : messages, événements, relevés)
-- Recevoir les **relevés cardiaques** validés (feature)
+- Recevoir les **relevés respiratoires** validés (feature)
 - Piloter agenda / RDV, équipe, paramètres cabinet
 - Éditer les **comptes rendus** (y compris versions IA)
 - Suivre les **commissions** liées aux activations clients
@@ -115,7 +115,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 
 | Domaine | Ce que fait VetPro |
 |---------|--------------------|
-| Cabinet | Onboarding profil, préférences email, mode messagerie indisponible, durées FC 15/30/60 s |
+| Cabinet | Onboarding profil, préférences email, mode messagerie indisponible, durées FR 15/30/60 s |
 | Clients | Liste, invitations / link-requests, dossiers animaux, photos, envoi lien app |
 | Messagerie | Threads client ↔ véto (+ médias), push côté client |
 | Timeline | Messages, événements, relevés validés |
@@ -132,7 +132,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 2. Onboarding profil cabinet complet  
 3. Création / rattachement clients & animaux  
 4. Prescription du suivi (lien app mobile / activation)  
-5. Messagerie + timeline au quotidien (relevés FC quand prescrits)  
+5. Messagerie + timeline au quotidien (relevés FR quand prescrits)  
 6. Agenda & CR (Web + terrain via VetLight mobile)
 
 ### Tarif VetPro
@@ -219,7 +219,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 - Messager avec son cabinet (+ push)
 - Rappels Care / Horse — **inclus** dès abonnement actif
 - Timeline historique
-- Relevé cardiaque au doigt (15/30/60 s) — **feature** dans l’app, durée prescrite par le cabinet
+- Relevé respiratoire au doigt (15/30/60 s) — **feature** dans l’app, durée prescrite par le cabinet
 
 ### Bénéfices (à pitcher)
 
@@ -246,7 +246,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 1. Register / Login / Google (+ consentement CGU)  
 2. Créer animal + choisir plan (steer triennial)  
 3. Paiement Stripe → entitlement actif  
-4. Premier usage : message / Care / (si prescrit) relevé cardiaque  
+4. Premier usage : message / Care / (si prescrit) relevé respiratoire  
 5. Relation continue avec le cabinet  
 
 ### Offre client (TTC)
@@ -257,7 +257,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Annuel | **35 € / an** (~2,9 €/mois) | Entrée |
 | **Triennal** | **95 € / 3 ans** (~2,6 €/mois) | **Recommandé** (−10 % vs 3× annuel) |
 
-**Inclus** dès animal payant : messagerie + push, timeline, Care/Horse, foyer, relevés cardiaques — **pas d’addons à vendre**.
+**Inclus** dès animal payant : messagerie + push, timeline, Care/Horse, foyer, relevés respiratoires — **pas d’addons à vendre**.
 
 ---
 
@@ -265,13 +265,13 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 | Besoin | VetPro (Web) | VetLight (mobile) | Client (mobile) |
 |--------|:------------:|:-----------------:|:---------------:|
-| Configurer le cabinet / durées FC | ✓ | | |
+| Configurer le cabinet / durées FR | ✓ | | |
 | Messagerie cabinet ↔ propriétaire | ✓ | | ✓ |
 | Care / Horse / foyer | ✓ (vue) | | ✓ |
 | Agenda terrain + GPS | ✓ (web) | ✓ | (booking optionnel) |
 | CR vocal + IA | ✓ (édition) | ✓ (dictée) | |
 | Suivre les relevés validés | ✓ | | (envoie) |
-| Relevé cardiaque au doigt | | | ✓ |
+| Relevé respiratoire au doigt | | | ✓ |
 | Payer le suivi animal | | | ✓ |
 | Commissions / business cabinet | ✓ | | |
 | Prix | Payant SaaS | Gratuit | Abo animal |
@@ -307,7 +307,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Objection | Réponse courte |
 |-----------|----------------|
 | « Encore un abonnement » | Prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €), tout dans l’app |
-| « C’est juste une app cardio ? » | **Non** — passeport digital : messagerie, Care/Horse, foyer, CR + partage care pro ; le FC est une feature |
+| « C’est juste une app cardio ? » | **Non** — passeport digital : messagerie, Care/Horse, foyer, CR + partage care pro ; la FR est une feature |
 | « Et Family / Care+ ? » | Inclus dès qu’un animal est payant |
 | « Je perds s’il y a un commercial » | Non — même plafond commission véto |
 | « On a déjà un logiciel / PMS » | Complementary — passeport Web + mobile (cabinet / care pro / foyer), pas un 2ᵉ PMS |
@@ -341,7 +341,7 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 8. VetLight mobile — pour qui / pourquoi  
 9. VetLight — CR & terrain  
 10. Client mobile — pour qui / pourquoi  
-11. Client — suivi prescrit (messages, Care, **et** relevé FC)  
+11. Client — suivi prescrit (messages, Care, **et** relevé FR)  
 12. Matrice « qui fait quoi »  
 13. Offre & prix (cabinet + client)  
 14. Parcours de valeur (prescribe → active → suit)  
@@ -386,7 +386,7 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 |-------|-----------|------|
 | Promesse = **continuité + passeport** cabinet / care pro / foyer | | |
 | Surfaces = **Web Pro + mobile ProLight + mobile Client** | | |
-| FC présenté comme **feature**, pas comme produit | | |
+| FR présenté comme **feature**, pas comme produit | | |
 | Pas de pitch centré « sans boîtier » | | |
 | Pas de promesse **messagerie entre care pro** (client ↔ care_pro OK) | | |
 | Steer **triennial 95 €** | | |

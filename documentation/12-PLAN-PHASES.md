@@ -6,7 +6,7 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 
 - Auth véto/client, onboarding cabinet
 - Clients / pets / timeline
-- Relevé cardiaque
+- Relevé respiratoire
 - Messagerie + indisponibilité
 - i18n FR / NL / EN (+ ES ensuite)
 

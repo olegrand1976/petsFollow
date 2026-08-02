@@ -9,7 +9,7 @@ Deux couches distinctes dans le dossier animal :
 | **Tension** | Client owner (premium) + practice staff (`pets.write_clinical`) + admin | `pets.blood_pressure_readings` | `blood_pressure` |
 | **Prise de sang** | Practice staff (`pets.write_clinical`) + admin — **pas** `care_pro` | `labs.panels` + `labs.panel_results` | `lab_panel` |
 
-Pas de workflow de validation type FC. Alerte seuil tension = hors V1.
+Pas de workflow de validation type FR. Alerte seuil tension = hors V1.
 
 ## Tension
 

@@ -134,7 +134,6 @@ function reportStatusOf(item: TimelineHistoryItem) {
 }
 
 function itemTitle(item: TimelineHistoryItem) {
-  if (item.title?.trim()) return item.title
   const type = item.type ?? ''
   const keyByType: Record<string, string> = {
     heartrate: 'clients.pet.timelineTypeHeartrate',
@@ -146,8 +145,10 @@ function itemTitle(item: TimelineHistoryItem) {
     visit: 'clients.pet.timelineTypeVisit',
     event: 'clients.pet.timelineTypeEvent',
   }
+  // Prefer i18n over API title (store still returns FR fallbacks for known types).
   const key = keyByType[type]
   if (key) return t(key)
+  if (item.title?.trim()) return item.title
   return type || t('clients.pet.timelineTypeEvent')
 }
 

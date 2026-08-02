@@ -1147,7 +1147,7 @@ abstract class AppLocalizations {
   /// No description provided for @heartRateShort.
   ///
   /// In fr, this message translates to:
-  /// **'Cœur'**
+  /// **'Respiration'**
   String get heartRateShort;
 
   /// No description provided for @weightShort.
@@ -1231,7 +1231,7 @@ abstract class AppLocalizations {
   /// No description provided for @howToMeasureIntro.
   ///
   /// In fr, this message translates to:
-  /// **'Mesurer la fréquence cardiaque de votre animal au repos.'**
+  /// **'Mesurer la fréquence respiratoire de votre animal au repos.'**
   String get howToMeasureIntro;
 
   /// No description provided for @howToMeasureStep1.
@@ -1243,7 +1243,7 @@ abstract class AppLocalizations {
   /// No description provided for @howToMeasureStep2.
   ///
   /// In fr, this message translates to:
-  /// **'2. Placez votre main sur le thorax et tapez à chaque battement pendant la durée indiquée.'**
+  /// **'2. Placez votre main sur le thorax et tapez à chaque respiration pendant la durée indiquée.'**
   String get howToMeasureStep2;
 
   /// No description provided for @howToMeasureStep3.
@@ -1261,7 +1261,7 @@ abstract class AppLocalizations {
   /// No description provided for @howToMeasureWhyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Le suivi régulier de la fréquence cardiaque permet de détecter des variations et d\'adapter le traitement avec votre vétérinaire.'**
+  /// **'Le suivi régulier de la fréquence respiratoire permet de détecter des variations et d\'adapter le traitement avec votre vétérinaire.'**
   String get howToMeasureWhyBody;
 
   /// No description provided for @reminders.
@@ -1273,7 +1273,7 @@ abstract class AppLocalizations {
   /// No description provided for @remindersHint.
   ///
   /// In fr, this message translates to:
-  /// **'Recevez un rappel quotidien pour effectuer un relevé cardiaque.'**
+  /// **'Recevez un rappel quotidien pour effectuer un relevé respiratoire.'**
   String get remindersHint;
 
   /// No description provided for @remindersEnabled.
@@ -1321,13 +1321,13 @@ abstract class AppLocalizations {
   /// No description provided for @legalTermsBody.
   ///
   /// In fr, this message translates to:
-  /// **'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux le suivi prescrit (messagerie, rappels Care/Horse, relevés cardiaques), de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi (paiement via Stripe). L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux le suivi prescrit (messagerie, rappels Care/Horse, relevés respiratoires), de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi (paiement via Stripe). L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d\'actualisation : juillet 2026'**
   String get legalTermsBody;
 
   /// No description provided for @legalPrivacyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google) et, côté app client (module expérimental), pour vulgariser les comptes rendus finalisés et proposer un triage d\'urgence conversationnel.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence respiratoire (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés respiratoires), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google) et, côté app client (module expérimental), pour vulgariser les comptes rendus finalisés et proposer un triage d\'urgence conversationnel.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
   String get legalPrivacyBody;
 
   /// No description provided for @legalNoticeBody.
@@ -1477,7 +1477,7 @@ abstract class AppLocalizations {
   /// No description provided for @heartRate.
   ///
   /// In fr, this message translates to:
-  /// **'Relevé cardiaque'**
+  /// **'Relevé respiratoire'**
   String get heartRate;
 
   /// No description provided for @history.
@@ -1795,13 +1795,13 @@ abstract class AppLocalizations {
   /// No description provided for @heartRateInstructions.
   ///
   /// In fr, this message translates to:
-  /// **'Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.'**
+  /// **'Tapotez à chaque respiration pendant la durée indiquée par votre vétérinaire.'**
   String get heartRateInstructions;
 
   /// No description provided for @heartRateInstructionsDuration.
   ///
   /// In fr, this message translates to:
-  /// **'Tapotez à chaque battement pendant {seconds} secondes.'**
+  /// **'Tapotez à chaque respiration pendant {seconds} secondes.'**
   String heartRateInstructionsDuration(int seconds);
 
   /// No description provided for @heartRateNoDurationConfigured.
@@ -1813,7 +1813,7 @@ abstract class AppLocalizations {
   /// No description provided for @heartRateNotSupported.
   ///
   /// In fr, this message translates to:
-  /// **'Le relevé cardiaque n’est pas disponible pour cette espèce'**
+  /// **'Le relevé respiratoire n’est pas disponible pour cette espèce'**
   String get heartRateNotSupported;
 
   /// No description provided for @start.
@@ -1831,13 +1831,13 @@ abstract class AppLocalizations {
   /// No description provided for @beatsCount.
   ///
   /// In fr, this message translates to:
-  /// **'{count} battements'**
+  /// **'{count} respirations'**
   String beatsCount(int count);
 
   /// No description provided for @tapHere.
   ///
   /// In fr, this message translates to:
-  /// **'Tapez ici à chaque battement'**
+  /// **'Tapez ici à chaque respiration'**
   String get tapHere;
 
   /// No description provided for @bpmLabel.
@@ -1849,7 +1849,7 @@ abstract class AppLocalizations {
   /// No description provided for @beatsLabel.
   ///
   /// In fr, this message translates to:
-  /// **'Battements: {count}'**
+  /// **'Respirations: {count}'**
   String beatsLabel(int count);
 
   /// No description provided for @thresholdAlert.
@@ -2035,7 +2035,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay0Body.
   ///
   /// In fr, this message translates to:
-  /// **'Créez le profil de votre animal et découvrez l\'app — messagerie, rappels et relevés (dont la fréquence cardiaque).'**
+  /// **'Créez le profil de votre animal et découvrez l\'app — messagerie, rappels et relevés (dont la fréquence respiratoire).'**
   String get discoveryDay0Body;
 
   /// No description provided for @discoveryDay2Title.
@@ -2047,7 +2047,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay2Body.
   ///
   /// In fr, this message translates to:
-  /// **'Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.'**
+  /// **'Effectuez votre premier relevé respiratoire et familiarisez-vous avec la technique.'**
   String get discoveryDay2Body;
 
   /// No description provided for @discoveryDay4Title.
@@ -2281,7 +2281,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationHrBody.
   ///
   /// In fr, this message translates to:
-  /// **'Il est temps de prendre un relevé cardiaque pour votre animal'**
+  /// **'Il est temps de prendre un relevé respiratoire pour votre animal'**
   String get notificationHrBody;
 
   /// No description provided for @reviewAskTitle.
@@ -2443,7 +2443,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationPrefHr.
   ///
   /// In fr, this message translates to:
-  /// **'Relevés cardiaques'**
+  /// **'Relevés respiratoires'**
   String get notificationPrefHr;
 
   /// No description provided for @notificationPrefCare.
@@ -2605,7 +2605,7 @@ abstract class AppLocalizations {
   /// No description provided for @timelineTypeHeartrate.
   ///
   /// In fr, this message translates to:
-  /// **'Fréquence cardiaque'**
+  /// **'Fréquence respiratoire'**
   String get timelineTypeHeartrate;
 
   /// No description provided for @timelineTypeWeight.

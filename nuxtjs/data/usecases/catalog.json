@@ -168,7 +168,7 @@
       "steps": [
         "Se connecter avec vet.onboarding@petsfollow.test.",
         "Constater l’écran de complétion de profil (pas le tableau de bord cabinet).",
-        "Remplir les champs demandés (infos cabinet, au moins une durée de relevé cardiaque si proposé).",
+        "Remplir les champs demandés (infos cabinet, au moins une durée de relevé respiratoire si proposé).",
         "Valider / terminer.",
         "Vérifier l’accès au tableau de bord."
       ],
@@ -393,12 +393,12 @@
       "id": "UC-CL-03",
       "folderId": "client",
       "slug": "UC-CL-03-releve-cardiaque",
-      "title": "Relevé cardiaque (côté client)",
+      "title": "Relevé respiratoire (côté client)",
       "duration": "~10 min",
       "priority": "Démo",
       "surface": "Flutter Client",
       "destructive": false,
-      "objective": "Démarrer un relevé cardiaque sur un animal, saisir les taps, puis valider (avec commentaire optionnel).",
+      "objective": "Démarrer un relevé respiratoire sur un animal, saisir les taps, puis valider (avec commentaire optionnel).",
       "actors": [
         {
           "role": "Client",
@@ -412,7 +412,7 @@
       ],
       "steps": [
         "Se connecter en client.demo.",
-        "Ouvrir un animal → lancer un relevé cardiaque.",
+        "Ouvrir un animal → lancer un relevé respiratoire.",
         "Effectuer les taps pendant le timer (15 / 30 / 60 s selon options).",
         "Valider le relevé.",
         "Ajouter un commentaire si proposé (ex. « repos »).",
@@ -424,7 +424,7 @@
         "Un relevé non validé ne doit pas être considéré comme envoyé au véto."
       ],
       "checklist": [
-        "Démarrage FC",
+        "Démarrage FR",
         "Validation",
         "Historique client"
       ]
@@ -456,7 +456,7 @@
         "Vérifier le snackbar de confirmation et la courbe / timeline."
       ],
       "expected": [
-        "Tension enregistrée immédiatement (pas de validation type FC).",
+        "Tension enregistrée immédiatement (pas de validation type FR).",
         "Visible dans l’historique client."
       ],
       "checklist": [
@@ -915,7 +915,7 @@
       "id": "UC-X-02",
       "folderId": "interactions",
       "slug": "UC-X-02-fc-client-vers-pro",
-      "title": "Relevé cardiaque client → VetPro",
+      "title": "Relevé respiratoire (FR) client → VetPro",
       "duration": "~12 min",
       "priority": "Démo",
       "surface": "Flutter Client → Web VetPro",
@@ -938,7 +938,7 @@
         "Enchaînement logique après UC-CL-03."
       ],
       "steps": [
-        "App — login client.demo → animal → relevé cardiaque → taps → valider + commentaire (ex. UC-X-02 repos).",
+        "App — login client.demo → animal → relevé respiratoire → taps → valider + commentaire (ex. UC-X-02 repos).",
         "Noter l’heure / BPM approximatif.",
         "Web — login vet.demo → Clients → même animal.",
         "Vérifier le relevé dans le tableau / chart / historique.",

@@ -562,7 +562,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get startMeasurement => 'EMPEZAR MEDICIÓN';
 
   @override
-  String get heartRateShort => 'Corazón';
+  String get heartRateShort => 'Respiración';
 
   @override
   String get weightShort => 'Peso';
@@ -609,7 +609,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get howToMeasureIntro =>
-      'Mida la frecuencia cardíaca en reposo de su mascota.';
+      'Mida la frecuencia respiratoria en reposo de su mascota.';
 
   @override
   String get howToMeasureStep1 =>
@@ -617,7 +617,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get howToMeasureStep2 =>
-      '2. Coloque la mano en el pecho y pulse en cada latido durante la duración indicada.';
+      '2. Coloque la mano en el pecho y pulse en cada respiración durante la duración indicada.';
 
   @override
   String get howToMeasureStep3 =>
@@ -628,14 +628,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get howToMeasureWhyBody =>
-      'El seguimiento regular de la frecuencia cardíaca ayuda a detectar cambios y ajustar el tratamiento con su veterinario.';
+      'El seguimiento regular de la frecuencia respiratoria ayuda a detectar cambios y ajustar el tratamiento con su veterinario.';
 
   @override
   String get reminders => 'Recordatorios';
 
   @override
   String get remindersHint =>
-      'Reciba un recordatorio diario para tomar una lectura de frecuencia cardíaca.';
+      'Reciba un recordatorio diario para tomar una lectura de frecuencia respiratoria.';
 
   @override
   String get remindersEnabled => 'Activar recordatorios';
@@ -660,11 +660,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Condiciones de uso — petsFollow\n\nLa app petsFollow permite a los propietarios el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas cardíacas), consultar el historial y comunicarse con su veterinario.\n\nLos servicios se prestan según la suscripción seleccionada (pagos vía Stripe).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nÚltima actualización: julio de 2026';
+      'Condiciones de uso — petsFollow\n\nLa app petsFollow permite a los propietarios el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas respiratorias), consultar el historial y comunicarse con su veterinario.\n\nLos servicios se prestan según la suscripción seleccionada (pagos vía Stripe).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nÚltima actualización: julio de 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, continuidad de cuidados (incluidas lecturas cardíacas), mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google) y, en la app cliente (módulo experimental), para explicar informes finalizados y ofrecer un triage conversacional de urgencia.\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@petsfollow.app.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
+      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia respiratoria (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, continuidad de cuidados (incluidas lecturas respiratorias), mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google) y, en la app cliente (módulo experimental), para explicar informes finalizados y ofrecer un triage conversacional de urgencia.\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@petsfollow.app.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
 
   @override
   String get legalNoticeBody =>
@@ -740,7 +740,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get manageSubscription => 'Gestionar suscripción';
 
   @override
-  String get heartRate => 'Lectura de frecuencia cardíaca';
+  String get heartRate => 'Lectura de frecuencia respiratoria';
 
   @override
   String get history => 'Historial';
@@ -922,11 +922,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Pulse en cada latido durante la duración fijada por su veterinario.';
+      'Pulse en cada respiración durante la duración fijada por su veterinario.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
-    return 'Pulse en cada latido durante $seconds segundos.';
+    return 'Pulse en cada respiración durante $seconds segundos.';
   }
 
   @override
@@ -935,7 +935,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get heartRateNotSupported =>
-      'La medición cardíaca no está disponible para esta especie';
+      'La medición de la frecuencia respiratoria no está disponible para esta especie';
 
   @override
   String get start => 'Empezar';
@@ -947,11 +947,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String beatsCount(int count) {
-    return '$count latidos';
+    return '$count respiraciones';
   }
 
   @override
-  String get tapHere => 'Pulse aquí en cada latido';
+  String get tapHere => 'Pulse aquí en cada respiración';
 
   @override
   String bpmLabel(String bpm) {
@@ -960,7 +960,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String beatsLabel(int count) {
-    return 'Latidos: $count';
+    return 'Respiraciones: $count';
   }
 
   @override
@@ -1058,14 +1058,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Cree el perfil de su mascota y descubra la app — mensajería, recordatorios y lecturas (incluida la frecuencia cardíaca).';
+      'Cree el perfil de su mascota y descubra la app — mensajería, recordatorios y lecturas (incluida la frecuencia respiratoria).';
 
   @override
   String get discoveryDay2Title => 'Paso 2 — Primera lectura';
 
   @override
   String get discoveryDay2Body =>
-      'Tome su primera lectura de frecuencia cardíaca y familiarícese con la técnica.';
+      'Tome su primera lectura de frecuencia respiratoria y familiarícese con la técnica.';
 
   @override
   String get discoveryDay4Title => 'Paso 3 — Rutina';
@@ -1192,7 +1192,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationHrBody =>
-      'Es el momento de una lectura de frecuencia cardíaca para su mascota';
+      'Es el momento de una lectura de frecuencia respiratoria para su mascota';
 
   @override
   String get reviewAskTitle => '¿Le gusta petsFollow?';
@@ -1283,7 +1283,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationPrefsSaved => 'Preferencias guardadas';
 
   @override
-  String get notificationPrefHr => 'Lecturas de frecuencia cardíaca';
+  String get notificationPrefHr => 'Lecturas de frecuencia respiratoria';
 
   @override
   String get notificationPrefCare => 'Recordatorios de cuidados';
@@ -1376,7 +1376,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get timelineTypeHeartrate => 'Frecuencia cardíaca';
+  String get timelineTypeHeartrate => 'Frecuencia respiratoria';
 
   @override
   String get timelineTypeWeight => 'Peso';

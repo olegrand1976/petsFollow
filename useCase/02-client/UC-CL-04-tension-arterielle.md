@@ -32,7 +32,7 @@ Saisir une tension artérielle (SYS/DIA) depuis la fiche animal et la voir dans 
 
 ## Résultat attendu
 
-- Tension enregistrée immédiatement (pas de validation type FC).
+- Tension enregistrée immédiatement (pas de validation type FR).
 - Visible dans l’historique client.
 
 ## Checklist

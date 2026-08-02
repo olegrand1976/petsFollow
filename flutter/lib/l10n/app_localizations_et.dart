@@ -561,7 +561,7 @@ class AppLocalizationsEt extends AppLocalizations {
   String get startMeasurement => 'ALUSTA MÕÕTMIST';
 
   @override
-  String get heartRateShort => 'Süda';
+  String get heartRateShort => 'Hingamine';
 
   @override
   String get weightShort => 'Kaal';
@@ -608,7 +608,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get howToMeasureIntro =>
-      'Mõõtke oma lemmiklooma puhkeoleku südame löögisagedust.';
+      'Mõõtke oma lemmiklooma puhkeoleku hingamissagedust.';
 
   @override
   String get howToMeasureStep1 =>
@@ -616,7 +616,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get howToMeasureStep2 =>
-      '2. Asetage käsi rinnale ja puudutage iga löögi peale näidatud kestuse jooksul.';
+      '2. Asetage käsi rinnale ja puudutage iga hingetõmbe peale näidatud kestuse jooksul.';
 
   @override
   String get howToMeasureStep3 =>
@@ -627,14 +627,14 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get howToMeasureWhyBody =>
-      'Regulaarne südame löögisageduse jälgimine aitab muutusi märgata ja ravi koos loomaarstiga kohandada.';
+      'Regulaarne hingamissageduse jälgimine aitab muutusi märgata ja ravi koos loomaarstiga kohandada.';
 
   @override
   String get reminders => 'Meeldetuletused';
 
   @override
   String get remindersHint =>
-      'Saage igapäevane meeldetuletus südame löögisageduse mõõtmiseks.';
+      'Saage igapäevane meeldetuletus hingamissageduse mõõtmiseks.';
 
   @override
   String get remindersEnabled => 'Luba meeldetuletused';
@@ -659,11 +659,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Kasutustingimused — petsFollow\n\nPetsFollowi rakendus võimaldab lemmikloomaomanikel ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised), ajaloo vaatamist ja suhtlust loomaarstiga.\n\nTeenuseid osutatakse valitud tellimuse alusel (maksed Stripe\'i kaudu). Kasutajad peavad rakendust kasutama ettenähtud otstarbel.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/terms\n\nViimati uuendatud: juuli 2026';
+      'Kasutustingimused — petsFollow\n\nPetsFollowi rakendus võimaldab lemmikloomaomanikel ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, hingamissageduse mõõtmised), ajaloo vaatamist ja suhtlust loomaarstiga.\n\nTeenuseid osutatakse valitud tellimuse alusel (maksed Stripe\'i kaudu). Kasutajad peavad rakendust kasutama ettenähtud otstarbel.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/terms\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita) ning kliendirakenduses (eksperimentaalne moodul) lõplikuks vormistatud aruannete selgitamiseks ja vestluspõhiseks erakorraliseks triaažiks.\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), hingamissageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh hingamissageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita) ning kliendirakenduses (eksperimentaalne moodul) lõplikuks vormistatud aruannete selgitamiseks ja vestluspõhiseks erakorraliseks triaažiks.\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -739,7 +739,7 @@ class AppLocalizationsEt extends AppLocalizations {
   String get manageSubscription => 'Halda tellimust';
 
   @override
-  String get heartRate => 'Südame löögisageduse näit';
+  String get heartRate => 'Hingamissageduse näit';
 
   @override
   String get history => 'Ajalugu';
@@ -921,11 +921,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Puudutage iga löögi peale teie loomaarsti määratud kestuse jooksul.';
+      'Puudutage iga hingetõmbe peale teie loomaarsti määratud kestuse jooksul.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
-    return 'Puudutage iga löögi peale $seconds sekundi jooksul.';
+    return 'Puudutage iga hingetõmbe peale $seconds sekundi jooksul.';
   }
 
   @override
@@ -934,7 +934,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get heartRateNotSupported =>
-      'Südame löögisageduse mõõtmine ei ole selle liigi jaoks saadaval';
+      'Hingamissageduse mõõtmine ei ole selle liigi jaoks saadaval';
 
   @override
   String get start => 'Alusta';
@@ -946,11 +946,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String beatsCount(int count) {
-    return '$count lööki';
+    return '$count hingetõmmet';
   }
 
   @override
-  String get tapHere => 'Puudutage siin iga löögi peale';
+  String get tapHere => 'Puudutage siin iga hingetõmbe peale';
 
   @override
   String bpmLabel(String bpm) {
@@ -959,7 +959,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String beatsLabel(int count) {
-    return 'Lööke: $count';
+    return 'Hingetõmbeid: $count';
   }
 
   @override
@@ -1057,14 +1057,14 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh südame löögisagedus).';
+      'Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh hingamissagedus).';
 
   @override
   String get discoveryDay2Title => 'Samm 2 — Esimene näit';
 
   @override
   String get discoveryDay2Body =>
-      'Tehke esimene südame löögisageduse mõõtmine ja harjuge tehnikaga.';
+      'Tehke esimene hingamissageduse mõõtmine ja harjuge tehnikaga.';
 
   @override
   String get discoveryDay4Title => 'Samm 3 — Rutiin';
@@ -1190,7 +1190,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get notificationHrBody =>
-      'Aeg teie lemmiklooma südame löögisagedust mõõta';
+      'Aeg teie lemmiklooma hingamissagedust mõõta';
 
   @override
   String get reviewAskTitle => 'Meeldib petsFollow?';
@@ -1280,7 +1280,7 @@ class AppLocalizationsEt extends AppLocalizations {
   String get notificationPrefsSaved => 'Eelistused salvestatud';
 
   @override
-  String get notificationPrefHr => 'Südame löögisageduse näidud';
+  String get notificationPrefHr => 'Hingamissageduse näidud';
 
   @override
   String get notificationPrefCare => 'Hoolduse meeldetuletused';
@@ -1373,7 +1373,7 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
-  String get timelineTypeHeartrate => 'Südame löögisagedus';
+  String get timelineTypeHeartrate => 'Hingamissagedus';
 
   @override
   String get timelineTypeWeight => 'Kaal';

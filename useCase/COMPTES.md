@@ -34,6 +34,7 @@ Environnement : **staging** (ou seed local).
 | DEV support IT | `dev.demo@petsfollow.test` | Web Admin (ops) | AD-02 |
 | Client riche | `client.demo@petsfollow.test` | Flutter Client | CL-01/03, X-01…03, X-06 (Spirit seed), X-08 |
 | Client vide | `client.vide@petsfollow.test` | Flutter Client | **CL-02 uniquement** (**Destructif**) |
+| Client nouveau | `client.nouveau@petsfollow.test` | Flutter Client | Lyon — Buddy · pending `/requests` VetPlus |
 
 > **Ne pas** réutiliser `client.vide` pour le lien cabinet (`UC-X-04`) : utiliser un **email jetable** (voir X-04).
 
@@ -59,6 +60,7 @@ Visibles / filtrables sur `/clients` (VetPro) et éditables sur la fiche Identit
 | Paul (`client.paul@`) | `0470 00 00 04` |
 | Julie (`client.julie@`) | `0470 00 00 05` |
 | Thomas (`client.thomas@`) | `0470 00 00 06` |
+| Nina (`client.nouveau@`) | `0470 00 00 07` |
 
 ## Autres comptes seed (hors UC V1)
 
@@ -69,7 +71,7 @@ Disponibles pour tests ad hoc — détail dans [`AGENTS.md`](../AGENTS.md) :
 | `vet.parc@` · `vet.lyon@` | Autres cabinets |
 | `vet.unverified@` · `vet.reset@` | Auth confirm / reset MDP |
 | `commercial.demo2@` (Alex) | 2ᵉ commercial / Parc |
-| `client.marie@` (NL) · `client.paul@` · `client.julie@` · `client.thomas@` | Multi-cabinet / i18n |
+| `client.nouveau@` (Lyon / Buddy, pending VetPlus) · `client.marie@` (NL, pending VetPlus) · `client.paul@` · `client.julie@` · `client.thomas@` | Multi-cabinet / i18n /requests |
 
 ## Tokens démo (Web)
 

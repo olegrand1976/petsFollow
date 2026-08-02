@@ -361,7 +361,7 @@
       "it": "Italiano"
     },
     "heartrate": {
-      "title": "Hartslagmeting",
+      "title": "Ademhalingsmeting",
       "subtitle": "Meetduur aangeboden aan uw klanten.",
       "duration15": "15 seconden",
       "duration30": "30 seconden",
@@ -386,7 +386,7 @@
       "title": "E-mailmeldingen",
       "subtitle": "Kies bij welke gebeurtenissen u een e-mail ontvangt.",
       "onMessage": "Nieuw klantbericht",
-      "onHeartrate": "Gevalideerde hartslagmeting",
+      "onHeartrate": "Gevalideerde ademhalingsmeting",
       "saved": "Voorkeuren opgeslagen.",
       "onVisitRequest": "Nieuwe afspraakaanvraag"
     },
@@ -603,7 +603,7 @@
       "kpi": {
         "pets": "Dieren",
         "unreadHeartrate": "Ongelezen metingen",
-        "alertSessions7d": "HF-alerten (7 d)",
+        "alertSessions7d": "AF-alerten (7 d)",
         "overdueCare": "Achterstallige zorg",
         "pendingVisits": "Openstaande afspraken",
         "shares": "Delingen",
@@ -623,8 +623,8 @@
         "sharing": "Delen"
       },
       "kpi": {
-        "lastBpm": "Laatste HF",
-        "alerts": "HF-alerten (7 d)",
+        "lastBpm": "Laatste AF",
+        "alerts": "AF-alerten (7 d)",
         "lastWeight": "Laatste gewicht",
         "lastBp": "Laatste bloeddruk",
         "overdueCare": "Achterstallige zorg",
@@ -654,7 +654,7 @@
       "dafDispensesTitle": "DAF-uitgiftes",
       "dafDispensesEmpty": "Geen DAF-uitgiftes geregistreerd voor dit dier.",
       "timelineRecentTitle": "Recente gebeurtenissen",
-      "timelineTypeHeartrate": "Hartslagmeting",
+      "timelineTypeHeartrate": "Ademhalingsmeting",
       "timelineTypeWeight": "Gewicht",
       "timelineTypeBloodPressure": "Bloeddruk",
       "timelineTypeLabPanel": "Labpanel",
@@ -665,12 +665,12 @@
       "chartsToggle": "Meetcurves",
       "chartsPreviewHint": "Overzicht van de laatste metingen. Gedetailleerde curves staan onder Metingen.",
       "chartsOpenVitals": "Curves bekijken",
-      "chartsTypeHeartrate": "Hartslag",
+      "chartsTypeHeartrate": "Ademhalingsfrequentie",
       "chartsTypeWeight": "Gewicht",
       "chartsTypeBp": "Bloeddruk",
       "chartsTypeLabs": "Labpanels",
       "timelineDayCount": "{n} gebeurtenis(sen)",
-      "heartrateTitle": "Gevalideerde hartslagmetingen",
+      "heartrateTitle": "Gevalideerde ademhalingsmetingen",
       "heartrateEmptyTitle": "Geen gevalideerde metingen",
       "heartrateEmptyDescription": "Gevalideerde BPM-sessies verschijnen hier.",
       "columnDate": "Datum",
@@ -920,10 +920,13 @@
     "columnBirthDate": "Geboortedatum",
     "columnLastVisit": "Laatste bezoek",
     "columnReadingType": "Type meting",
-    "columnLastHeartRate": "Laatste HF",
+    "columnLastHeartRate": "Laatste AF",
     "columnOwner": "Cliënt",
     "readingType": {
-      "heartrate": "HF"
+      "heartrate": "AF"
+    },
+    "readingTypeFull": {
+      "heartrate": "Ademhalingsfrequentie"
     },
     "unreadBadge": "Ongelezen meting",
     "unreadCount": "{n} ongelezen metingen"
@@ -1187,7 +1190,7 @@
     "viewRequests": "Aanvragen bekijken",
     "messaging": "Berichten",
     "about": "Over",
-    "aboutText": "petsFollow Pro centraliseert zorgcontinuïteit: cliëntdossiers, beveiligde berichten, hartslagmetingen en veldopvolging voor uw dierenartspraktijk.",
+    "aboutText": "petsFollow Pro centraliseert zorgcontinuïteit: cliëntdossiers, beveiligde berichten, ademhalingsmetingen en veldopvolging voor uw dierenartspraktijk.",
     "viewCalendar": "Agenda bekijken",
     "aiModule": {
       "title": "AI visit reports",
@@ -2082,7 +2085,7 @@
       "options": {
         "label": "Opties",
         "title": "Monitoringsopties",
-        "text": "Website (optioneel) en hartslagduur die u aan klanten voorstelt."
+        "text": "Website (optioneel) en ademhalingsduur die u aan klanten voorstelt."
       }
     }
   },
@@ -2275,7 +2278,7 @@
       }
     },
     "autofinanceTip": "≈ 8 driejarige cliëntactivaties / maand ≈ dekt het maandelijkse Pro-equivalent (≈ 69,56 € excl. btw).",
-    "clientIncludedLine": "Inbegrepen bij elk plan: paspoort, berichten + push, HR 15/30/60 s, Care/Horse, huishouden, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Inbegrepen bij elk plan: paspoort, berichten + push, AF 15/30/60 s, Care/Horse, huishouden, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
@@ -2322,7 +2325,7 @@
       "Begeleide hartmetingen 15 / 30 / 60 s",
       "Care / Horse / huishouden inbegrepen zodra het dier betaalt"
     ],
-    "includedLine": "Inbegrepen ongeacht het plan: paspoort, berichten + push, HR-metingen, Care/Horse-herinneringen, huishouden, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Inbegrepen ongeacht het plan: paspoort, berichten + push, AF-metingen, Care/Horse-herinneringen, huishouden, FR/NL/EN/ES/ET/IT.",
     "economyTitle": "Zelffinanciering & verbintenissen",
     "partnerLead": "Commissies op cliëntactivaties compenseren het Pro-abonnement (offline verrekening).",
     "partnerSteps": [
@@ -2503,12 +2506,12 @@
     "terms": {
       "title": "Gebruiksvoorwaarden",
       "link": "Voorwaarden",
-      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, hartslagmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}petsfollow.app."
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, ademhalingsmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}petsfollow.app."
+      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), ademhalingsmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
@@ -2818,7 +2821,7 @@
       "vetGrid": "Dierenarts: 7% → 12% excl. btw volgens volume betalende cliënten, met planfactor (maandelijks / jaarlijks / triennial).",
       "addons": "Geen addons — commissie enkel op plannen (8% maandelijks / 8% jaarlijks / 12% triennial).",
       "webFeatures": [
-        "Operationeel dashboard cliënten / berichten / HR",
+        "Operationeel dashboard cliënten / berichten / AF",
         "Patiëntdossier en messaging",
         "Opvolging dierenartscommissies",
         "Praktijk-onboarding en instellingen"
@@ -3590,8 +3593,8 @@
       },
       "heartrate": {
         "validate": {
-          "label": "HF valideren",
-          "tip": "Hartslagmetingen valideren."
+          "label": "AF valideren",
+          "tip": "Ademhalingsmetingen valideren."
         }
       },
       "messaging": {
@@ -3840,7 +3843,7 @@
     "errorTitle": "Dossier niet gevonden",
     "marketingTitle": "Word lid van petsFollow",
     "marketingText": "Centraliseer opvolging, berichten en zorg samen met de eigenaars.",
-    "benefitFollow": "Hartslagmeting en gedeelde tijdlijn",
+    "benefitFollow": "Ademhalingsmeting en gedeelde tijdlijn",
     "benefitMessages": "Veilige berichten met klanten",
     "benefitContinuity": "Continuïteit van zorg tussen professionals",
     "registerCta": "Pro-account aanmaken",
@@ -3861,7 +3864,7 @@
     "errorTitle": "Consultatie niet gevonden",
     "marketingTitle": "Word lid van petsFollow",
     "marketingText": "Centraliseer opvolging, berichten en zorg samen met de eigenaars.",
-    "benefitFollow": "Hartslagmeting en gedeelde tijdlijn",
+    "benefitFollow": "Ademhalingsmeting en gedeelde tijdlijn",
     "benefitMessages": "Veilige berichten met klanten",
     "benefitContinuity": "Continuïteit van zorg tussen professionals",
     "registerCta": "Pro-account aanmaken",
@@ -4070,7 +4073,7 @@
       "lab_flag": "Lab flags",
       "care_preventive": "Preventive care",
       "antibiotic_daf": "Antibiotic DAF",
-      "hr_alert": "HR alert"
+      "hr_alert": "AF-alert"
     },
     "settings": {
       "title": "petsFollow Research",
@@ -4201,7 +4204,7 @@
       },
       "hr_vitals": {
         "title": "Hartmetingen",
-        "desc": "HR-metingen bij de eigenaar; validatie bij de dierenarts."
+        "desc": "AF-metingen bij de eigenaar; validatie bij de dierenarts."
       },
       "link_requests": {
         "title": "Koppelverzoeken",
@@ -4268,12 +4271,12 @@
       "vet_register": "Registratie + e-mailbevestiging",
       "vet_onboarding": "Onboarding praktijkprofiel",
       "vet_dashboard": "Dashboard klanten & verzoeken",
-      "vet_care": "Berichten, HR, dossier delen",
+      "vet_care": "Berichten, AF, dossier delen",
       "vet_earn": "Commissies & praktijkmodules",
       "client_register": "Register / login (e-mail of Google)",
       "client_pet": "Dier aanmaken + plan kiezen",
       "client_pay": "Stripe Checkout",
-      "client_active": "Actieve entitlement → HR, berichten, Care/Horse",
+      "client_active": "Actieve entitlement → AF, berichten, Care/Horse",
       "client_engage": "In-app discovery + educatieve e-mails",
       "care_login": "Login care_pro (Pro Light)",
       "care_agenda": "Agenda / dagrondte",
@@ -4315,7 +4318,7 @@
       },
       "hr_client_vet": {
         "label": "Meting → validatie",
-        "desc": "Eigenaar stuurt HR; dierenarts ziet en valideert."
+        "desc": "Eigenaar stuurt AF; dierenarts ziet en valideert."
       },
       "pay_client_commissions": {
         "label": "Betaling → salescommissie",

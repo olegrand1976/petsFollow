@@ -6,7 +6,7 @@ Login email/MDP, register + confirm email, forgot/reset, refresh JWT, Google OAu
 
 ## Practice (véto)
 
-Profil cabinet (onboarding), durées FC, préférences email, disponibilité messagerie, overview dashboard, care overdue.
+Profil cabinet (onboarding), durées FR, préférences email, disponibilité messagerie, overview dashboard, care overdue.
 
 **Calendrier RDV** : plages horaires + vacances (`/vet/schedule`, `/vet/vacations`), agenda Pro `/calendar`, booking client optionnel (`client_booking_enabled`), replanification bilatérale, e-mail alerte demande, **pré-consultation** client à la confirmation ([31](31-PRECONSULTATION.md)).
 
@@ -14,7 +14,7 @@ Profil cabinet (onboarding), durées FC, préférences email, disponibilité mes
 
 Liste clients Pro (invitations link-requests dans l’en-tête), dossier animal, photo, timeline, primary practice, envoi lien app.
 
-## Relevé cardiaque
+## Relevé respiratoire
 
 Sessions 15/30/60 s (config cabinet) — détail [09-RELEVE-CARDIAQUE.md](09-RELEVE-CARDIAQUE.md).
 

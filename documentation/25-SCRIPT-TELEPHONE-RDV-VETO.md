@@ -137,7 +137,7 @@ Durée totale cible après le « oui » au RDV : **&lt; 30 s**.
 |-----------|----------------|--------|
 | « Envoyez-moi un e-mail » | « Je vous l’envoie — et pour que ce soit utile, on fixe 20 min pour le regarder ensemble. Mardi midi ou jeudi 18h30 ? » | RDV ou date de rappel |
 | « Pas le budget » | « Le setup et le SaaS Pro incluent déjà le CR IA — vos clients paient le suivi animal (≤ 3,5 €/mois) et les commissions peuvent compenser l’abonnement. Justement l’intérêt du RDV : voir le modèle et le ROI en 20 min. » | → Close créneau |
-| « On a déjà une app / un logiciel » | « Souvent complementary — petsFollow ajoute Web Pro + apps mobiles (messages, Care, relevés FC). 20 min suffisent pour voir la différence. » | → Close créneau |
+| « On a déjà une app / un logiciel » | « Souvent complementary — petsFollow ajoute Web Pro + apps mobiles (messages, Care, relevés FR). 20 min suffisent pour voir la différence. » | → Close créneau |
 | « Je dois en parler à mon associé » | « Bien sûr. On peut faire le RDV à deux, ou je vous envoie le créneau et vous invitez [associé]. Mardi ou jeudi ? » | RDV avec les décideurs |
 | « Ce n’est pas le moment » | « Compris. Je vous rappelle en [mois] — je note [date]. Entre-temps je laisse juste un lien de 1 page, OK ? » | Rappel planifié (CRM) |
 | « Combien ça coûte pour le client ? » | « Moins de 3 €/mois selon le plan — le détail, on le voit en 2 minutes en démo. » | → Close créneau (pas de grille complète) |

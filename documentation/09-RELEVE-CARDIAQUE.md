@@ -1,4 +1,7 @@
-# Relevé cardiaque
+# Relevé respiratoire (FR)
+
+> Nom technique historique inchangé : schéma/API `heartrate.*` (sessions, BPM). Vocabulaire produit = **fréquence respiratoire**.
+
 
 ## Principe
 
@@ -7,7 +10,7 @@ La durée du relevé (**15 / 30 / 60 s**) est **définie par le vétérinaire** 
 ## Flux client (Flutter)
 
 1. **Prêt** — durée(s) proposées = `pet.heartrateDurationsSec` (cabinet) ; défaut UI = **plus longue** durée activée
-2. **En cours** — timer = durée choisie, tap à chaque battement
+2. **En cours** — timer = durée choisie, tap à chaque respiration
 3. **Résultat** — BPM + alerte seuil + **commentaire optionnel** (max 500 car.)
 4. **Valider et envoyer au véto** ou **Recommencer**
 
@@ -38,8 +41,8 @@ Seuls les relevés **validated** sont visibles du véto.
 
 ### Espèces
 
-- **dog / cat / horse** : relevé FC autorisé.
-- **other** : pas de contrôle FC (UI masquée ; `POST …/heartrate/sessions` → `403` `heartrate_not_supported`). Le poids reste autorisé.
+- **dog / cat / horse** : relevé FR autorisé.
+- **other** : pas de contrôle FR (UI masquée ; `POST …/heartrate/sessions` → `403` `heartrate_not_supported`). Le poids reste autorisé.
 
 ### Alerte seuil (hausse vs précédent)
 

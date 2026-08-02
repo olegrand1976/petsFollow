@@ -16,7 +16,7 @@ export type VetPetsListFilters = {
   unreadOnly?: boolean
 }
 
-/** Reading type for the practice pets list (FC only today). */
+/** Reading type for the practice pets list (FR / respiratory; technical key heartrate). */
 export function petReadingType(pet: Pick<VetPetListRow, 'lastHeartRateAt' | 'unreadHeartrateCount'>): VetPetReadingType | null {
   if (pet.lastHeartRateAt || (pet.unreadHeartrateCount ?? 0) > 0) return 'heartrate'
   return null

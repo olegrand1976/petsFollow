@@ -282,6 +282,22 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
   await expect(page.getByTestId('pet-shares-card')).toBeVisible({ timeout: 15000 })
 })
 
+test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { petId } = await demoClientAndPet()
+  await seedHeartRateComment(petId)
+
+  await loginAsVet(page)
+  await page.goto('/pets', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
+  const row = page.getByTestId(`pet-row-${petId}`)
+  await expect(row).toBeVisible({ timeout: 15000 })
+  const readingType = row.getByTestId('pet-reading-type')
+  await expect(readingType).toHaveText('FR')
+  await expect(readingType).toHaveAttribute('title', 'Fréquence respiratoire')
+  await expect(readingType).toHaveAttribute('aria-label', 'Fréquence respiratoire')
+})
+
 test('pet detail — suivi poids chart + tableau', async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()

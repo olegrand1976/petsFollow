@@ -560,7 +560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startMeasurement => 'START MEASUREMENT';
 
   @override
-  String get heartRateShort => 'Heart';
+  String get heartRateShort => 'Breathing';
 
   @override
   String get weightShort => 'Weight';
@@ -606,7 +606,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get howToMeasure => 'How to measure?';
 
   @override
-  String get howToMeasureIntro => 'Measure your pet\'s resting heart rate.';
+  String get howToMeasureIntro =>
+      'Measure your pet\'s resting respiratory rate.';
 
   @override
   String get howToMeasureStep1 =>
@@ -614,7 +615,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howToMeasureStep2 =>
-      '2. Place your hand on the chest and tap on each beat for the indicated duration.';
+      '2. Place your hand on the chest and tap on each breath for the indicated duration.';
 
   @override
   String get howToMeasureStep3 =>
@@ -625,14 +626,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howToMeasureWhyBody =>
-      'Regular heart rate monitoring helps detect changes and adjust treatment with your vet.';
+      'Regular respiratory rate monitoring helps detect changes and adjust treatment with your vet.';
 
   @override
   String get reminders => 'Reminders';
 
   @override
   String get remindersHint =>
-      'Receive a daily reminder to take a heart rate reading.';
+      'Receive a daily reminder to take a respiratory rate reading.';
 
   @override
   String get remindersEnabled => 'Enable reminders';
@@ -657,11 +658,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Terms of use — petsFollow\n\nThe petsFollow app lets pet owners follow prescribed care (messaging, Care/Horse reminders, heart-rate readings), view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription (payments via Stripe). Users must use the app as intended.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/terms\n\nLast updated: July 2026';
+      'Terms of use — petsFollow\n\nThe petsFollow app lets pet owners follow prescribed care (messaging, Care/Horse reminders, respiratory rate readings), view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription (payments via Stripe). Users must use the app as intended.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/terms\n\nLast updated: July 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, care continuity (including heart-rate readings), vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google) and, on the client app (experimental module), to explain finalized visit reports and provide conversational emergency triage.\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@petsfollow.app.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
+      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), respiratory rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, care continuity (including respiratory rate readings), vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google) and, on the client app (experimental module), to explain finalized visit reports and provide conversational emergency triage.\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@petsfollow.app.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
 
   @override
   String get legalNoticeBody =>
@@ -737,7 +738,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageSubscription => 'Manage subscription';
 
   @override
-  String get heartRate => 'Heart rate reading';
+  String get heartRate => 'Respiratory rate reading';
 
   @override
   String get history => 'History';
@@ -918,11 +919,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Tap on each beat for the duration set by your veterinarian.';
+      'Tap on each breath for the duration set by your veterinarian.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
-    return 'Tap on each beat for $seconds seconds.';
+    return 'Tap on each breath for $seconds seconds.';
   }
 
   @override
@@ -931,7 +932,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heartRateNotSupported =>
-      'Heart rate measurement is not available for this species';
+      'Respiratory rate measurement is not available for this species';
 
   @override
   String get start => 'Start';
@@ -943,11 +944,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String beatsCount(int count) {
-    return '$count beats';
+    return '$count breaths';
   }
 
   @override
-  String get tapHere => 'Tap here on each beat';
+  String get tapHere => 'Tap here on each breath';
 
   @override
   String bpmLabel(String bpm) {
@@ -956,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String beatsLabel(int count) {
-    return 'Beats: $count';
+    return 'Breaths: $count';
   }
 
   @override
@@ -1052,14 +1053,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Create your pet\'s profile and explore the app — messaging, reminders and readings (including heart rate).';
+      'Create your pet\'s profile and explore the app — messaging, reminders and readings (including respiratory rate).';
 
   @override
   String get discoveryDay2Title => 'Step 2 — First reading';
 
   @override
   String get discoveryDay2Body =>
-      'Take your first heart rate reading and get comfortable with the technique.';
+      'Take your first respiratory rate reading and get comfortable with the technique.';
 
   @override
   String get discoveryDay4Title => 'Step 3 — Routine';
@@ -1184,7 +1185,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationHrTitle => 'petsFollow';
 
   @override
-  String get notificationHrBody => 'Time for a heart rate reading for your pet';
+  String get notificationHrBody =>
+      'Time for a respiratory rate reading for your pet';
 
   @override
   String get reviewAskTitle => 'Enjoying petsFollow?';
@@ -1271,7 +1273,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationPrefsSaved => 'Preferences saved';
 
   @override
-  String get notificationPrefHr => 'Heart rate readings';
+  String get notificationPrefHr => 'Respiratory rate readings';
 
   @override
   String get notificationPrefCare => 'Care reminders';
@@ -1364,7 +1366,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get timelineTypeHeartrate => 'Heart rate';
+  String get timelineTypeHeartrate => 'Respiratory rate';
 
   @override
   String get timelineTypeWeight => 'Weight';

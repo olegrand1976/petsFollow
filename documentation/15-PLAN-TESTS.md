@@ -87,13 +87,13 @@ Parcours minimum avant toute dist / staging.
 | ID | Surface | Étapes | Attendu |
 |----|---------|--------|---------|
 | A1 | Web | Login `vet.demo` → `/dashboard` | KPI + shell Pro visibles |
-| A2 | Web | `/clients` → ouvrir un client → dossier pet | Fiche + timeline / FC / care |
+| A2 | Web | `/clients` → ouvrir un client → dossier pet | Fiche + timeline / FR / care |
 | A3 | Web | `/messages` | Liste threads ; ouvrir un thread |
 | A4 | Web | `/calendar` | Agenda charge ; visite seed visible |
 | A5 | Web | Logout → login `admin.demo` → `/admin` | Métriques admin |
 | A5b | Web | Logout → login `dev.demo` → `/admin` | Shell ops léger (users/support/flags) ; pas billing |
 | A6 | Flutter | Login `client.demo` | Shell 5 tabs (Home / Pets / Care / Messages / Settings) |
-| A7 | Flutter | Ouvrir un pet → démarrer FC (sans valider) | Timer + taps OK |
+| A7 | Flutter | Ouvrir un pet → démarrer FR (sans valider) | Timer + taps OK |
 | A8 | Flutter | Messagerie : ouvrir un thread | Historique messages |
 | A9 | Flutter | Login `farrier.demo` | Shell pro light (Agenda / Clients / …) |
 | A10 | Croisé | Véto envoie message → client rafraîchit Messages | Message visible côté Flutter |
@@ -154,11 +154,11 @@ Compte : `vet.demo@petsfollow.test`
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
 | C1.1 | P0 | Onboarding incomplet | Login `vet.onboarding` | Redirect `/onboarding` ; pas de dashboard métier |
-| C1.2 | P1 | Compléter onboarding | Remplir profil + durées FC (≥1) | Accès `/dashboard` |
-| C1.3 | P1 | Durées FC settings | Settings → 15/30/60 | Persist ; au moins une durée |
+| C1.2 | P1 | Compléter onboarding | Remplir profil + durées FR (≥1) | Accès `/dashboard` |
+| C1.3 | P1 | Durées FR settings | Settings → 15/30/60 | Persist ; au moins une durée |
 | C1.4 | P1 | Dispo messagerie | Unavailable ON | Client voit indisponible (voir F3) |
 | C1.5 | P1 | Plages / vacances | Schedule + vacations | Calendrier respecte indispos |
-| C1.6 | P2 | Prefs email véto | Notifs message / FC / visit | Toggle persist |
+| C1.6 | P2 | Prefs email véto | Notifs message / FR / visit | Toggle persist |
 | C1.7 | P2 | Client booking | Activer/désactiver booking client | Flutter BookVisit reflète l’état |
 
 ### Digest produit quotidien (interne)
@@ -174,9 +174,9 @@ Compte : `vet.demo@petsfollow.test`
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
 | C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) |
-| C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
+| C2.4 | P0 | Dossier pet | Chart FR, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
 | C2.4b | P1 | Tension & labos | Onglet vitals : saisir tension Pro (site/commentaire) ; créer/éditer panel labo (`valueNum`/`valueText`) ; timeline `blood_pressure` / `lab_panel` ; client Flutter sheet tension + lecture panels | Go `TestBloodPressure*` / `TestLabPanel*` ; Flutter `pet_quick_actions_test` + `lab_panels_screen_test` ; Playwright `09-pet-detail` `@p1` ; `make smoke` BP/labs |
-| C2.5 | P1 | Liste pets | `/pets` (+ `?unread=1` depuis KPI dashboard) | Animaux transverses ; filtre **Non lus** ; badge relevé non lu ; colonne **Type de relevé** (FC) ; Vitest `vet-pets-list.spec.ts` |
+| C2.5 | P1 | Liste pets | `/pets` (+ `?unread=1` depuis KPI dashboard) | Animaux transverses ; filtre **Non lus** ; badge relevé non lu ; colonne **Type de relevé** (FR) ; Vitest `vet-pets-list.spec.ts` |
 | C2.6 | P1 | Créer / rattacher client | Nouveau client (prénom/nom/email/tél/adresse/NISS, **sans** MDP temporaire) → lien cabinet + invite app ; client existant → link | 409 enrichi + link OK ; identité visible get/patch ; create sans password OK (`TestClientIdentityCreateWithoutPasswordAndPatch`) ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
@@ -220,7 +220,7 @@ Compte : `vet.demo@petsfollow.test`
 | C4.5 | P1 | Read / read-all | Marquer lu | Compteurs à jour |
 | C4.6 | P2 | Depuis dossier pet | CTA messagerie | Même thread |
 
-### C5 — Relevés FC (côté Pro)
+### C5 — Relevés FR (côté Pro)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
@@ -360,18 +360,18 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F1.13 | P2 | Pets shared | Grant reçu | Label permission ; read-only si read |
 | F1.14 | P1 | Sans liaison véto | Client libre crée pet | 201 + dialog « Lier un vétérinaire » ; badge détail |
 
-### F2 — Relevé cardiaque
+### F2 — Relevé respiratoire
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| F2.1 | P0 | Durées cabinet | Ouvrir FC | Durées = cabinet ; défaut = plus longue |
+| F2.1 | P0 | Durées cabinet | Ouvrir FR | Durées = cabinet ; défaut = plus longue |
 | F2.2 | P0 | Session complète | Taps → résultat BPM | Calcul `(taps×60)/durée` |
 | F2.3 | P0 | Valider + comment | Commentaire ≤500 → validate | Visible Pro (C5) |
 | F2.4 | P1 | Recommencer | Cancel / restart | Pas de session fantôme côté véto |
 | F2.5 | P1 | Alerte hausse BPM | Hausse ≥ delta espèce (seed 30) vs dernier validé | `isAlert` + email véto ; 1er relevé sans alerte |
-| F2.5b | P1 | Espèce `other` | Pet other | CTA FC masqué ; start API `heartrate_not_supported` |
+| F2.5b | P1 | Espèce `other` | Pet other | CTA FR masqué ; start API `heartrate_not_supported` |
 | F2.6 | P1 | How-to measure | Settings / éducation | Contenu |
-| F2.7 | P1 | Premium gate | Pet sans entitlement | FC bloquée / CTA paywall |
+| F2.7 | P1 | Premium gate | Pet sans entitlement | FR bloquée / CTA paywall |
 | F2.8 | P2 | Commentaire max | >500 car. | Truncate / erreur validation |
 
 ### F3 — Messagerie client
@@ -414,8 +414,8 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| F6.1 | P1 | Timeline pet | Après FC + message + care | Entrées chronologiques |
-| F6.2 | P1 | Commentaire FC | Entrée session | Corps contient comment |
+| F6.1 | P1 | Timeline pet | Après FR + message + care | Entrées chronologiques |
+| F6.2 | P1 | Commentaire FR | Entrée session | Corps contient comment |
 | F6.3 | P2 | ACL notes | Sans write_notes | Notes visite masquées |
 | F6.4 | P2 | ACL messages | Sans full | Messages absents timeline |
 
@@ -452,14 +452,14 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | ID | Pri | Flux | Acteurs | Vérifications |
 |----|-----|------|---------|---------------|
 | H1 | P0 | Message véto → client | vet.demo ↔ client.demo | Texte Pro → Flutter ; inverse ; push si FCM |
-| H2 | P0 | FC validate → Pro | client → vet | Pending invisible ; validated + comment + chart + timeline |
+| H2 | P0 | FR validate → Pro | client → vet | Pending invisible ; validated + comment + chart + timeline |
 | H3 | P1 | RDV bilatéral | client book → vet confirm | Calendar + push + prefs email |
 | H4 | P1 | Link-request | Flutter invite → Pro accept | Relation active ; pets possibles |
 | H5 | P1 | Share → care_pro | Vet share → farrier | Agenda/fiche ; notes selon permission |
 | H13 | P1 | Envoi dossier animal → pro | Client Flutter → e-mail pro → `/dossier/{token}` | ZIP (PDF + docs + carnet) ; marketing + tél. commercial ; expiry 24 h ; UC-X-08 |
 | H14 | P1 | Consultation client + partage PDF | Historique Flutter → CTA disponible (final) / en attente (draft) → CR final → e-mail → `/consultation/{token}` | PDF CR brandé ; multi-auteurs finaux ; expiry 24 h ; UC-X-09 |
 | H15 | P1 | Client AI (tag `dev`) | Settings → Assistance IA → « Comprendre un CR » (liste) ; Timeline pastille + CR final → CTA ; Home/Settings → triage 24/7 | Explication additive + disclaimer ; escalade Rouge = tel cabinet + messagerie + RDV ; flag `CLIENT_AI_ENABLED` (staging on) |
-| H6 | P1 | Billing → features | Checkout pet | Entitlement → FC + messaging + Care/Horse ; commission activation |
+| H6 | P1 | Billing → features | Checkout pet | Entitlement → FR + messaging + Care/Horse ; commission activation |
 | H7 | P1 | Care overdue | Pro crée → client postpone/done | Dashboard véto sync |
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
 | H9 | P2 | Multi-cabinet | marie (Parc) vs demo (VetPlus) | Isolation données |
@@ -477,7 +477,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I2 | Table ↔ kanban (listes Pro) | Bascule `useListView` OK |
 | I3 | Refresh token | Laisser session expirer / idle | Re-auth propre |
 | I4 | Offline Flutter | Mode avion court | Message erreur ; reprise |
-| I5 | Rotation / kill app mid-FC | Reprise ou cancel propre |
+| I5 | Rotation / kill app mid-FR | Reprise ou cancel propre |
 | I6 | Médias avatars | Upload puis reload cold | Toujours affichés |
 | I7 | Isolation rôles URLs | Accès croisés `/admin` `/commercial-manager` | 403 / redirect |
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
@@ -587,7 +587,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 ### Démo commerciale 15 min
 
 1. `commercial.demo` → `/commercial/competition` (BE) + pitch  
-2. Flutter `client.demo` modules ON → FC + commentaire  
+2. Flutter `client.demo` modules ON → FR + commentaire  
 3. Switch profil `farrier.demo` → Spirit agenda GPS  
 4. Pro `vet.demo` → `/team` + relevé validé  
 

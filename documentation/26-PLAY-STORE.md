@@ -74,7 +74,7 @@ Google peut exiger un **Closed testing** (≥ 12 testeurs, ≥ 14 jours) avant P
 |-------|-----------------|
 | Nom | petsFollow |
 | Description courte | Suivi santé prescrit avec votre vétérinaire — app mobile |
-| Description longue | Messagerie cabinet, rappels de soins, relevés cardiaques, foyer, abonnement animal (mensuel / annuel / triennal)… |
+| Description longue | Messagerie cabinet, rappels de soins, relevés respiratoires, foyer, abonnement animal (mensuel / annuel / triennal)… |
 | Icône 512×512 | Exporter depuis `brand/` |
 | Feature graphic 1024×500 | Visuel marketing |
 | Screenshots téléphone | ≥ 2 (login, home, relevé, soins, messagerie) |
@@ -109,7 +109,7 @@ Déclarer la **collecte** (et le partage avec sous-traitants le cas échéant) :
 | Nom / email | Oui | Non (sauf Google Sign-In) | Compte |
 | Photos / vidéos | Oui | Cabinet (médias) | Profil animal, messagerie |
 | Messages | Oui | Cabinet | Messagerie |
-| Santé / FC (animal) | Oui | Cabinet | Suivi santé (dont relevés cardiaques) |
+| Santé / FR (animal) | Oui | Cabinet | Suivi santé (dont relevés respiratoires) |
 | Identifiants appareil / FCM | Oui | Google FCM | Notifications |
 | Infos paiement | Via Stripe | Stripe | Abonnements animal (plans) |
 | Advertising ID | **Non** | — | — |

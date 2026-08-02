@@ -47,6 +47,7 @@ Entraînement pitch IA (commercial) : `/commercial/training` — nécessite `GEM
 | Research (épidémio) | `research.demo@petsfollow.test` | Observatoire `/research` (tag `dev`) — aussi profil `research` sur `vet.demo` / `admin.demo` |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — 6 pets démo + Care+/Kennel/Horse (seed) · tél. `0470 00 00 01` |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |
+| Client | `client.nouveau@petsfollow.test` | Lyon — Buddy · **pending** lien VetPlus (`/requests`) · tél. `0470 00 00 07` |
 | Client | `client.marie@petsfollow.test` | Parc — Mimi, Chouchou |
 | Client | `client.paul@petsfollow.test` | Parc — Max |
 | Client | `client.julie@petsfollow.test` | Lyon — Oscar |

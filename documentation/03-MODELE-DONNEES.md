@@ -9,7 +9,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | `identity` | Users, tokens email/reset, OAuth/2FA, locale, payout commercial (`payout_iban`…), zone de base commercial (`base_lat`/`base_lng`/`base_city`/`base_postal_code` — `000058`) |
 | `practice` | Cabinets (profil société/banque `000026`), clients liés, invitations, link-requests, `vet_schedule` / vacations (`000024`), import jobs (`000028`) |
 | `pets` | Animaux, dossier events, relevés de poids (`weight_readings` — `000060`), tension (`blood_pressure_readings` — `000127`) |
-| `heartrate` | Sessions relevé cardiaque |
+| `heartrate` | Sessions relevé respiratoire |
 | `labs` | Panels de prise de sang + résultats analytes (`000128`) — [41](41-TENSION-LABOS.md) |
 | `messaging` | Threads, messages (+ media), dispo véto |
 | `notifications` | Préférences, log, device tokens |
@@ -35,7 +35,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
 | Commissions | `commission_tiers`, `commission_ledger`, `commercial_commission_ledger`, payout runs/lines, `commercial_bonus_awards` |
 | Commercial | `sales.prospects` (claim `commercial_user_id` nullable = pool libre ; inactivité 30 j) ; assignation commercial ↔ véto ; `manager_user_id` ; RDV / contact — `000031` ; `practice.commercial_referrals` (QR client / nearby) ; `practice.client_referrals` (QR parrainage client→client, `000074`) ; `practice.app_invite_codes` (Code Parrain cabinet+client+véto+care_pro) ; zone base commercial `000058` ; pool admin vétos `assigned_commercial_id IS NULL` |
-| FC | `heartrate.sessions` |
+| Relevé FR (respiratoire) | `heartrate.sessions` |
 | Poids | `pets.weight_readings` (historique) ; `pets.pets.weight_kg` = dernier `POST /weights` (peut diverger si PATCH fiche animal sans lecture) |
 | Tension | `pets.blood_pressure_readings` (SYS/DIA, méthode, site) — [41](41-TENSION-LABOS.md) |
 | Labos | `labs.panels`, `labs.panel_results` (catalogue analytes V1) — [41](41-TENSION-LABOS.md) |
@@ -46,7 +46,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 
 ## Entitlements
 
-- **Pet** : `plan_code` vendable `monthly` / `annual` / `triennial` (+ `quinquennial` **legacy hors vente**) + `billing_mode` (`one_time` / `subscription` ; monthly = `subscription` only) + statut (`pending` → `active` / `past_due` / …) + `stripe_subscription_id` si sub. Entitlement animal actif ouvre Care / Horse / foyer / kennel ; premium FC + messagerie restent conditionnés au paiement.
+- **Pet** : `plan_code` vendable `monthly` / `annual` / `triennial` (+ `quinquennial` **legacy hors vente**) + `billing_mode` (`one_time` / `subscription` ; monthly = `subscription` only) + statut (`pending` → `active` / `past_due` / …) + `stripe_subscription_id` si sub. Entitlement animal actif ouvre Care / Horse / foyer / kennel ; premium FR + messagerie restent conditionnés au paiement.
 - **Addon** (**legacy / plus vendus**) : `family` / `kennel` / `care_plus` / `horse` — table + API conservées pour entitlements existants. Historiquement paiement Stripe unique (`payment`) à vie (`valid_until` NULL) ; `stripe_subscription_id` + handlers `invoice.paid` / `subscription.*` pour lignes sub legacy. Statut `pending` / `active` / `past_due` / `cancelled` / `expired`. Scope owner. Family ≥2 ; Kennel ≥6 ; exclusifs (upgrade Kennel annule Family) ; pets.`litter_tag`.
 
 Migrations utiles : `000019` commissions · `000020` `commercial_bonus_awards` · `000022` kennel / litter_tag / ledger addon · `000023` addon `stripe_subscription_id` + `past_due` · `000024` calendrier véto · `000026` profil payout véto · `000028`/`000029` import clients · `000031` commercial_manager + CRM tracking / directory.

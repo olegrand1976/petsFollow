@@ -18,13 +18,13 @@ Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie 
 
 **Pro** (app **Web** + apps mobiles) facturé **hors ligne** (834,71 € HTVA/an + setup, ou 2 253,72 € / 3 ans) — **CR vocaux et amélioration IA inclus** ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
 
-Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit. Le CR IA est une **plus-value cabinet incluse**, pas un add-on.
+Le relevé respiratoire (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit. Le CR IA est une **plus-value cabinet incluse**, pas un add-on.
 
 ## Axes du passeport
 
 | Lien | Vendable aujourd’hui | Hors pitch |
 |------|----------------------|------------|
-| **Pro ↔ propriétaire** | Messagerie, timeline, relevés FC, rappels Care/Horse, push | — |
+| **Pro ↔ propriétaire** | Messagerie, timeline, relevés FR, rappels Care/Horse, push | — |
 | **Care pro ↔ propriétaire** | Notes, docs, CR visite, agenda, ACL `write_notes` | Messagerie care_pro |
 | **Pro ↔ care pro / care pro ↔ care pro** | Partage de dossier (`pet_access` / `client_access`), CR, notes | Chat inter-pros |
 
@@ -38,7 +38,7 @@ Le passeport = **quoi** circule entre acteurs. La continuité prescrite = **pour
 |--------|----------|
 | Véto (Pro) | Continuité entre consultations + passeport partagé + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA **inclus** |
 | Pro Light (ProLight) | App mobile terrain gratuite (véto light / care pro), notes / CR / docs + partage ACL ; avec ou sans compte Web Pro |
-| Client | App mobile simple : face propriétaire du passeport — suivi prescrit, messages (↔ véto), rappels Care/Horse, relevé FC |
+| Client | App mobile simple : face propriétaire du passeport — suivi prescrit, messages (↔ véto), rappels Care/Horse, relevé FR |
 | Commercial | Commission sur chaque nouvelle activation + SPIFF mix triennial |
 
 ## Offre cœur (TTC)
@@ -72,7 +72,7 @@ Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal ac
 ## Interdits pitch
 
 Ne pas promettre un appareil à vendre, WebSocket temps réel, ni % sur TTC — voir interdits dans [22](22-FICHE-PRODUIT-COMMERCIAL.md).  
-Ne pas cantonner le pitch à « une app cardiaque » — le FC est un module parmi d’autres.  
+Ne pas cantonner le pitch à « une app cardiaque » — la FR est un module parmi d’autres.  
 Ne pas centrer le pitch sur « sans boîtier » — parler des **apps** Web + mobile.  
 **Ne pas promettre une messagerie entre care pro** — parler de **partage de dossier / CR / notes**.  
 Push FCM livré (messages véto → client, confirmation RDV) — détail [08](08-MESSAGERIE-NOTIFICATIONS.md).

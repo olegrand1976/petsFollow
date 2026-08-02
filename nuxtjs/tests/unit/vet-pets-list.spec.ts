@@ -29,7 +29,7 @@ const pets: VetPetListRow[] = [
 ]
 
 describe('vet-pets-list', () => {
-  it('petReadingType is heartrate when last FC or unread exists', () => {
+  it('petReadingType is heartrate when last FR reading or unread exists', () => {
     expect(petReadingType(pets[0])).toBe('heartrate')
     expect(petReadingType(pets[1])).toBe('heartrate')
     expect(petReadingType(pets[2])).toBeNull()

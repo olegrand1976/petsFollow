@@ -1,4 +1,4 @@
-# UC-CL-03 — Relevé cardiaque (côté client)
+# UC-CL-03 — Relevé respiratoire (côté client)
 
 | | |
 |--|--|
@@ -11,7 +11,7 @@
 
 ## Objectif
 
-Démarrer un relevé cardiaque sur un animal, saisir les taps, puis valider (avec commentaire optionnel).
+Démarrer un relevé respiratoire sur un animal, saisir les taps, puis valider (avec commentaire optionnel).
 
 ## Acteurs
 
@@ -27,7 +27,7 @@ Démarrer un relevé cardiaque sur un animal, saisir les taps, puis valider (ave
 ## Étapes
 
 1. Se connecter en `client.demo`.
-2. Ouvrir un animal → lancer un **relevé cardiaque**.
+2. Ouvrir un animal → lancer un **relevé respiratoire**.
 3. Effectuer les taps pendant le timer (15 / 30 / 60 s selon options).
 4. **Valider** le relevé.
 5. Ajouter un **commentaire** si proposé (ex. « repos »).
@@ -43,7 +43,7 @@ Démarrer un relevé cardiaque sur un animal, saisir les taps, puis valider (ave
 
 | | Résultat |
 |--|----------|
-| Démarrage FC | OK / KO / N/A |
+| Démarrage FR | OK / KO / N/A |
 | Validation | OK / KO / N/A |
 | Historique client | OK / KO / N/A |
 

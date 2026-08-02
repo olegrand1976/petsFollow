@@ -7,7 +7,7 @@ Carte interactive Pro (admin / commercial / responsable commercial) : **`/flux`*
 | Rôle | Surface | Mission |
 |------|---------|---------|
 | `vet` | Pro web | Prescrire / suivre / messagerie / partage dossier |
-| `client` | Flutter pets | Self-signup, animaux, FC, paiement, messages |
+| `client` | Flutter pets | Self-signup, animaux, FR, paiement, messages |
 | `care_pro` | Flutter pro light | Agenda terrain, fiches, CR (specialty : vet_light, farrier, …) |
 | `commercial` | Pro | Apporter cabinets, prospects, activations — mappe un **distributeur** MLM |
 | `commercial_manager` | Pro | Piloter l’équipe / **branche** (KPI, suivi, quotas) + portefeuille perso — mappe un **upline L1** |
@@ -37,7 +37,7 @@ flowchart TD
   Reg[Register + confirm email] --> Onb[Onboarding profil cabinet]
   Onb --> Dash[Dashboard / clients]
   Dash --> Msg[Messagerie]
-  Dash --> FC[Relevés FC validés]
+  Dash --> FR[Relevés FR validés]
   Dash --> Comm[Commissions]
   Dash --> Req[Link-requests]
 ```
@@ -50,12 +50,12 @@ flowchart TD
   Confirm --> Pets[Créer animal + plan monthly/annual/triennial]
   Pets --> Pay[Stripe Checkout]
   Pay --> Active[Entitlement active]
-  Active --> HR[Relevé cardiaque premium]
+  Active --> HR[Relevé respiratoire premium]
   Active --> Thread[Messagerie véto]
   Active --> Care[Care Horse foyer kennel inclus]
 ```
 
-Paiement plan → entitlement actif : Care / Horse / foyer / kennel inclus. Premium FC + messagerie restent conditionnés au paiement. Addons Family / Kennel / Care+ / Horse = legacy hors vente (pas d’étape upsell).
+Paiement plan → entitlement actif : Care / Horse / foyer / kennel inclus. Premium FR + messagerie restent conditionnés au paiement. Addons Family / Kennel / Care+ / Horse = legacy hors vente (pas d’étape upsell).
 
 En parallèle (engagement) :
 

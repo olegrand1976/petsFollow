@@ -116,7 +116,7 @@
           },
           {
             "title": "Mõõtmised vajadusel",
-            "desc": "Juhitud HR 15 / 30 / 60 s kliiniku kinnitusega — funktsioon, mitte toote identiteet."
+            "desc": "Juhitud RR 15 / 30 / 60 s kliiniku kinnitusega — funktsioon, mitte toote identiteet."
           }
         ]
       },
@@ -218,7 +218,7 @@
         "points": [
           {
             "title": "Põhisõnum",
-            "desc": "petsFollow = loomaarsti juhitud hoolduse järjepidevus — mitte südame löögisageduse äpp."
+            "desc": "petsFollow = loomaarsti juhitud hoolduse järjepidevus — mitte südamerütmi äpp."
           },
           {
             "title": "Erinevus",

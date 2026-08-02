@@ -27,7 +27,7 @@ Vérifier qu’un vétérinaire au profil incomplet est forcé de compléter son
 
 1. Se connecter avec `vet.onboarding@petsfollow.test`.
 2. Constater l’écran de **complétion de profil** (pas le tableau de bord cabinet).
-3. Remplir les champs demandés (infos cabinet, au moins une durée de relevé cardiaque si proposé).
+3. Remplir les champs demandés (infos cabinet, au moins une durée de relevé respiratoire si proposé).
 4. Valider / terminer.
 5. Vérifier l’accès au **tableau de bord**.
 

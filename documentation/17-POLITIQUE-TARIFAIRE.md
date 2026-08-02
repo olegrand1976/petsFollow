@@ -1,6 +1,6 @@
 # Politique tarifaire petsFollow
 
-Positionnement : **continuité de soins prescrite** + **passeport digital** de l’animal — Web Pro · mobile ProLight / care pro · mobile Client. Le relevé cardiaque est une feature.  
+Positionnement : **continuité de soins prescrite** + **passeport digital** de l’animal — Web Pro · mobile ProLight / care pro · mobile Client. Le relevé respiratoire est une feature.  
 Monétisation **double** :
 
 1. **SaaS cabinet Pro** — facturation **externe** (pas de Stripe)  

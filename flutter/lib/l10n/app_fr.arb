@@ -201,7 +201,7 @@
   },
   "latestValues": "Dernières valeurs",
   "startMeasurement": "DÉMARRER LA MESURE",
-  "heartRateShort": "Cœur",
+  "heartRateShort": "Respiration",
   "weightShort": "Poids",
   "recordWeightTitle": "Enregistrer le poids",
   "weightKgLabel": "Poids (kg)",
@@ -229,14 +229,14 @@
     }
   },
   "howToMeasure": "Comment mesurer ?",
-  "howToMeasureIntro": "Mesurer la fréquence cardiaque de votre animal au repos.",
+  "howToMeasureIntro": "Mesurer la fréquence respiratoire de votre animal au repos.",
   "howToMeasureStep1": "1. Placez votre animal au calme, allongé ou assis.",
-  "howToMeasureStep2": "2. Placez votre main sur le thorax et tapez à chaque battement pendant la durée indiquée.",
+  "howToMeasureStep2": "2. Placez votre main sur le thorax et tapez à chaque respiration pendant la durée indiquée.",
   "howToMeasureStep3": "3. Validez le relevé pour l'envoyer à votre vétérinaire.",
   "howToMeasureWhyTitle": "Pourquoi mesurer ?",
-  "howToMeasureWhyBody": "Le suivi régulier de la fréquence cardiaque permet de détecter des variations et d'adapter le traitement avec votre vétérinaire.",
+  "howToMeasureWhyBody": "Le suivi régulier de la fréquence respiratoire permet de détecter des variations et d'adapter le traitement avec votre vétérinaire.",
   "reminders": "Rappels",
-  "remindersHint": "Recevez un rappel quotidien pour effectuer un relevé cardiaque.",
+  "remindersHint": "Recevez un rappel quotidien pour effectuer un relevé respiratoire.",
   "remindersEnabled": "Activer les rappels",
   "remindersTime": "Heure du rappel",
   "remindersSaved": "Rappels enregistrés",
@@ -244,8 +244,8 @@
   "legalPrivacyTitle": "Politique de confidentialité",
   "legalNoticeTitle": "Mentions légales",
   "legalOpenOnline": "Voir la version en ligne",
-  "legalTermsBody": "Conditions générales d'utilisation — petsFollow\n\nL'application petsFollow permet aux propriétaires d'animaux le suivi prescrit (messagerie, rappels Care/Horse, relevés cardiaques), de consulter l'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l'abonnement choisi (paiement via Stripe). L'utilisateur s'engage à utiliser l'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d'actualisation : juillet 2026",
-  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google) et, côté app client (module expérimental), pour vulgariser les comptes rendus finalisés et proposer un triage d'urgence conversationnel.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d'actualisation : juillet 2026",
+  "legalTermsBody": "Conditions générales d'utilisation — petsFollow\n\nL'application petsFollow permet aux propriétaires d'animaux le suivi prescrit (messagerie, rappels Care/Horse, relevés respiratoires), de consulter l'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l'abonnement choisi (paiement via Stripe). L'utilisateur s'engage à utiliser l'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d'actualisation : juillet 2026",
+  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence respiratoire (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés respiratoires), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google) et, côté app client (module expérimental), pour vulgariser les comptes rendus finalisés et proposer un triage d'urgence conversationnel.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d'actualisation : juillet 2026",
   "legalNoticeBody": "Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@petsfollow.app\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d'actualisation : juillet 2026",
   "language": "Langue",
   "languageFr": "Français",
@@ -270,7 +270,7 @@
   "notifChannelCare": "Soins",
   "paymentResume": "Reprendre le paiement",
   "manageSubscription": "Gérer mon abonnement",
-  "heartRate": "Relevé cardiaque",
+  "heartRate": "Relevé respiratoire",
   "history": "Historique",
   "vetMessaging": "Messagerie véto",
   "badgeAutoRenew": "Renouvellement auto",
@@ -372,8 +372,8 @@
       }
     }
   },
-  "heartRateInstructions": "Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.",
-  "heartRateInstructionsDuration": "Tapotez à chaque battement pendant {seconds} secondes.",
+  "heartRateInstructions": "Tapotez à chaque respiration pendant la durée indiquée par votre vétérinaire.",
+  "heartRateInstructionsDuration": "Tapotez à chaque respiration pendant {seconds} secondes.",
   "@heartRateInstructionsDuration": {
     "placeholders": {
       "seconds": {
@@ -382,7 +382,7 @@
     }
   },
   "heartRateNoDurationConfigured": "Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.",
-  "heartRateNotSupported": "Le relevé cardiaque n’est pas disponible pour cette espèce",
+  "heartRateNotSupported": "Le relevé respiratoire n’est pas disponible pour cette espèce",
   "start": "Démarrer",
   "secondsLeft": "{seconds} s",
   "@secondsLeft": {
@@ -392,7 +392,7 @@
       }
     }
   },
-  "beatsCount": "{count} battements",
+  "beatsCount": "{count} respirations",
   "@beatsCount": {
     "placeholders": {
       "count": {
@@ -400,7 +400,7 @@
       }
     }
   },
-  "tapHere": "Tapez ici à chaque battement",
+  "tapHere": "Tapez ici à chaque respiration",
   "bpmLabel": "BPM: {bpm}",
   "@bpmLabel": {
     "placeholders": {
@@ -409,7 +409,7 @@
       }
     }
   },
-  "beatsLabel": "Battements: {count}",
+  "beatsLabel": "Respirations: {count}",
   "@beatsLabel": {
     "placeholders": {
       "count": {
@@ -447,9 +447,9 @@
   "discoveryTitle": "Découvrir petsFollow",
   "discoveryMission": "Votre parcours petsFollow",
   "discoveryDay0Title": "Étape 1 — Bienvenue",
-  "discoveryDay0Body": "Créez le profil de votre animal et découvrez l'app — messagerie, rappels et relevés (dont la fréquence cardiaque).",
+  "discoveryDay0Body": "Créez le profil de votre animal et découvrez l'app — messagerie, rappels et relevés (dont la fréquence respiratoire).",
   "discoveryDay2Title": "Étape 2 — Première mesure",
-  "discoveryDay2Body": "Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.",
+  "discoveryDay2Body": "Effectuez votre premier relevé respiratoire et familiarisez-vous avec la technique.",
   "discoveryDay4Title": "Étape 3 — Routine",
   "discoveryDay4Body": "Installez une routine de mesure quotidienne avec les rappels personnalisés.",
   "discoveryDay6Title": "Étape 4 — Partage véto",
@@ -488,7 +488,7 @@
   "visitAcceptReschedule": "Accepter le nouveau créneau",
   "upcomingVisit": "Visite à venir",
   "notificationHrTitle": "petsFollow",
-  "notificationHrBody": "Il est temps de prendre un relevé cardiaque pour votre animal",
+  "notificationHrBody": "Il est temps de prendre un relevé respiratoire pour votre animal",
   "reviewAskTitle": "Vous aimez petsFollow ?",
   "reviewAskYes": "Oui, noter l'app",
   "reviewAskNo": "Plus tard",
@@ -529,7 +529,7 @@
   "notificationPreferences": "Préférences de notifications",
   "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",
   "notificationPrefsSaved": "Préférences enregistrées",
-  "notificationPrefHr": "Relevés cardiaques",
+  "notificationPrefHr": "Relevés respiratoires",
   "notificationPrefCare": "Rappels de soins",
   "notificationPrefVisits": "Visites",
   "notificationPrefMessages": "Messages",
@@ -584,7 +584,7 @@
       }
     }
   },
-  "timelineTypeHeartrate": "Fréquence cardiaque",
+  "timelineTypeHeartrate": "Fréquence respiratoire",
   "timelineTypeWeight": "Poids",
   "timelineTypeMessage": "Message",
   "timelineTypeCare": "Soin",

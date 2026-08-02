@@ -84,7 +84,13 @@
             <td>{{ p.breed || $t('common.unknownBreed') }}</td>
             <td>{{ formatBirthDate(p.birthDate) }}</td>
             <td>{{ p.lastVisitAt ? formatDate(p.lastVisitAt) : $t('common.dash') }}</td>
-            <td data-testid="pet-reading-type">{{ readingTypeLabel(p) }}</td>
+            <td
+              data-testid="pet-reading-type"
+              :title="readingTypeFullLabel(p)"
+              :aria-label="readingTypeFullLabel(p)"
+            >
+              {{ readingTypeLabel(p) }}
+            </td>
             <td>
               <template v-if="p.lastHeartRateAt">
                 <code v-if="p.lastHeartRateBpm != null">{{ p.lastHeartRateBpm }}</code>
@@ -161,6 +167,11 @@ function speciesLabel(species: string) {
 function readingTypeLabel(p: VetPet) {
   const type = petReadingType(p)
   return type ? t(`pets.readingType.${type}`) : t('common.dash')
+}
+
+function readingTypeFullLabel(p: VetPet) {
+  const type = petReadingType(p)
+  return type ? t(`pets.readingTypeFull.${type}`) : t('common.dash')
 }
 
 function unreadLabel(count: number) {

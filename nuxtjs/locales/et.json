@@ -361,7 +361,7 @@
       "it": "Italiano"
     },
     "heartrate": {
-      "title": "Südamerütmi mõõtmine",
+      "title": "Hingamissageduse mõõtmine",
       "subtitle": "Klientidele pakutavad mõõtmiskestused.",
       "duration15": "15 sekundit",
       "duration30": "30 sekundit",
@@ -386,7 +386,7 @@
       "title": "E-posti teavitused",
       "subtitle": "Valige, millised sündmused käivitavad e-kirja.",
       "onMessage": "Uus kliendi sõnum",
-      "onHeartrate": "Kinnitatud südamerütmi mõõtmine",
+      "onHeartrate": "Kinnitatud hingamissageduse mõõtmine",
       "saved": "Eelistused salvestatud.",
       "onVisitRequest": "Uus vastuvõtu päring"
     },
@@ -554,7 +554,7 @@
       "kpi": {
         "pets": "Loomad",
         "unreadHeartrate": "Lugemata näidud",
-        "alertSessions7d": "HR hoiatused (7 p)",
+        "alertSessions7d": "RR hoiatused (7 p)",
         "overdueCare": "Hilinenud hooldus",
         "pendingVisits": "Ootel vastuvõtud",
         "shares": "Jagamisid",
@@ -574,8 +574,8 @@
         "sharing": "Jagamine"
       },
       "kpi": {
-        "lastBpm": "Viimane HR",
-        "alerts": "HR hoiatused (7 p)",
+        "lastBpm": "Viimane RR",
+        "alerts": "RR hoiatused (7 p)",
         "lastWeight": "Viimane kaal",
         "lastBp": "Viimane vererõhk",
         "overdueCare": "Hilinenud hooldus",
@@ -605,7 +605,7 @@
       "dafDispensesTitle": "DAF väljastused",
       "dafDispensesEmpty": "Sellele looma ei ole DAF väljastusi registreeritud.",
       "timelineRecentTitle": "Viimased sündmused",
-      "timelineTypeHeartrate": "Südame löögisagedus",
+      "timelineTypeHeartrate": "Hingamissagedus",
       "timelineTypeWeight": "Kaal",
       "timelineTypeBloodPressure": "Vererõhk",
       "timelineTypeLabPanel": "Laboripaneel",
@@ -616,12 +616,12 @@
       "chartsToggle": "Näitude kõverad",
       "chartsPreviewHint": "Viimaste näitude ülevaade. Detailised kõverad on vahekaardil Näidud.",
       "chartsOpenVitals": "Vaata kõveraid",
-      "chartsTypeHeartrate": "Südame löögisagedus",
+      "chartsTypeHeartrate": "Hingamissagedus",
       "chartsTypeWeight": "Kaal",
       "chartsTypeBp": "Vererõhk",
       "chartsTypeLabs": "Laboripaneelid",
       "timelineDayCount": "{n} sündmus(t)",
-      "heartrateTitle": "Kinnitatud südamerütmi mõõtmised",
+      "heartrateTitle": "Kinnitatud hingamissageduse mõõtmised",
       "heartrateEmptyTitle": "Kinnitatud mõõtmisi pole",
       "heartrateEmptyDescription": "Kinnitatud BPM sessioonid ilmuvad siia.",
       "columnDate": "Kuupäev",
@@ -904,7 +904,7 @@
   },
   "pets": {
     "title": "Jälgitavad lemmikloomad",
-    "subtitle": "Kõik praktika lemmikloomad, viimase visiidi ja südamerütmi mõõtmisega.",
+    "subtitle": "Kõik praktika lemmikloomad, viimase visiidi ja hingamissageduse mõõtmisega.",
     "search": "Otsi",
     "searchPlaceholder": "Nimi, tõug, klient…",
     "speciesFilter": "Tüüp",
@@ -920,10 +920,13 @@
     "columnBirthDate": "Sünnikuupäev",
     "columnLastVisit": "Viimane visiit",
     "columnReadingType": "Näidu tüüp",
-    "columnLastHeartRate": "Viimane HR",
+    "columnLastHeartRate": "Viimane RR",
     "columnOwner": "Klient",
     "readingType": {
-      "heartrate": "HR"
+      "heartrate": "RR"
+    },
+    "readingTypeFull": {
+      "heartrate": "Hingamissagedus"
     },
     "unreadBadge": "Lugemata näit",
     "unreadCount": "{n} lugemata näitu"
@@ -1156,7 +1159,7 @@
     "viewRequests": "Vaata päringuid",
     "messaging": "Sõnumid",
     "about": "Teave",
-    "aboutText": "petsFollow Pro koondab ravi järjepidevuse: klienditoimikud, turvaline sõnumside, südame löögisageduse mõõtmised ja välijälgimine teie veterinaarkabinetile.",
+    "aboutText": "petsFollow Pro koondab ravi järjepidevuse: klienditoimikud, turvaline sõnumside, hingamissageduse mõõtmised ja välijälgimine teie veterinaarkabinetile.",
     "viewCalendar": "Vaata kalendrit",
     "aiModule": {
       "title": "AI visit reports",
@@ -2051,7 +2054,7 @@
       "options": {
         "label": "Valikud",
         "title": "Jälgimise valikud",
-        "text": "Veebisait (valikuline) ja klientidele pakutavad südame löögisageduse mõõtmise kestused."
+        "text": "Veebisait (valikuline) ja klientidele pakutavad hingamissageduse mõõtmise kestused."
       }
     }
   },
@@ -2182,7 +2185,7 @@
           "Häälelised protokollid ja AI-parandus kaasas",
           "Digitaalne pass ja jagatud ajajoon",
           "Turvaline sõnumside + push (kliinik ↔ klient)",
-          "Juhendatud südame mõõtmised 15 / 30 / 60 s",
+          "Juhendatud hingamismõõtmised 15 / 30 / 60 s",
           "Meeldetuletused, vastuvõtud ja järgimine",
           "Toimiku jagamine care pro / kolleegidega",
           "Partneritasud (väline arveldus)"
@@ -2244,7 +2247,7 @@
       }
     },
     "autofinanceTip": "≈ 8 kolmeaastast kliendi aktiveerimist / kuu ≈ katab Pro kuu ekvivalendi (≈ 69,56 € KM-ta).",
-    "clientIncludedLine": "Igas plaanis: pass, sõnumid + push, HR 15/30/60 s, Care/Horse, kodu, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Igas plaanis: pass, sõnumid + push, RR 15/30/60 s, Care/Horse, kodu, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
@@ -2265,7 +2268,7 @@
         "Häälelised protokollid ja AI-parandus kaasas",
         "Digitaalne pass + jagatud ajajoon (kliinik / klient / care pro)",
         "Turvaline sõnumside klient ↔ kliinik + push",
-        "Juhendatud südame mõõtmised 15 / 30 / 60 s",
+        "Juhendatud hingamismõõtmised 15 / 30 / 60 s",
         "Meeldetuletused ja vastuvõtutaotlused",
         "Toimiku jagamine (kolleegid / care pro)",
         "Kliendi aktiveerimiste ja partneritasude jälgimine"
@@ -2288,10 +2291,10 @@
     "clientFeatures": [
       "Digitaalne pass / tervisekaart alati taskus",
       "Sõnumside kliinikuga + push-meeldetuletused",
-      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s",
+      "Juhendatud hingamissageduse mõõtmised 15 / 30 / 60 s",
       "Care / Horse / leibkond kaasatud alates maksvast loomast"
     ],
-    "includedLine": "Kaasatud igas plaanis: pass, sõnumside + push, HR mõõtmised, Care/Horse meeldetuletused, leibkond, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Kaasatud igas plaanis: pass, sõnumside + push, RR mõõtmised, Care/Horse meeldetuletused, leibkond, FR/NL/EN/ES/ET/IT.",
     "economyTitle": "Isefinantseerimine ja kohustused",
     "partnerLead": "Komisjonid aktiveerimistelt kompenseerivad Pro tellimuse (offline arveldus).",
     "partnerSteps": [
@@ -2324,7 +2327,7 @@
     "includedLead": "Olenemata plaanist (igakuine, aastane või kolmeaastane) saab omanik:",
     "included": [
       "Digitaalne pass / tervisekaart: ajajoon ja jagatud toimik",
-      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s mobiilirakendusest",
+      "Juhendatud hingamissageduse mõõtmised 15 / 30 / 60 s mobiilirakendusest",
       "Seansid saadetakse kliinikusse ja kinnitatakse seal",
       "Turvaline sõnumside klient ↔ loomaarst + push-teavitused",
       "Care meeldetuletused (standard, ravimid, isiklik) ja hobuste pakett vajadusel",
@@ -2472,12 +2475,12 @@
     "terms": {
       "title": "Kasutustingimused",
       "link": "Tingimused",
-      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}petsfollow.app."
+      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, hingamissageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privaatsuspoliitika",
       "link": "Privaatsus",
-      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}petsfollow.app."
+      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), hingamissageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Õigusteave",
@@ -2787,7 +2790,7 @@
       "vetGrid": "Loomaarst: 7% → 12% käibemaksuta maksevate klientide mahu järgi, plaani teguriga (igakuine / aastane / kolmeaastane).",
       "addons": "Lisasid pole — komisjon ainult plaanidelt (8% igakuine / 8% aastane / 12% kolmeaastane).",
       "webFeatures": [
-        "Töölaud kliendid / sõnumid / südame löögisagedus",
+        "Töölaud kliendid / sõnumid / hingamissagedus",
         "Patsienditoimik ja sõnumid",
         "Veterinaari komisjonide jälgimine",
         "Kabineti onboarding ja seaded"
@@ -2993,7 +2996,7 @@
       "feature3": "Kalender / vastuvõtud, ümberplaneerimine ja taotlused äpist",
       "feature4": "Eelkonsultatsioon: põhjus ja kiireloomulisus enne saabumist",
       "feature5": "Toimiku jagamine (kolleegid / care pro) — märkmed, aruanded, dokumendid",
-      "feature6": "Juhitud südame löögisageduse mõõtmised 15 / 30 / 60 s (eristav funktsioon, mitte toote identiteet)",
+      "feature6": "Juhitud hingamissageduse mõõtmised 15 / 30 / 60 s (eristav funktsioon, mitte toote identiteet)",
       "terrainTitle": "Pro Light — tasuta väljaäpp",
       "terrain1": "Väljakalender, loomakaardid, visiidimärkmed",
       "terrain2": "Toimiku jagamine + soovitus-QR",
@@ -3560,7 +3563,7 @@
       "heartrate": {
         "validate": {
           "label": "SK kinnitamine",
-          "tip": "Südame löögisageduse näitude kinnitamine."
+          "tip": "Hingamissageduse näitude kinnitamine."
         }
       },
       "messaging": {
@@ -3809,7 +3812,7 @@
     "errorTitle": "Toimikut ei leitud",
     "marketingTitle": "Liitu petsFollow'ga",
     "marketingText": "Koonda jälgimine, sõnumid ja hooldus koos loomaomanikega.",
-    "benefitFollow": "Südamerütmi mõõtmine ja jagatud ajajoon",
+    "benefitFollow": "Hingamissageduse mõõtmine ja jagatud ajajoon",
     "benefitMessages": "Turvaline sõnumivahetus klientidega",
     "benefitContinuity": "Ravi järjepidevus spetsialistide vahel",
     "registerCta": "Loo professionaalne konto",
@@ -3830,7 +3833,7 @@
     "errorTitle": "Konsultatsiooni ei leitud",
     "marketingTitle": "Liitu petsFollow'ga",
     "marketingText": "Koonda jälgimine, sõnumid ja hooldus koos loomaomanikega.",
-    "benefitFollow": "Südamerütmi mõõtmine ja jagatud ajajoon",
+    "benefitFollow": "Hingamissageduse mõõtmine ja jagatud ajajoon",
     "benefitMessages": "Turvaline sõnumivahetus klientidega",
     "benefitContinuity": "Ravi järjepidevus spetsialistide vahel",
     "registerCta": "Loo professionaalne konto",
@@ -4039,7 +4042,7 @@
       "lab_flag": "Lab flags",
       "care_preventive": "Preventive care",
       "antibiotic_daf": "Antibiotic DAF",
-      "hr_alert": "HR alert"
+      "hr_alert": "RR hoiatus"
     },
     "settings": {
       "title": "petsFollow Research",
@@ -4169,8 +4172,8 @@
         "desc": "Ristsõnumid kliinik ↔ omanik, kliendi push’iga."
       },
       "hr_vitals": {
-        "title": "Südame mõõtmised",
-        "desc": "HR omaniku poolel; kinnitus ja jälgimine loomaarsti poolel."
+        "title": "Hingamismõõtmised",
+        "desc": "RR omaniku poolel; kinnitus ja jälgimine loomaarsti poolel."
       },
       "link_requests": {
         "title": "Sidumise taotlused",
@@ -4237,12 +4240,12 @@
       "vet_register": "Registreerimine + e-posti kinnitus",
       "vet_onboarding": "Kliiniku profiili onboarding",
       "vet_dashboard": "Klientide ja taotluste töölaud",
-      "vet_care": "Sõnumid, HR, dossier’i jagamine",
+      "vet_care": "Sõnumid, RR, dossier’i jagamine",
       "vet_earn": "Komisjonid ja kliiniku moodulid",
       "client_register": "Register / login (e-post või Google)",
       "client_pet": "Looma loomine + plaani valik",
       "client_pay": "Stripe Checkout",
-      "client_active": "Aktiivne entitlement → HR, sõnumid, Care/Horse",
+      "client_active": "Aktiivne entitlement → RR, sõnumid, Care/Horse",
       "client_engage": "In-app discovery + õppe-e-kirjad",
       "care_login": "care_pro login (Pro Light)",
       "care_agenda": "Ajakava / päeva ring",
@@ -4284,7 +4287,7 @@
       },
       "hr_client_vet": {
         "label": "Mõõtmine → kinnitus",
-        "desc": "Omanik saadab HR; loomaarst näeb ja kinnitab."
+        "desc": "Omanik saadab RR; loomaarst näeb ja kinnitab."
       },
       "pay_client_commissions": {
         "label": "Makse → müügikomisjon",

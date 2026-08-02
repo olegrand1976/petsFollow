@@ -626,7 +626,7 @@ type seedProspect struct {
 }
 
 var demo1Prospects = []seedProspect{
-	{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
+	{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi respiratoire.", "qualified", 12},
 	{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
 	{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
 	{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
@@ -1519,26 +1519,39 @@ func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
 		}
 	}
 
-	// Pending link request for Pro /requests inbox (client.marie → vet.demo).
-	var marieID, vetDemoID, vetPlusID string
+	// Pending link requests for Pro /requests inbox (→ vet.demo / VetPlus).
+	var vetDemoID, vetPlusID string
 	err := pool.QueryRow(ctx, `
-		SELECT c.id::text, v.id::text, v.practice_id::text
-		FROM identity.users c
-		JOIN identity.users v ON v.email = 'vet.demo@petsfollow.test' AND v.role = 'vet'
-		WHERE c.email = 'client.marie@petsfollow.test' AND c.role = 'client'`).Scan(&marieID, &vetDemoID, &vetPlusID)
+		SELECT id::text, practice_id::text FROM identity.users
+		WHERE email = 'vet.demo@petsfollow.test' AND role = 'vet'`).Scan(&vetDemoID, &vetPlusID)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return err
 	}
 	if err == nil {
-		if _, err := pool.Exec(ctx, `
-			INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
-			VALUES ($1, $2, $3, $4, 'pending')
-			ON CONFLICT (client_user_id, practice_id) DO UPDATE SET
-				vet_user_id = EXCLUDED.vet_user_id,
-				status = 'pending',
-				updated_at = NOW()`,
-			uuid.NewString(), marieID, vetPlusID, vetDemoID); err != nil {
-			return err
+		for _, clientEmail := range []string{
+			"client.marie@petsfollow.test",
+			"client.nouveau@petsfollow.test",
+		} {
+			var clientID string
+			cerr := pool.QueryRow(ctx, `
+				SELECT id::text FROM identity.users
+				WHERE email = $1 AND role = 'client'`, clientEmail).Scan(&clientID)
+			if errors.Is(cerr, pgx.ErrNoRows) {
+				continue
+			}
+			if cerr != nil {
+				return cerr
+			}
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
+				VALUES ($1, $2, $3, $4, 'pending')
+				ON CONFLICT (client_user_id, practice_id) DO UPDATE SET
+					vet_user_id = EXCLUDED.vet_user_id,
+					status = 'pending',
+					updated_at = NOW()`,
+				uuid.NewString(), clientID, vetPlusID, vetDemoID); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

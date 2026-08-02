@@ -7,7 +7,7 @@
 **Continuité de soins prescrite**, matérialisée en **passeport digital de l’animal** — **Web** cabinet (**Pro**), **mobile** terrain (**ProLight** / care pro), **app** propriétaire (**pets**).  
 **Pro** (app Web + apps mobiles) facturé **hors ligne** ; **Pro Light** (app mobile **ProLight**) gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
 
-Le relevé cardiaque (tap, 15 / 30 / 60 s dans l’app) est une **feature** parmi d’autres (messagerie, Care/Horse, CR IA, agenda terrain, partage ACL). « Carnet de santé » = alias UI propriétaire ; identité = **passeport digital**.
+Le relevé respiratoire (tap, 15 / 30 / 60 s dans l’app) est une **feature** parmi d’autres (messagerie, Care/Horse, CR IA, agenda terrain, partage ACL). « Carnet de santé » = alias UI propriétaire ; identité = **passeport digital**.
 ## Pour qui / modèle
 
 | Qui | Rôle | Surface | Tarif |
@@ -26,7 +26,7 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 - Messagerie client ↔ véto (+ mode indisponible) et client ↔ care_pro (app Pro Light, fil distinct du cabinet)
 - Timeline historique (messages, relevés validés, événements)
 - Partage de dossier (`pet_access` / `client_access`) : collègue / care pro / pro externe — notes, CR, docs
-- Relevé cardiaque **15 / 30 / 60 s** (tap dans l’app) — feature différenciante
+- Relevé respiratoire **15 / 30 / 60 s** (tap dans l’app) — feature différenciante
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
 - **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — **inclus dans Pro** ([32](32-MODULE-IA-CR.md))
 - Agenda terrain (Pro Light) + calendrier cabinet (Pro)
@@ -70,7 +70,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 |-----------|---------|
 | « Encore un abonnement » | Prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €), tout dans l’app. |
 | « Je perds s’il y a un commercial » | **Non** — même plafond véto avec ou sans commercial. |
-| « C’est juste une app cardio ? » | **Non** — passeport digital multi-acteurs : messagerie, Care/Horse, foyer, CR terrain + IA, partage care pro ; le FC est une feature parmi d’autres. |
+| « C’est juste une app cardio ? » | **Non** — passeport digital multi-acteurs : messagerie, Care/Horse, foyer, CR terrain + IA, partage care pro ; la FR est une feature parmi d’autres. |
 | « Et Family / Care+ ? » | **Inclus** dès qu’un animal est payant — plus d’addons à acheter. |
 | « On a déjà un PMS » | Complementary — petsFollow ajoute le passeport Web + mobile (cabinet / care pro / foyer), pas un 2ᵉ PMS. |
 | « Les care pro peuvent chatter entre eux ? » | **Non** — partage sécurisé de dossier, notes et CR ; pas de messagerie inter-pros. |
@@ -118,10 +118,10 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 | **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. SPIFF mix = ≥ 55 % activations triennial / mois. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
 | **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Même plafond (~9,4 € sur le triennial). |
-| **Cantonner le pitch au « suivi cardiaque »** | Identité = continuité prescrite + passeport digital (Web + mobiles). Le FC est vendable en démo, pas comme plafond d’offre. |
+| **Cantonner le pitch au « suivi cardiaque »** | Identité = continuité prescrite + passeport digital (Web + mobiles). La FR est vendable en démo, pas comme plafond d’offre. |
 | **Centrer le pitch sur « sans boîtier »** | Parler des **apps** : Web Pro · ProLight · Client. Ne pas vendre / promettre un appareil. |
 | **Promettre une messagerie entre care pro** | Vendable = partage de dossier / CR / notes (ACL). Chat inter-pros = **hors scope**. |
-| **Promettre un appareil, du chat WebSocket, ou vendre des addons** | Vendable = Web Pro + apps mobiles (passeport, messagerie véto↔client, timeline, FC, Care/Horse/foyer inclus, CR IA, push FCM, partage ACL). WebSocket, addons payants = **pas à pitcher**. |
+| **Promettre un appareil, du chat WebSocket, ou vendre des addons** | Vendable = Web Pro + apps mobiles (passeport, messagerie véto↔client, timeline, FR, Care/Horse/foyer inclus, CR IA, push FCM, partage ACL). WebSocket, addons payants = **pas à pitcher**. |
 
 ## Liens
 

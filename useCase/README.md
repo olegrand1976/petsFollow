@@ -62,7 +62,7 @@ Ordre pour un commercial sur staging :
 1. [`UC-VP-01`](01-vetpro/UC-VP-01-cockpit-cabinet.md) — cockpit cabinet  
 2. [`UC-VP-04`](01-vetpro/UC-VP-04-nouvelle-consultation.md) — consultation rapide (CR → DAF / facture)  
 3. [`UC-X-01`](10-interactions/UC-X-01-messagerie-vet-client.md) — messagerie véto ↔ client *(couvre aussi VP-03)*  
-4. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé cardiaque *(couvre aussi CL-03)*  
+4. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé respiratoire *(couvre aussi CL-03)*  
 5. [`UC-X-10`](10-interactions/UC-X-10-tension-labos.md) — tension & prise de sang *(couvre aussi CL-04)*  
 6. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
 7. [`UC-PL-01`](03-pro-light/UC-PL-01-agenda-terrain.md) — Pro Light  
@@ -88,7 +88,7 @@ Ordre pour un commercial sur staging :
 |----|---------|----------|
 | UC-CL-01 | [Parcours accueil](02-client/UC-CL-01-parcours-accueil.md) | Démo |
 | UC-CL-02 | [Activation + paiement](02-client/UC-CL-02-activation-paiement.md) | Démo — **Destructif** |
-| UC-CL-03 | [Relevé cardiaque solo](02-client/UC-CL-03-releve-cardiaque.md) | Démo — skip si X-02 |
+| UC-CL-03 | [Relevé respiratoire solo](02-client/UC-CL-03-releve-cardiaque.md) | Démo — skip si X-02 |
 | UC-CL-04 | [Tension artérielle solo](02-client/UC-CL-04-tension-arterielle.md) | Démo — skip si X-10 |
 
 ### Pro Light — [`03-pro-light/`](03-pro-light/)
@@ -130,7 +130,7 @@ Ordre pour un commercial sur staging :
 | ID | Fichier | Priorité |
 |----|---------|----------|
 | UC-X-01 | [Messagerie véto ↔ client](10-interactions/UC-X-01-messagerie-vet-client.md) | Démo |
-| UC-X-02 | [FC client → VetPro](10-interactions/UC-X-02-fc-client-vers-pro.md) | Démo |
+| UC-X-02 | [FR client → VetPro](10-interactions/UC-X-02-fc-client-vers-pro.md) | Démo |
 | UC-X-03 | [RDV bout-en-bout](10-interactions/UC-X-03-rdv-bout-en-bout.md) | Démo |
 | UC-X-04 | [Lien cabinet](10-interactions/UC-X-04-lien-cabinet.md) | Important |
 | UC-X-05 | [Partage care pro](10-interactions/UC-X-05-partage-care-pro.md) | Démo |

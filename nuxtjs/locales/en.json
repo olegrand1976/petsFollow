@@ -361,7 +361,7 @@
       "it": "Italiano"
     },
     "heartrate": {
-      "title": "Heart rate reading",
+      "title": "Respiratory rate reading",
       "subtitle": "Measurement durations offered to your clients.",
       "duration15": "15 seconds",
       "duration30": "30 seconds",
@@ -386,7 +386,7 @@
       "title": "Email notifications",
       "subtitle": "Choose which events trigger an email.",
       "onMessage": "New client message",
-      "onHeartrate": "Validated heart rate reading",
+      "onHeartrate": "Validated respiratory rate reading",
       "saved": "Preferences saved.",
       "onVisitRequest": "New appointment request"
     },
@@ -603,7 +603,7 @@
       "kpi": {
         "pets": "Pets",
         "unreadHeartrate": "Unread readings",
-        "alertSessions7d": "HR alerts (7d)",
+        "alertSessions7d": "RR alerts (7d)",
         "overdueCare": "Overdue care",
         "pendingVisits": "Pending visits",
         "shares": "Shares",
@@ -623,8 +623,8 @@
         "sharing": "Sharing"
       },
       "kpi": {
-        "lastBpm": "Last HR",
-        "alerts": "HR alerts (7d)",
+        "lastBpm": "Last RR",
+        "alerts": "RR alerts (7d)",
         "lastWeight": "Last weight",
         "lastBp": "Last BP",
         "overdueCare": "Overdue care",
@@ -654,7 +654,7 @@
       "dafDispensesTitle": "DAF dispenses",
       "dafDispensesEmpty": "No DAF dispenses recorded for this pet.",
       "timelineRecentTitle": "Recent events",
-      "timelineTypeHeartrate": "Heart rate reading",
+      "timelineTypeHeartrate": "Respiratory rate reading",
       "timelineTypeWeight": "Weight",
       "timelineTypeBloodPressure": "Blood pressure",
       "timelineTypeLabPanel": "Lab panel",
@@ -665,12 +665,12 @@
       "chartsToggle": "Reading charts",
       "chartsPreviewHint": "Latest readings at a glance. Detailed charts are in the Readings tab.",
       "chartsOpenVitals": "View charts",
-      "chartsTypeHeartrate": "Heart rate",
+      "chartsTypeHeartrate": "Respiratory rate",
       "chartsTypeWeight": "Weight",
       "chartsTypeBp": "Blood pressure",
       "chartsTypeLabs": "Lab panels",
       "timelineDayCount": "{n} event(s)",
-      "heartrateTitle": "Validated heart rate readings",
+      "heartrateTitle": "Validated respiratory rate readings",
       "heartrateEmptyTitle": "No validated readings",
       "heartrateEmptyDescription": "Validated BPM sessions will appear here.",
       "columnDate": "Date",
@@ -904,7 +904,7 @@
   },
   "pets": {
     "title": "Monitored pets",
-    "subtitle": "All practice pets, with last visit and heart rate reading.",
+    "subtitle": "All practice pets, with last visit and respiratory rate reading.",
     "search": "Search",
     "searchPlaceholder": "Name, breed, client…",
     "speciesFilter": "Type",
@@ -920,10 +920,13 @@
     "columnBirthDate": "Date of birth",
     "columnLastVisit": "Last visit",
     "columnReadingType": "Reading type",
-    "columnLastHeartRate": "Last HR",
+    "columnLastHeartRate": "Last RR",
     "columnOwner": "Client",
     "readingType": {
-      "heartrate": "HR"
+      "heartrate": "RR"
+    },
+    "readingTypeFull": {
+      "heartrate": "Respiratory rate"
     },
     "unreadBadge": "Unread reading",
     "unreadCount": "{n} unread readings"
@@ -1187,7 +1190,7 @@
     "viewRequests": "View requests",
     "messaging": "Messaging",
     "about": "About",
-    "aboutText": "petsFollow Pro centralises care continuity: client records, secure messaging, heart-rate readings and field follow-up for your veterinary practice.",
+    "aboutText": "petsFollow Pro centralises care continuity: client records, secure messaging, respiratory rate readings and field follow-up for your veterinary practice.",
     "viewCalendar": "View calendar",
     "aiModule": {
       "title": "AI visit reports",
@@ -2082,7 +2085,7 @@
       "options": {
         "label": "Options",
         "title": "Monitoring options",
-        "text": "Website (optional) and heart-rate reading durations offered to clients."
+        "text": "Website (optional) and respiratory rate reading durations offered to clients."
       }
     }
   },
@@ -2213,7 +2216,7 @@
           "Voice visit reports & AI improvement included",
           "Digital passport & shared timeline",
           "Secure messaging + push (practice ↔ client)",
-          "Guided heart-rate checks 15 / 30 / 60 s",
+          "Guided respiratory rate checks 15 / 30 / 60 s",
           "Reminders, appointments & adherence",
           "Record sharing with care pros / colleagues",
           "Partner commissions (external invoicing)"
@@ -2275,7 +2278,7 @@
       }
     },
     "autofinanceTip": "≈ 8 triennial client activations / month ≈ covers the Pro monthly equivalent (≈ €69.56 excl. VAT).",
-    "clientIncludedLine": "Included on every plan: passport, messaging + push, HR checks 15/30/60 s, Care/Horse, household, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Included on every plan: passport, messaging + push, RR checks 15/30/60 s, Care/Horse, household, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Professional offer",
@@ -2296,7 +2299,7 @@
         "Voice visit reports & AI improvement included",
         "Digital passport + shared timeline (practice / client / care pro)",
         "Secure client ↔ practice messaging + push",
-        "Guided heart-rate checks 15 / 30 / 60 s",
+        "Guided respiratory rate checks 15 / 30 / 60 s",
         "Reminders and appointment requests",
         "Record sharing (colleagues / care pro)",
         "Client activation tracking and partner commissions"
@@ -2319,10 +2322,10 @@
     "clientFeatures": [
       "Digital passport / health record always in their pocket",
       "Messaging with the practice + push reminders",
-      "Guided heart-rate checks 15 / 30 / 60 s",
+      "Guided respiratory rate checks 15 / 30 / 60 s",
       "Care / Horse / household included once the pet is paying"
     ],
-    "includedLine": "Included on every plan: passport, messaging + push, HR checks, Care/Horse reminders, household, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Included on every plan: passport, messaging + push, RR checks, Care/Horse reminders, household, FR/NL/EN/ES/ET/IT.",
     "economyTitle": "Self-funding & commitments",
     "partnerLead": "Commissions on client activations offset the Pro subscription (settled offline).",
     "partnerSteps": [
@@ -2355,7 +2358,7 @@
     "includedLead": "Whatever the plan (monthly, annual or triennial), owners get:",
     "included": [
       "Digital passport / health record: shared timeline and record",
-      "Guided heart-rate checks 15 / 30 / 60 s from the mobile app",
+      "Guided respiratory rate checks 15 / 30 / 60 s from the mobile app",
       "Sessions sent to and validated by the practice",
       "Secure client ↔ vet messaging + push notifications",
       "Care reminders (standard, meds, custom) and equine pack if horse",
@@ -2503,12 +2506,12 @@
     "terms": {
       "title": "Terms of use",
       "link": "Terms",
-      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, heart-rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}petsfollow.app."
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, respiratory rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}petsfollow.app."
+      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), respiratory rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Legal notice",
@@ -2818,7 +2821,7 @@
       "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (monthly / annual / triennial).",
       "addons": "No addons — commissions on plans only (8% monthly / 8% annual / 12% triennial).",
       "webFeatures": [
-        "Operational dashboard clients / messages / HR",
+        "Operational dashboard clients / messages / RR",
         "Patient file and messaging",
         "Vet commission tracking",
         "Practice onboarding and settings"
@@ -3024,7 +3027,7 @@
       "feature3": "Calendar / appointments, rescheduling and requests from the app",
       "feature4": "Pre-consultation: reason and urgency before arrival",
       "feature5": "File sharing (colleagues / care pro) — notes, visit reports, documents",
-      "feature6": "Guided heart-rate readings 15 / 30 / 60 s (differentiating feature, not the product identity)",
+      "feature6": "Guided respiratory rate readings 15 / 30 / 60 s (differentiating feature, not the product identity)",
       "terrainTitle": "Pro Light — free field app",
       "terrain1": "Field calendar, animal cards, visit notes",
       "terrain2": "File sharing + referral QR",
@@ -3590,8 +3593,8 @@
       },
       "heartrate": {
         "validate": {
-          "label": "Validate HR",
-          "tip": "Validate heart-rate readings."
+          "label": "Validate RR",
+          "tip": "Validate respiratory rate readings."
         }
       },
       "messaging": {
@@ -3840,7 +3843,7 @@
     "errorTitle": "File not found",
     "marketingTitle": "Join petsFollow",
     "marketingText": "Centralise follow-up, messaging and care with pet owners.",
-    "benefitFollow": "Heart rate reading and shared timeline",
+    "benefitFollow": "Respiratory rate reading and shared timeline",
     "benefitMessages": "Secure messaging with clients",
     "benefitContinuity": "Multi-professional care continuity",
     "registerCta": "Create a professional account",
@@ -3861,7 +3864,7 @@
     "errorTitle": "Consultation not found",
     "marketingTitle": "Join petsFollow",
     "marketingText": "Centralise follow-up, messaging and care with pet owners.",
-    "benefitFollow": "Heart rate reading and shared timeline",
+    "benefitFollow": "Respiratory rate reading and shared timeline",
     "benefitMessages": "Secure messaging with clients",
     "benefitContinuity": "Multi-professional care continuity",
     "registerCta": "Create a professional account",
@@ -4070,7 +4073,7 @@
       "lab_flag": "Lab flags",
       "care_preventive": "Preventive care",
       "antibiotic_daf": "Antibiotic DAF",
-      "hr_alert": "HR alert"
+      "hr_alert": "RR alert"
     },
     "settings": {
       "title": "petsFollow Research",
@@ -4200,8 +4203,8 @@
         "desc": "Cross threads practice ↔ owner, with client push."
       },
       "hr_vitals": {
-        "title": "Heart-rate readings",
-        "desc": "Owner-side HR measures; vet-side validation and follow-up."
+        "title": "Respiratory rate readings",
+        "desc": "Owner-side RR measures; vet-side validation and follow-up."
       },
       "link_requests": {
         "title": "Link requests",
@@ -4268,12 +4271,12 @@
       "vet_register": "Sign-up + e-mail confirm",
       "vet_onboarding": "Practice profile onboarding",
       "vet_dashboard": "Clients & requests dashboard",
-      "vet_care": "Messaging, HR readings, dossier share",
+      "vet_care": "Messaging, RR readings, dossier share",
       "vet_earn": "Commissions & practice modules",
       "client_register": "Register / login (e-mail or Google)",
       "client_pet": "Create a pet + choose a plan",
       "client_pay": "Stripe Checkout",
-      "client_active": "Active entitlement → HR, messages, Care/Horse",
+      "client_active": "Active entitlement → RR, messages, Care/Horse",
       "client_engage": "In-app discovery + educational e-mails",
       "care_login": "care_pro login (Pro Light)",
       "care_agenda": "Agenda / day’s round",
@@ -4315,7 +4318,7 @@
       },
       "hr_client_vet": {
         "label": "Reading → validation",
-        "desc": "Owner sends HR; vet sees and validates it."
+        "desc": "Owner sends RR; vet sees and validates it."
       },
       "pay_client_commissions": {
         "label": "Payment → sales commission",

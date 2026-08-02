@@ -994,7 +994,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			)`
 	}
 	q := `
-		SELECT id::text, 'heartrate', 'Relevé cardiaque',
+		SELECT id::text, 'heartrate', 'Relevé respiratoire',
 			CASE
 				WHEN comment IS NOT NULL AND btrim(comment) <> ''
 					THEN CONCAT('BPM: ', COALESCE(bpm::text,'?'), ' — ', comment)

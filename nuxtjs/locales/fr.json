@@ -697,7 +697,7 @@
       "vetGrid": "Véto : 7 % → 12 % HTVA selon le volume, avec facteur plan (mensuel / annuel / triennal).",
       "addons": "Pas d'addons — commissionnement uniquement sur les plans (8 % mensuel / 8 % annuel / 12 % triennal).",
       "webFeatures": [
-        "Dashboard opérationnel clients / messages / FC",
+        "Dashboard opérationnel clients / messages / FR",
         "Dossier patient et messagerie",
         "Suivi commissions vétérinaires",
         "Onboarding cabinet et paramètres"
@@ -885,7 +885,7 @@
       "feature3": "Agenda / RDV, replanification et demandes depuis l’app",
       "feature4": "Pré-consultation : motif et urgence avant l’arrivée",
       "feature5": "Partage de dossier (collègues / care pro) — notes, CR, documents",
-      "feature6": "Relevés cardiaques guidés 15 / 30 / 60 s (feature différenciante, pas l’identité produit)",
+      "feature6": "Relevés respiratoires guidés 15 / 30 / 60 s (feature différenciante, pas l’identité produit)",
       "terrainTitle": "Pro Light — terrain gratuit",
       "terrain1": "Agenda, fiches animaux, notes de visite",
       "terrain2": "Partage de dossier + QR de parrainage",
@@ -973,7 +973,7 @@
       "it": "Italiano"
     },
     "heartrate": {
-      "title": "Relevé cardiaque",
+      "title": "Relevé respiratoire",
       "subtitle": "Durées de mesure proposées à vos clients.",
       "duration15": "15 secondes",
       "duration30": "30 secondes",
@@ -998,7 +998,7 @@
       "title": "Notifications email",
       "subtitle": "Choisissez les événements pour lesquels vous recevez un email.",
       "onMessage": "Nouveau message client",
-      "onHeartrate": "Relevé cardiaque validé",
+      "onHeartrate": "Relevé respiratoire validé",
       "onVisitRequest": "Nouvelle demande de rendez-vous",
       "saved": "Préférences enregistrées."
     },
@@ -1225,7 +1225,7 @@
       "kpi": {
         "pets": "Animaux",
         "unreadHeartrate": "Relevés non lus",
-        "alertSessions7d": "Alertes FC (7 j)",
+        "alertSessions7d": "Alertes FR (7 j)",
         "overdueCare": "Soins en retard",
         "pendingVisits": "RDV en attente",
         "shares": "Partages",
@@ -1245,8 +1245,8 @@
         "sharing": "Partage"
       },
       "kpi": {
-        "lastBpm": "Dernière FC",
-        "alerts": "Alertes FC (7 j)",
+        "lastBpm": "Dernière FR",
+        "alerts": "Alertes FR (7 j)",
         "lastWeight": "Dernier poids",
         "lastBp": "Dernière tension",
         "overdueCare": "Soins en retard",
@@ -1276,7 +1276,7 @@
       "dafDispensesTitle": "Dispenses DAF",
       "dafDispensesEmpty": "Aucune dispense DAF enregistrée pour cet animal.",
       "timelineRecentTitle": "Derniers événements",
-      "timelineTypeHeartrate": "Relevé cardiaque",
+      "timelineTypeHeartrate": "Relevé respiratoire",
       "timelineTypeWeight": "Poids",
       "timelineTypeBloodPressure": "Tension",
       "timelineTypeLabPanel": "Bilan labo",
@@ -1287,12 +1287,12 @@
       "chartsToggle": "Courbes de relevés",
       "chartsPreviewHint": "Aperçu des derniers relevés. Les courbes détaillées sont dans l’onglet Relevés.",
       "chartsOpenVitals": "Voir les courbes",
-      "chartsTypeHeartrate": "Fréquence cardiaque",
+      "chartsTypeHeartrate": "Fréquence respiratoire",
       "chartsTypeWeight": "Poids",
       "chartsTypeBp": "Tension",
       "chartsTypeLabs": "Bilans labo",
       "timelineDayCount": "{n} événement(s)",
-      "heartrateTitle": "Relevés cardiaques validés",
+      "heartrateTitle": "Relevés respiratoires validés",
       "heartrateEmptyTitle": "Aucun relevé validé",
       "heartrateEmptyDescription": "Les sessions BPM validées apparaîtront ici.",
       "columnDate": "Date",
@@ -1516,7 +1516,7 @@
   },
   "pets": {
     "title": "Animaux suivis",
-    "subtitle": "Tous les animaux du cabinet, avec dernière visite et relevé cardiaque.",
+    "subtitle": "Tous les animaux du cabinet, avec dernière visite et relevé respiratoire.",
     "search": "Recherche",
     "searchPlaceholder": "Nom, race, client…",
     "speciesFilter": "Type",
@@ -1532,10 +1532,13 @@
     "columnBirthDate": "Naissance",
     "columnLastVisit": "Dernière visite",
     "columnReadingType": "Type de relevé",
-    "columnLastHeartRate": "Dernière FC",
+    "columnLastHeartRate": "Dernière FR",
     "columnOwner": "Client",
     "readingType": {
-      "heartrate": "FC"
+      "heartrate": "FR"
+    },
+    "readingTypeFull": {
+      "heartrate": "Fréquence respiratoire"
     },
     "unreadBadge": "Relevé non lu",
     "unreadCount": "{n} relevés non lus"
@@ -1800,7 +1803,7 @@
     "viewCalendar": "Voir le calendrier",
     "messaging": "Messagerie",
     "about": "À propos",
-    "aboutText": "petsFollow Pro centralise la continuité de soins : dossiers clients, messagerie sécurisée, relevés cardiaques et suivi terrain pour votre cabinet vétérinaire.",
+    "aboutText": "petsFollow Pro centralise la continuité de soins : dossiers clients, messagerie sécurisée, relevés respiratoires et suivi terrain pour votre cabinet vétérinaire.",
     "aiModule": {
       "title": "Compte-rendu IA",
       "inactive": "Module non activé. Demandez à votre commercial petsFollow.",
@@ -2948,7 +2951,7 @@
       "options": {
         "label": "Options",
         "title": "Options de suivi",
-        "text": "Site web (optionnel) et durées de relevé cardiaque proposées aux clients."
+        "text": "Site web (optionnel) et durées de relevé respiratoire proposées aux clients."
       }
     }
   },
@@ -3081,7 +3084,7 @@
           "Comptes-rendus vocaux & amélioration IA inclus",
           "Passeport digital & timeline partagée",
           "Messagerie sécurisée + push (cabinet ↔ client)",
-          "Relevés cardiaques guidés 15 / 30 / 60 s",
+          "Relevés respiratoires guidés 15 / 30 / 60 s",
           "Rappels, RDV et observance",
           "Partage de dossier avec care pro / collègues",
           "Commissions partenaires (facturation externe)"
@@ -3123,7 +3126,7 @@
     "autofinanceTip": "≈ 8 activations clients triennales / mois ≈ couverture de l’équivalent mensuel Pro (≈ 69,56 € HTVA).",
     "clientPlansTitle": "Ce que paient vos clients",
     "clientPlansLead": "Le propriétaire finance le passeport de son animal — trois formules, tout inclus dès l'abonnement actif.",
-    "clientIncludedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés HR 15/30/60 s, Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
+    "clientIncludedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR 15/30/60 s, Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / mois",
@@ -3162,7 +3165,7 @@
         "Comptes-rendus vocaux & amélioration IA inclus",
         "Passeport digital + timeline partagée (cabinet / client / care pro)",
         "Messagerie sécurisée client ↔ cabinet + push",
-        "Relevés cardiaques guidés 15 / 30 / 60 s",
+        "Relevés respiratoires guidés 15 / 30 / 60 s",
         "Rappels et demandes de RDV",
         "Partage de dossier (collègues / care pro)",
         "Suivi des activations clients et commissions partenaires"
@@ -3185,10 +3188,10 @@
     "clientFeatures": [
       "Passeport / carnet digital toujours en poche",
       "Messagerie avec le cabinet + rappels push",
-      "Relevés cardiaques guidés 15 / 30 / 60 s",
+      "Relevés respiratoires guidés 15 / 30 / 60 s",
       "Care / Horse / foyer inclus dès animal payant"
     ],
-    "includedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés HR, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
     "economyTitle": "Autofinancement & engagements",
     "partnerLead": "Les commissions sur activations clients compensent l’abonnement Pro (règlement hors ligne).",
     "partnerSteps": [
@@ -3221,7 +3224,7 @@
     "includedLead": "Quel que soit le plan (mensuel, annuel ou triennal), le propriétaire dispose de :",
     "included": [
       "Passeport digital / carnet : timeline et dossier partagé",
-      "Relevés cardiaques guidés 15 / 30 / 60 s depuis l'app mobile",
+      "Relevés respiratoires guidés 15 / 30 / 60 s depuis l'app mobile",
       "Envoi et validation des sessions par le cabinet",
       "Messagerie sécurisée client ↔ vétérinaire + notifications push",
       "Rappels de soins (standards, médicaments, perso) et pack équine si cheval",
@@ -3369,12 +3372,12 @@
     "terms": {
       "title": "Conditions générales d'utilisation",
       "link": "CGU",
-      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires. L'application permet le suivi prescrit (messagerie, rappels Care/Horse, relevés cardiaques) et la communication avec le cabinet. Les paiements d'abonnement et d'addons sont traités par Stripe. L'utilisateur s'engage à utiliser le service conformément à sa destination. Contact : support{'@'}petsfollow.app."
+      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires. L'application permet le suivi prescrit (messagerie, rappels Care/Horse, relevés respiratoires) et la communication avec le cabinet. Les paiements d'abonnement et d'addons sont traités par Stripe. L'utilisateur s'engage à utiliser le service conformément à sa destination. Contact : support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Politique de confidentialité",
       "link": "Confidentialité",
-      "body": "petsFollow traite des données personnelles pour fournir la continuité de soins animal : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (Firebase Cloud Messaging), données de paiement traitées par Stripe. Finalités : compte, suivi, messagerie, notifications, comptes rendus, facturation. Traitement IA : Google Gemini est utilisé pour l'amélioration des comptes rendus de visite, l'import de fichiers clients et l'entraînement au pitch commercial (audio traité en temps réel, non conservé par Google). Partenaires : Google (Sign-In, FCM, Gemini), Stripe, hébergement Google Cloud Platform. Conservation : durée du compte puis effacement ; comptes inactifs purgés après 3 ans ; enregistrements audio des comptes rendus conservés le temps du dossier. Droits RGPD (accès, rectification, suppression, portabilité) : paramètres (export de vos données, suppression du compte), ou support{'@'}petsfollow.app."
+      "body": "petsFollow traite des données personnelles pour fournir la continuité de soins animal : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence respiratoire (données de santé animale), messages et médias avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (Firebase Cloud Messaging), données de paiement traitées par Stripe. Finalités : compte, suivi, messagerie, notifications, comptes rendus, facturation. Traitement IA : Google Gemini est utilisé pour l'amélioration des comptes rendus de visite, l'import de fichiers clients et l'entraînement au pitch commercial (audio traité en temps réel, non conservé par Google). Partenaires : Google (Sign-In, FCM, Gemini), Stripe, hébergement Google Cloud Platform. Conservation : durée du compte puis effacement ; comptes inactifs purgés après 3 ans ; enregistrements audio des comptes rendus conservés le temps du dossier. Droits RGPD (accès, rectification, suppression, portabilité) : paramètres (export de vos données, suppression du compte), ou support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Mentions légales",
@@ -3635,8 +3638,8 @@
       },
       "heartrate": {
         "validate": {
-          "label": "Valider la FC",
-          "tip": "Valider les relevés de fréquence cardiaque."
+          "label": "Valider la FR",
+          "tip": "Valider les relevés de fréquence respiratoire."
         }
       },
       "messaging": {
@@ -3841,7 +3844,7 @@
     "errorTitle": "Dossier introuvable",
     "marketingTitle": "Rejoignez petsFollow",
     "marketingText": "Centralisez le suivi, la messagerie et les soins avec les propriétaires.",
-    "benefitFollow": "Relevé cardiaque et timeline partagée",
+    "benefitFollow": "Relevé respiratoire et timeline partagée",
     "benefitMessages": "Messagerie sécurisée avec les clients",
     "benefitContinuity": "Continuité de soins multi-professionnels",
     "registerCta": "Créer un compte professionnel",
@@ -3862,7 +3865,7 @@
     "errorTitle": "Consultation introuvable",
     "marketingTitle": "Rejoignez petsFollow",
     "marketingText": "Centralisez le suivi, la messagerie et les soins avec les propriétaires.",
-    "benefitFollow": "Relevé cardiaque et timeline partagée",
+    "benefitFollow": "Relevé respiratoire et timeline partagée",
     "benefitMessages": "Messagerie sécurisée avec les clients",
     "benefitContinuity": "Continuité de soins multi-professionnels",
     "registerCta": "Créer un compte professionnel",
@@ -4071,7 +4074,7 @@
       "lab_flag": "Labs (flag)",
       "care_preventive": "Care préventif",
       "antibiotic_daf": "DAF antibiotique",
-      "hr_alert": "Alerte FC"
+      "hr_alert": "Alerte FR"
     },
     "settings": {
       "title": "petsFollow Research",
@@ -4201,8 +4204,8 @@
         "desc": "Threads croisés cabinet ↔ propriétaire, avec push côté client."
       },
       "hr_vitals": {
-        "title": "Relevés cardiaques",
-        "desc": "Mesures FC côté client ; validation et suivi côté véto."
+        "title": "Relevés respiratoires",
+        "desc": "Mesures FR côté client ; validation et suivi côté véto."
       },
       "link_requests": {
         "title": "Demandes de liaison",
@@ -4269,12 +4272,12 @@
       "vet_register": "Inscription + confirm e-mail",
       "vet_onboarding": "Onboarding profil cabinet",
       "vet_dashboard": "Dashboard clients & demandes",
-      "vet_care": "Messagerie, relevés FC, partage dossier",
+      "vet_care": "Messagerie, relevés FR, partage dossier",
       "vet_earn": "Commissions & modules cabinet",
       "client_register": "Register / login (e-mail ou Google)",
       "client_pet": "Créer un animal + choisir un plan",
       "client_pay": "Checkout Stripe",
-      "client_active": "Entitlement actif → FC, messages, Care/Horse",
+      "client_active": "Entitlement actif → FR, messages, Care/Horse",
       "client_engage": "Discovery in-app + e-mails éducatifs",
       "care_login": "Login care_pro (Pro Light)",
       "care_agenda": "Agenda / tournée du jour",
@@ -4316,7 +4319,7 @@
       },
       "hr_client_vet": {
         "label": "Relevé → validation",
-        "desc": "Le propriétaire envoie une FC ; le véto la voit et la valide."
+        "desc": "Le propriétaire envoie une FR ; le véto la voit et la valide."
       },
       "pay_client_commissions": {
         "label": "Paiement → commission commercial",
