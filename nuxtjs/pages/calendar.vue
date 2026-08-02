@@ -201,6 +201,14 @@
           >
             {{ $t('calendar.sourceCarePro') }}
           </ProBadge>
+          <ProBadge
+            v-if="selectedVisit.waitingRoomAt"
+            variant="warning"
+            data-testid="visit-waiting-room-badge"
+            :title="$t('calendar.waitingRoomTooltip')"
+          >
+            {{ $t('calendar.waitingRoomTag') }}
+          </ProBadge>
         </p>
         <p v-if="selectedVisit.preconsultStatus || preconsult" data-testid="visit-preconsult-status">
           <strong>{{ $t('calendar.preconsultLabel') }} :</strong>
@@ -278,7 +286,7 @@
             </dl>
           </div>
         </div>
-        <div class="pro-field pro-mb-md">
+        <div v-if="canWriteClinical" class="pro-field pro-mb-md">
           <ProInput
             v-model="visitAddress"
             :label="$t('calendar.address')"
@@ -305,7 +313,7 @@
           </div>
           <p v-if="addressMsg" class="pro-hint">{{ addressMsg }}</p>
         </div>
-        <div class="pro-field pro-mb-md">
+        <div v-if="canWriteClinical" class="pro-field pro-mb-md">
           <ProVisitReportPanel
             :visit-id="selectedVisit.id"
             :visit-scheduled-at="selectedVisit.scheduledAt || selectedVisit.proposedScheduledAt"
@@ -316,6 +324,28 @@
             :client-user-id="selectedVisit.clientId || ''"
             :pet-id="''"
           />
+        </div>
+        <div class="pro-field pro-mb-md" data-testid="calendar-desk-note">
+          <label class="pro-label" for="calendar-desk-note-input">{{ $t('calendar.deskNote') }}</label>
+          <textarea
+            id="calendar-desk-note-input"
+            v-model="deskNote"
+            class="pro-textarea"
+            rows="4"
+            data-testid="calendar-desk-note-input"
+            :placeholder="$t('calendar.deskNotePlaceholder')"
+          />
+          <div class="pro-flex-gap" style="margin-top: 0.5rem">
+            <ProButton
+              variant="secondary"
+              :disabled="deskNoteBusy || !selectedVisit.id"
+              test-id="calendar-desk-note-save"
+              @click="saveDeskNote"
+            >
+              {{ $t('calendar.deskNoteSave') }}
+            </ProButton>
+          </div>
+          <p v-if="deskNoteMsg" class="pro-hint">{{ deskNoteMsg }}</p>
         </div>
         <div class="pro-flex-gap create-client-actions">
           <label
@@ -348,14 +378,23 @@
             @click="actFromDetail('reject_reschedule')"
           />
           <ProIconAction
+            v-if="canSendPreconsult"
+            icon="mail"
+            :label="$t('calendar.sendPreconsult')"
+            :disabled="busyId === selectedVisit.id"
+            test-id="calendar-send-preconsult"
+            @click="actFromDetail('send_preconsult')"
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'confirmed' && !selectedVisit.consultationSession"
             icon="event"
-            :label="$t('calendar.proposeMove')"
+            :label="$t('calendar.changeTime')"
             :disabled="busyId === selectedVisit.id"
+            test-id="calendar-change-time"
             @click="openReschedule(selectedVisit)"
           />
           <ProIconAction
-            v-if="selectedVisit.status === 'confirmed' && selectedVisit.consultationSession"
+            v-if="selectedVisit.status === 'confirmed' && selectedVisit.consultationSession && canWriteClinical"
             icon="task_alt"
             :label="$t('calendar.markDone')"
             :disabled="busyId === selectedVisit.id"
@@ -363,18 +402,35 @@
             @click="actFromDetail('done')"
           />
           <ProIconAction
+            v-if="!selectedVisit.consultationSession && !selectedVisit.waitingRoomAt"
+            icon="hourglass_top"
+            :label="$t('calendar.waitingRoomOn')"
+            :disabled="busyId === selectedVisit.id"
+            test-id="calendar-waiting-room-on"
+            @click="actFromDetail('mark_waiting_room')"
+          />
+          <ProIconAction
+            v-if="!selectedVisit.consultationSession && selectedVisit.waitingRoomAt"
+            icon="hourglass_bottom"
+            :label="$t('calendar.waitingRoomOff')"
+            :disabled="busyId === selectedVisit.id"
+            test-id="calendar-waiting-room-off"
+            @click="actFromDetail('clear_waiting_room')"
+          />
+          <ProIconAction
             v-if="!selectedVisit.consultationSession"
             icon="cancel"
             variant="danger"
-            :label="$t('calendar.cancel')"
+            :label="canWriteClinical ? $t('calendar.cancel') : $t('calendar.deleteVisit')"
             :disabled="busyId === selectedVisit.id"
+            test-id="calendar-delete-visit"
             @click="actFromDetail('cancel')"
           />
         </div>
       </div>
     </ProModal>
 
-    <ProModal v-model:open="rescheduleOpen" :title="$t('calendar.proposeMove')">
+    <ProModal v-model:open="rescheduleOpen" :title="$t('calendar.changeTime')">
       <form class="pro-form" @submit.prevent="submitReschedule">
         <ProInput
           v-model="rescheduleAt"
@@ -382,6 +438,17 @@
           :label="$t('calendar.newSlot')"
           required
         />
+        <fieldset class="pro-fieldset" data-testid="calendar-reschedule-mode">
+          <legend class="pro-label">{{ $t('calendar.rescheduleMode') }}</legend>
+          <label class="pro-checkbox-label">
+            <input v-model="rescheduleMode" type="radio" value="propose" class="pro-radio">
+            {{ $t('calendar.rescheduleModePropose') }}
+          </label>
+          <label class="pro-checkbox-label">
+            <input v-model="rescheduleMode" type="radio" value="direct" class="pro-radio">
+            {{ $t('calendar.rescheduleModeDirect') }}
+          </label>
+        </fieldset>
         <p v-if="rescheduleError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">
           {{ rescheduleError }}
         </p>
@@ -393,8 +460,9 @@
             type="submit"
             :loading="busyId === rescheduleVisitId"
             :disabled="busyId === rescheduleVisitId"
+            test-id="calendar-reschedule-submit"
           >
-            {{ $t('calendar.sendPropose') }}
+            {{ rescheduleMode === 'direct' ? $t('calendar.rescheduleConfirmDirect') : $t('calendar.sendPropose') }}
           </ProButton>
         </div>
       </form>
@@ -422,6 +490,7 @@ const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const runtimeConfig = useRuntimeConfig()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const showCalendarDafTreatments = computed(
   () => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled) && canPractice('pharmacy.write'),
 )
@@ -469,6 +538,9 @@ const selectedVisit = ref<CalendarVisit | null>(null)
 const visitAddress = ref('')
 const addressBusy = ref(false)
 const addressMsg = ref('')
+const deskNote = ref('')
+const deskNoteBusy = ref(false)
+const deskNoteMsg = ref('')
 const preconsult = ref<{
   status?: string
   aiUrgency?: string
@@ -551,6 +623,14 @@ const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
 const rescheduleError = ref('')
+const rescheduleMode = ref<'propose' | 'direct'>('propose')
+
+const canSendPreconsult = computed(() => {
+  const v = selectedVisit.value
+  if (!v || v.consultationSession || v.status !== 'confirmed') return false
+  const st = preconsult.value?.status || v.preconsultStatus || ''
+  return !st
+})
 
 const mapsUrl = computed(() => {
   const v = selectedVisit.value
@@ -677,7 +757,10 @@ async function load() {
 }
 
 async function act(id: string, action: string) {
-  if (action === 'cancel' && !window.confirm(t('calendar.cancelConfirm'))) return
+  if (action === 'cancel') {
+    const msg = canWriteClinical.value ? t('calendar.cancelConfirm') : t('calendar.deleteConfirm')
+    if (!window.confirm(msg)) return
+  }
   if (action === 'reject_reschedule' && !window.confirm(t('calendar.rejectRescheduleConfirm'))) return
   busyId.value = id
   actionError.value = ''
@@ -686,7 +769,24 @@ async function act(id: string, action: string) {
     if (action === 'confirm' && requestPreconsult.value) {
       body.requestPreconsult = true
     }
-    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body })
+    const res: any = await $fetch(`/api/visits/${id}`, { method: 'PATCH', body })
+    const data = res?.data ?? res
+    if (
+      selectedVisit.value?.id === id
+      && (action === 'mark_waiting_room' || action === 'clear_waiting_room' || action === 'send_preconsult')
+    ) {
+      selectedVisit.value = {
+        ...selectedVisit.value,
+        ...data,
+        waitingRoomAt: data?.waitingRoomAt ?? (action === 'clear_waiting_room' ? null : selectedVisit.value.waitingRoomAt),
+        preconsultStatus: data?.preconsultStatus || selectedVisit.value.preconsultStatus,
+      }
+      if (action === 'send_preconsult') {
+        await loadVisitPreconsult(id)
+      }
+      await load()
+      return
+    }
     detailOpen.value = false
     requestPreconsult.value = false
     await load()
@@ -706,10 +806,32 @@ function openVisitDetail(v: CalendarVisit) {
   selectedVisit.value = v
   visitAddress.value = v.addressText || ''
   addressMsg.value = ''
+  deskNote.value = v.notes || ''
+  deskNoteMsg.value = ''
   preconsult.value = null
   focusVisitId.value = v.id
   detailOpen.value = true
   void loadVisitPreconsult(v.id)
+}
+
+async function saveDeskNote() {
+  if (!selectedVisit.value) return
+  deskNoteBusy.value = true
+  deskNoteMsg.value = ''
+  try {
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/notes`, {
+      method: 'PATCH',
+      body: { notes: deskNote.value },
+    })
+    const data = res.data ?? res
+    selectedVisit.value = { ...selectedVisit.value, notes: data.notes ?? deskNote.value }
+    deskNoteMsg.value = t('calendar.deskNoteSaved')
+    await load()
+  } catch (e: any) {
+    deskNoteMsg.value = mapError(e)
+  } finally {
+    deskNoteBusy.value = false
+  }
 }
 
 async function loadVisitPreconsult(visitId: string) {
@@ -781,6 +903,7 @@ function openReschedule(v: CalendarVisit) {
   rescheduleVisitId.value = v.id
   rescheduleAt.value = ''
   rescheduleError.value = ''
+  rescheduleMode.value = 'propose'
   actionSuccess.value = ''
   rescheduleOpen.value = true
   detailOpen.value = false
@@ -803,14 +926,17 @@ async function submitReschedule() {
       return
     }
     const iso = at.toISOString()
+    const action = rescheduleMode.value === 'direct' ? 'reschedule_direct' : 'propose_reschedule'
     await $fetch(`/api/visits/${rescheduleVisitId.value}`, {
       method: 'PATCH',
-      body: { action: 'propose_reschedule', proposedScheduledAt: iso },
+      body: { action, proposedScheduledAt: iso },
     })
     rescheduleOpen.value = false
     rescheduleError.value = ''
     await load()
-    actionSuccess.value = t('calendar.proposeSent')
+    actionSuccess.value = action === 'reschedule_direct'
+      ? t('calendar.rescheduleDirectDone')
+      : t('calendar.proposeSent')
   } catch (e: any) {
     rescheduleError.value = mapError(e)
   } finally {

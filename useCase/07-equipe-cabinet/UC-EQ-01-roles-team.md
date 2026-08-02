@@ -33,12 +33,14 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 4. Se déconnecter → se connecter en `vet.colleague` : accès cabinet cohérent.
 5. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits) — **Histo. consultations** visible.
 6. Se connecter en `secretary.demo` : focus secrétariat (**Agenda** + clients) ; **pas** d’entrée **Histo. consultations** dans le menu (droit `consultations.history.read` OFF par défaut ; réactivable via Équipe).
+7. Ouvrir **Agenda** → cliquer un RDV confirmé : le détail est un mode **desk** (note + enregistrer, envoyer pré-consultation si absente, modifier l’heure proposer/valider, supprimer avec confirm, « client en salle d’attente ») — **pas** de dictée / CR IA.
 
 ## Résultat attendu
 
 - Page Équipe lisible côté véto référence (droits compréhensibles ; tip Agenda ≠ historique).
 - Chaque rôle se connecte ; l’espace **Admin** reste inaccessible.
 - Différences de droits **perceptibles** entre assistante / secrétaire / collègue (dont historique consultations).
+- Secrétaire : détail RDV administratif (pas de panneau clinique) ; tags pré-consult / salle d’attente visibles sur l’agenda.
 
 ## Checklist
 
@@ -48,6 +50,7 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 | Login collègue | OK / KO / N/A |
 | Login assistante | OK / KO / N/A |
 | Login secrétaire | OK / KO / N/A |
+| Détail RDV desk secrétaire | OK / KO / N/A |
 
 ## Zone retour
 

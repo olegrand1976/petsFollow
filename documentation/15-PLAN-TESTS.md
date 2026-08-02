@@ -208,6 +208,7 @@ Compte : `vet.demo@petsfollow.test`
 | C3.7 | P2 | GPS / adresse | Saisir adresse visite | Lien Maps si présent |
 | C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm |
 | C3.9 | P1 | Pré-consult urgente | Opt-in pré-consult → client soumet `urgency=high` | Badge Urgent calendrier ; détail + IA informatif ; email véto immédiat (alerte clinique) |
+| C3.10 | P1 | Desk secrétaire RDV | `/calendar` en `secretary.demo` → détail RDV | Pas de CR/dictée ; note + save ; send pré-consult si absente ; change heure propose/direct ; cancel confirm ; salle d’attente (tag + notif topbar clinique) ; tags pré-C tooltip ; e2e `13-team-staff-smoke` B2c |
 
 ### C4 — Messagerie Pro
 
@@ -575,6 +576,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L8 | P0 | `shares.read` vs manage | Secrétaire / assist : onglet partages visible, pas de create/revoke ; GET OK / POST 403 |
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
 | L10 | P0 | `consultations.history.read` | Cap distinct de `calendar.manage` ; secrétaire OFF par défaut (nav + `/consultations` + `GET /vet/consultations` 403) ; soft-delete = history.read ∧ write_clinical ; ASV/véto ON ; tip Équipe Agenda ≠ historique ; e2e `13-team-staff-smoke` B2b |
+| L11 | P1 | Agenda desk secrétaire | Sans `pets.write_clinical` : modal détail sans CR ; `PATCH …/notes`, `send_preconsult`, `reschedule_direct`, `mark_waiting_room` ; tags chips + `GET /vet/desk-alerts` ; e2e B2c + Go `TestSecretaryDesk*` |
 
 ## M — Concurrence commerciale
 
@@ -793,7 +795,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
-| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly + histo. consultations OFF secrétaire | `@p0` |
+| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly + histo. consultations OFF secrétaire + détail RDV desk (B2c) | `@p0` |
 | `13b-desk-switch` | Switch poste partagé + veille (lock overlay) + reprise consultation mid-veille (scénario G) | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |

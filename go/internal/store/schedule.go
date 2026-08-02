@@ -201,7 +201,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			COALESCE(v.consultation_session, false),
 			COALESCE(v.visit_type_id::text, ''),
 			COALESCE(vt.name, ''),
-			COALESCE(vt.color, '')
+			COALESCE(vt.color, ''),
+			v.waiting_room_at
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -227,7 +228,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
-			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor,
+			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor, &v.WaitingRoomAt,
 		); err != nil {
 			return nil, err
 		}

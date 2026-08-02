@@ -456,6 +456,21 @@ a.pro-kpi-card:focus-visible {
 .cal-chip--urgent {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pf-vet-alert) 50%, transparent);
 }
+.cal-chip--waiting {
+  box-shadow: inset 3px 0 0 var(--pf-vet-accent);
+}
+.cal-chip__waiting,
+.cal-chip__preconsult {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--pf-vet-accent);
+  flex-shrink: 0;
+}
+.cal-chip__preconsult--answered {
+  color: var(--pf-vet-primary);
+}
 .cal-chip__urgent {
   font-size: 0.6rem;
   font-weight: 700;

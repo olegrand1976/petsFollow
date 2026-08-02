@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
@@ -1127,6 +1129,83 @@ func (s *Store) HasNotificationKindForVisit(ctx context.Context, kind, visitID s
 		SELECT COUNT(*)::int FROM notifications.notification_log
 		WHERE kind = $1 AND payload->>'visitId' = $2`, kind, visitID).Scan(&n)
 	return n > 0, err
+}
+
+// DeskAlert is a Pro topbar alert from notification_log (waiting room, etc.).
+type DeskAlert struct {
+	ID        string         `json:"id"`
+	Kind      string         `json:"kind"`
+	Payload   map[string]any `json:"payload"`
+	CreatedAt time.Time      `json:"createdAt"`
+	ReadAt    *time.Time     `json:"readAt,omitempty"`
+}
+
+// ListUnreadDeskAlerts returns recent unread desk kinds for a practice staff user.
+func (s *Store) ListUnreadDeskAlerts(ctx context.Context, vetUserID string, limit int) ([]DeskAlert, error) {
+	if limit <= 0 {
+		limit = 30
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, kind, payload, created_at, read_at
+		FROM notifications.notification_log
+		WHERE vet_user_id = $1
+		  AND read_at IS NULL
+		  AND kind = ANY($2::text[])
+		ORDER BY created_at DESC
+		LIMIT $3`, vetUserID, []string{"waiting_room"}, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []DeskAlert
+	for rows.Next() {
+		var a DeskAlert
+		var payload []byte
+		if err := rows.Scan(&a.ID, &a.Kind, &payload, &a.CreatedAt, &a.ReadAt); err != nil {
+			return nil, err
+		}
+		_ = json.Unmarshal(payload, &a.Payload)
+		if a.Payload == nil {
+			a.Payload = map[string]any{}
+		}
+		out = append(out, a)
+	}
+	if out == nil {
+		out = []DeskAlert{}
+	}
+	return out, rows.Err()
+}
+
+// MarkDeskAlertsRead marks unread desk alerts as read for a user (all or by ids).
+func (s *Store) MarkDeskAlertsRead(ctx context.Context, vetUserID string, ids []string) (int, error) {
+	var tag pgconn.CommandTag
+	var err error
+	if len(ids) == 0 {
+		tag, err = s.pool.Exec(ctx, `
+			UPDATE notifications.notification_log
+			SET read_at = now()
+			WHERE vet_user_id = $1 AND read_at IS NULL AND kind = ANY($2::text[])`,
+			vetUserID, []string{"waiting_room"})
+	} else {
+		tag, err = s.pool.Exec(ctx, `
+			UPDATE notifications.notification_log
+			SET read_at = now()
+			WHERE vet_user_id = $1 AND read_at IS NULL AND id = ANY($2::uuid[])`,
+			vetUserID, ids)
+	}
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
+}
+
+// MarkWaitingRoomAlertsReadForVisit marks waiting_room alerts for a visit as read for all recipients.
+func (s *Store) MarkWaitingRoomAlertsReadForVisit(ctx context.Context, visitID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE notifications.notification_log
+		SET read_at = COALESCE(read_at, now())
+		WHERE kind = 'waiting_room' AND payload->>'visitId' = $1 AND read_at IS NULL`, visitID)
+	return err
 }
 
 func (s *Store) GetVetForClient(ctx context.Context, clientID, practiceID string) (string, error) {

@@ -88,6 +88,25 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByTestId('consultations-page')).toHaveCount(0)
   })
 
+  test('B2c: secretary — détail RDV desk (pas de CR clinique)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/calendar', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('calendar-page')).toBeVisible({ timeout: 15000 })
+    const chip = page.locator('[data-testid^="calendar-chip-"]:not(.cal-chip--walkin)').first()
+    if ((await chip.count()) === 0) {
+      test.skip(true, 'aucun RDV non walk-in visible sur l’agenda seed pour le smoke desk')
+      return
+    }
+    await chip.click()
+    await expect(page.getByTestId('calendar-desk-note')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('calendar-desk-note-input')).toBeVisible()
+    await expect(page.getByTestId('visit-address')).toHaveCount(0)
+    await expect(page.getByTestId('calendar-delete-visit')).toBeVisible()
+    await expect(
+      page.getByTestId('calendar-waiting-room-on').or(page.getByTestId('calendar-waiting-room-off')),
+    ).toBeVisible()
+  })
+
   test('B3: secretary — /prescriptions/nouveau redirect (no write_clinical)', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
     await page.goto('/prescriptions/nouveau', { waitUntil: 'domcontentloaded' })

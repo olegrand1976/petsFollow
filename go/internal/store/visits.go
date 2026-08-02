@@ -42,6 +42,8 @@ type Visit struct {
 	RequestPreconsult bool `json:"requestPreconsult,omitempty"`
 	// ConsultationSession: walk-in CR flow — excluded from agenda overlap / slot busy.
 	ConsultationSession bool `json:"consultationSession,omitempty"`
+	// WaitingRoomAt: desk marked client as arrived / in waiting room.
+	WaitingRoomAt *time.Time `json:"waitingRoomAt,omitempty"`
 	// HasFinalReport: at least one visit_reports row with status=final (client list enrichment).
 	HasFinalReport bool `json:"hasFinalReport,omitempty"`
 	// ReportStatus: owner-only enrichment — "final" | "draft" (never draft body text).
@@ -417,15 +419,88 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)
+			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
+			waiting_room_at
 		FROM visits.visits WHERE id = $1 AND deleted_at IS NULL`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession)
+		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}
 	return v, err
+}
+
+// UpdateVisitNotes sets agenda / desk notes (calendar.manage — not clinical CR).
+func (s *Store) UpdateVisitNotes(ctx context.Context, id, notes string) (Visit, error) {
+	if len(notes) > 1000 {
+		notes = notes[:1000]
+	}
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits SET notes = $2 WHERE id = $1 AND deleted_at IS NULL`, id, notes)
+	if err != nil {
+		return Visit{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return Visit{}, ErrNotFound
+	}
+	return s.GetVisit(ctx, id)
+}
+
+// RescheduleVisitDirect sets scheduled_at immediately (staff unilateral move).
+// Status stays confirmed (or becomes confirmed from reschedule_pending only).
+func (s *Store) RescheduleVisitDirect(ctx context.Context, id string, at time.Time) (Visit, error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits
+		SET scheduled_at = $2,
+			proposed_scheduled_at = NULL,
+			pending_action_by = NULL,
+			status_before_reschedule = NULL,
+			status = 'confirmed'
+		WHERE id = $1
+		  AND deleted_at IS NULL
+		  AND COALESCE(consultation_session, false) = false
+		  AND status IN ('confirmed', 'reschedule_pending')`,
+		id, at,
+	)
+	if err != nil {
+		return Visit{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return Visit{}, ErrNotFound
+	}
+	return s.GetVisit(ctx, id)
+}
+
+// MarkVisitWaitingRoom sets waiting_room_at = now() when currently null. Returns (visit, newlyMarked, err).
+func (s *Store) MarkVisitWaitingRoom(ctx context.Context, id string) (Visit, bool, error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits
+		SET waiting_room_at = now()
+		WHERE id = $1 AND deleted_at IS NULL AND waiting_room_at IS NULL
+		  AND status IN ('requested', 'confirmed', 'reschedule_pending')`, id)
+	if err != nil {
+		return Visit{}, false, err
+	}
+	v, gerr := s.GetVisit(ctx, id)
+	if gerr != nil {
+		return Visit{}, false, gerr
+	}
+	return v, tag.RowsAffected() > 0, nil
+}
+
+// ClearVisitWaitingRoom clears the waiting-room flag.
+func (s *Store) ClearVisitWaitingRoom(ctx context.Context, id string) (Visit, error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits SET waiting_room_at = NULL
+		WHERE id = $1 AND deleted_at IS NULL`, id)
+	if err != nil {
+		return Visit{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return Visit{}, ErrNotFound
+	}
+	return s.GetVisit(ctx, id)
 }
 
 // SetVisitRequestPreconsult toggles the opt-in flag (VetPro calendar.manage).

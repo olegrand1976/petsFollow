@@ -43,9 +43,11 @@
               'cal-chip--walkin': !!v.consultationSession,
               'cal-chip--typed': !!v.visitTypeColor,
               'cal-chip--urgent': v.preconsultAlert === 'urgent',
+              'cal-chip--waiting': !!v.waitingRoomAt,
             },
           ]"
           :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
+          :title="chipTitle(v) || undefined"
           :data-testid="`calendar-chip-${v.id}`"
           @click="emit('select-visit', v)"
         >
@@ -53,10 +55,29 @@
           <span v-if="v.visitTypeName" class="cal-chip__type">{{ v.visitTypeName }}</span>
           <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span
+            v-if="v.waitingRoomAt"
+            class="cal-chip__waiting"
+            data-testid="calendar-chip-waiting-room"
+            :title="$t('calendar.waitingRoomTooltip')"
+          >{{ $t('calendar.waitingRoomTag') }}</span>
+          <span
             v-if="v.preconsultAlert === 'urgent'"
             class="cal-chip__urgent"
             data-testid="calendar-chip-preconsult-urgent"
+            :title="$t('calendar.preconsultUrgentTooltip')"
           >{{ $t('calendar.preconsultUrgentShort') }}</span>
+          <span
+            v-else-if="v.preconsultStatus === 'submitted'"
+            class="cal-chip__preconsult cal-chip__preconsult--answered"
+            data-testid="calendar-chip-preconsult-answered"
+            :title="$t('calendar.preconsultAnsweredTooltip')"
+          >{{ $t('calendar.preconsultAnsweredTag') }}</span>
+          <span
+            v-else-if="v.preconsultStatus === 'pending'"
+            class="cal-chip__preconsult cal-chip__preconsult--sent"
+            data-testid="calendar-chip-preconsult-sent"
+            :title="$t('calendar.preconsultSentTooltip')"
+          >{{ $t('calendar.preconsultSentTag') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
           <span v-if="v.addressText" class="cal-chip__place">{{ v.addressText }}</span>
         </button>
@@ -67,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
+import { calendarChipTooltip, type CalendarVacation, type CalendarVisit } from '~/composables/useCalendarGrid'
 
 const props = defineProps<{
   weekStart: Date
@@ -89,6 +110,10 @@ const {
   statusVariant,
   startOfDay,
 } = useCalendarGrid()
+
+function chipTitle(v: CalendarVisit) {
+  return calendarChipTooltip(v, t)
+}
 
 const byDay = computed(() => visitsByDay(props.visits))
 const todayKey = dayKey(startOfDay(new Date()))

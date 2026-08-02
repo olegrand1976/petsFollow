@@ -1,3 +1,5 @@
+import { isPracticeStaffRole } from './useAuth'
+
 export type ProNotificationItem = {
   id: string
   label: string
@@ -19,33 +21,75 @@ function onVisibility() {
 
 export function useProNotifications() {
   const { t } = useI18n()
+  const { user } = useProUser()
   const threadsState = useState<any[]>('pro-notif-threads', () => [])
+  const deskAlertsState = useState<any[]>('pro-notif-desk-alerts', () => [])
   const loadedState = useState<boolean>('pro-notif-loaded', () => false)
+  const canFetchDeskAlerts = computed(() => isPracticeStaffRole(user.value?.role))
 
   const unreadThreads = computed(() =>
     threadsState.value.filter((thread) => (thread.unreadCount ?? 0) > 0),
   )
 
-  const items = computed<ProNotificationItem[]>(() =>
-    unreadThreads.value.map((thread) => ({
+  const deskItems = computed<ProNotificationItem[]>(() =>
+    deskAlertsState.value.map((alert) => {
+      const payload = alert.payload || {}
+      const client = payload.clientName || ''
+      const pet = payload.petName || ''
+      const visitId = payload.visitId || ''
+      return {
+        id: `desk-${alert.id}`,
+        label: t('calendar.waitingRoomNotif'),
+        preview: [client, pet].filter(Boolean).join(' · ') || t('calendar.waitingRoomNotifPreview'),
+        href: visitId ? `/calendar?visit=${encodeURIComponent(visitId)}` : '/calendar',
+      }
+    }),
+  )
+
+  const items = computed<ProNotificationItem[]>(() => [
+    ...deskItems.value,
+    ...unreadThreads.value.map((thread) => ({
       id: thread.id,
       label: thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' }),
       preview: thread.lastMessagePreview || undefined,
       href: `/messages?thread=${thread.id}`,
     })),
-  )
+  ])
 
-  const count = computed(() =>
-    unreadThreads.value.reduce((sum, t) => sum + (t.unreadCount ?? 0), 0),
+  const count = computed(
+    () =>
+      deskAlertsState.value.length
+      + unreadThreads.value.reduce((sum, th) => sum + (th.unreadCount ?? 0), 0),
   )
 
   async function refresh() {
     try {
-      const res: any = await $fetch('/api/messaging/threads')
-      const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      const deskFetch = canFetchDeskAlerts.value
+        ? $fetch('/api/vet/desk-alerts').catch(() => null)
+        : Promise.resolve(null)
+      const [threadsRes, deskRes]: any[] = await Promise.all([
+        $fetch('/api/messaging/threads').catch(() => null),
+        deskFetch,
+      ])
+      const list = Array.isArray(threadsRes?.data)
+        ? threadsRes.data
+        : Array.isArray(threadsRes)
+          ? threadsRes
+          : []
       threadsState.value = list.filter((item: any) => item != null && item.id != null)
+      if (!canFetchDeskAlerts.value) {
+        deskAlertsState.value = []
+      } else {
+        const alerts = Array.isArray(deskRes?.data)
+          ? deskRes.data
+          : Array.isArray(deskRes)
+            ? deskRes
+            : []
+        deskAlertsState.value = alerts.filter((a: any) => a != null && a.id != null)
+      }
     } catch {
       threadsState.value = []
+      deskAlertsState.value = []
     } finally {
       loadedState.value = true
     }
@@ -54,11 +98,18 @@ export function useProNotifications() {
   sharedRefresh = refresh
 
   async function markAllRead() {
-    await $fetch('/api/messaging/threads/read-all', { method: 'POST' })
+    const jobs: Promise<unknown>[] = [
+      $fetch('/api/messaging/threads/read-all', { method: 'POST' }).catch(() => null),
+    ]
+    if (canFetchDeskAlerts.value) {
+      jobs.push($fetch('/api/vet/desk-alerts/read', { method: 'POST', body: {} }).catch(() => null))
+    }
+    await Promise.all(jobs)
     threadsState.value = threadsState.value.map((thread) => ({
       ...thread,
       unreadCount: 0,
     }))
+    deskAlertsState.value = []
   }
 
   function startPolling() {

@@ -345,6 +345,32 @@ func (a *API) enrichPublicPreconsultLinks(ctx context.Context, out *store.Public
 	}
 }
 
+// errPreconsultAlreadySent is returned when a public invite was already issued.
+var errPreconsultAlreadySent = errors.New("preconsult_already_sent")
+
+// issuePreconsultInvite ensures pending intake + public token + email (once per visit).
+func (a *API) issuePreconsultInvite(ctx context.Context, pet store.Pet, visit store.Visit) error {
+	already, err := a.store.HasPreconsultInviteIssued(ctx, visit.ID)
+	if err != nil {
+		return err
+	}
+	if already {
+		return errPreconsultAlreadySent
+	}
+	if err := a.store.SetVisitRequestPreconsult(ctx, visit.ID, true); err != nil {
+		return err
+	}
+	if _, _, err = a.store.EnsurePreconsultPending(ctx, visit.ID); err != nil {
+		return err
+	}
+	token, err := a.store.IssuePreconsultToken(ctx, visit.ID)
+	if err != nil {
+		return err
+	}
+	a.emailVisitPreconsult(ctx, pet, visit, token)
+	return nil
+}
+
 // onVisitConfirmed pushes FCM; emails affiliation or public preconsult when opted-in.
 // Token/email are issued at most once per visit (idempotent across confirm retries).
 func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
@@ -357,25 +383,9 @@ func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
 		}
 		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 		if visit.RequestPreconsult {
-			already, err := a.store.HasPreconsultInviteIssued(ctx, visit.ID)
-			if err != nil {
-				log.Printf("preconsult: check invite visit %s: %v", visit.ID, err)
-				return
+			if err := a.issuePreconsultInvite(ctx, pet, visit); err != nil && !errors.Is(err, errPreconsultAlreadySent) {
+				log.Printf("preconsult: issue invite visit %s: %v", visit.ID, err)
 			}
-			if already {
-				return
-			}
-			_, _, err = a.store.EnsurePreconsultPending(ctx, visit.ID)
-			if err != nil {
-				log.Printf("preconsult: ensure pending visit %s: %v", visit.ID, err)
-				return
-			}
-			token, err := a.store.IssuePreconsultToken(ctx, visit.ID)
-			if err != nil {
-				log.Printf("preconsult: issue token visit %s: %v", visit.ID, err)
-				return
-			}
-			a.emailVisitPreconsult(ctx, pet, visit, token)
 			return
 		}
 		a.emailVisitConfirmedAffiliate(ctx, pet, visit)

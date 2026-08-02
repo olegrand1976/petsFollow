@@ -140,6 +140,37 @@ func mergeTeamPermissions(role TeamRole, override map[string]bool) map[string]bo
 	return out
 }
 
+// ListClinicalStaffUserIDs returns active team members with pets.write_clinical.
+func (s *Store) ListClinicalStaffUserIDs(ctx context.Context, practiceID string) ([]string, error) {
+	members, err := s.ListTeamMembers(ctx, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	seen := map[string]bool{}
+	for _, m := range members {
+		if m.Status != "active" {
+			continue
+		}
+		if !m.Permissions["pets.write_clinical"] {
+			continue
+		}
+		if m.UserID == "" || seen[m.UserID] {
+			continue
+		}
+		seen[m.UserID] = true
+		out = append(out, m.UserID)
+	}
+	// Legacy solo reference vet may not appear in team_members filters — include practice ref.
+	if ref, err := s.PracticeReferenceVetUserID(ctx, practiceID); err == nil && ref != "" && !seen[ref] {
+		out = append(out, ref)
+	}
+	if out == nil {
+		out = []string{}
+	}
+	return out, nil
+}
+
 func (s *Store) ListTeamMembers(ctx context.Context, practiceID string) ([]TeamMember, error) {
 	// Hide multi-switch demo accounts whose home profile is not practice staff
 	// (admin/commercial attached to VetPlus for switch demos only).

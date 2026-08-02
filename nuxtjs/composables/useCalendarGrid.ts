@@ -7,6 +7,7 @@ export type CalendarVisit = {
   clientId?: string
   clientName?: string
   petName?: string
+  notes?: string
   scheduledAt?: string
   proposedScheduledAt?: string
   createdAt?: string
@@ -16,9 +17,23 @@ export type CalendarVisit = {
   lng?: number
   preconsultStatus?: string
   preconsultAlert?: string
+  waitingRoomAt?: string | null
   visitTypeId?: string
   visitTypeName?: string
   visitTypeColor?: string
+}
+
+/** Native tooltip for calendar chip tags (preconsult / waiting room). */
+export function calendarChipTooltip(
+  v: CalendarVisit,
+  t: (key: string) => string,
+): string {
+  const parts: string[] = []
+  if (v.waitingRoomAt) parts.push(t('calendar.waitingRoomTooltip'))
+  if (v.preconsultAlert === 'urgent') parts.push(t('calendar.preconsultUrgentTooltip'))
+  else if (v.preconsultStatus === 'submitted') parts.push(t('calendar.preconsultAnsweredTooltip'))
+  else if (v.preconsultStatus === 'pending') parts.push(t('calendar.preconsultSentTooltip'))
+  return parts.join(' — ')
 }
 
 export type CalendarVacation = {

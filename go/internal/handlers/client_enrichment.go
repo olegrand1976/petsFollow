@@ -938,6 +938,9 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 				writeErr(w, r, http.StatusForbidden, "forbidden", "care_pro_visit_only")
 				return
 			}
+		case "reschedule_direct", "send_preconsult", "mark_waiting_room", "clear_waiting_room":
+			writeErr(w, r, http.StatusForbidden, "forbidden", "practice_staff_only")
+			return
 		}
 	}
 
@@ -1014,45 +1017,8 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "done")
 	case "propose_reschedule":
-		if visit.ConsultationSession {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_not_reschedulable")
-			return
-		}
-		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
-			return
-		}
-		if req.ProposedScheduledAt == nil || *req.ProposedScheduledAt == "" {
-			writeErr(w, r, http.StatusBadRequest, "proposed_required", "proposed_required")
-			return
-		}
-		proposed, perr := time.Parse(time.RFC3339, *req.ProposedScheduledAt)
-		if perr != nil {
-			writeErr(w, r, http.StatusBadRequest, "invalid_proposed", "invalid_proposed")
-			return
-		}
-		dur := 30
-		if visit.DurationMinutes != nil {
-			dur = *visit.DurationMinutes
-		} else if _, slotDur, e := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID); e == nil {
-			dur = slotDur
-		}
-		overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, proposed, dur, visit.ID)
-		if oerr != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if overlap {
-			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
-			return
-		}
-		onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, proposed)
-		if verr != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if onVac {
-			writeErr(w, r, http.StatusBadRequest, "on_vacation", "on_vacation")
+		proposed, ok := a.parseAndValidateVisitSlot(w, r, pet, visit, req.ProposedScheduledAt)
+		if !ok {
 			return
 		}
 		pendingBy := "client"
@@ -1066,6 +1032,77 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			} else {
 				a.notifyVetsVisitRequest(pet, updated)
 			}
+		}
+	case "reschedule_direct":
+		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
+			return
+		}
+		// Do not auto-confirm requested visits here (would skip onVisitConfirmed side-effects).
+		if visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
+		proposed, ok := a.parseAndValidateVisitSlot(w, r, pet, visit, req.ProposedScheduledAt)
+		if !ok {
+			return
+		}
+		updated, err = a.store.RescheduleVisitDirect(r.Context(), visit.ID, proposed)
+		if err == nil {
+			a.pushVisitReschedule(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+		}
+	case "send_preconsult":
+		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
+			return
+		}
+		if visit.ConsultationSession {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_no_preconsult")
+			return
+		}
+		if visit.Status != "confirmed" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
+		if err := a.issuePreconsultInvite(r.Context(), pet, visit); err != nil {
+			if errors.Is(err, errPreconsultAlreadySent) {
+				writeErr(w, r, http.StatusConflict, "conflict", "preconsult_already_sent")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		updated, err = a.store.GetVisit(r.Context(), visit.ID)
+		if err == nil {
+			vs := []store.Visit{updated}
+			_ = a.store.AttachPreconsultStatuses(r.Context(), vs)
+			updated = vs[0]
+		}
+	case "mark_waiting_room":
+		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
+			return
+		}
+		var newly bool
+		updated, newly, err = a.store.MarkVisitWaitingRoom(r.Context(), visit.ID)
+		if err != nil {
+			break
+		}
+		if !newly && updated.WaitingRoomAt == nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
+		if newly {
+			a.notifyClinicalStaffWaitingRoom(id.UserID, pet, updated)
+		}
+	case "clear_waiting_room":
+		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
+			return
+		}
+		updated, err = a.store.ClearVisitWaitingRoom(r.Context(), visit.ID)
+		if err == nil {
+			_ = a.store.MarkWaitingRoomAlertsReadForVisit(r.Context(), visit.ID)
 		}
 	case "accept_reschedule":
 		if visit.ConsultationSession {

@@ -27,9 +27,13 @@ Créer / confirmer RDV (checkbox « Demander une pré-consultation »)
   Sinon:
     → Email SendVisitConfirmedAffiliate
          CTA = /invite/{code} (affiliation cabinet / commission commercial)
+
+Post-confirm (détail agenda, staff calendar.manage) :
+  PATCH /visits/{id} { action: "send_preconsult" }
+  → même émission token/email si invite pas encore émise (409 si déjà envoyée)
 ```
 
-L’auto-création d’intake + mail à **chaque** confirm est **désactivée**. Le formulaire Flutter auth reste secondaire ; la source de vérité est le **formulaire web public**.
+L’auto-création d’intake + mail à **chaque** confirm est **désactivée**. Un envoi ultérieur reste possible via `send_preconsult` (une fois). Le formulaire Flutter auth reste secondaire ; la source de vérité est le **formulaire web public**.
 
 Échec Gemini = soft-fail (soumission OK, pas d’`aiUrgency`).
 
@@ -60,15 +64,16 @@ Statuts intake : `pending` → `submitted` (ou `skipped` réservé).
 
 ## Signal Pro (calendrier)
 
-- Payload visite : `preconsultAlert: "urgent"` si intake soumis avec `ai_urgency=red` **ou** `answers.urgency=high`.
-- UI : badge sur chips semaine/mois + détail RDV (réponses + bloc IA).
-- Pas de centre de notifications topbar dédié (messages seulement).
+- Payload visite : `preconsultStatus` (`pending` / `submitted`) ; `preconsultAlert: "urgent"` si intake soumis avec `ai_urgency=red` **ou** `answers.urgency=high`.
+- UI chips : tags pré-consult envoyée / réponse reçue (+ urgent) avec tooltip au survol ; détail RDV (réponses + bloc IA pour profil clinique).
+- Mode desk (sans `pets.write_clinical`) : CTA « Envoyer pré-consultation » si pas encore émise.
 
 ## API
 
 | Méthode | Route | Qui |
 |---------|-------|-----|
 | `POST/PATCH` | visite + `requestPreconsult` | staff `calendar.manage` |
+| `PATCH` | `/visits/{id}` `{ action: "send_preconsult" }` | staff `calendar.manage` (confirmé, invite absente) |
 | `GET` | `/visits/{visitID}/preconsult` | owner · staff · care_pro lecture |
 | `PUT` | `/visits/{visitID}/preconsult` | owner client (legacy app) |
 | `GET/POST` | `/public/preconsult/{token}` | public, rate-limité |
