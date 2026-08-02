@@ -75,6 +75,7 @@ const navItems = computed<ProNavItem[]>(() => {
       ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
       : []),
     productFlowsNavItem(t('nav.productFlows'), t('nav.section.ops')),
+    presentationNavItem(t('presentation.ui.navLabel'), t('nav.section.ops')),
     ...(isStagingLike.value
       ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
       : []),
@@ -83,6 +84,7 @@ const navItems = computed<ProNavItem[]>(() => {
     { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: t('nav.section.salesForce') },
     { to: '/admin/sales-branches', label: t('nav.adminSalesBranches'), icon: 'account_tree', section: t('nav.section.salesForce') },
     { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: t('nav.section.salesForce') },
+    aiFlowsNavItem(t('nav.aiFlows'), t('nav.section.ai')),
     { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
     { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: t('nav.section.ai') },
     { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments', section: t('nav.section.billing') },

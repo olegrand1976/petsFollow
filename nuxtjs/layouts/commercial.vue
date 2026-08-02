@@ -40,8 +40,8 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/network', label: t('nav.commercialNetwork'), icon: 'account_tree', section: t('nav.section.network') },
   { to: '/produits', label: t('nav.products'), icon: 'description', section: t('nav.section.offer') },
   productFlowsNavItem(t('nav.productFlows'), t('nav.section.offer')),
+  presentationNavItem(t('presentation.ui.navLabel'), t('nav.section.offer')),
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
-  { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },
   { to: '/commercial/asv-memo', label: t('nav.commercialAsvMemo'), icon: 'support_agent', section: t('nav.section.offer') },
   { to: '/commercial/brochure', label: t('nav.commercialBrochure'), icon: 'picture_as_pdf', section: t('nav.section.offer') },
   { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics', section: t('nav.section.offer') },
@@ -49,6 +49,7 @@ const navItems = computed<ProNavItem[]>(() => [
     ? [usecasesNavItem(t('nav.usecases'), t('nav.section.offer'))]
     : []),
   { to: '/commercial/training', label: t('nav.commercialTraining'), icon: 'phone_in_talk', section: t('nav.section.ai') },
+  aiFlowsNavItem(t('nav.aiFlows'), t('nav.section.ai')),
   { to: '/commercial/ai-modules', label: t('nav.commercialAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
   { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description', section: t('nav.section.ai') },
   { to: '/commercial/commissions', label: t('nav.commercialCommissions'), icon: 'payments', section: t('nav.section.payout') },

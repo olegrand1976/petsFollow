@@ -6,9 +6,9 @@
     />
 
     <ProCard class="pro-mb-lg" data-testid="pitch-deck-cta">
-      <p class="pro-hint">{{ $t('pitchDeck.ui.openDeckDesc') }}</p>
-      <ProButton test-id="pitch-open-deck" @click="navigateTo('/commercial/pitch-deck')">
-        {{ $t('pitchDeck.ui.openDeck') }}
+      <p class="pro-hint">{{ $t('presentation.ui.openDeckDesc') }}</p>
+      <ProButton test-id="pitch-open-deck" @click="navigateTo('/presentation')">
+        {{ $t('presentation.ui.openDeck') }}
       </ProButton>
     </ProCard>
 

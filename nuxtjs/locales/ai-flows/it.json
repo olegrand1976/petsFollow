@@ -1,0 +1,98 @@
+{
+  "aiFlows": {
+    "title": "Flussi IA e automazioni",
+    "subtitle": "Diagrammi di utilizzo IA e automazioni — profilo veterinario in evidenza.",
+    "howtoTitle": "Come leggere questa pagina?",
+    "howto1": "Scegliete un profilo (veterinario di default).",
+    "howto2": "Selezionate un diagramma dall’elenco.",
+    "howto3": "Usate questi flussi nelle demo commerciali per spiegare l’integrazione IA.",
+    "selectProfile": "Profilo",
+    "vetHighlight": "Prioritario",
+    "loading": "Caricamento diagramma…",
+    "profiles": {
+      "vet": {
+        "label": "Veterinario",
+        "mission": "CR IA, adozione e continuità di cura"
+      },
+      "commercial": {
+        "label": "Commerciale",
+        "mission": "Iscrizione ambulatorio → tracking IA → attivazioni"
+      },
+      "care_pro": {
+        "label": "Care pro",
+        "mission": "Territorio Pro Light e condivisione cartella"
+      }
+    },
+    "diagrams": {
+      "vet_cr_ai": {
+        "title": "Consultazione + CR IA",
+        "desc": "Dettatura → trascrizione → Migliora (IA) → finalizza → cartella / client.",
+        "nodes": {
+          "start": "Nuova consultazione",
+          "dictate": "Dettatura audio",
+          "transcribe": "Trascrizione",
+          "improve": "Migliora IA",
+          "review": "Revisione clinico",
+          "finalize": "Finalizza referto",
+          "record": "Cartella animale",
+          "client": "Visibile al client se condiviso"
+        }
+      },
+      "vet_ai_adoption": {
+        "title": "Adozione CR IA automatizzata",
+        "desc": "Tracking attivazione, drip J0–J60, ROI e alert di attrito al commerciale.",
+        "nodes": {
+          "track": "Attiva tracking CR IA",
+          "j0": "Email J0 primi referti",
+          "usage": "Uso CR IA?",
+          "no": "No",
+          "yes": "Si",
+          "nudge": "Solleciti J3 J7",
+          "digest": "Digest J15 J30",
+          "nps": "NPS J14 J45",
+          "roi": "ROI J60",
+          "friction": "Alert attrito al commerciale"
+        }
+      },
+      "vet_care_continuity": {
+        "title": "Continuità di cura",
+        "desc": "CR / messaggio → push → risposta client → cartella → appuntamento o promemoria Care.",
+        "nodes": {
+          "cr": "Referto finalizzato",
+          "msg": "Messaggio veto al client",
+          "push": "Notifica push",
+          "reply": "Risposta client",
+          "thread": "Thread messaggi",
+          "dossier": "Aggiornamento cartella",
+          "rdv": "Richiesta appuntamento o promemoria Care"
+        }
+      },
+      "co_encode_activate": {
+        "title": "Iscrizione e attivazione IA",
+        "desc": "Prospect → iscrizione ambulatorio → tracking CR IA → attivazioni client → commissioni.",
+        "nodes": {
+          "prospect": "Prospect CRM",
+          "encode": "Iscrizione ambulatorio",
+          "onboard": "Onboarding profilo",
+          "trackAi": "Attiva tracking CR IA",
+          "pets": "Attivazioni animali client",
+          "ledger": "Ledger commissioni"
+        }
+      },
+      "care_share_notes": {
+        "title": "Note sul campo e condivisione",
+        "desc": "Agenda Pro Light → note / dettatura → condivisione ACL → Migliora IA sul Web.",
+        "nodes": {
+          "login": "Login Pro Light",
+          "agenda": "Agenda territorio",
+          "visit": "Visita / note",
+          "share": "Condivisione cartella ACL",
+          "vet": "Visibile su Web Pro",
+          "dictate": "Dettatura opzionale",
+          "webAi": "Migliora IA sul Web"
+        }
+      }
+    },
+    "renderError": "Impossibile visualizzare il diagramma."
+  }
+}

@@ -1,0 +1,235 @@
+{
+  "presentation": {
+    "ui": {
+      "title": "Presentación clínica",
+      "subtitle": "Funciones petsFollow para una clínica veterinaria — continuidad asistencial e IA.",
+      "navLabel": "Presentación clínica",
+      "prev": "Anterior",
+      "next": "Siguiente",
+      "openDeck": "Abrir presentación clínica",
+      "openDeckDesc": "Recorrido por páginas: funciones de clínica, integración IA y oferta.",
+      "openAiFlows": "Ver flujos IA (diagramas)",
+      "tocLabel": "Índice"
+    },
+    "steps": {
+      "welcome": {
+        "nav": "Inicio",
+        "kicker": "Posicionamiento",
+        "headline": "petsFollow: continuidad de cuidados prescrita",
+        "lead": "Un pasaporte digital del animal compartido entre la clínica (Web Pro), el terreno (Pro Light) y el propietario (app cliente). No es un segundo PMS: es el hilo de seguimiento entre visitas.",
+        "points": [
+          {
+            "title": "Web Pro (clínica)",
+            "desc": "Relación, historial, mensajería, informes IA, agenda y comisiones."
+          },
+          {
+            "title": "Pro Light (terreno)",
+            "desc": "App móvil gratuita para visitas a domicilio, establos y partners de cuidados."
+          },
+          {
+            "title": "App cliente",
+            "desc": "El propietario sigue, escribe y paga el seguimiento de su animal."
+          }
+        ]
+      },
+      "pain": {
+        "nav": "Problema",
+        "kicker": "Por qué ahora",
+        "headline": "El hilo se pierde entre consultas",
+        "lead": "Sin un canal estructurado, la recepción se satura y el veterinario pierde continuidad de información.",
+        "points": [
+          {
+            "title": "Recepción saturada",
+            "desc": "Llamadas, SMS personales y correos dispersos: nada queda en el historial."
+          },
+          {
+            "title": "Hilo clínico roto",
+            "desc": "Entre visitas es difícil saber qué se dijo, recetó o siguió."
+          },
+          {
+            "title": "Herramientas fragmentadas",
+            "desc": "PMS, WhatsApp, papel: el equipo pierde tiempo reconstruyendo el contexto."
+          }
+        ]
+      },
+      "surfaces": {
+        "nav": "3 superficies",
+        "kicker": "Ecosistema",
+        "headline": "Tres superficies, un mismo pasaporte",
+        "lead": "Cada actor tiene la interfaz adecuada; la clínica sigue siendo el centro de mando.",
+        "points": [
+          {
+            "title": "VetPro — Web clínica",
+            "desc": "SaaS Pro: cockpit, clientes, animales, mensajería, CR IA, equipo ASV."
+          },
+          {
+            "title": "VetLight — Móvil terreno",
+            "desc": "Gratis: agenda de campo, fichas, notas, dictado; IA estructurante en Web."
+          },
+          {
+            "title": "Cliente — Móvil propietario",
+            "desc": "Plan por animal: pasaporte, mensajes, constantes, Care/Horse, hogar."
+          }
+        ]
+      },
+      "vetpro": {
+        "nav": "VetPro",
+        "kicker": "Clínica",
+        "headline": "El puesto de mando de la clínica",
+        "lead": "Todo lo que el equipo necesita a diario para dirigir la relación y el historial del animal.",
+        "points": [
+          {
+            "title": "Cockpit y clientes",
+            "desc": "Dashboard, ficha de cliente, animales vinculados, solicitudes de enlace."
+          },
+          {
+            "title": "Historial y timeline",
+            "desc": "Pasaporte digital: historial, informes, compartidos y eventos de seguimiento."
+          },
+          {
+            "title": "Agenda y equipo",
+            "desc": "Calendario de clínica, roles ASV / secretaría, onboarding."
+          },
+          {
+            "title": "Comisiones",
+            "desc": "Seguimiento de activaciones de clientes que ayudan a financiar el SaaS Pro."
+          }
+        ]
+      },
+      "care_loop": {
+        "nav": "Continuidad",
+        "kicker": "Bucle asistencial",
+        "headline": "Consulta → mensaje → seguimiento",
+        "lead": "El valor está entre visitas: la clínica mantiene el hilo y el propietario se siente acompañado.",
+        "points": [
+          {
+            "title": "Consulta",
+            "desc": "Nueva consulta, notas clínicas, finalización del informe."
+          },
+          {
+            "title": "Mensajería segura",
+            "desc": "Veterinario ↔ cliente con push — sin SMS personales dispersos."
+          },
+          {
+            "title": "Citas y recordatorios",
+            "desc": "Solicitudes de cita y recordatorios Care para mantener el seguimiento."
+          },
+          {
+            "title": "Constantes si se prescriben",
+            "desc": "FC guiadas 15 / 30 / 60 s validadas por la clínica — una función, no la identidad del producto."
+          }
+        ]
+      },
+      "ai_in_app": {
+        "nav": "IA integrada",
+        "kicker": "Foco IA",
+        "headline": "Cómo está integrada la IA en VetPro",
+        "lead": "El módulo CR IA está incluido en Pro: dictado, transcripción y mejora — sin SKU add-on.",
+        "points": [
+          {
+            "title": "Dictado / transcripción",
+            "desc": "El veterinario dicta; el audio se transcribe para acelerar la redacción."
+          },
+          {
+            "title": "Mejorar (IA)",
+            "desc": "Gemini estructura y aclara el informe bajo control del clínico."
+          },
+          {
+            "title": "Finalizar y compartir",
+            "desc": "El informe finalizado entra en el historial y puede verse el propietario."
+          },
+          {
+            "title": "Terreno vs Web",
+            "desc": "Pro Light captura; la mejora IA estructurante ocurre en Web Pro."
+          }
+        ]
+      },
+      "ai_automation": {
+        "nav": "Automatizaciones IA",
+        "kicker": "Foco IA",
+        "headline": "Automatizaciones alrededor de la adopción IA",
+        "lead": "Más allá del botón Mejorar, petsFollow sigue la adopción, empuja a las clínicas y alerta al comercial ante fricciones.",
+        "points": [
+          {
+            "title": "Seguimiento de activación",
+            "desc": "Admin / comercial activa el seguimiento; email de marca J0 para los primeros CR."
+          },
+          {
+            "title": "Drip de adopción",
+            "desc": "Recordatorios J3 / J7 si cero uso, digests y NPS hasta J60."
+          },
+          {
+            "title": "ROI en J60",
+            "desc": "Tiempo ahorrado estimado en CR finalizados con transcribe / improve."
+          },
+          {
+            "title": "Alertas de fricción",
+            "desc": "Etiquetas NPS y señales de fricción llegan al comercial asignado."
+          }
+        ]
+      },
+      "ecosystem": {
+        "nav": "Ecosistema",
+        "kicker": "Más allá de la clínica",
+        "headline": "Terreno, propietarios y partners",
+        "lead": "La clínica prescribe y dirige; Pro Light y la app cliente extienden la continuidad fuera de las paredes.",
+        "points": [
+          {
+            "title": "Pro Light gratis",
+            "desc": "Veterinario itinerante y care pros: agenda, notas, compartir historial."
+          },
+          {
+            "title": "App cliente de pago",
+            "desc": "El propietario paga el seguimiento; mensajería y pasaporte siempre a mano."
+          },
+          {
+            "title": "Compartir ACL",
+            "desc": "Historial compartido con colegas / care pros con consentimiento — sin chat care↔care."
+          }
+        ]
+      },
+      "offer": {
+        "nav": "Oferta",
+        "kicker": "Modelo económico",
+        "headline": "SaaS clínica + planes cliente",
+        "lead": "El veterinario prescribe; el propietario paga el seguimiento. Las comisiones por activaciones ayudan a cubrir el SaaS Pro.",
+        "clientBadge": "Clientes (IVA incl.)",
+        "points": [
+          {
+            "title": "Steer Pro",
+            "desc": "Compromiso trienal recomendado (−10 % vs 3× anual) — CR IA incluido."
+          },
+          {
+            "title": "Steer cliente",
+            "desc": "Plan trienal 95 € / 3 años — mejor argumento de precio hogar."
+          },
+          {
+            "title": "Autofinanciación",
+            "desc": "≈ 8 activaciones trienales / mes ≈ equivalente mensual SaaS Pro."
+          }
+        ]
+      },
+      "close": {
+        "nav": "Cierre",
+        "kicker": "Siguiente paso",
+        "headline": "¿Listo para la demo de campo?",
+        "lead": "Anclar el posicionamiento (continuidad + pasaporte), mostrar una consulta con CR IA y luego la mensajería. Los diagramas IA detallan las automatizaciones.",
+        "cta": "Pasar a la acción",
+        "points": [
+          {
+            "title": "Mensaje clave",
+            "desc": "petsFollow = continuidad de cuidados dirigida por el veterinario, no una app cardíaca."
+          },
+          {
+            "title": "Diferenciador",
+            "desc": "CR IA incluido en Pro + tres superficies coherentes (Web, terreno, cliente)."
+          },
+          {
+            "title": "Siguiente",
+            "desc": "Prospecto → alta clínica → activaciones animales → comisiones."
+          }
+        ]
+      }
+    }
+  }
+}

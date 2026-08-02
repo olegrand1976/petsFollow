@@ -7,12 +7,12 @@ export default defineNuxtConfig({
   i18n: {
     restructureDir: false,
     locales: [
-      { code: 'fr', language: 'fr-FR', files: ['fr.json', 'pitch-deck/fr.json'] },
-      { code: 'nl', language: 'nl-NL', files: ['nl.json', 'pitch-deck/nl.json'] },
-      { code: 'en', language: 'en-GB', files: ['en.json', 'pitch-deck/en.json'] },
-      { code: 'es', language: 'es-ES', files: ['es.json', 'pitch-deck/es.json'] },
-      { code: 'et', language: 'et-EE', files: ['et.json', 'pitch-deck/et.json'] },
-      { code: 'it', language: 'it-IT', files: ['it.json', 'pitch-deck/it.json'] },
+      { code: 'fr', language: 'fr-FR', files: ['fr.json', 'presentation/fr.json', 'ai-flows/fr.json'] },
+      { code: 'nl', language: 'nl-NL', files: ['nl.json', 'presentation/nl.json', 'ai-flows/nl.json'] },
+      { code: 'en', language: 'en-GB', files: ['en.json', 'presentation/en.json', 'ai-flows/en.json'] },
+      { code: 'es', language: 'es-ES', files: ['es.json', 'presentation/es.json', 'ai-flows/es.json'] },
+      { code: 'et', language: 'et-EE', files: ['et.json', 'presentation/et.json', 'ai-flows/et.json'] },
+      { code: 'it', language: 'it-IT', files: ['it.json', 'presentation/it.json', 'ai-flows/it.json'] },
     ],
     defaultLocale: 'fr',
     strategy: 'no_prefix',
@@ -51,7 +51,7 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       exclude: ['@cornerstonejs/dicom-image-loader'],
-      include: ['dicom-parser'],
+      include: ['dicom-parser', 'mermaid'],
     },
     worker: {
       format: 'es',

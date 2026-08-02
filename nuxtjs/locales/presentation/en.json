@@ -1,0 +1,235 @@
+{
+  "presentation": {
+    "ui": {
+      "title": "Practice presentation",
+      "subtitle": "petsFollow features for a veterinary practice — care continuity and AI focus.",
+      "navLabel": "Practice presentation",
+      "prev": "Previous",
+      "next": "Next",
+      "openDeck": "Open practice presentation",
+      "openDeckDesc": "Step-by-step walkthrough: practice features, AI integration and offer.",
+      "openAiFlows": "View AI flows (diagrams)",
+      "tocLabel": "Table of contents"
+    },
+    "steps": {
+      "welcome": {
+        "nav": "Welcome",
+        "kicker": "Positioning",
+        "headline": "petsFollow: prescribed care continuity",
+        "lead": "A shared digital animal passport across the practice (Web Pro), field (Pro Light) and owner (client app). Not a second PMS — the follow-up thread between visits.",
+        "points": [
+          {
+            "title": "Web Pro (practice)",
+            "desc": "Relationship hub, records, messaging, AI reports, calendar and commissions."
+          },
+          {
+            "title": "Pro Light (field)",
+            "desc": "Free mobile app for home visits, stables and care partners."
+          },
+          {
+            "title": "Client app",
+            "desc": "Owners follow, message and pay for their pet’s care continuity."
+          }
+        ]
+      },
+      "pain": {
+        "nav": "Pain points",
+        "kicker": "Why now",
+        "headline": "The thread breaks between consultations",
+        "lead": "Without a structured channel, the front desk is overloaded and clinicians lose information continuity.",
+        "points": [
+          {
+            "title": "Overloaded front desk",
+            "desc": "Calls, personal SMS and scattered emails — nothing lands in the record."
+          },
+          {
+            "title": "Broken clinical thread",
+            "desc": "Between visits it is hard to know what was said, prescribed or followed up."
+          },
+          {
+            "title": "Fragmented tools",
+            "desc": "PMS, WhatsApp, paper: the team wastes time rebuilding context."
+          }
+        ]
+      },
+      "surfaces": {
+        "nav": "3 surfaces",
+        "kicker": "Ecosystem",
+        "headline": "Three surfaces, one passport",
+        "lead": "Each actor gets the right interface — the practice remains the control tower.",
+        "points": [
+          {
+            "title": "VetPro — Web practice",
+            "desc": "Pro SaaS: cockpit, clients, pets, messaging, AI CR, ASV team."
+          },
+          {
+            "title": "VetLight — Field mobile",
+            "desc": "Free: field agenda, charts, notes, dictation; structuring AI on Web."
+          },
+          {
+            "title": "Client — Owner mobile",
+            "desc": "Per-pet plan: passport, messages, vitals, Care/Horse, household."
+          }
+        ]
+      },
+      "vetpro": {
+        "nav": "VetPro",
+        "kicker": "Practice",
+        "headline": "The practice control tower",
+        "lead": "Everything the care team needs daily to steer the relationship and the animal record.",
+        "points": [
+          {
+            "title": "Cockpit & clients",
+            "desc": "Dashboard, client file, linked pets, link requests."
+          },
+          {
+            "title": "Record & timeline",
+            "desc": "Digital passport: history, visit reports, shares and follow-up events."
+          },
+          {
+            "title": "Calendar & team",
+            "desc": "Practice calendar, ASV / secretary roles, profile onboarding."
+          },
+          {
+            "title": "Commissions",
+            "desc": "Track client activations that help fund the Pro SaaS."
+          }
+        ]
+      },
+      "care_loop": {
+        "nav": "Continuity",
+        "kicker": "Care loop",
+        "headline": "Consultation → message → follow-up",
+        "lead": "Value sits between visits: the practice keeps the thread, the owner stays reassured.",
+        "points": [
+          {
+            "title": "Consultation",
+            "desc": "New visit, clinical notes, finalize the report."
+          },
+          {
+            "title": "Secure messaging",
+            "desc": "Vet ↔ client with push — no more scattered personal SMS."
+          },
+          {
+            "title": "Appointments & reminders",
+            "desc": "Appointment requests and Care reminders to sustain follow-up."
+          },
+          {
+            "title": "Vitals when prescribed",
+            "desc": "Guided HR 15 / 30 / 60 s validated by the practice — a feature, not the product identity."
+          }
+        ]
+      },
+      "ai_in_app": {
+        "nav": "AI in-app",
+        "kicker": "AI focus",
+        "headline": "How AI is built into VetPro",
+        "lead": "The AI visit-report module is included in Pro: dictation, transcription and improve — no add-on SKU.",
+        "points": [
+          {
+            "title": "Dictation / transcription",
+            "desc": "The vet dictates; audio is transcribed to speed drafting."
+          },
+          {
+            "title": "Improve (AI)",
+            "desc": "Gemini structures and clarifies the report under clinician control."
+          },
+          {
+            "title": "Finalize & share",
+            "desc": "The finalized report joins the record and can be visible to the owner."
+          },
+          {
+            "title": "Field vs Web",
+            "desc": "Pro Light captures; structuring AI improve happens on Web Pro."
+          }
+        ]
+      },
+      "ai_automation": {
+        "nav": "AI automation",
+        "kicker": "AI focus",
+        "headline": "Automations around AI adoption",
+        "lead": "Beyond the Improve button, petsFollow tracks adoption, nudges practices and alerts the assigned sales rep on friction.",
+        "points": [
+          {
+            "title": "Activation tracking",
+            "desc": "Admin / sales enables tracking; branded J0 email for first reports."
+          },
+          {
+            "title": "Adoption drip",
+            "desc": "J3 / J7 nudges if zero usage, digests and NPS through J60."
+          },
+          {
+            "title": "ROI at J60",
+            "desc": "Estimated time saved on finalized reports that used transcribe / improve."
+          },
+          {
+            "title": "Friction alerts",
+            "desc": "NPS tags and friction signals reach the assigned commercial for coaching."
+          }
+        ]
+      },
+      "ecosystem": {
+        "nav": "Ecosystem",
+        "kicker": "Beyond the practice",
+        "headline": "Field, owners and partners",
+        "lead": "The practice prescribes and steers; Pro Light and the client app extend continuity outside the clinic.",
+        "points": [
+          {
+            "title": "Free Pro Light",
+            "desc": "Mobile vet and care pros: agenda, notes, dossier sharing."
+          },
+          {
+            "title": "Paid client app",
+            "desc": "Owners pay for pet follow-up; messaging and passport always on hand."
+          },
+          {
+            "title": "ACL sharing",
+            "desc": "Dossier shared with colleagues / care pros with consent — no care↔care chat."
+          }
+        ]
+      },
+      "offer": {
+        "nav": "Offer",
+        "kicker": "Business model",
+        "headline": "Practice SaaS + client plans",
+        "lead": "The vet prescribes; the owner pays for follow-up. Activation commissions help cover Pro SaaS.",
+        "clientBadge": "Clients (incl. VAT)",
+        "points": [
+          {
+            "title": "Pro steer",
+            "desc": "Recommended 3-year commitment (−10% vs 3× annual) — AI CR included."
+          },
+          {
+            "title": "Client steer",
+            "desc": "Triennial plan €95 / 3 years — strongest household price argument."
+          },
+          {
+            "title": "Self-funding",
+            "desc": "≈ 8 triennial activations / month ≈ monthly Pro SaaS equivalent."
+          }
+        ]
+      },
+      "close": {
+        "nav": "Close",
+        "kicker": "Next step",
+        "headline": "Ready for a field demo?",
+        "lead": "Anchor positioning (continuity + passport), show a visit with AI CR, then client messaging. AI diagrams detail the automations.",
+        "cta": "Take action",
+        "points": [
+          {
+            "title": "Key message",
+            "desc": "petsFollow = vet-led care continuity — not a heart-rate app."
+          },
+          {
+            "title": "Differentiator",
+            "desc": "AI CR included in Pro + three coherent surfaces (Web, field, client)."
+          },
+          {
+            "title": "Next",
+            "desc": "Prospect → practice signup → pet activations → commissions."
+          }
+        ]
+      }
+    }
+  }
+}

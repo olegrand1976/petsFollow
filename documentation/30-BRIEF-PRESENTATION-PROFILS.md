@@ -1,9 +1,25 @@
 # Brief présentation & débrief commercial — petsFollow
 
 > **Usages**  
-> 1. **Présentation** — coller dans Gemini : *« Crée une présentation professionnelle à partir de ce brief… »*  
-> 2. **Débrief commercial** — check-list post-RDV / coaching (section 12)  
-> Sources : [22](22-FICHE-PRODUIT-COMMERCIAL.md), [14](14-POSITIONNEMENT-MARKETING.md), [21](21-GTM-COMMERCIAL.md), [28](28-MULTI-PROFILS-PRO.md), [17](17-POLITIQUE-TARIFAIRE.md).
+> 1. **Présentation in-app** — Pro (admin / commercial / manager) : [`/presentation`](../nuxtjs/pages/presentation/index.vue) (pages successives, focus cabinet + IA) · diagrammes Mermaid : [`/flux-ia`](../nuxtjs/pages/flux-ia/index.vue)  
+> 2. **Présentation Gemini** — coller dans Gemini : *« Crée une présentation professionnelle à partir de ce brief… »*  
+> 3. **Débrief commercial** — check-list post-RDV / coaching (section 12)  
+> Sources : [22](22-FICHE-PRODUIT-COMMERCIAL.md), [14](14-POSITIONNEMENT-MARKETING.md), [21](21-GTM-COMMERCIAL.md), [28](28-MULTI-PROFILS-PRO.md), [17](17-POLITIQUE-TARIFAIRE.md), [32](32-MODULE-IA-CR.md).
+
+---
+
+## Présentation in-app (shell Pro)
+
+Parcours pages successives (`?step=`) pour **cabinet vétérinaire** :
+
+1. Accueil / positionnement → constat → 3 surfaces → VetPro → continuité soins  
+2. **Focus IA** : intégration CR IA (dictée → transcription → Améliorer → finalize)  
+3. **Focus IA** : automatisations adoption (drip J0–J60, ROI, friction)  
+4. Écosystème → offre → closing (CTA fonctionnel)
+
+Diagrammes Mermaid associés : `/flux-ia?profile=vet` (consultation CR IA, adoption, continuité) — profils secondaires commercial / care_pro.
+
+Ancienne route `/commercial/pitch-deck` → redirect vers `/presentation`.
 
 ---
 
@@ -12,12 +28,13 @@
 Tu es un designer de pitch deck B2B santé animale. À partir du brief ci-dessous :
 
 1. Produis **12 à 18 slides** (titre + 3–6 bullets max, ou schéma simple).
-2. Organisation obligatoire : **Vue d’ensemble → VetPro (Web) → VetLight (mobile) → Client (mobile) → Écosystème → Offre & modèle → Différenciation → Closing**.
+2. Organisation obligatoire : **Vue d’ensemble → VetPro (Web) → Focus IA (CR inclus + automatisations) → VetLight (mobile) → Client (mobile) → Écosystème → Offre & modèle → Différenciation → Closing**.
 3. Langue : **français**. Style : clair, confiant, concrêt (bénéfices avant features).
 4. **Identité produit = continuité de soins prescrite + passeport digital de l’animal** via **trois apps** : Web cabinet · mobile ProLight / care pro · mobile particulier. Le relevé cardiaque est **une feature parmi d’autres** — ne jamais présenter petsFollow comme « une app cardiaque ».
 5. **Ne pas centrer le pitch sur « sans boîtier »** — parler des surfaces logicielles (Web + mobile). Ne promets **jamais** : chat WebSocket temps réel, messagerie entre care pro, addons payants Family/Care+/Horse, ni un appareil à vendre. Pitch care pro = **partage de dossier / CR / notes**.
 6. Steer commercial client : plan **triennial 95 € / 3 ans**.
-7. Propose en fin de deck une **slide « Démo terrain »** (parcours 5 minutes).
+7. Inclure **2 slides IA** : (a) comment le CR IA est intégré dans VetPro ; (b) automatisations d’adoption / ROI J60.
+8. Propose en fin de deck une **slide « Démo terrain »** (parcours 5 minutes).
 ---
 
 ## 1. En une phrase

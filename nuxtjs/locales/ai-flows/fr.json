@@ -1,0 +1,98 @@
+{
+  "aiFlows": {
+    "title": "Flux IA & automatisations",
+    "subtitle": "Diagrammes des parcours d’utilisation de l’IA et des automatisations — profil vétérinaire mis en avant.",
+    "howtoTitle": "Comment lire cette page ?",
+    "howto1": "Choisissez un profil (vétérinaire par défaut).",
+    "howto2": "Sélectionnez un diagramme dans la liste.",
+    "howto3": "Utilisez ces flux en démo commerciale pour expliquer l’intégration IA.",
+    "selectProfile": "Profil",
+    "vetHighlight": "Prioritaire",
+    "loading": "Chargement du diagramme…",
+    "profiles": {
+      "vet": {
+        "label": "Vétérinaire",
+        "mission": "CR IA, adoption et continuité de soins"
+      },
+      "commercial": {
+        "label": "Commercial",
+        "mission": "Encode cabinet → suivi IA → activations"
+      },
+      "care_pro": {
+        "label": "Care pro",
+        "mission": "Terrain Pro Light et partage dossier"
+      }
+    },
+    "diagrams": {
+      "vet_cr_ai": {
+        "title": "Consultation + CR IA",
+        "desc": "Dictée → transcription → Améliorer (IA) → finalisation → dossier / client.",
+        "nodes": {
+          "start": "Nouvelle consultation",
+          "dictate": "Dictee audio",
+          "transcribe": "Transcription",
+          "improve": "Ameliorer IA",
+          "review": "Relecture clinicien",
+          "finalize": "Finaliser CR",
+          "record": "Dossier animal",
+          "client": "Visible client si partage"
+        }
+      },
+      "vet_ai_adoption": {
+        "title": "Adoption CR IA automatisée",
+        "desc": "Suivi d’activation, drip J0–J60, ROI et alertes friction vers le commercial.",
+        "nodes": {
+          "track": "Activation suivi CR IA",
+          "j0": "Email J0 premiers CR",
+          "usage": "Usage CR IA ?",
+          "no": "Non",
+          "yes": "Oui",
+          "nudge": "Relances J3 J7",
+          "digest": "Digests J15 J30",
+          "nps": "NPS J14 J45",
+          "roi": "ROI J60",
+          "friction": "Alerte friction commercial"
+        }
+      },
+      "vet_care_continuity": {
+        "title": "Continuité de soins",
+        "desc": "CR / message → push → réponse client → dossier → RDV ou rappel Care.",
+        "nodes": {
+          "cr": "CR finalise",
+          "msg": "Message veto vers client",
+          "push": "Notification push",
+          "reply": "Reponse client",
+          "thread": "Fil messagerie",
+          "dossier": "Mise a jour dossier",
+          "rdv": "Demande RDV ou rappel Care"
+        }
+      },
+      "co_encode_activate": {
+        "title": "Encode & activation IA",
+        "desc": "Prospect → inscription cabinet → suivi CR IA → activations clients → commissions.",
+        "nodes": {
+          "prospect": "Prospect CRM",
+          "encode": "Inscription cabinet",
+          "onboard": "Onboarding profil",
+          "trackAi": "Activer suivi CR IA",
+          "pets": "Activation animaux clients",
+          "ledger": "Commissions ledger"
+        }
+      },
+      "care_share_notes": {
+        "title": "Notes terrain & partage",
+        "desc": "Agenda Pro Light → notes / dictée → partage ACL → amélioration IA côté Web.",
+        "nodes": {
+          "login": "Login Pro Light",
+          "agenda": "Agenda terrain",
+          "visit": "Visite / notes",
+          "share": "Partage dossier ACL",
+          "vet": "Visible cabinet Web Pro",
+          "dictate": "Dictee optionnelle",
+          "webAi": "Ameliorer IA cote Web"
+        }
+      }
+    },
+    "renderError": "Impossible d’afficher le diagramme."
+  }
+}

@@ -89,7 +89,8 @@
     "adminResearch": "Research opt-in",
     "researchGroups": "Groupes",
     "researchDataroom": "Data room",
-    "productFlows": "Flux produit"
+    "productFlows": "Flux produit",
+    "aiFlows": "Flux IA"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
