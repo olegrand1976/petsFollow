@@ -63,7 +63,7 @@
         </h2>
         <p class="pf-ai-flows__blurb">{{ $t(`aiFlows.diagrams.${activeDiagram.id}.desc`) }}</p>
         <ClientOnly>
-          <MermaidDiagram
+          <AiFlowsMermaidDiagram
             :key="`${activeDiagram.id}-${locale}`"
             :diagram-id="activeDiagram.id"
             :source="resolvedSource"

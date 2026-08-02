@@ -1706,6 +1706,16 @@ func resetDemoTeamPasswords(ctx context.Context, pool *pgxpool.Pool, emails []st
 	if tag.RowsAffected() < int64(len(emails)) {
 		return fmt.Errorf("reset demo team passwords: updated %d/%d", tag.RowsAffected(), len(emails))
 	}
+	// Filet ACL : overrides team_members (ex. shares.read=false) cassent les e2e @p0 secrétaire.
+	if _, err := pool.Exec(ctx, `
+		UPDATE practice.team_members tm
+		SET permissions = NULL
+		FROM identity.users u
+		WHERE tm.user_id = u.id
+		  AND u.email = ANY($1::text[])
+		  AND u.email LIKE '%@petsfollow.test'`, emails); err != nil {
+		return fmt.Errorf("clear demo team permission overrides: %w", err)
+	}
 	return nil
 }
 
@@ -1748,20 +1758,28 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 			{"vet.assist@petsfollow.test", "Camille Assistante", store.TeamRoleAssistant},
 			{"secretary.demo@petsfollow.test", "Sophie Secrétariat", store.TeamRoleSecretary},
 		}
+		var inviteErr error
 		for _, m := range teamMembers {
 			if _, err2 := st.InviteTeamMember(ctx, practiceID, vetDemoID, store.InviteTeamMemberInput{
 				Email: m.email, FullName: m.name, Password: passwordVet, TeamRole: m.role,
 			}); err2 != nil {
-				return fmt.Errorf("seed team member %s: %w", m.email, err2)
+				if inviteErr == nil {
+					inviteErr = fmt.Errorf("seed team member %s: %w", m.email, err2)
+				} else {
+					log.Printf("seed team member %s: %v", m.email, err2)
+				}
 			}
 		}
-		// Filet : même si un chemin invite a divergé, MDP démo équipe = VetDemo123!
+		// Filet : MDP + ACL démo même si une invite a partiellement échoué (AttachProfile, etc.).
 		emails := make([]string, len(teamMembers))
 		for i, m := range teamMembers {
 			emails[i] = m.email
 		}
 		if err := resetDemoTeamPasswords(ctx, pool, emails, passwordVet); err != nil {
 			return err
+		}
+		if inviteErr != nil {
+			return inviteErr
 		}
 	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("vet.demo practice for team seed: %w", err)

@@ -288,6 +288,9 @@ test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' },
   await seedHeartRateComment(petId)
 
   await loginAsVet(page)
+  // Cloud Run runners are often en-US; this assertion is about FR copy.
+  const origin = new URL(page.url()).origin
+  await page.context().addCookies([{ name: 'pf_locale', value: 'fr', url: origin }])
   await page.goto('/pets', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
   const row = page.getByTestId(`pet-row-${petId}`)

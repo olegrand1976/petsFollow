@@ -1,5 +1,5 @@
 <template>
-  <PresentationWizard />
+  <CommercialPresentationWizard />
 </template>
 
 <script setup lang="ts">
