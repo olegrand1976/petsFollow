@@ -1759,7 +1759,7 @@
     "todayTitle": "Oggi",
     "todayEmptyTitle": "Nessun appuntamento oggi",
     "todayEmptyDescription": "Niente di pianificato per oggi.",
-    "queueTitle": "Da fare",
+    "queueTitle": "Appuntamenti da confermare",
     "queueEmptyTitle": "Niente in sospeso",
     "queueEmptyDescription": "Nessuna visita, messaggio o invito in sospeso.",
     "queueLinkRequests": "1 invito cliente",

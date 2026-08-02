@@ -1192,7 +1192,7 @@
     "todayTitle": "Hoy",
     "todayEmptyTitle": "Sin citas hoy",
     "todayEmptyDescription": "Nada planificado para hoy.",
-    "queueTitle": "Por hacer",
+    "queueTitle": "Citas por confirmar",
     "queueEmptyTitle": "Nada pendiente",
     "queueEmptyDescription": "Sin citas, mensajes ni invitaciones pendientes.",
     "queueLinkRequests": "1 invitación de cliente",

@@ -1223,7 +1223,7 @@
     "todayTitle": "Today",
     "todayEmptyTitle": "No visits today",
     "todayEmptyDescription": "Nothing scheduled for today.",
-    "queueTitle": "To do",
+    "queueTitle": "Appointments to confirm",
     "queueEmptyTitle": "All clear",
     "queueEmptyDescription": "No pending visits, messages or invitations.",
     "queueLinkRequests": "1 client invitation",

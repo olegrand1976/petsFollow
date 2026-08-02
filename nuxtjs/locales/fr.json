@@ -1835,7 +1835,7 @@
     "todayTitle": "Aujourd'hui",
     "todayEmptyTitle": "Aucun RDV aujourd’hui",
     "todayEmptyDescription": "Rien de planifié pour cette journée.",
-    "queueTitle": "À traiter",
+    "queueTitle": "RDV à confirmer",
     "queueEmptyTitle": "Rien en attente",
     "queueEmptyDescription": "Pas de RDV, message ou invitation à traiter.",
     "queueLinkRequests": "1 invitation client",

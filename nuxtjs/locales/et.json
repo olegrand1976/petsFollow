@@ -1192,7 +1192,7 @@
     "todayTitle": "Täna",
     "todayEmptyTitle": "Täna visiite pole",
     "todayEmptyDescription": "Tänaseks midagi planeeritud ei ole.",
-    "queueTitle": "Teha",
+    "queueTitle": "Kinnitamist ootavad kohtumised",
     "queueEmptyTitle": "Kõik korras",
     "queueEmptyDescription": "Ootel visiite, sõnumeid ega kutseid pole.",
     "queueLinkRequests": "1 kliendi kutse",
