@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { loginAsVet, nativeClick } from '../helpers/auth'
+import { loginAsVet } from '../helpers/auth'
 
 const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
 
@@ -282,34 +282,25 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
   await expect(page.getByTestId('pet-shares-card')).toBeVisible({ timeout: 15000 })
 })
 
-test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' }, async ({ page }) => {
-  test.setTimeout(60000)
-  const { petId } = await demoClientAndPet()
-  await seedHeartRateComment(petId)
+test.describe('pets reading type i18n', () => {
+  // Force browser language so detectBrowserLanguage ≠ en-US on Cloud Run runners.
+  test.use({ locale: 'fr-FR' })
 
-  await loginAsVet(page)
-  // Cloud Run runners are often en-US; pin FR like 02-locale (wait preferredLocale init).
-  await page.goto('/settings?tab=account')
-  const activeLocale = page.locator('[data-testid^="settings-locale-"].pro-toggle-btn--active')
-  await expect(activeLocale).toBeVisible({ timeout: 15000 })
-  await expect(async () => {
-    await nativeClick(page, 'settings-locale-fr')
-    await expect(page.getByTestId('settings-locale-fr')).toHaveClass(/pro-toggle-btn--active/, {
-      timeout: 2000,
-    })
-  }).toPass({ timeout: 15000 })
-  await nativeClick(page, 'settings-locale-save')
-  await expect(page.getByTestId('settings-locale-fr')).toHaveClass(/pro-toggle-btn--active/, {
-    timeout: 15000,
+  test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' }, async ({ page }) => {
+    test.setTimeout(60000)
+    const { petId } = await demoClientAndPet()
+    await seedHeartRateComment(petId)
+
+    await loginAsVet(page)
+    await page.goto('/pets', { waitUntil: 'domcontentloaded' })
+    await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
+    const row = page.getByTestId(`pet-row-${petId}`)
+    await expect(row).toBeVisible({ timeout: 15000 })
+    const readingType = row.getByTestId('pet-reading-type')
+    await expect(readingType).toHaveText('FR')
+    await expect(readingType).toHaveAttribute('title', 'Fréquence respiratoire')
+    await expect(readingType).toHaveAttribute('aria-label', 'Fréquence respiratoire')
   })
-  await page.goto('/pets', { waitUntil: 'domcontentloaded' })
-  await expect(page.getByTestId('pets-page')).toBeVisible({ timeout: 15000 })
-  const row = page.getByTestId(`pet-row-${petId}`)
-  await expect(row).toBeVisible({ timeout: 15000 })
-  const readingType = row.getByTestId('pet-reading-type')
-  await expect(readingType).toHaveText('FR')
-  await expect(readingType).toHaveAttribute('title', 'Fréquence respiratoire')
-  await expect(readingType).toHaveAttribute('aria-label', 'Fréquence respiratoire')
 })
 
 test('pet detail — suivi poids chart + tableau', async ({ page }) => {
