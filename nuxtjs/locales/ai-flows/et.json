@@ -1,0 +1,98 @@
+{
+  "aiFlows": {
+    "title": "AI vood ja automatiseerimised",
+    "subtitle": "AI kasutuse ja automatiseerimise diagrammid — loomaarsti profiil esile tõstetud.",
+    "howtoTitle": "Kuidas seda lehte lugeda?",
+    "howto1": "Valige profiil (vaikimisi loomaarst).",
+    "howto2": "Valige diagramm loendist.",
+    "howto3": "Kasutage neid vooge müügidemodes AI integratsiooni selgitamiseks.",
+    "selectProfile": "Profiil",
+    "vetHighlight": "Prioriteet",
+    "loading": "Diagrammi laadimine…",
+    "profiles": {
+      "vet": {
+        "label": "Loomaarst",
+        "mission": "AI aruanded, kasutuselevõtt ja hoolduse järjepidevus"
+      },
+      "commercial": {
+        "label": "Müük",
+        "mission": "Kliiniku registreerimine → AI jälgimine → aktiveerimised"
+      },
+      "care_pro": {
+        "label": "Care pro",
+        "mission": "Pro Light väli ja toimiku jagamine"
+      }
+    },
+    "diagrams": {
+      "vet_cr_ai": {
+        "title": "Konsultatsioon + AI aruanne",
+        "desc": "Dikteerimine → transkriptsioon → Paranda (AI) → lõpeta → toimik / klient.",
+        "nodes": {
+          "start": "Uus konsultatsioon",
+          "dictate": "Audio dikteerimine",
+          "transcribe": "Transkriptsioon",
+          "improve": "Paranda AI",
+          "review": "Kliiniku ülevaatus",
+          "finalize": "Lopeta aruanne",
+          "record": "Looma toimik",
+          "client": "Naehtav kliendile kui jagatud"
+        }
+      },
+      "vet_ai_adoption": {
+        "title": "Automatiseeritud AI kasutuselevõtt",
+        "desc": "Aktiveerimise jälgimine, drip J0–J60, ROI ja hõõrdumise hoiatused müügile.",
+        "nodes": {
+          "track": "AI CR jälgimise aktiveerimine",
+          "j0": "J0 e-kiri esimesed aruanded",
+          "usage": "AI CR kasutus?",
+          "no": "Ei",
+          "yes": "Jah",
+          "nudge": "Meeldetuletused J3 J7",
+          "digest": "Kokkuvotted J15 J30",
+          "nps": "NPS J14 J45",
+          "roi": "ROI J60",
+          "friction": "Hõõrdumise hoiatus müügile"
+        }
+      },
+      "vet_care_continuity": {
+        "title": "Hoolduse järjepidevus",
+        "desc": "Aruanne / sõnum → push → kliendi vastus → toimik → aeg või Care meeldetuletus.",
+        "nodes": {
+          "cr": "Lõplik aruanne",
+          "msg": "Sõnum loomaarstilt kliendile",
+          "push": "Push teavitus",
+          "reply": "Kliendi vastus",
+          "thread": "Sõnumilõim",
+          "dossier": "Toimiku uuendus",
+          "rdv": "Aja taotlus või Care meeldetuletus"
+        }
+      },
+      "co_encode_activate": {
+        "title": "Registreerimine ja AI aktiveerimine",
+        "desc": "Prospect → kliiniku registreerimine → AI CR jälgimine → kliendiaktiveerimised → komisjonid.",
+        "nodes": {
+          "prospect": "CRM prospect",
+          "encode": "Kliiniku registreerimine",
+          "onboard": "Profiili onboarding",
+          "trackAi": "AI CR jälgimise aktiveerimine",
+          "pets": "Kliendi loomade aktiveerimised",
+          "ledger": "Komisjonide ledger"
+        }
+      },
+      "care_share_notes": {
+        "title": "Väljamärkmed ja jagamine",
+        "desc": "Pro Light kalender → märkmed / dikteerimine → ACL jagamine → AI parandus veebis.",
+        "nodes": {
+          "login": "Pro Light login",
+          "agenda": "Välja kalender",
+          "visit": "Visiit / märkmed",
+          "share": "ACL toimiku jagamine",
+          "vet": "Naehtav Web Pros",
+          "dictate": "Valikuline dikteerimine",
+          "webAi": "AI parandus veebis"
+        }
+      }
+    },
+    "renderError": "Diagrammi ei saa kuvada."
+  }
+}

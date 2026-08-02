@@ -313,7 +313,9 @@ Compte : `commercial.demo@petsfollow.test`
 | E1.6 | P1 | Activer pet payant | Checkout / mock activation | Commission ledger |
 | E1.7 | P1 | Commissions | `/commercial/commissions` + payout profile | Montants + profil |
 | E1.8 | P2 | Pitch + mémo ASV | `/commercial/pitch` · `/commercial/asv-memo` | Contenu offre + leave-behind ASV (Imprimer / PDF) |
+| E1.8a | P2 | Présentation cabinet | `/presentation` · `?step=` (canon invalide→welcome) · alias `/commercial/presentation` · redirect `/commercial/pitch-deck` | Pages successives cabinet + focus IA ; admin / commercial / manager ; véto refusé · Playwright `25-presentation-ai-flows` |
 | E1.8b | P2 | Flux produit | `/flux` · `?profile=` (canon invalide→vet) · alias `/commercial/flux?profile=` | Profils + liens croisés ; admin / commercial / manager ; véto refusé · Playwright `24-product-flows` |
+| E1.8c | P2 | Flux IA Mermaid | `/flux-ia` · `?profile=` (défaut vet) · alias `/commercial/flux-ia` | Diagrammes CR IA / adoption / continuité ; admin / commercial / manager ; véto refusé · Playwright `25-presentation-ai-flows` |
 | E1.9 | P2 | Training IA | `/commercial/training` | Session Gemini (si clé) |
 | E1.10 | P2 | Settings | `/commercial/settings` | Locale / prefs + champ téléphone de contact |
 | E1.12 | P1 | Porte téléphone | Commercial sans `contactPhone` → toute page Pro | Redirection `/complete-contact-phone` ; après saisie, retour au tableau de bord ; pages publiques (`/dossier/**`, `/login`) non impactées |
@@ -781,8 +783,9 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
-| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation | `@p1` (filiation) |
+| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation · redirect pitch-deck → `/presentation` | `@p1` (filiation) |
 | `24-product-flows` | `/flux` nav + deep-link `?profile=` + redirect alias + admin/manager + refus véto | P2 |
+| `25-presentation-ai-flows` | `/presentation` + `/flux-ia` nav, steps, Mermaid, admin/manager, refus véto | P2 |
 | `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
 | `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR, données médicales + statut animal | `@p0` (parcours chart/HR) + `@p1` CTA / lifecycle |

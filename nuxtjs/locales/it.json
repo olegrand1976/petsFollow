@@ -88,7 +88,8 @@
     "adminResearch": "Research opt-in",
     "researchGroups": "Gruppi",
     "researchDataroom": "Data room",
-    "productFlows": "Flussi prodotto"
+    "productFlows": "Flussi prodotto",
+    "aiFlows": "Flussi IA"
   },
   "training": {
     "title": "Allenamento AI",

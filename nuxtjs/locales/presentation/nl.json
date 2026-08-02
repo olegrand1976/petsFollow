@@ -1,0 +1,235 @@
+{
+  "presentation": {
+    "ui": {
+      "title": "Presentatie praktijk",
+      "subtitle": "petsFollow-functies voor een dierenartspraktijk — focus op zorgcontinuïteit en AI.",
+      "navLabel": "Presentatie praktijk",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "openDeck": "Presentatie praktijk openen",
+      "openDeckDesc": "Stapsgewijze rondleiding: praktijkfuncties, AI-integratie en aanbod.",
+      "openAiFlows": "AI-stromen bekijken (diagrammen)",
+      "tocLabel": "Inhoudsopgave"
+    },
+    "steps": {
+      "welcome": {
+        "nav": "Welkom",
+        "kicker": "Positionering",
+        "headline": "petsFollow: voorgeschreven zorgcontinuïteit",
+        "lead": "Een gedeeld digitaal dierenpaspoort tussen praktijk (Web Pro), terrein (Pro Light) en eigenaar (client-app). Geen tweede PMS — de opvolglijn tussen bezoeken.",
+        "points": [
+          {
+            "title": "Web Pro (praktijk)",
+            "desc": "Relatiehub, dossier, messaging, AI-verslagen, agenda en commissies."
+          },
+          {
+            "title": "Pro Light (terrein)",
+            "desc": "Gratis mobiele app voor huisbezoeken, stallen en zorgpartners."
+          },
+          {
+            "title": "Client-app",
+            "desc": "Eigenaars volgen, berichten en betalen voor de opvolging van hun dier."
+          }
+        ]
+      },
+      "pain": {
+        "nav": "Pijnpunten",
+        "kicker": "Waarom nu",
+        "headline": "De lijn breekt tussen consultaties",
+        "lead": "Zonder gestructureerd kanaal raakt de balie overbelast en verliest de dierenarts informatiecontinuïteit.",
+        "points": [
+          {
+            "title": "Overbelaste balie",
+            "desc": "Oproepen, persoonlijke sms en verspreide e-mails — niets belandt in het dossier."
+          },
+          {
+            "title": "Gebroken klinische lijn",
+            "desc": "Tussen bezoeken is onduidelijk wat gezegd, voorgeschreven of opgevolgd werd."
+          },
+          {
+            "title": "Gefragmenteerde tools",
+            "desc": "PMS, WhatsApp, papier: het team verliest tijd aan context heropbouwen."
+          }
+        ]
+      },
+      "surfaces": {
+        "nav": "3 oppervlakken",
+        "kicker": "Ecosysteem",
+        "headline": "Drie oppervlakken, één paspoort",
+        "lead": "Elke actor krijgt de juiste interface — de praktijk blijft de controletoren.",
+        "points": [
+          {
+            "title": "VetPro — Web praktijk",
+            "desc": "Pro SaaS: cockpit, cliënten, dieren, messaging, AI-CR, ASV-team."
+          },
+          {
+            "title": "VetLight — Mobiel terrein",
+            "desc": "Gratis: terreinagenda, fiches, notities, dictee; structurering-AI op Web."
+          },
+          {
+            "title": "Client — Eigenaar mobiel",
+            "desc": "Abonnement per dier: paspoort, berichten, metingen, Care/Horse, gezin."
+          }
+        ]
+      },
+      "vetpro": {
+        "nav": "VetPro",
+        "kicker": "Praktijk",
+        "headline": "De controletoren van de praktijk",
+        "lead": "Alles wat het zorgteam dagelijks nodig heeft om relatie en dierdossier te sturen.",
+        "points": [
+          {
+            "title": "Cockpit & cliënten",
+            "desc": "Dashboard, cliëntfiche, gekoppelde dieren, koppelverzoeken."
+          },
+          {
+            "title": "Dossier & tijdlijn",
+            "desc": "Digitaal paspoort: historiek, verslagen, delingen en opvolgevents."
+          },
+          {
+            "title": "Agenda & team",
+            "desc": "Praktijkagenda, ASV-/secretaresse-rollen, onboarding."
+          },
+          {
+            "title": "Commissies",
+            "desc": "Opvolging van clientactivaties die helpen het Pro SaaS te financieren."
+          }
+        ]
+      },
+      "care_loop": {
+        "nav": "Continuïteit",
+        "kicker": "Zorgloop",
+        "headline": "Consultatie → bericht → opvolging",
+        "lead": "De waarde zit tussen bezoeken: de praktijk houdt de lijn, de eigenaar blijft gerust.",
+        "points": [
+          {
+            "title": "Consultatie",
+            "desc": "Nieuwe visit, klinische notities, verslag finaliseren."
+          },
+          {
+            "title": "Veilige messaging",
+            "desc": "Dierenarts ↔ cliënt met push — geen verspreide persoonlijke sms meer."
+          },
+          {
+            "title": "Afspraken & herinneringen",
+            "desc": "Afspraakverzoeken en Care-herinneringen voor blijvende opvolging."
+          },
+          {
+            "title": "Metingen indien voorgeschreven",
+            "desc": "Geleide HR 15 / 30 / 60 s gevalideerd door de praktijk — een feature, niet de productidentiteit."
+          }
+        ]
+      },
+      "ai_in_app": {
+        "nav": "AI in-app",
+        "kicker": "AI-focus",
+        "headline": "Hoe AI in VetPro is geïntegreerd",
+        "lead": "De AI-verslagmodule is inbegrepen in Pro: dictee, transcriptie en verbeteren — geen add-on SKU.",
+        "points": [
+          {
+            "title": "Dictee / transcriptie",
+            "desc": "De dierenarts dicteert; audio wordt getranscribeerd om sneller te schrijven."
+          },
+          {
+            "title": "Verbeteren (AI)",
+            "desc": "Gemini structureert en verduidelijkt het verslag onder klinische controle."
+          },
+          {
+            "title": "Finaliseren & delen",
+            "desc": "Het gefinaliseerde verslag komt in het dossier en kan zichtbaar zijn voor de eigenaar."
+          },
+          {
+            "title": "Terrein vs Web",
+            "desc": "Pro Light legt vast; structurering via AI gebeurt op Web Pro."
+          }
+        ]
+      },
+      "ai_automation": {
+        "nav": "AI-automatisering",
+        "kicker": "AI-focus",
+        "headline": "Automatiseringen rond AI-adoptie",
+        "lead": "Naast de knop Verbeteren volgt petsFollow adoptie, nudget praktijken en waarschuwt de toegewezen commercial bij frictie.",
+        "points": [
+          {
+            "title": "Activatie-opvolging",
+            "desc": "Admin / commercial activeert tracking; gebrand e-mail J0 voor eerste verslagen."
+          },
+          {
+            "title": "Adoptie-drip",
+            "desc": "J3 / J7 nudges bij nul gebruik, digests en NPS tot J60."
+          },
+          {
+            "title": "ROI op J60",
+            "desc": "Geschatte tijdswinst op gefinaliseerde verslagen met transcribe / improve."
+          },
+          {
+            "title": "Frictie-alerts",
+            "desc": "NPS-tags en frictiesignalen gaan naar de toegewezen commercial voor coaching."
+          }
+        ]
+      },
+      "ecosystem": {
+        "nav": "Ecosysteem",
+        "kicker": "Buiten de praktijk",
+        "headline": "Terrein, eigenaars en partners",
+        "lead": "De praktijk schrijft voor en stuurt; Pro Light en de client-app verlengen continuïteit buiten de muren.",
+        "points": [
+          {
+            "title": "Gratis Pro Light",
+            "desc": "Rijdende dierenarts en care pros: agenda, notities, dossierdeling."
+          },
+          {
+            "title": "Betaalde client-app",
+            "desc": "Eigenaars betalen voor opvolging; messaging en paspoort altijd bij de hand."
+          },
+          {
+            "title": "ACL-deling",
+            "desc": "Dossier gedeeld met collega’s / care pros met toestemming — geen care↔care-chat."
+          }
+        ]
+      },
+      "offer": {
+        "nav": "Aanbod",
+        "kicker": "Businessmodel",
+        "headline": "Praktijk-SaaS + clientabonnementen",
+        "lead": "De dierenarts schrijft voor; de eigenaar betaalt opvolging. Commissies op activaties helpen Pro SaaS te dekken.",
+        "clientBadge": "Cliënten (incl. btw)",
+        "points": [
+          {
+            "title": "Pro-steer",
+            "desc": "Aanbevolen 3-jarige verbintenis (−10% vs 3× jaarlijks) — AI-CR inbegrepen."
+          },
+          {
+            "title": "Client-steer",
+            "desc": "Triënnale plan €95 / 3 jaar — sterkste prijsargument voor het gezin."
+          },
+          {
+            "title": "Zelffinanciering",
+            "desc": "≈ 8 triënnale activaties / maand ≈ maandelijks Pro SaaS-equivalent."
+          }
+        ]
+      },
+      "close": {
+        "nav": "Afsluiting",
+        "kicker": "Volgende stap",
+        "headline": "Klaar voor een terrein-demo?",
+        "lead": "Veranker positionering (continuïteit + paspoort), toon een consult met AI-CR, dan clientmessaging. AI-diagrammen detaileren de automatiseringen.",
+        "cta": "Aan de slag",
+        "points": [
+          {
+            "title": "Kernboodschap",
+            "desc": "petsFollow = zorgcontinuïteit onder leiding van de dierenarts — geen hartslag-app."
+          },
+          {
+            "title": "Differentiatie",
+            "desc": "AI-CR inbegrepen in Pro + drie coherente oppervlakken (Web, terrein, client)."
+          },
+          {
+            "title": "Vervolg",
+            "desc": "Prospect → praktijkinschrijving → dieractivaties → commissies."
+          }
+        ]
+      }
+    }
+  }
+}

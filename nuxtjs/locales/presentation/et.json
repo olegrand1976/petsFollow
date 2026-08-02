@@ -1,0 +1,235 @@
+{
+  "presentation": {
+    "ui": {
+      "title": "Kliiniku esitlus",
+      "subtitle": "petsFollowi funktsioonid veterinaarkliinikule — hoolduse järjepidevus ja AI.",
+      "navLabel": "Kliiniku esitlus",
+      "prev": "Eelmine",
+      "next": "Järgmine",
+      "openDeck": "Ava kliiniku esitlus",
+      "openDeckDesc": "Samm-sammult: kliiniku funktsioonid, AI integratsioon ja pakkumine.",
+      "openAiFlows": "Vaata AI vooge (diagrammid)",
+      "tocLabel": "Sisukord"
+    },
+    "steps": {
+      "welcome": {
+        "nav": "Algus",
+        "kicker": "Positsioneerimine",
+        "headline": "petsFollow: ette kirjutatud hoolduse järjepidevus",
+        "lead": "Jagatud digitaalne looma pass kliiniku (Web Pro), välja (Pro Light) ja omaniku (kliendiäpp) vahel. See ei ole teine PMS — see on jälgimisniit visiitide vahel.",
+        "points": [
+          {
+            "title": "Web Pro (kliinik)",
+            "desc": "Suhtlus, toimik, sõnumid, AI aruanded, kalender ja komisjonid."
+          },
+          {
+            "title": "Pro Light (väli)",
+            "desc": "Tasuta mobiilirakendus koduvisiitideks, tallideks ja hoolduspartneriteks."
+          },
+          {
+            "title": "Kliendiäpp",
+            "desc": "Omanik jälgib, suhtleb ja maksab oma looma järelvalve eest."
+          }
+        ]
+      },
+      "pain": {
+        "nav": "Probleem",
+        "kicker": "Miks praegu",
+        "headline": "Niit katkeb konsultatsioonide vahel",
+        "lead": "Ilma struktureeritud kanalita ülekoormatakse registratuur ja loomaarst kaotab teabe järjepidevuse.",
+        "points": [
+          {
+            "title": "Ülekoormatud registratuur",
+            "desc": "Kõned, isiklikud SMS-id ja hajutatud e-kirjad — midagi ei jõua toimikusse."
+          },
+          {
+            "title": "Katkine kliiniline niit",
+            "desc": "Visiitide vahel on raske teada, mida öeldi, määrati või jälgiti."
+          },
+          {
+            "title": "Hajutatud tööriistad",
+            "desc": "PMS, WhatsApp, paber: meeskond kulutab aega konteksti taastamisele."
+          }
+        ]
+      },
+      "surfaces": {
+        "nav": "3 pinda",
+        "kicker": "Ökosüsteem",
+        "headline": "Kolm pinda, üks pass",
+        "lead": "Iga osaleja saab sobiva liidese — kliinik jääb juhtimiskeskuseks.",
+        "points": [
+          {
+            "title": "VetPro — veebiklinik",
+            "desc": "Pro SaaS: kokpitt, kliendid, loomad, sõnumid, AI CR, ASV meeskond."
+          },
+          {
+            "title": "VetLight — väljamobiil",
+            "desc": "Tasuta: välikalender, kaardid, märkmed, dikteerimine; struktureeriv AI veebis."
+          },
+          {
+            "title": "Klient — omaniku mobiil",
+            "desc": "Planeering looma kohta: pass, sõnumid, mõõtmised, Care/Horse, kodu."
+          }
+        ]
+      },
+      "vetpro": {
+        "nav": "VetPro",
+        "kicker": "Kliinik",
+        "headline": "Kliiniku juhtimiskeskus",
+        "lead": "Kõik, mida hooldusmeeskond iga päev vajab suhte ja loomatoimiku juhtimiseks.",
+        "points": [
+          {
+            "title": "Kokpitt ja kliendid",
+            "desc": "Töölaud, kliendikaart, seotud loomad, sidumise taotlused."
+          },
+          {
+            "title": "Toimik ja ajajoon",
+            "desc": "Digipass: ajalugu, aruanded, jagamised ja järelvalve sündmused."
+          },
+          {
+            "title": "Kalender ja meeskond",
+            "desc": "Kliiniku kalender, ASV / sekretär rollid, onboarding."
+          },
+          {
+            "title": "Komisjonid",
+            "desc": "Kliendiaktivatsioonide jälgimine, mis aitavad Pro SaaSi rahastada."
+          }
+        ]
+      },
+      "care_loop": {
+        "nav": "Järjepidevus",
+        "kicker": "Hooldusahel",
+        "headline": "Konsultatsioon → sõnum → järelvalve",
+        "lead": "Väärtus on visiitide vahel: kliinik hoiab niiti, omanik jääb rahulikuks.",
+        "points": [
+          {
+            "title": "Konsultatsioon",
+            "desc": "Uus visiit, kliinilised märkmed, aruande lõpetamine."
+          },
+          {
+            "title": "Turvaline sõnumside",
+            "desc": "Loomaarst ↔ klient pushiga — enam ei ole hajutatud isiklikke SMS-e."
+          },
+          {
+            "title": "Ajad ja meeldetuletused",
+            "desc": "Aja taotlused ja Care meeldetuletused järelvalve hoidmiseks."
+          },
+          {
+            "title": "Mõõtmised vajadusel",
+            "desc": "Juhitud HR 15 / 30 / 60 s kliiniku kinnitusega — funktsioon, mitte toote identiteet."
+          }
+        ]
+      },
+      "ai_in_app": {
+        "nav": "AI rakenduses",
+        "kicker": "AI fookus",
+        "headline": "Kuidas AI on VetPros integreeritud",
+        "lead": "AI visiidiaruande moodul on Pro hinnas: dikteerimine, transkriptsioon ja parandamine — ilma lisatasuta.",
+        "points": [
+          {
+            "title": "Dikteerimine / transkriptsioon",
+            "desc": "Loomaarst dikteerib; heli transkribeeritakse kirjutamise kiirendamiseks."
+          },
+          {
+            "title": "Paranda (AI)",
+            "desc": "Gemini struktureerib ja selgitab aruannet kliiniku kontrolli all."
+          },
+          {
+            "title": "Lõpeta ja jaga",
+            "desc": "Lõplik aruanne jõuab toimikusse ja võib olla omanikule nähtav."
+          },
+          {
+            "title": "Väli vs veeb",
+            "desc": "Pro Light salvestab; struktureeriv AI toimub Web Pros."
+          }
+        ]
+      },
+      "ai_automation": {
+        "nav": "AI automatiseerimine",
+        "kicker": "AI fookus",
+        "headline": "Automatiseerimised AI kasutuselevõtu ümber",
+        "lead": "Lisaks Paranda nupule jälgib petsFollow kasutuselevõttu, tuletab kliinikutele meelde ja hoiatab müüjat hõõrdumise korral.",
+        "points": [
+          {
+            "title": "Aktiveerimise jälgimine",
+            "desc": "Admin / müük aktiveerib jälgimise; bränditud J0 e-kiri esimeste aruannete jaoks."
+          },
+          {
+            "title": "Kasutuselevõtu drip",
+            "desc": "J3 / J7 meeldetuletused nullkasutuse korral, kokkuvõtted ja NPS kuni J60."
+          },
+          {
+            "title": "ROI J60",
+            "desc": "Hinnanguline aja kokkuhoid lõpetatud aruannetel, mis kasutasid transcribe / improve."
+          },
+          {
+            "title": "Hõõrdumise hoiatused",
+            "desc": "NPS sildid ja hõõrdumise signaalid jõuavad määratud müüjani."
+          }
+        ]
+      },
+      "ecosystem": {
+        "nav": "Ökosüsteem",
+        "kicker": "Väljaspool kliinikut",
+        "headline": "Väli, omanikud ja partnerid",
+        "lead": "Kliinik määrab ja juhib; Pro Light ja kliendiäpp laiendavad järjepidevust väljaspool seinu.",
+        "points": [
+          {
+            "title": "Tasuta Pro Light",
+            "desc": "Mobiilne loomaarst ja care pro’d: kalender, märkmed, toimiku jagamine."
+          },
+          {
+            "title": "Tasuline kliendiäpp",
+            "desc": "Omanik maksab järelvalve eest; sõnumid ja pass alati kaasas."
+          },
+          {
+            "title": "ACL jagamine",
+            "desc": "Toimik jagatud kolleegide / care pro’dega nõusolekul — ilma care↔care chatita."
+          }
+        ]
+      },
+      "offer": {
+        "nav": "Pakkumine",
+        "kicker": "Ärimudel",
+        "headline": "Kliiniku SaaS + kliendiplaanid",
+        "lead": "Loomaarst määrab; omanik maksab järelvalve eest. Aktiveerimise komisjonid aitavad Pro SaaSi katta.",
+        "clientBadge": "Kliendid (KM-ga)",
+        "points": [
+          {
+            "title": "Pro steer",
+            "desc": "Soovitatav 3-aastane kohustus (−10% vs 3× aastane) — AI CR kaasas."
+          },
+          {
+            "title": "Kliendi steer",
+            "desc": "Kolmeaastane plaan 95 € / 3 aastat — tugevaim hinnargument kodule."
+          },
+          {
+            "title": "Isefinantseerimine",
+            "desc": "≈ 8 kolmeaastast aktiveerimist / kuu ≈ Pro SaaSi kuukvivalent."
+          }
+        ]
+      },
+      "close": {
+        "nav": "Lõpp",
+        "kicker": "Järgmine samm",
+        "headline": "Valmis väli-demoks?",
+        "lead": "Kinnita positsioon (järjepidevus + pass), näita visiiti AI CR-iga, siis kliendisõnumeid. AI diagrammid detailivad automatiseerimisi.",
+        "cta": "Tegutse",
+        "points": [
+          {
+            "title": "Põhisõnum",
+            "desc": "petsFollow = loomaarsti juhitud hoolduse järjepidevus — mitte südame löögisageduse äpp."
+          },
+          {
+            "title": "Erinevus",
+            "desc": "AI CR Pro hinnas + kolm sidusat pinda (veeb, väli, klient)."
+          },
+          {
+            "title": "Järgmine",
+            "desc": "Prospect → kliiniku registreerimine → loomade aktiveerimised → komisjonid."
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "aiFlows": {
+    "title": "AI-stromen & automatiseringen",
+    "subtitle": "Diagrammen van AI-gebruik en automatiseringspaden — dierenartsprofiel uitgelicht.",
+    "howtoTitle": "Hoe deze pagina lezen?",
+    "howto1": "Kies een profiel (dierenarts standaard).",
+    "howto2": "Selecteer een diagram in de lijst.",
+    "howto3": "Gebruik deze stromen in demos om AI-integratie uit te leggen.",
+    "selectProfile": "Profiel",
+    "vetHighlight": "Prioriteit",
+    "loading": "Diagram laden…",
+    "profiles": {
+      "vet": {
+        "label": "Dierenarts",
+        "mission": "AI-verslagen, adoptie en zorgcontinuïteit"
+      },
+      "commercial": {
+        "label": "Commercial",
+        "mission": "Encode praktijk → AI-opvolging → activaties"
+      },
+      "care_pro": {
+        "label": "Care pro",
+        "mission": "Pro Light terrein en dossierdeling"
+      }
+    },
+    "diagrams": {
+      "vet_cr_ai": {
+        "title": "Consultatie + AI-verslag",
+        "desc": "Dictee → transcriptie → Verbeteren (AI) → finaliseren → dossier / cliënt.",
+        "nodes": {
+          "start": "Nieuwe consultatie",
+          "dictate": "Audio-dictee",
+          "transcribe": "Transcriptie",
+          "improve": "Verbeteren AI",
+          "review": "Controle clinicus",
+          "finalize": "Verslag finaliseren",
+          "record": "Dossier dier",
+          "client": "Zichtbaar voor client indien gedeeld"
+        }
+      },
+      "vet_ai_adoption": {
+        "title": "Geautomatiseerde AI-adoptie",
+        "desc": "Activatie-opvolging, drip J0–J60, ROI en frictie-alerts naar commercial.",
+        "nodes": {
+          "track": "AI-CR tracking activeren",
+          "j0": "J0 e-mail eerste verslagen",
+          "usage": "AI-CR gebruik?",
+          "no": "Nee",
+          "yes": "Ja",
+          "nudge": "Nudges J3 J7",
+          "digest": "Digests J15 J30",
+          "nps": "NPS J14 J45",
+          "roi": "ROI J60",
+          "friction": "Frictie-alert naar commercial"
+        }
+      },
+      "vet_care_continuity": {
+        "title": "Zorgcontinuïteit",
+        "desc": "Verslag / bericht → push → cliëntantwoord → dossier → afspraak of Care-herinnering.",
+        "nodes": {
+          "cr": "Gefinaliseerd verslag",
+          "msg": "Bericht dierenarts naar client",
+          "push": "Pushmelding",
+          "reply": "Antwoord client",
+          "thread": "Berichtenreeks",
+          "dossier": "Dossierupdate",
+          "rdv": "Afspraakverzoek of Care-herinnering"
+        }
+      },
+      "co_encode_activate": {
+        "title": "Encode & AI-activatie",
+        "desc": "Prospect → praktijkinschrijving → AI-CR tracking → cliëntactivaties → commissies.",
+        "nodes": {
+          "prospect": "CRM-prospect",
+          "encode": "Praktijkinschrijving",
+          "onboard": "Profiel-onboarding",
+          "trackAi": "AI-CR tracking activeren",
+          "pets": "Client-dieractivaties",
+          "ledger": "Commissies ledger"
+        }
+      },
+      "care_share_notes": {
+        "title": "Terreinnotities & delen",
+        "desc": "Pro Light-agenda → notities / dictee → ACL-deling → AI verbeteren op Web.",
+        "nodes": {
+          "login": "Pro Light login",
+          "agenda": "Terreinagenda",
+          "visit": "Bezoek / notities",
+          "share": "ACL-dossierdeling",
+          "vet": "Zichtbaar op Web Pro",
+          "dictate": "Optioneel dictee",
+          "webAi": "AI verbeteren op Web"
+        }
+      }
+    },
+    "renderError": "Diagram kan niet worden weergegeven."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "aiFlows": {
+    "title": "AI flows & automations",
+    "subtitle": "Diagrams of AI usage and automation paths — veterinarian profile highlighted.",
+    "howtoTitle": "How to use this page?",
+    "howto1": "Pick a profile (veterinarian by default).",
+    "howto2": "Select a diagram from the list.",
+    "howto3": "Use these flows in sales demos to explain AI integration.",
+    "selectProfile": "Profile",
+    "vetHighlight": "Priority",
+    "loading": "Loading diagram…",
+    "profiles": {
+      "vet": {
+        "label": "Veterinarian",
+        "mission": "AI visit reports, adoption and care continuity"
+      },
+      "commercial": {
+        "label": "Sales",
+        "mission": "Practice encode → AI tracking → activations"
+      },
+      "care_pro": {
+        "label": "Care pro",
+        "mission": "Pro Light field and dossier sharing"
+      }
+    },
+    "diagrams": {
+      "vet_cr_ai": {
+        "title": "Consultation + AI report",
+        "desc": "Dictation → transcription → Improve (AI) → finalize → record / client.",
+        "nodes": {
+          "start": "New consultation",
+          "dictate": "Audio dictation",
+          "transcribe": "Transcription",
+          "improve": "Improve AI",
+          "review": "Clinician review",
+          "finalize": "Finalize report",
+          "record": "Animal record",
+          "client": "Visible to client if shared"
+        }
+      },
+      "vet_ai_adoption": {
+        "title": "Automated AI adoption",
+        "desc": "Activation tracking, J0–J60 drip, ROI and friction alerts to sales.",
+        "nodes": {
+          "track": "Enable AI CR tracking",
+          "j0": "J0 email first reports",
+          "usage": "AI CR usage?",
+          "no": "No",
+          "yes": "Yes",
+          "nudge": "Nudges J3 J7",
+          "digest": "Digests J15 J30",
+          "nps": "NPS J14 J45",
+          "roi": "ROI J60",
+          "friction": "Friction alert to sales"
+        }
+      },
+      "vet_care_continuity": {
+        "title": "Care continuity",
+        "desc": "Report / message → push → client reply → record → appointment or Care reminder.",
+        "nodes": {
+          "cr": "Finalized report",
+          "msg": "Vet message to client",
+          "push": "Push notification",
+          "reply": "Client reply",
+          "thread": "Message thread",
+          "dossier": "Record update",
+          "rdv": "Appointment request or Care reminder"
+        }
+      },
+      "co_encode_activate": {
+        "title": "Encode & AI activation",
+        "desc": "Prospect → practice signup → AI CR tracking → client activations → commissions.",
+        "nodes": {
+          "prospect": "CRM prospect",
+          "encode": "Practice signup",
+          "onboard": "Profile onboarding",
+          "trackAi": "Enable AI CR tracking",
+          "pets": "Client pet activations",
+          "ledger": "Commissions ledger"
+        }
+      },
+      "care_share_notes": {
+        "title": "Field notes & sharing",
+        "desc": "Pro Light agenda → notes / dictation → ACL share → AI improve on Web.",
+        "nodes": {
+          "login": "Pro Light login",
+          "agenda": "Field agenda",
+          "visit": "Visit / notes",
+          "share": "ACL dossier share",
+          "vet": "Visible on Web Pro",
+          "dictate": "Optional dictation",
+          "webAi": "Improve AI on Web"
+        }
+      }
+    },
+    "renderError": "Unable to render the diagram."
+  }
+}

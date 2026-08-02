@@ -88,7 +88,8 @@
     "adminResearch": "Research opt-in",
     "researchGroups": "Groups",
     "researchDataroom": "Data room",
-    "productFlows": "Product flows"
+    "productFlows": "Product flows",
+    "aiFlows": "AI flows"
   },
   "auth": {
     "login": {

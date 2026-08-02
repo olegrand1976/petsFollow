@@ -1,14 +1,9 @@
-<template>
-  <CommercialPitchDeck />
-</template>
-
 <script setup lang="ts">
-definePageMeta({
-  layout: false,
-  middleware: 'commercial-only',
-})
+/** Ancien pitch-deck → présentation pages successives. */
+definePageMeta({ middleware: [] })
 
-useHead({
-  title: 'petsFollow Pro — Pitch deck B2B',
-})
+await navigateTo(
+  { path: '/presentation', query: { step: 'welcome' } },
+  { redirectCode: 302, replace: true },
+)
 </script>
