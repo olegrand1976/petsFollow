@@ -63,3 +63,13 @@ func TestBuildPacsInstanceMetadataPrefersPixelSpacing(t *testing.T) {
 		t.Fatalf("spacing %#v", meta.PixelSpacingMm)
 	}
 }
+
+func TestBuildPacsInstanceMetadataSpacingArray(t *testing.T) {
+	t.Parallel()
+	meta := buildPacsInstanceMetadata("x", map[string]any{
+		"PixelSpacing": []any{0.5, 0.5},
+	})
+	if len(meta.PixelSpacingMm) != 2 || meta.PixelSpacingMm[0] != 0.5 || meta.PixelSpacingMm[1] != 0.5 {
+		t.Fatalf("spacing %#v", meta.PixelSpacingMm)
+	}
+}

@@ -1059,23 +1059,42 @@ func parseSpacingTag(tags map[string]any, key string) []float64 {
 	if !ok || raw == nil {
 		return nil
 	}
-	var s string
+	var out []float64
 	switch v := raw.(type) {
 	case string:
-		s = v
+		parts := strings.FieldsFunc(v, func(r rune) bool { return r == '\\' || r == ',' })
+		for _, p := range parts {
+			f, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+			if err != nil || f <= 0 {
+				return nil
+			}
+			out = append(out, f)
+		}
 	case float64:
-		return []float64{v, v}
-	default:
-		return nil
-	}
-	parts := strings.FieldsFunc(s, func(r rune) bool { return r == '\\' || r == ',' })
-	var out []float64
-	for _, p := range parts {
-		f, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
-		if err != nil || f <= 0 {
+		if v <= 0 {
 			return nil
 		}
-		out = append(out, f)
+		return []float64{v, v}
+	case []any:
+		for _, item := range v {
+			switch n := item.(type) {
+			case float64:
+				if n <= 0 {
+					return nil
+				}
+				out = append(out, n)
+			case string:
+				f, err := strconv.ParseFloat(strings.TrimSpace(n), 64)
+				if err != nil || f <= 0 {
+					return nil
+				}
+				out = append(out, f)
+			default:
+				return nil
+			}
+		}
+	default:
+		return nil
 	}
 	if len(out) == 1 {
 		out = append(out, out[0])

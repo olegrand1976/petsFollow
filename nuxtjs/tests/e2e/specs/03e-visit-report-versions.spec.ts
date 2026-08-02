@@ -34,7 +34,7 @@ async function setVisitReportHistoryOpen(page: Page, open: boolean) {
     .toBe(open)
 }
 
-/** History CTAs sit under sticky head/footer in fill layout — center in scroll + force click. */
+/** History CTAs sit under sticky head/footer — scroll into view then native click (force can miss Vue handlers). */
 async function clickVisitReportRestore(page: Page, testId: 'visit-report-restore-v0' | 'visit-report-restore-v1') {
   await setVisitReportHistoryOpen(page, true)
   const btn = page.getByTestId(testId)
@@ -49,8 +49,8 @@ async function clickVisitReportRestore(page: Page, testId: 'visit-report-restore
     else {
       el.scrollIntoView({ block: 'center', inline: 'nearest' })
     }
+    ;(el as HTMLButtonElement).click()
   })
-  await btn.click({ force: true })
 }
 
 /** Rich editor keeps a hidden markdown mirror (visit-report-body) for fill/toHaveValue. */
@@ -294,13 +294,14 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await ensureVisitReportEditMode(page)
     await body.fill('dirty right before restore v1')
     await clickVisitReportRestore(page, 'visit-report-restore-v1')
+    await expect(body).toHaveValue(improved, { timeout: 10000 })
     await ensureVisitReportEditMode(page)
     await expect(body).toHaveValue(improved)
 
     // Restore v0 → gauche
     await transcript.fill('dirty left before restore v0')
     await clickVisitReportRestore(page, 'visit-report-restore-v0')
-    await expect(transcript).toHaveValue(notes)
+    await expect(transcript).toHaveValue(notes, { timeout: 10000 })
 
     await page.route('**/api/visits/*/report-finalize', async (route) => {
       await route.fulfill({
