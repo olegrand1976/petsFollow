@@ -1409,7 +1409,7 @@ const confirmPreconsultByVisit = reactive<Record<string, boolean>>({})
 const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
-const { formatDate } = useFormatters()
+const { formatDate, formatTime, dateLocale } = useFormatters()
 const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNavBadges } = useNavBadges()
@@ -1522,7 +1522,8 @@ const kpiNextVisit = computed(() => {
     )
     .sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt))
   if (!upcoming.length) return '—'
-  return formatDate(upcoming[0].scheduledAt)
+  const at = upcoming[0].scheduledAt
+  return `${new Date(at).toLocaleDateString(dateLocale())} ${formatTime(at)}`
 })
 
 function isReadingNew(s: { id: string, isNew?: boolean }) {

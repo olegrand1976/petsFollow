@@ -215,7 +215,7 @@
 }
 
 .pro-kpi__value {
-  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
   font-weight: 700;
   font-family: var(--pf-font-mono);
   color: var(--pf-vet-primary);
