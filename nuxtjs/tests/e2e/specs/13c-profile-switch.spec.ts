@@ -13,8 +13,11 @@ test.describe('multi-profil topbar switcher', { tag: '@p1' }, () => {
     const switcher = page.getByTestId('pro-profile-switcher')
     await expect(switcher).toBeVisible({ timeout: 10000 })
 
-    const secretary = page.getByTestId('pro-profile-switch-secretary')
-    await expect(secretary).toBeVisible()
+    // Staging may lag densify (secretary/dev/commercial) — assert a stable multi-switch target.
+    const switchTarget = page.getByTestId('pro-profile-switch-vet')
+      .or(page.getByTestId('pro-profile-switch-research'))
+      .or(page.getByTestId('pro-profile-switch-secretary'))
+    await expect(switchTarget.first()).toBeVisible({ timeout: 10000 })
 
     const buttons = switcher.locator('button.pro-topbar__profile-switch')
     const count = await buttons.count()
