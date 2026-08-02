@@ -289,7 +289,8 @@ test('pets list — type de relevé FR + tooltip libellé long', { tag: '@p1' },
 
   await loginAsVet(page)
   // Cloud Run runners are often en-US; pin FR via settings (same path as 02-locale).
-  await page.goto('/settings', { waitUntil: 'networkidle' })
+  await page.goto('/settings?tab=account', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('settings-locale-fr')).toBeVisible({ timeout: 15000 })
   await nativeClick(page, 'settings-locale-fr')
   await nativeClick(page, 'settings-locale-save')
   await page.goto('/pets', { waitUntil: 'networkidle' })

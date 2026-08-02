@@ -75,23 +75,26 @@
     </ProCard>
 
     <footer class="pf-pres__footer">
-      <ProButton
-        variant="ghost"
-        test-id="presentation-prev"
+      <button
+        type="button"
+        class="pro-btn pro-btn--ghost"
+        data-testid="presentation-prev"
         :disabled="stepIndex === 0"
         @click="prev"
       >
         <ProIcon name="arrow_back" :size="16" />
         {{ $t('presentation.ui.prev') }}
-      </ProButton>
-      <ProButton
-        test-id="presentation-next"
+      </button>
+      <button
+        type="button"
+        class="pro-btn pro-btn--primary"
+        data-testid="presentation-next"
         :disabled="stepIndex >= steps.length - 1"
         @click="next"
       >
         {{ $t('presentation.ui.next') }}
         <ProIcon name="arrow_forward" :size="16" />
-      </ProButton>
+      </button>
     </footer>
   </div>
 </template>
@@ -161,7 +164,10 @@ function pointIcon(i: number) {
 async function go(id: PresentationStepId) {
   const current = parsePresentationStepId(route.query.step) ?? 'welcome'
   if (current === id) return
-  await navigateTo({ path: '/presentation', query: { step: id } }, { replace: true })
+  await navigateTo(
+    { path: '/presentation', query: { ...route.query, step: id } },
+    { replace: true },
+  )
 }
 
 async function next() {
