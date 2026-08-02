@@ -1686,6 +1686,29 @@ func logSummary() {
 	log.Printf("Reset password: http://localhost:3002/reset-password?token=%s", demoPasswordResetToken)
 }
 
+// resetDemoTeamPasswords force le hash bcrypt des comptes équipe démo (e2e / desk switch).
+func resetDemoTeamPasswords(ctx context.Context, pool *pgxpool.Pool, emails []string, password string) error {
+	if len(emails) == 0 {
+		return nil
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	tag, err := pool.Exec(ctx, `
+		UPDATE identity.users
+		SET password_hash = $1, must_change_password = false
+		WHERE email = ANY($2::text[]) AND email LIKE '%@petsfollow.test'`,
+		string(hash), emails)
+	if err != nil {
+		return fmt.Errorf("reset demo team passwords: %w", err)
+	}
+	if tag.RowsAffected() < int64(len(emails)) {
+		return fmt.Errorf("reset demo team passwords: updated %d/%d", tag.RowsAffected(), len(emails))
+	}
+	return nil
+}
+
 func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
 	rows, err := pool.Query(ctx, `SELECT id::text FROM identity.users`)
 	if err != nil {
@@ -1706,10 +1729,13 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 	}
 
 	// VetPlus équipe : référence + collègue + assistant + secrétaire
+	// Lookup via profil vet (users.practice_id/role peuvent être NULL après switch research/ops).
 	var practiceID, vetDemoID string
 	err = pool.QueryRow(ctx, `
-		SELECT p.id::text, u.id::text FROM practice.practices p
-		JOIN identity.users u ON u.practice_id = p.id AND u.role = 'vet' AND u.email = 'vet.demo@petsfollow.test'
+		SELECT p.practice_id::text, u.id::text
+		FROM identity.users u
+		JOIN identity.profiles p ON p.user_id = u.id AND p.role = 'vet' AND p.practice_id IS NOT NULL
+		WHERE u.email = 'vet.demo@petsfollow.test'
 		LIMIT 1`).Scan(&practiceID, &vetDemoID)
 	if err == nil {
 		_ = st.EnsureReferenceTeamMembership(ctx, practiceID, vetDemoID)
@@ -1717,17 +1743,28 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 			email, name string
 			role        store.TeamRole
 		}
-		for _, m := range []member{
+		teamMembers := []member{
 			{"vet.colleague@petsfollow.test", "Dr Collègue VetPlus", store.TeamRoleVet},
 			{"vet.assist@petsfollow.test", "Camille Assistante", store.TeamRoleAssistant},
 			{"secretary.demo@petsfollow.test", "Sophie Secrétariat", store.TeamRoleSecretary},
-		} {
+		}
+		for _, m := range teamMembers {
 			if _, err2 := st.InviteTeamMember(ctx, practiceID, vetDemoID, store.InviteTeamMemberInput{
 				Email: m.email, FullName: m.name, Password: passwordVet, TeamRole: m.role,
 			}); err2 != nil {
-				log.Printf("seed team member %s: %v", m.email, err2)
+				return fmt.Errorf("seed team member %s: %w", m.email, err2)
 			}
 		}
+		// Filet : même si un chemin invite a divergé, MDP démo équipe = VetDemo123!
+		emails := make([]string, len(teamMembers))
+		for i, m := range teamMembers {
+			emails[i] = m.email
+		}
+		if err := resetDemoTeamPasswords(ctx, pool, emails, passwordVet); err != nil {
+			return err
+		}
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("vet.demo practice for team seed: %w", err)
 	}
 
 	// Modules ON pour client.demo
