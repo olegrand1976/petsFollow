@@ -31,6 +31,17 @@ func TestCompendiumImportFlow(t *testing.T) {
 	}
 	api.api.TestSetMedia(bundle.Store)
 
+	// DB dev partagée : le commit d'un run précédent laisse un « ZZZ Unmatched
+	// Orphan … » (CNK 2888002) dans ref_medications que le matcher fuzzy
+	// re-suggère au run suivant — l'orphelin ne serait plus « error ».
+	cleanupTestRefMeds := func() {
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM pharmacy.ref_medications
+			 WHERE cnk IN ('2888001','2888002') OR name LIKE 'ZZZ Unmatched Orphan %'`)
+	}
+	cleanupTestRefMeds()
+	t.Cleanup(cleanupTestRefMeds)
+
 	orphanName := "ZZZ Unmatched Orphan " + uuid.NewString()[:8]
 	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
 		return []pharmacy.ExtractedMedication{
