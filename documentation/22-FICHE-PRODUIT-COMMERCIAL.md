@@ -46,7 +46,7 @@ Prix **TTC** client. Steer = **triennial**. Pas d’addons à vendre ; pas de pl
 
 Détail économique → [17](17-POLITIQUE-TARIFAIRE.md).
 
-Commission indicative triennial (plafond) : **~9,4 €** pour vous **et** pour le véto — grille complète [19](19-FICHE-COMMISSION-COMMERCIAL.md).
+Commission indicative triennial (plafond) : **~9,4 €** pour vous · **~6,28 €** pour le véto — grille complète [19](19-FICHE-COMMISSION-COMMERCIAL.md).
 
 ## Parcours de vente (3 étapes)
 
@@ -117,7 +117,7 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 |----------|----------|
 | **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. SPIFF mix = ≥ 55 % activations triennial / mois. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
-| **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Même plafond (~9,4 € sur le triennial). |
+| **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Plafond véto inchangé avec ou sans commercial (~6,28 € sur le triennial). |
 | **Cantonner le pitch au « suivi cardiaque »** | Identité = continuité prescrite + passeport digital (Web + mobiles). La FR est vendable en démo, pas comme plafond d’offre. |
 | **Centrer le pitch sur « sans boîtier »** | Parler des **apps** : Web Pro · ProLight · Client. Ne pas vendre / promettre un appareil. |
 | **Promettre une messagerie entre care pro** | Vendable = partage de dossier / CR / notes (ACL). Chat inter-pros = **hors scope**. |

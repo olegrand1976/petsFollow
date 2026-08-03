@@ -104,7 +104,7 @@ const { formatCurrency } = useFormatters()
 
 const summary = ref<any>({
   eligibleClients: 0,
-  currentRateBps: 700,
+  currentRateBps: 750,
   monthEarnedCents: 0,
   lifetimeEarnedCents: 0,
   tiers: [],

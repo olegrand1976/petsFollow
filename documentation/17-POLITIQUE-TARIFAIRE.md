@@ -70,12 +70,12 @@ Aucune pénalité véto si commercial assigné.
 
 | Clients payants | Taux de base |
 |-----------------|--------------|
-| 1–10 | **7 %** |
-| 11–30 | **9 %** |
-| 31–60 | **11 %** |
-| 61+ | **12 %** |
+| 1–10 | **7,50 %** |
+| 11–30 | **7,67 %** |
+| 31–60 | **7,83 %** |
+| 61+ | **8 %** |
 
-Facteur plan : monthly / annual **×0,67** · triennial **×1,00** (plafond effectif 8 / 8 / 12 %).
+Facteur plan : monthly / annual **×0,67** · triennial **×1,00**, puis borne effective **5–8 %** (plafond effectif ~5,4 / ~5,4 / 8 %).
 
 ### Commercial — fixe par plan
 
@@ -104,9 +104,9 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 
 | Offre | Net / an (approx.) | % TTC |
 |-------|--------------------|-------|
-| Monthly 3,50 € ×12 | ~28 € | ~67 % |
-| Annual 35 € | ~23,5 € | ~67 % |
-| Triennial 95 € | ~**19,3 €** | ~61 % |
+| Monthly 3,50 € ×12 | ~29 € | ~69 % |
+| Annual 35 € | ~24,3 € | ~69 % |
+| Triennial 95 € | ~**20,4 €** | ~64 % |
 
 ### Gardes-fous
 
@@ -116,7 +116,7 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 | Net annualisé / animal (cœur) | **≥ 17 € / an** |
 | Remise max multi-ans | **≤ 20 %** |
 | Prix d’entrée | **≤ ~3,5 € / mois** |
-| Take rate max cœur | **≤ 24 %** HT |
+| Take rate max cœur | **≤ 20 %** HT |
 
 ---
 
@@ -127,7 +127,7 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 | Montants TTC | `go/internal/billing/domain.go` (350 / 3500 / 9500) |
 | HTVA | `go/internal/store/vat.go` |
 | Taux / facteurs | `go/internal/store/commission_rates.go` |
-| Tiers seed | migration `000019` + `DefaultVetCommissionTiers` |
+| Tiers seed | migration `000140` + `DefaultVetCommissionTiers` |
 | SPIFF commercial | `go/internal/store/commercial_bonuses.go` · mig `000020` · UI `/admin/commercial-bonuses` |
 | Fiches UI | `ProCommissionSheet` (vet / commercial / admin) |
 | Stripe | Prices `STRIPE_PRICE_*` : monthly **sub** · annual / triennial one_time+sub |

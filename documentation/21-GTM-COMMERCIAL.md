@@ -10,13 +10,13 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 
 ## Playbook 30 jours
 1. Onboard véto (profil cabinet complet)
-2. Pitch triennial (~2,6 €/mois · ~9,4 € commission chacun @ plafond)
+2. Pitch triennial (~2,6 €/mois · ~9,4 € commission commercial / ~6,28 € véto @ plafond)
 3. 10 clients prescrits / 30 j
 4. Offre simple : **3,50 €/mois · 35 €/an · 95 €/3 ans** — Care / Horse / foyer / élevage **inclus** dès entitlement actif (pas d’upsell addon)
 
 ## Scripts courts
 - **Client** : « Le suivi que votre véto vous prescrit — messages, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois. »
-- **Véto** : « Continuité Web cabinet + mobile terrain + app client. Vous gagnez sur chaque activation ; plafond ~9,4 € sur le triennial ; pas de perte si un commercial vous a apporté. »
+- **Véto** : « Continuité Web cabinet + mobile terrain + app client. Vous gagnez sur chaque activation ; plafond ~6,28 € sur le triennial (borne 5–8 %) ; pas de perte si un commercial vous a apporté. »
 - **Commercial** : « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. »
 - **Téléphone → RDV** : funnel complet → [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md)
 

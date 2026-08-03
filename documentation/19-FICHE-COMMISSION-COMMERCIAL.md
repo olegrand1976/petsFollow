@@ -33,8 +33,8 @@ Steer : triennial = **meilleur taux** et **meilleur €**. Pas de commission add
 Détection **automatique** (`SyncCommercialBonusAwards`) ; payout via admin **mark-paid**.
 
 ## Grille véto (pour votre pitch)
-Progressif 7 → 9 → 11 → 12 % × facteur plan (plafond effectif 8 / 8 / 12 %).  
-Sur le triennial au plafond : **~9,4 €** aussi pour le véto.  
+Progressif base 7,50 → 8 % × facteur plan (borne effective 5–8 % ; plafond triennial **8 %**).  
+Sur le triennial au plafond : **~6,28 €** pour le véto (vous : **~9,4 €**).  
 **Le véto n’est pas pénalisé** si vous êtes assigné.
 
 ## Ne pas compter

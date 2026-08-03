@@ -2828,7 +2828,7 @@
       "webTitle": "Pro Web-app (dierenarts)",
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
-      "vetGrid": "Dierenarts: 7% → 12% excl. btw volgens volume betalende cliënten, met planfactor (maandelijks / jaarlijks / triennial).",
+      "vetGrid": "Dierenarts: basis 7,50% → 8% excl. btw volgens volume; effectief 5–8% na planfactor (maandelijks / jaarlijks / triennial).",
       "addons": "Geen addons — commissie enkel op plannen (8% maandelijks / 8% jaarlijks / 12% triennial).",
       "webFeatures": [
         "Operationeel dashboard cliënten / berichten / AF",
@@ -3083,10 +3083,10 @@
     "colCommRate": "Commercialtarief",
     "colCommEuros": "€ commercial",
     "vetBaseExplain": "Basistarief volgens het aantal betalende klanten gekoppeld aan uw praktijk:",
-    "vetMaxExplain": "Dit basistarief wordt vermenigvuldigd met een planfactor (100% op Triennial, 67% op Monthly en Annual), daarna begrensd op 12%. De tabel toont het maximum bij 61+ klanten — uw reële tarief kan lager zijn op eerdere schijven.",
+    "vetMaxExplain": "Dit basistarief wordt vermenigvuldigd met een planfactor (100% op Triennial, 67% op Monthly en Annual), daarna begrensd tussen 5% en 8%. De tabel toont het maximum bij 61+ klanten — uw reële tarief kan lager zijn op eerdere schijven.",
     "vetAddonNote": "Add-ons (Family / Kennel / Care+ / Horse) worden niet meer verkocht — alleen legacy.",
     "coSellNote": "De dierenarts wordt niet benadeeld als u toegewezen bent — win-win co-selling.",
-    "adminGuardrails": "Grenzen: nettowinst ≥ 55% van incl. btw · netto/jaar kern ≥ €17 · max. partner take rate 24% excl. btw.",
+    "adminGuardrails": "Grenzen: nettowinst ≥ 55% van incl. btw · netto/jaar kern ≥ €17 · max. partner take rate 20% excl. btw.",
     "tier": "{min}–{max} klanten → {pct}% (basis)",
     "tierOpen": "{min}+ klanten → {pct}% (basis)",
     "plans": {

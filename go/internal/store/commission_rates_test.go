@@ -7,26 +7,33 @@ import (
 )
 
 func TestApplyVetPlanFactor(t *testing.T) {
-	if got := store.ApplyVetPlanFactor(1200, "triennial"); got != 1200 {
-		t.Fatalf("triennial max = 1200, got %d", got)
+	if got := store.ApplyVetPlanFactor(800, "triennial"); got != 800 {
+		t.Fatalf("triennial max = 800, got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(1200, "annual"); got != 804 {
-		t.Fatalf("annual max = 804 (8%%), got %d", got)
+	if got := store.ApplyVetPlanFactor(1200, "triennial"); got != 800 {
+		t.Fatalf("triennial over-cap clamps to 800, got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(1200, "monthly"); got != 804 {
-		t.Fatalf("monthly max = 804 (8%%), got %d", got)
+	if got := store.ApplyVetPlanFactor(800, "annual"); got != 536 {
+		t.Fatalf("annual max = 536 (5.36%%), got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(1200, "quinquennial"); got != 804 {
-		t.Fatalf("quinquennial legacy max = 804, got %d", got)
+	if got := store.ApplyVetPlanFactor(800, "monthly"); got != 536 {
+		t.Fatalf("monthly max = 536 (5.36%%), got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(700, "triennial"); got != 700 {
-		t.Fatalf("triennial entry = 700, got %d", got)
+	if got := store.ApplyVetPlanFactor(800, "quinquennial"); got != 536 {
+		t.Fatalf("quinquennial legacy max = 536, got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(700, "annual"); got != 469 {
-		t.Fatalf("annual entry = 469, got %d", got)
+	if got := store.ApplyVetPlanFactor(750, "triennial"); got != 750 {
+		t.Fatalf("triennial entry = 750, got %d", got)
 	}
-	if got := store.ApplyVetPlanFactor(700, "monthly"); got != 469 {
-		t.Fatalf("monthly entry = 469, got %d", got)
+	if got := store.ApplyVetPlanFactor(750, "annual"); got != 502 {
+		t.Fatalf("annual entry = 502, got %d", got)
+	}
+	if got := store.ApplyVetPlanFactor(750, "monthly"); got != 502 {
+		t.Fatalf("monthly entry = 502, got %d", got)
+	}
+	// Below 5% after factor → floor at MinVetCommissionBps.
+	if got := store.ApplyVetPlanFactor(700, "annual"); got != 500 {
+		t.Fatalf("annual below-floor clamps to 500, got %d", got)
 	}
 }
 
@@ -65,7 +72,13 @@ func TestDefaultVetCommissionTiers(t *testing.T) {
 	if len(tiers) != 4 {
 		t.Fatalf("want 4 tiers, got %d", len(tiers))
 	}
-	if tiers[0].RateBps != 700 || tiers[3].RateBps != 1200 {
-		t.Fatalf("unexpected tier rates: %#v", tiers)
+	want := []int{750, 767, 783, 800}
+	for i, w := range want {
+		if tiers[i].RateBps != w {
+			t.Fatalf("tier[%d] rate = %d, want %d", i, tiers[i].RateBps, w)
+		}
+		if tiers[i].RateBps < store.MinVetBaseTierBps || tiers[i].RateBps > store.MaxVetCommissionBps {
+			t.Fatalf("tier[%d] rate %d outside [%d, %d]", i, tiers[i].RateBps, store.MinVetBaseTierBps, store.MaxVetCommissionBps)
+		}
 	}
 }

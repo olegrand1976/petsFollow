@@ -169,7 +169,7 @@ func (s *Store) ReplaceCommissionTiers(ctx context.Context, tiers []CommissionTi
 	openEnded := 0
 	prevMax := 0
 	for i, t := range tiers {
-		if t.MinClients < 1 || t.RateBps < 0 || t.RateBps > 5000 {
+		if t.MinClients < 1 || t.RateBps < MinVetBaseTierBps || t.RateBps > MaxVetCommissionBps {
 			return errors.New("invalid_tier")
 		}
 		if t.MaxClients == nil {

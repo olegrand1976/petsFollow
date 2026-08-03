@@ -135,10 +135,10 @@ const leadText = computed(() => {
 })
 
 const vetTierLabels = computed(() => [
-  t('commissionSheet.tier', { min: 1, max: 10, pct: 7 }),
-  t('commissionSheet.tier', { min: 11, max: 30, pct: 9 }),
-  t('commissionSheet.tier', { min: 31, max: 60, pct: 11 }),
-  t('commissionSheet.tierOpen', { min: 61, pct: 12 }),
+  t('commissionSheet.tier', { min: 1, max: 10, pct: '7.50' }),
+  t('commissionSheet.tier', { min: 11, max: 30, pct: '7.67' }),
+  t('commissionSheet.tier', { min: 31, max: 60, pct: '7.83' }),
+  t('commissionSheet.tierOpen', { min: 61, pct: 8 }),
 ])
 
 const visibleBonuses = computed(() => {

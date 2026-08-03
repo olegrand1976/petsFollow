@@ -43,7 +43,7 @@ func TestAddonCatalogMatchesBillingDomain(t *testing.T) {
 }
 
 func TestIndicativeTriennialCommissions(t *testing.T) {
-	// 95 € TTC → HTVA 7851 ct; 12% = 942 ct
+	// 95 € TTC → HTVA 7851 ct; commercial 12% = 942 ct; vet max 8% = 628 ct
 	ht := store.HTVACents(9500)
 	if ht != 7851 {
 		t.Fatalf("HTVA(9500)=7851, got %d", ht)
@@ -51,12 +51,26 @@ func TestIndicativeTriennialCommissions(t *testing.T) {
 	if got := store.CommissionFromTTCCents(9500, 1200); got != 942 {
 		t.Fatalf("12%% of HTVA(9500)=942, got %d", got)
 	}
+	if got := store.CommissionFromTTCCents(9500, 800); got != 628 {
+		t.Fatalf("8%% vet max of HTVA(9500)=628, got %d", got)
+	}
 	if got := store.CommissionFromTTCCents(3500, 800); got != 231 {
-		// HTVA(3500)=2892; 8%=231
+		// HTVA(3500)=2892; 8%=231 (commercial annual; vet annual max uses 536 bps)
 		t.Fatalf("8%% of HTVA(3500)=231, got %d", got)
 	}
 	if got := store.CommissionFromTTCCents(350, 800); got != 23 {
 		// HTVA(350)=289; 8%=23
 		t.Fatalf("8%% of HTVA(350)=23, got %d", got)
+	}
+	rates := store.SubscriptionPlanRates()
+	byCode := map[string]store.PlanRateInfo{}
+	for _, r := range rates {
+		byCode[r.Code] = r
+	}
+	if byCode["triennial"].VetRateBpsMax != 800 || byCode["triennial"].VetCentsMax != 628 {
+		t.Fatalf("triennial vet max = %#v", byCode["triennial"])
+	}
+	if byCode["annual"].VetRateBpsMax != 536 || byCode["monthly"].VetRateBpsMax != 536 {
+		t.Fatalf("monthly/annual vet max want 536, got m=%d a=%d", byCode["monthly"].VetRateBpsMax, byCode["annual"].VetRateBpsMax)
 	}
 }

@@ -2797,7 +2797,7 @@
       "webTitle": "App web Pro (vet)",
       "mobileTitle": "App móvil Flutter (clientes)",
       "commissionTitle": "Comisionamiento",
-      "vetGrid": "Veterinario: 7 % → 12 % sin IVA según volumen de clientes de pago, con factor de plan (mensual / anual / trienal).",
+      "vetGrid": "Veterinario: base 7,50 % → 8 % sin IVA según volumen; efectivo 5–8 % tras factor de plan (mensual / anual / trienal).",
       "addons": "Sin complementos — comisiones solo sobre planes (8 % mensual / 8 % anual / 12 % trienal).",
       "webFeatures": [
         "Panel operativo clientes / mensajes / FR",
@@ -3052,10 +3052,10 @@
     "colCommRate": "Tasa comercial",
     "colCommEuros": "€ comercial",
     "vetBaseExplain": "Tasa base según el número de clientes de pago vinculados a su clínica:",
-    "vetMaxExplain": "Esta tasa base se multiplica por un factor según el plan (100% en Triennial, 67% en Monthly y Annual), luego se limita al 12%. La tabla indica el máximo en el tramo 61+ clientes — su tasa real puede ser inferior en tramos anteriores.",
+    "vetMaxExplain": "Esta tasa base se multiplica por un factor según el plan (100% en Triennial, 67% en Monthly y Annual), luego se acota entre el 5% y el 8%. La tabla indica el máximo en el tramo 61+ clientes — su tasa real puede ser inferior en tramos anteriores.",
     "vetAddonNote": "Los addons (Family / Kennel / Care+ / Horse) ya no se venden — solo legacy.",
     "coSellNote": "El veterinario no se penaliza si usted está asignado — co-selling beneficioso para ambos.",
-    "adminGuardrails": "Límites: margen neto ≥ 55 % del TTC · neto/año núcleo ≥ 17 € · take rate máx. núcleo 24 % HT.",
+    "adminGuardrails": "Límites: margen neto ≥ 55 % del TTC · neto/año núcleo ≥ 17 € · take rate máx. núcleo 20 % HT.",
     "tier": "{min}–{max} clientes → {pct} % (base)",
     "tierOpen": "{min}+ clientes → {pct} % (base)",
     "plans": {

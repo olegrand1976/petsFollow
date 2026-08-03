@@ -2828,7 +2828,7 @@
       "webTitle": "Pro Web app (vet)",
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
-      "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (monthly / annual / triennial).",
+      "vetGrid": "Vet: base 7.50% → 8% ex-VAT by paying-client volume; effective 5–8% after plan factor (monthly / annual / triennial).",
       "addons": "No addons — commissions on plans only (8% monthly / 8% annual / 12% triennial).",
       "webFeatures": [
         "Operational dashboard clients / messages / RR",
@@ -3083,10 +3083,10 @@
     "colCommRate": "Sales rate",
     "colCommEuros": "Sales €",
     "vetBaseExplain": "Base rate by number of paying clients linked to your practice:",
-    "vetMaxExplain": "This base rate is then multiplied by a plan factor (100% on Triennial, 67% on Monthly and Annual), then capped at 12%. The table shows the maximum at the 61+ clients tier — your actual rate may be lower on earlier tiers.",
+    "vetMaxExplain": "This base rate is then multiplied by a plan factor (100% on Triennial, 67% on Monthly and Annual), then bounded between 5% and 8%. The table shows the maximum at the 61+ clients tier — your actual rate may be lower on earlier tiers.",
     "vetAddonNote": "Add-ons (Family / Kennel / Care+ / Horse) are no longer sold — legacy only.",
     "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
-    "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
+    "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 20% HT.",
     "tier": "{min}–{max} clients → {pct}% (base)",
     "tierOpen": "{min}+ clients → {pct}% (base)",
     "plans": {

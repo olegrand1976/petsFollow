@@ -163,8 +163,8 @@ Commissions actuelles (assiette **HTVA**, TVA BE 21 %) :
 
 | Offre | Commercial | Véto |
 |-------|------------|------|
-| Monthly | 8 % | progressif × 0,67 |
-| Annual | 8 % | progressif × 0,67 |
-| Triennial | **12 %** | progressif × 1,00 |
+| Monthly | 8 % | progressif × 0,67 (effectif ~5–5,4 %) |
+| Annual | 8 % | progressif × 0,67 (effectif ~5–5,4 %) |
+| Triennial | **12 %** | progressif × 1,00 (effectif ≤ **8 %**) |
 
 Détail → [17-POLITIQUE-TARIFAIRE.md](./17-POLITIQUE-TARIFAIRE.md) · fiches → [18](./18-FICHE-COMMISSION-VETO.md) / [19](./19-FICHE-COMMISSION-COMMERCIAL.md).

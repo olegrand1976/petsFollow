@@ -18,20 +18,20 @@
 ## Grille progressive (base)
 | Clients payants | Taux |
 |-----------------|------|
-| 1–10 | 7 % |
-| 11–30 | 9 % |
-| 31–60 | 11 % |
-| 61+ | 12 % |
+| 1–10 | 7,50 % |
+| 11–30 | 7,67 % |
+| 31–60 | 7,83 % |
+| 61+ | 8 % |
 
 × facteur plan : **triennial ×1** · monthly / annual **×0,67**  
-→ plafonds effectifs **12 % / 8 % / 8 %**
+→ borne effective **5–8 %** (plafonds ~5,4 % / ~5,4 % / **8 %**)
 
 ## € indicatifs (plafond)
 | Plan TTC | € max approx. |
 |----------|---------------|
-| Monthly 3,50 € | ~0,23 € |
-| Annual 35 € | ~2,3 € |
-| **Triennial 95 €** | **~9,4 €** |
+| Monthly 3,50 € | ~0,15 € |
+| Annual 35 € | ~1,55 € |
+| **Triennial 95 €** | **~6,28 €** |
 
 ## Bonus
 - **50 €** one-shot au 1er passage de **31** clients payants  

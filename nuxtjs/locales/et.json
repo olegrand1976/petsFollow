@@ -2797,7 +2797,7 @@
       "webTitle": "Pro veebirakendus (veterinaar)",
       "mobileTitle": "Flutteri mobiilirakendus (kliendid)",
       "commissionTitle": "Komisjonid",
-      "vetGrid": "Loomaarst: 7% → 12% käibemaksuta maksevate klientide mahu järgi, plaani teguriga (igakuine / aastane / kolmeaastane).",
+      "vetGrid": "Loomaarst: baas 7,50% → 8% käibemaksuta mahu järgi; tegelik 5–8% pärast plaani tegurit (igakuine / aastane / kolmeaastane).",
       "addons": "Lisasid pole — komisjon ainult plaanidelt (8% igakuine / 8% aastane / 12% kolmeaastane).",
       "webFeatures": [
         "Töölaud kliendid / sõnumid / hingamissagedus",
@@ -3052,10 +3052,10 @@
     "colCommRate": "Müügi määr",
     "colCommEuros": "Müük €",
     "vetBaseExplain": "Baasmäär vastavalt sinu kabinetiga seotud maksvate klientide arvule:",
-    "vetMaxExplain": "Baasmäära korrutatakse plaani teguriga (100% Triennial, 67% Monthly ja Annual), seejärel piiratakse 12%-ni. Tabel näitab maksimumi 61+ kliendi tasemel — tegelik määr võib olla madalam varasematel tasemetel.",
+    "vetMaxExplain": "Baasmäära korrutatakse plaani teguriga (100% Triennial, 67% Monthly ja Annual), seejärel piiratakse 5–8% vahemikku. Tabel näitab maksimumi 61+ kliendi tasemel — tegelik määr võib olla madalam varasematel tasemetel.",
     "vetAddonNote": "Lisad (Family / Kennel / Care+ / Horse) ei ole enam müügil — ainult legacy.",
     "coSellNote": "Veterinaare ei karistata, kui oled määratud — win-win ühismüük.",
-    "adminGuardrails": "Piirangud: netomarginaal ≥ 55% TTC-st · põhinet/aasta ≥ €17 · partnerite maksimaalne take rate 24% HT.",
+    "adminGuardrails": "Piirangud: netomarginaal ≥ 55% TTC-st · põhinet/aasta ≥ €17 · partnerite maksimaalne take rate 20% HT.",
     "tier": "{min}–{max} klienti → {pct}% (baas)",
     "tierOpen": "{min}+ klienti → {pct}% (baas)",
     "plans": {
