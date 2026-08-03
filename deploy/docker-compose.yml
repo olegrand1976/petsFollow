@@ -78,6 +78,9 @@ services:
       HTTP_ADDR: ":8080"
       MIGRATE_ON_BOOT: "true"
       DEV_SEED_ENABLED: "true"
+      # Stack locale (mailhog, mdp démo) — même défaut que make api-dev ; le
+      # garde-fou seed (env_guard.go) refuse de tourner sans APP_ENV seedable.
+      APP_ENV: "${APP_ENV:-local}"
       BILLING_MOCK_ENABLED: "${BILLING_MOCK_ENABLED:-true}"
     ports:
       - "${PETSFOLLOW_API_PORT:-8291}:8080"
