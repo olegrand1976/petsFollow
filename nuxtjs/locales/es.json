@@ -867,7 +867,12 @@
       "ctaPrescriptionHint": "Crear una receta para esta mascota.",
       "ctaInvoiceHint": "Abrir facturación con cliente y visita precargados.",
       "nextStepsTitle": "Siguiente paso de la consulta",
-      "nextStepsHint": "Informe guardado. Elija el siguiente paso o termine la consulta."
+      "nextStepsHint": "Informe guardado. Elija el siguiente paso o termine la consulta.",
+      "nextStepsEmpty": "No hay ningún paso adicional disponible: finalice la consulta.",
+      "nextPromptTitle": "Informe guardado",
+      "nextPromptHint": "¿Pasar a la continuación de la consulta (receta, DAF, factura) o seguir editando el informe?",
+      "nextPromptStay": "Seguir editando el informe",
+      "nextPromptContinue": "Ir a la continuación"
     }
   },
   "consultations": {

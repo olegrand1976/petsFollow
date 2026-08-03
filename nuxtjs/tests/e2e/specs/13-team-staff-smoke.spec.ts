@@ -137,6 +137,32 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     ).toBeVisible()
   })
 
+  test('B2e: assist — détail RDV desk (mêmes options que secrétaire + CTA consultation)', async ({ page }) => {
+    await loginExpectDashboard(page, 'vet.assist@petsfollow.test')
+    await page.goto('/calendar', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('calendar-page')).toBeVisible({ timeout: 15000 })
+    const chip = page
+      .locator('[data-testid^="calendar-chip-"].cal-chip--success:not(.cal-chip--walkin)')
+      .first()
+    if ((await chip.count()) === 0) {
+      test.skip(true, 'aucun RDV confirmé non walk-in visible sur l’agenda seed pour le smoke desk')
+      return
+    }
+    await chip.click()
+    // Parité desk avec la secrétaire : note, modifier l'heure, supprimer, salle d'attente.
+    await expect(page.getByTestId('calendar-desk-note')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('calendar-change-time')).toBeVisible()
+    await expect(page.getByTestId('calendar-delete-visit')).toBeVisible()
+    await expect(
+      page.getByTestId('calendar-waiting-room-on').or(page.getByTestId('calendar-waiting-room-off')),
+    ).toBeVisible()
+    // Les données de consultation ne sont plus dans le détail RDV — CTA vers l'écran consultation.
+    await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
+    await expect(
+      page.getByTestId('calendar-open-consultation').or(page.getByTestId('calendar-view-consultation')),
+    ).toBeVisible()
+  })
+
   test('B3: secretary — /prescriptions/nouveau redirect (no write_clinical)', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
     await page.goto('/prescriptions/nouveau', { waitUntil: 'domcontentloaded' })

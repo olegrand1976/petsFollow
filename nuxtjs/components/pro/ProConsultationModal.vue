@@ -4,7 +4,7 @@
     :size="visitId ? 'full' : 'md'"
     :title="modalTitle"
     test-id="consultation-modal"
-    :prevent-close="reportBusy || closing || leavePromptOpen"
+    :prevent-close="reportBusy || closing || leavePromptOpen || nextPromptOpen"
     :expandable="!!visitId"
     v-model:expanded="modalExpanded"
     @update:open="onOpenUpdate"
@@ -40,7 +40,7 @@
 
     <!-- Étape B : CR médical -->
     <div
-      v-else-if="!reportSaved"
+      v-else-if="!nextStepsOpen"
       class="consultation-report"
       data-testid="consultation-report"
     >
@@ -51,7 +51,7 @@
         :visit-id="visitId"
         :visit-scheduled-at="scheduledAt"
         @saved="onReportSaved"
-        @finalized="onReportSaved"
+        @finalized="onReportFinalized"
         @busy="onReportBusy"
       />
     </div>
@@ -105,6 +105,13 @@
           <span class="consultation-next-card__desc">{{ $t('clients.consultation.ctaInvoiceHint') }}</span>
         </button>
       </div>
+      <p
+        v-if="!showPrescriptionCta && !showDafCta && !showInvoiceCta"
+        class="pro-hint"
+        data-testid="consultation-next-steps-empty"
+      >
+        {{ $t('clients.consultation.nextStepsEmpty') }}
+      </p>
     </div>
 
     <template #footer>
@@ -128,7 +135,7 @@
         </ProButton>
       </template>
 
-      <template v-else-if="reportSaved">
+      <template v-else-if="nextStepsOpen">
         <ProButton
           variant="secondary"
           test-id="consultation-cta-done"
@@ -138,6 +145,44 @@
           {{ $t('clients.consultation.ctaDone') }}
         </ProButton>
       </template>
+
+      <!-- CR déjà enregistré mais resté à l'écran (IA / « Continuer l'édition ») :
+           garder un accès au hub sans imposer la bascule. -->
+      <template v-else-if="reportSaved">
+        <ProButton
+          variant="secondary"
+          test-id="consultation-goto-next-steps"
+          :disabled="reportBusy || closing"
+          @click="openNextSteps"
+        >
+          {{ $t('clients.consultation.nextStepsTitle') }}
+        </ProButton>
+      </template>
+    </template>
+  </ProModal>
+
+  <ProModal
+    :open="nextPromptOpen"
+    size="md"
+    :title="$t('clients.consultation.nextPromptTitle')"
+    test-id="consultation-next-prompt"
+    @update:open="onNextPromptOpen"
+  >
+    <p class="pro-hint">{{ $t('clients.consultation.nextPromptHint') }}</p>
+    <template #footer>
+      <ProButton
+        variant="ghost"
+        test-id="consultation-next-stay"
+        @click="nextPromptOpen = false"
+      >
+        {{ $t('clients.consultation.nextPromptStay') }}
+      </ProButton>
+      <ProButton
+        test-id="consultation-next-continue"
+        @click="openNextSteps"
+      >
+        {{ $t('clients.consultation.nextPromptContinue') }}
+      </ProButton>
     </template>
   </ProModal>
 
@@ -183,6 +228,9 @@
 import type { ConsultationPet } from '~/composables/useConsultationFlow'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+
+/** Miroir de `VisitReportSavedOrigin` (ProVisitReportPanel) — évite un import de type cross-SFC. */
+type ReportSavedOrigin = 'save' | 'improve' | 'flush'
 
 type ReportPanelExpose = {
   forceSave: () => Promise<boolean>
@@ -249,6 +297,10 @@ const actionError = ref('')
 const selectedPetId = ref('')
 const notes = ref('')
 const closing = ref(false)
+/** Étape C affichée — distincte de `reportSaved` (persistance) : la bascule est explicite. */
+const nextStepsOpen = ref(false)
+/** Confirmation « aller vers la suite » après un Enregistrer / Finaliser explicite. */
+const nextPromptOpen = ref(false)
 const leavePromptOpen = ref(false)
 const leaveBusy = ref(false)
 const leaveError = ref('')
@@ -257,7 +309,7 @@ const modalExpanded = ref(false)
 const { user } = useProUser()
 
 const modalTitle = computed(() => {
-  if (visitId.value && reportSaved.value) {
+  if (visitId.value && nextStepsOpen.value) {
     return t('clients.consultation.nextStepsTitle')
   }
   return t('clients.consultation.title')
@@ -351,6 +403,8 @@ watch(
     notes.value = ''
     actionError.value = ''
     closing.value = false
+    nextStepsOpen.value = false
+    nextPromptOpen.value = false
     leavePromptOpen.value = false
     leaveError.value = ''
     modalExpanded.value = false
@@ -530,8 +584,29 @@ async function start() {
   }
 }
 
-function onReportSaved() {
+/**
+ * `saved` marque la persistance (leave-guard, CTA suite) mais ne bascule jamais
+ * d'écran tout seul : seul un Enregistrer explicite propose la suite, et l'IA
+ * (`improve`) doit laisser le véto relire la proposition.
+ */
+function onReportSaved(origin: ReportSavedOrigin = 'save') {
   afterSaved()
+  if (origin !== 'save') return
+  nextPromptOpen.value = true
+}
+
+function onReportFinalized() {
+  afterSaved()
+  nextPromptOpen.value = true
+}
+
+function openNextSteps() {
+  nextPromptOpen.value = false
+  nextStepsOpen.value = true
+}
+
+function onNextPromptOpen(v: boolean) {
+  if (!v) nextPromptOpen.value = false
 }
 
 function onReportBusy(busy: boolean) {

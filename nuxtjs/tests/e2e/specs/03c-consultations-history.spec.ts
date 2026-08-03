@@ -67,6 +67,9 @@ async function createWalkInWithReport(page: Page): Promise<string> {
   await reportBody.fill(probe)
   await expect(reportBody).toHaveValue(new RegExp(probe.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   await page.getByTestId('visit-report-save').click()
+  // Save ne bascule plus seul vers le hub : confirmer la suite.
+  await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
+  await page.getByTestId('consultation-next-continue').click()
   await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
   await page.getByTestId('consultation-cta-done').click()
   await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })

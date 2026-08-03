@@ -334,7 +334,7 @@
         :disabled="reportBusy || hydrating || dictating || reportStatus === 'final' || !dirty"
         :loading="reportBusy && saveInFlight"
         test-id="visit-report-save"
-        @click="saveVisitReport"
+        @click="saveVisitReport('save')"
       >
         {{ $t('calendar.saveReport') }}
       </ProButton>
@@ -403,8 +403,16 @@ const props = withDefaults(
   { fillHeight: false },
 )
 
+/**
+ * Origine d'un `saved` :
+ * - `save` : clic explicite « Enregistrer » (le host peut proposer la suite)
+ * - `improve` : PUT technique avant/après IA — le CR reste à l'écran
+ * - `flush` : leave-guard / veille — le host gère déjà la fermeture
+ */
+export type VisitReportSavedOrigin = 'save' | 'improve' | 'flush'
+
 const emit = defineEmits<{
-  saved: []
+  saved: [origin: VisitReportSavedOrigin]
   finalized: []
   busy: [value: boolean]
 }>()
@@ -677,8 +685,10 @@ function selectReportAuthor(author: VisitReportAuthor) {
   applyPeerReport(author)
 }
 
-async function saveVisitReport(): Promise<boolean> {
+async function saveVisitReport(origin: VisitReportSavedOrigin = 'save'): Promise<boolean> {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return false
+  // Garde-fou : un handler @click mal câblé passerait l'événement DOM en 1er argument.
+  const savedOrigin: VisitReportSavedOrigin = origin === 'improve' || origin === 'flush' ? origin : 'save'
   applyDatePrefixIfNeeded()
   reportBusy.value = true
   saveInFlight.value = true
@@ -695,7 +705,7 @@ async function saveVisitReport(): Promise<boolean> {
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
     void loadVisitReports(props.visitId)
-    emit('saved')
+    emit('saved', savedOrigin)
     return true
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -725,7 +735,7 @@ async function forceSave(): Promise<boolean> {
   if (!reportBody.value.trim() && reportTranscript.value.trim()) {
     reportBody.value = reportTranscript.value
   }
-  return saveVisitReport()
+  return saveVisitReport('flush')
 }
 
 /**
@@ -746,7 +756,7 @@ async function flushForSuspend(): Promise<boolean> {
   if (!reportBody.value.trim() && reportTranscript.value.trim()) {
     reportBody.value = reportTranscript.value
   }
-  return saveVisitReport()
+  return saveVisitReport('flush')
 }
 
 function isDirty(): boolean {
@@ -783,6 +793,8 @@ async function improveVisitReport() {
     })
     // Resync persisted* so a later improve failure does not leave a false dirty / stale hydrate.
     // Do NOT emit('saved') here — that would unlock Traitements (DAF) before the IA text arrives.
+    // Note : les `saved` de ce flux portent l'origine `improve` — le host garde le CR
+    // affiché pour que le véto relise la proposition IA (pas de bascule vers le hub).
     applyReportPayload(putRes.data ?? putRes)
     putSucceeded = true
     // Flat BFF path: nested …/report/improve is registered but not matched by rou3
@@ -798,11 +810,11 @@ async function improveVisitReport() {
     showAiQualityBar.value = true
     reportMsg.value = t('calendar.reportImproved')
     void loadVisitReports(props.visitId)
-    emit('saved')
+    emit('saved', 'improve')
   } catch (e: any) {
     reportMsg.value = mapError(e)
     // PUT already persisted — mark saved so leave-guard / Enregistrer stay coherent (DAF OK post-flight).
-    if (putSucceeded) emit('saved')
+    if (putSucceeded) emit('saved', 'improve')
   } finally {
     improveInFlight.value = false
     reportBusy.value = false

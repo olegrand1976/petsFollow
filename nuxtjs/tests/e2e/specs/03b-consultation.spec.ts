@@ -105,7 +105,16 @@ async function saveConsultationReport(page: Page) {
   await fillVisitReportBody(page, `E2E consultation CR ${Date.now()}`)
   await expect(page.getByTestId('visit-report-save')).toBeEnabled()
   await page.getByTestId('visit-report-save').click()
-  await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 15000 })
+  await confirmGoToNextSteps(page)
+}
+
+/** Enregistrer/Finaliser ne bascule jamais seul : confirmation explicite → hub. */
+async function confirmGoToNextSteps(page: Page) {
+  await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
+  // Tant que la confirmation n'est pas acceptée, le CR reste à l'écran.
+  await expect(page.getByTestId('consultation-report')).toBeVisible()
+  await page.getByTestId('consultation-next-continue').click()
+  await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 10000 })
   await expect(page.getByTestId('consultation-cta-done')).toBeVisible()
 }
 
@@ -197,7 +206,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
 
     try {
       await putDone
-      await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 20000 })
+      await confirmGoToNextSteps(page)
       await expect(page.getByTestId('consultation-cancel')).toBeEnabled()
       await page.getByTestId('consultation-cta-done').click()
       await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })

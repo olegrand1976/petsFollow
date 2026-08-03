@@ -172,7 +172,11 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
       'API must persist and return transcriptText on PUT /report',
     ).toContain('"quotes"')
     const persistedTranscript = String(saved.transcriptText)
-    await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
+    // Save propose la suite mais ne bascule pas : rester sur le CR pour les restores.
+    await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('consultation-next-stay').click()
+    await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0, { timeout: 5000 })
+    await expect(page.getByTestId('visit-report-panel')).toBeVisible()
 
     // History restore targets — require server-persisted transcript (PUT transcriptText).
     await setVisitReportHistoryOpen(page, true)
@@ -192,6 +196,9 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     const html = await prose.innerHTML()
     expect(html.toLowerCase()).not.toContain('<script')
 
+    // Hub joignable après coup via le CTA du footer CR.
+    await page.getByTestId('consultation-goto-next-steps').click()
+    await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 10000 })
     await page.getByTestId('consultation-cta-done').click()
     await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
   })
@@ -273,6 +280,10 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('visit-report-improving-banner')).toHaveCount(0, { timeout: 10000 })
     await expect(page.getByTestId('visit-report-quality')).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('visit-report-msg')).toBeVisible({ timeout: 15000 })
+    // Régression : l'IA ne bascule pas vers le hub — le CR proposé reste relisible.
+    await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+    await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0)
+    await expect(page.getByTestId('consultation-next-steps')).toHaveCount(0)
     if (pharmacyFlagOn) {
       const treatments = page.getByTestId('consultation-treatments')
       if ((await treatments.count()) === 0) {
@@ -343,6 +354,10 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     })
 
     await page.getByTestId('visit-report-finalize').click()
+    // Finaliser propose la suite : rester sur le CR pour vérifier le verrou.
+    await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('consultation-next-stay').click()
+    await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0, { timeout: 5000 })
     await expect(page.getByTestId('visit-report-status-final')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('visit-report-status-final')).toContainText(/Finaliz|Afgerond|Lõplik|Finalis/i)
     await expect(page.getByTestId('visit-report-footer')).toHaveCount(0)

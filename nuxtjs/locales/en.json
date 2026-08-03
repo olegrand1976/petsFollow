@@ -575,7 +575,12 @@
       "ctaPrescriptionHint": "Create a prescription for this pet.",
       "ctaInvoiceHint": "Open invoicing with client and visit prefilled.",
       "nextStepsTitle": "Next steps",
-      "nextStepsHint": "Visit report saved. Choose what to do next or finish the consultation."
+      "nextStepsHint": "Visit report saved. Choose what to do next or finish the consultation.",
+      "nextStepsEmpty": "No additional step available — finish the consultation.",
+      "nextPromptTitle": "Report saved",
+      "nextPromptHint": "Move on to the next steps of the consultation (prescription, DAF, invoice) or keep editing the report?",
+      "nextPromptStay": "Keep editing the report",
+      "nextPromptContinue": "Go to next steps"
     },
     "detail": {
       "title": "Client profile",

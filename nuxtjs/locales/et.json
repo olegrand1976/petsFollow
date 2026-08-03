@@ -867,7 +867,12 @@
       "ctaPrescriptionHint": "Loo retsept sellele loomale.",
       "ctaInvoiceHint": "Ava arveldus kliendi ja visiidiga eeltäidetult.",
       "nextStepsTitle": "Konsultatsiooni järgmised sammud",
-      "nextStepsHint": "Raport salvestatud. Valige järgmine samm või lõpetage konsultatsioon."
+      "nextStepsHint": "Raport salvestatud. Valige järgmine samm või lõpetage konsultatsioon.",
+      "nextStepsEmpty": "Lisasamme pole saadaval — lõpeta konsultatsioon.",
+      "nextPromptTitle": "Aruanne salvestatud",
+      "nextPromptHint": "Kas liigud konsultatsiooni järgmiste sammude juurde (retsept, DAF, arve) või jätkad aruande muutmist?",
+      "nextPromptStay": "Jätka aruande muutmist",
+      "nextPromptContinue": "Mine järgmiste sammude juurde"
     }
   },
   "consultations": {

@@ -575,7 +575,12 @@
       "ctaPrescriptionHint": "Maak een voorschrift voor dit dier.",
       "ctaInvoiceHint": "Open facturatie met klant en bezoek vooraf ingevuld.",
       "nextStepsTitle": "Vervolg van de consultatie",
-      "nextStepsHint": "Verslag opgeslagen. Kies de volgende stap of rond de consultatie af."
+      "nextStepsHint": "Verslag opgeslagen. Kies de volgende stap of rond de consultatie af.",
+      "nextStepsEmpty": "Geen extra stap beschikbaar — beëindig de consultatie.",
+      "nextPromptTitle": "Verslag opgeslagen",
+      "nextPromptHint": "Naar het vervolg van de consultatie (voorschrift, VVDA, factuur) of het verslag verder bewerken?",
+      "nextPromptStay": "Verslag verder bewerken",
+      "nextPromptContinue": "Naar het vervolg"
     },
     "detail": {
       "title": "Klantdossier",

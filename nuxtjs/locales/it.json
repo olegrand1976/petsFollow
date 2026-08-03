@@ -1434,7 +1434,12 @@
       "ctaPrescriptionHint": "Crea una ricetta per questo animale.",
       "ctaInvoiceHint": "Apri la fatturazione con cliente e visita precompilati.",
       "nextStepsTitle": "Seguito della consultazione",
-      "nextStepsHint": "Referto salvato. Scegli il passo successivo oppure termina la consultazione."
+      "nextStepsHint": "Referto salvato. Scegli il passo successivo oppure termina la consultazione.",
+      "nextStepsEmpty": "Nessuna fase aggiuntiva disponibile: concludi la consultazione.",
+      "nextPromptTitle": "Referto salvato",
+      "nextPromptHint": "Passare al seguito della consultazione (prescrizione, DAF, fattura) o continuare a modificare il referto?",
+      "nextPromptStay": "Continua il referto",
+      "nextPromptContinue": "Vai al seguito"
     }
   },
   "consultations": {
