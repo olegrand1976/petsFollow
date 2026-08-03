@@ -263,6 +263,7 @@ type ConsultationRow = {
   reportStatus?: string
 }
 
+const route = useRoute()
 const { t, locale } = useI18n()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
@@ -516,7 +517,25 @@ async function playAudio(row: ConsultationRow) {
   }
 }
 
-onMounted(() => { void load() })
+/** Deep-link depuis l'agenda : /consultations?visit=<id> ouvre directement le CR. */
+function openReportFromQuery() {
+  const visitQ = route.query.visit
+  const visitId = typeof visitQ === 'string' ? visitQ.trim() : ''
+  if (!visitId || !canReadPets.value) return
+  const row = rows.value.find(r => r.id === visitId)
+  if (row) {
+    openReport(row)
+    return
+  }
+  selectedVisitId.value = visitId
+  selectedVisitScheduledAt.value = ''
+  reportOpen.value = true
+}
+
+onMounted(async () => {
+  await load()
+  openReportFromQuery()
+})
 onBeforeUnmount(() => {
   revokeAudioUrl()
   if (debounceTimer) clearTimeout(debounceTimer)

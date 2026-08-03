@@ -275,11 +275,6 @@
           <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
         </div>
       </details>
-
-      <p v-if="dirty && !reportLocked" class="pro-hint" data-testid="visit-report-dirty-hint">
-        {{ $t('calendar.reportDirtyHint') }}
-      </p>
-      <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg" role="alert">{{ reportMsg }}</p>
     </div>
 
     <input
@@ -297,6 +292,28 @@
       class="pro-visit-report__footer"
       data-testid="visit-report-footer"
     >
+      <div
+        v-if="(dirty && !reportLocked) || reportMsg"
+        class="visit-report-status-tags"
+        data-testid="visit-report-status-tags"
+      >
+        <ProBadge
+          v-if="dirty && !reportLocked"
+          variant="warning"
+          data-testid="visit-report-dirty-hint"
+        >
+          {{ $t('calendar.reportDirtyHint') }}
+        </ProBadge>
+        <ProBadge
+          v-if="reportMsg"
+          variant="neutral"
+          data-testid="visit-report-msg"
+          role="alert"
+        >
+          {{ reportMsg }}
+        </ProBadge>
+      </div>
+      <div class="pro-visit-report__footer-actions">
       <ProButton
         variant="ghost"
         :disabled="reportBusy || hydrating || dictating || !dirty"
@@ -321,6 +338,7 @@
       >
         {{ $t('calendar.saveReport') }}
       </ProButton>
+      </div>
     </div>
 
     <ProModal v-model:open="audioConsentOpen" :title="$t('calendar.audioConsentTitle')">
@@ -434,9 +452,12 @@ let recordChunks: Blob[] = []
 /** In-flight Stop → transcribe; flush waits on this to avoid overwriting the transcript. */
 let stopDictationInFlight: Promise<void> | null = null
 
+// flush sync : le busy(false) final doit partir AVANT un éventuel démontage du
+// panneau (emit('saved') → le parent bascule d'écran) — sinon le parent reste
+// bloqué busy et waitUntilReportIdle ne se résout jamais.
 watch(reportBusy, (busy) => {
   emit('busy', busy)
-}, { immediate: true })
+}, { immediate: true, flush: 'sync' })
 
 function waitUntilReportIdle(timeoutMs = 90_000): Promise<void> {
   if (!reportBusy.value) return Promise.resolve()
@@ -1216,13 +1237,42 @@ watch(
 .pro-visit-report__footer {
   flex-shrink: 0;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0;
-  padding: 0.75rem 0 0.15rem;
+  padding: 0.5rem 0 0.15rem;
   border-top: 1px solid var(--pf-vet-border);
   background: var(--pf-vet-surface, #fff);
+}
+
+.visit-report-status-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.visit-report-status-tags :deep(.pro-badge) {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.15rem 0.45rem;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pro-visit-report__footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
 .pro-visit-report__file {
@@ -1305,7 +1355,9 @@ watch(
 .pro-visit-report--fill .pro-visit-report__scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding-right: 0.15rem;
 }
 
@@ -1318,20 +1370,30 @@ watch(
 }
 
 .pro-visit-report--fill .visit-report-pane {
-  overflow: auto;
+  overflow: hidden;
   min-height: 0;
+  height: 100%;
+}
+
+.pro-visit-report--fill .visit-report-pane__header .pro-hint {
+  display: none;
+}
+
+.pro-visit-report--fill .visit-report-recording {
+  padding: 0.4rem 0.65rem;
+  gap: 0.5rem;
 }
 
 .pro-visit-report--fill .visit-report-pane__textarea {
   flex: 1 1 auto;
-  min-height: 16rem;
+  min-height: 0;
   resize: none;
 }
 
 /* TipTap root (was .pro-md-report before rich editor migration). */
 .pro-visit-report--fill :deep(.pro-rich-report) {
   flex: 1 1 auto;
-  min-height: 16rem;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -1340,11 +1402,22 @@ watch(
 
 .pro-visit-report--fill :deep(.pro-rich-report__editor) {
   flex: 1 1 auto;
-  min-height: 16rem;
+  min-height: 0;
   overflow: auto;
 }
 
 .pro-visit-report--fill :deep(.pro-rich-report__editor .ProseMirror) {
-  min-height: 16rem;
+  min-height: 100%;
+}
+
+.pro-visit-report--fill .visit-report-history {
+  max-height: 2.25rem;
+  overflow: hidden;
+  padding: 0.35rem 0.65rem;
+}
+
+.pro-visit-report--fill .visit-report-history[open] {
+  max-height: min(40vh, 16rem);
+  overflow: auto;
 }
 </style>

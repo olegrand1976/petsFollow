@@ -302,7 +302,9 @@
       }
     },
     "stagingEnv": "Entorno staging",
-    "refresh": "Actualizar"
+    "refresh": "Actualizar",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa"
   },
   "settings": {
     "title": "Ajustes",
@@ -858,7 +860,14 @@
       "stepInvoice": "4. Facturar",
       "unsavedTreatmentsHint": "Guarde el borrador DAF antes de salir, o descarte los cambios.",
       "draftsOrphanBadge": "Borrador antiguo",
-      "vamregIndicationDefault": "Tratamiento antibacteriano"
+      "vamregIndicationDefault": "Tratamiento antibacteriano",
+      "ctaDaf": "DAF",
+      "ctaDafHint": "Abrir el asistente DAF con el contexto de esta consulta.",
+      "ctaPrescription": "Prescripción",
+      "ctaPrescriptionHint": "Crear una receta para esta mascota.",
+      "ctaInvoiceHint": "Abrir facturación con cliente y visita precargados.",
+      "nextStepsTitle": "Siguiente paso de la consulta",
+      "nextStepsHint": "Informe guardado. Elija el siguiente paso o termine la consulta."
     }
   },
   "consultations": {
@@ -3117,6 +3126,8 @@
     "nextMonth": "Mes siguiente",
     "moreCount": "+{n}",
     "vacation": "Cierre",
+    "openConsultation": "Nueva consulta",
+    "viewConsultation": "Ver la consulta",
     "visitDetail": "Detalle de la cita",
     "walkInSession": "Consulta inmediata",
     "walkInShort": "Walk-in",

@@ -105,7 +105,8 @@ async function saveConsultationReport(page: Page) {
   await fillVisitReportBody(page, `E2E consultation CR ${Date.now()}`)
   await expect(page.getByTestId('visit-report-save')).toBeEnabled()
   await page.getByTestId('visit-report-save').click()
-  await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('consultation-cta-done')).toBeVisible()
 }
 
 test.describe('nouvelle consultation', { tag: '@p0' }, () => {
@@ -253,107 +254,84 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('daf-from-consultation-banner')).toBeVisible()
   })
 
-  test('traitements CNK → preview FEFO → finalize DAF', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
+  test('après CR → hub next-steps (pas de traitements in-modal)', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
-    // Treatments panel mounts only after CR saved (avoids overlay on TipTap).
     await saveConsultationReport(page)
 
-    const treatments = page.getByTestId('consultation-treatments')
-    if ((await treatments.count()) === 0) {
+    await expect(page.getByTestId('consultation-next-steps')).toBeVisible()
+    await expect(page.getByTestId('consultation-treatments')).toHaveCount(0)
+    await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
+    await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
+
+    const dafCta = page.getByTestId('consultation-cta-daf')
+    if ((await dafCta.count()) === 0) {
       test.skip(true, 'pharmacy off ou pharmacy.write absent')
     }
-    await expect(treatments).toBeVisible({ timeout: 10000 })
-
-    const medInput = page.getByTestId('consultation-treatments').getByTestId('pro-combobox-input').first()
-    if ((await medInput.count()) === 0) {
-      test.skip(true, 'combobox med input absent')
-    }
-    await medInput.fill('Vaccin Rage')
-    const list = page.getByTestId('pro-combobox-list')
-    await expect(list).toBeVisible({ timeout: 10000 })
-    await list.locator('[role="option"]').first().click()
-
-    const amm = page.getByTestId('consultation-treatment-amm-0')
-    await expect(amm).toBeVisible()
-    // Catalogue AMM may auto-fill; ensure non-empty for finalize.
-    if (!(await amm.inputValue()).trim()) {
-      await amm.fill('BE-DEMO-RAGE-1')
-    }
-    // Antibio VAMReg fields (if present) must be filled for canSubmit.
-    const species = page.getByTestId('consultation-treatment-species-0')
-    if ((await species.count()) > 0) {
-      if (!(await species.inputValue()).trim()) await species.fill('dog')
-      const indication = page.getByTestId('consultation-treatment-indication-0')
-      if ((await indication.count()) > 0 && !(await indication.inputValue()).trim()) {
-        await indication.fill('infection')
-      }
-    }
-    await page.getByTestId('consultation-treatment-qty-0').fill('1')
-    await expect(page.getByTestId('consultation-treatments-save')).toBeEnabled({ timeout: 5000 })
-    await page.getByTestId('consultation-treatments-save').click()
-    await expect(page.getByTestId('consultation-treatments-ok')).toBeVisible({ timeout: 15000 })
-
-    await page.getByTestId('consultation-treatments-preview').click()
-    // Stock seed OK → FEFO; sinon form réception express (pas de skip soft CNK).
-    const fefo = page.getByTestId('consultation-treatments-fefo')
-    const receipt = page.getByTestId('consultation-treatments-receipt')
-    const outcome = await Promise.race([
-      fefo.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'fefo' as const),
-      receipt.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'receipt' as const),
-    ]).catch(() => null)
-    if (!outcome) {
-      const errText = await page.getByTestId('consultation-treatments').locator('.pro-error, [role="alert"]').first().textContent().catch(() => '')
-      throw new Error(`preview: ni FEFO ni receipt (erreur UI: ${errText || 'n/a'})`)
-    }
-    if (outcome === 'receipt') {
-      const exp = new Date()
-      exp.setMonth(exp.getMonth() + 6)
-      await page.getByTestId('consultation-receipt-lot').fill(`E2E-${Date.now()}`)
-      await page.getByTestId('consultation-receipt-expiry').fill(exp.toISOString().slice(0, 10))
-      await page.getByTestId('consultation-receipt-qty').fill('10')
-      await page.getByTestId('consultation-receipt-submit').click()
-      await expect(fefo).toBeVisible({ timeout: 15000 })
-    }
-
-    await page.getByTestId('consultation-treatments-finalize').click()
-    await expect(page.getByTestId('consultation-treatments-finalize-confirm')).toBeVisible({ timeout: 5000 })
-    const finalizeRes = page.waitForResponse(
-      (r) => /\/api\/vet\/pharmacy\/daf\/[^/]+\/finalize\b/.test(r.url()) && r.request().method() === 'POST',
-      { timeout: 20000 },
-    )
-    await page.getByTestId('consultation-finalize-ok').click()
-    const finalized = await finalizeRes
-    expect(finalized.status()).toBe(200)
-    await expect(page.getByTestId('consultation-treatments-finalized')).toBeVisible({ timeout: 15000 })
+    await expect(dafCta).toBeVisible()
   })
 
-  test('protocole clinique 1 clic → lignes + AMM préremplies', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
-    await openConsultationSetup(page)
-    await startConsultationVisit(page)
-    await saveConsultationReport(page)
+  test('détail RDV agenda → CTA Nouvelle consultation (visite conservée au close)', async ({ page }) => {
+    await ensureVetOnClients(page)
 
-    const treatments = page.getByTestId('consultation-treatments')
-    if ((await treatments.count()) === 0) {
-      test.skip(true, 'pharmacy off ou pharmacy.write absent')
+    // Un petId valide du cabinet via une visite seed confirmée.
+    const visitsRes = await page.request.get('/api/vet/visits?status=confirmed')
+    expect(visitsRes.ok()).toBeTruthy()
+    const visitsBody = await visitsRes.json()
+    const seedVisits = (visitsBody?.data ?? visitsBody) as Array<{ petId?: string }>
+    const petId = seedVisits.find((v) => v.petId)?.petId
+    expect(petId).toBeTruthy()
+
+    // RDV agenda confirmé demain matin (pas une session walk-in) — 3 créneaux candidats anti-overlap.
+    let rdvId = ''
+    for (const [h, m] of [[6, 15], [6, 45], [7, 15]]) {
+      const at = new Date()
+      at.setDate(at.getDate() + 1)
+      at.setHours(h, m, 0, 0)
+      const created = await page.request.post(`/api/pets/${petId}/visits`, {
+        data: {
+          confirmDirect: true,
+          silentConfirm: true,
+          scheduledAt: at.toISOString(),
+          durationMinutes: 15,
+          notes: 'E2E RDV consultation CTA',
+        },
+      })
+      if (created.ok()) {
+        const body = await created.json()
+        rdvId = String((body?.data ?? body)?.id || '')
+        break
+      }
     }
-    await expect(treatments).toBeVisible({ timeout: 10000 })
+    expect(rdvId).toBeTruthy()
 
-    const protocols = page.getByTestId('consultation-treatments-protocols')
-    if ((await protocols.count()) === 0) {
-      test.skip(true, 'aucun protocole seed (Antibiothérapie courte)')
+    try {
+      // Deep-link : le détail RDV s'ouvre seul, sans CR inline, avec le CTA.
+      await page.goto(`/calendar?visit=${rdvId}`, { waitUntil: 'networkidle' })
+      const openCta = page.getByTestId('calendar-open-consultation')
+      await expect(openCta).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
+
+      // CTA → écran Nouvelle consultation directement sur la visite du RDV (pas d'étape setup).
+      await openCta.click()
+      await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+
+      // Fermer sans enregistrer : confirm leave → le RDV n'est PAS annulé.
+      await page.getByTestId('consultation-cancel').click()
+      await expect(page.getByTestId('consultation-leave-prompt')).toBeVisible({ timeout: 10000 })
+      await page.getByTestId('consultation-leave-discard').click()
+      await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+
+      const afterRes = await page.request.get('/api/vet/visits?status=confirmed')
+      const afterBody = await afterRes.json()
+      const after = (afterBody?.data ?? afterBody) as Array<{ id: string, status?: string }>
+      expect(after.some((v) => v.id === rdvId)).toBeTruthy()
     }
-    await expect(protocols).toBeVisible({ timeout: 10000 })
-
-    const protoBtn = page.getByRole('button', { name: /Antibiothérapie courte/i })
-    if ((await protoBtn.count()) === 0) {
-      test.skip(true, 'protocole Antibiothérapie courte absent du seed')
+    finally {
+      // Nettoyage : ce RDV jetable ne doit pas polluer l'agenda seed.
+      await page.request.patch(`/api/visits/${rdvId}`, { data: { action: 'cancel' } }).catch(() => undefined)
     }
-    await protoBtn.first().click()
-
-    const amm = page.getByTestId('consultation-treatment-amm-0')
-    await expect(amm).toBeVisible({ timeout: 10000 })
-    await expect.poll(async () => (await amm.inputValue()).trim(), { timeout: 10000 }).not.toBe('')
-    await expect(page.getByTestId('consultation-treatment-qty-0')).toHaveValue('1')
   })
 })

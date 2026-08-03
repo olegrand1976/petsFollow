@@ -249,7 +249,8 @@
         "Écran CR split :",
         "(Optionnel) Panneau Traitements (DAF) : protocole 1 clic ou search CNK → AMM auto → enregistrer brouillon ; preview FEFO ; finaliser dans la modal (confirm ProModal) ou ouvrir le wizard pour édition avancée.",
         "Choisir :",
-        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal. Voir aussi UC-VP-05 pour le parcours stock/DAF détaillé."
+        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal. Voir aussi UC-VP-05 pour le parcours stock/DAF détaillé.",
+        "(Optionnel) Depuis Agenda → détail d’un RDV : le détail n’affiche plus le CR — bouton Nouvelle consultation (RDV confirmé à venir, ou walk-in à reprendre) ouvre le même écran CR sur la visite du RDV (pas de nouvelle visite ; fermer sans enregistrer n’annule pas le RDV) ; Voir la consultation (RDV passé / done) ouvre /consultations?visit=<id> sur le CR."
       ],
       "expected": [
         "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
@@ -259,7 +260,7 @@
         "CR accessible immédiatement.",
         "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module prescriptions).",
         "Traitements CNK en consult → brouillon DAF visit_id ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.",
-        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).",
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize · détail RDV agenda → CTA consultation avec visite conservée au close).",
         "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
       ],
       "checklist": [
@@ -793,13 +794,15 @@
         "Se déconnecter → se connecter en vet.colleague : accès cabinet cohérent.",
         "Se connecter en vet.assist : noter ce qui est accessible / masqué (droits réduits) — Histo. consultations visible.",
         "Se connecter en secretary.demo : focus secrétariat (Agenda + clients) ; pas d’entrée Histo. consultations dans le menu (droit consultations.history.read OFF par défaut ; réactivable via Équipe).",
-        "Ouvrir Agenda → cliquer un RDV confirmé : le détail est un mode desk (note + enregistrer, envoyer pré-consultation si absente, modifier l’heure proposer/valider, supprimer avec confirm, « client en salle d’attente ») — pas de dictée / CR IA."
+        "Ouvrir Agenda → cliquer un RDV confirmé : le détail est un mode desk (note + enregistrer, envoyer pré-consultation si absente, modifier l’heure proposer/valider, supprimer avec confirm, « client en salle d’attente ») — pas de dictée / CR IA.",
+        "Se reconnecter en vet.demo (ou vet.assist) → même RDV : détail desk identique (mêmes options que la secrétaire) ; le CR n’est plus dans le détail — bouton Nouvelle consultation (RDV à venir) ou Voir la consultation (RDV passé) à la place."
       ],
       "expected": [
         "Page Équipe lisible côté véto référence (droits compréhensibles ; tip Agenda ≠ historique).",
         "Chaque rôle se connecte ; l’espace Admin reste inaccessible.",
         "Différences de droits perceptibles entre assistante / secrétaire / collègue (dont historique consultations).",
-        "Secrétaire : détail RDV administratif (pas de panneau clinique) ; tags pré-consult / salle d’attente visibles sur l’agenda."
+        "Secrétaire : détail RDV administratif (pas de panneau clinique) ; tags pré-consult / salle d’attente visibles sur l’agenda.",
+        "Véto / assistante : mêmes options desk que la secrétaire dans le détail RDV, plus le CTA consultation (nouvelle si RDV à venir, lecture si RDV passé) — la secrétaire ne voit pas ce CTA."
       ],
       "checklist": [
         "Page équipe (vet.demo)",

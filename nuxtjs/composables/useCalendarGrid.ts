@@ -4,6 +4,7 @@ export type CalendarVisit = {
   source?: string
   consultationSession?: boolean
   pendingActionBy?: string
+  petId?: string
   clientId?: string
   clientName?: string
   petName?: string
@@ -21,6 +22,29 @@ export type CalendarVisit = {
   visitTypeId?: string
   visitTypeName?: string
   visitTypeColor?: string
+}
+
+/**
+ * CTA consultation du détail RDV : écran « Nouvelle consultation » tant que le
+ * RDV est à venir (ou walk-in en cours), consultation en lecture une fois le
+ * RDV passé — statut done, ou fin de créneau dépassée (l'agenda garde les RDV
+ * passés en statut confirmed).
+ */
+export function visitConsultationCta(
+  v: Pick<CalendarVisit, 'status' | 'clientId' | 'consultationSession' | 'scheduledAt' | 'durationMinutes'>,
+  now: Date = new Date(),
+): 'start' | 'view' | null {
+  if (v.status === 'done') return 'view'
+  if (v.status !== 'confirmed') return null
+  if (v.consultationSession) return v.clientId ? 'start' : null
+  if (v.scheduledAt) {
+    const start = new Date(v.scheduledAt)
+    if (!Number.isNaN(start.getTime())) {
+      const slotEnd = new Date(start.getTime() + (v.durationMinutes || 30) * 60_000)
+      if (slotEnd < now) return 'view'
+    }
+  }
+  return v.clientId ? 'start' : null
 }
 
 /** Native tooltip for calendar chip tags (preconsult / waiting room). */

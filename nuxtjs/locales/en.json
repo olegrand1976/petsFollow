@@ -302,7 +302,9 @@
       }
     },
     "stagingEnv": "Staging environment",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   },
   "settings": {
     "title": "Settings",
@@ -566,7 +568,14 @@
       "stepInvoice": "4. Invoice",
       "unsavedTreatmentsHint": "Save the DAF draft before leaving, or discard changes.",
       "draftsOrphanBadge": "Stale draft",
-      "vamregIndicationDefault": "Antibacterial treatment"
+      "vamregIndicationDefault": "Antibacterial treatment",
+      "ctaDaf": "DAF",
+      "ctaDafHint": "Open the DAF wizard with this consultation context.",
+      "ctaPrescription": "Prescription",
+      "ctaPrescriptionHint": "Create a prescription for this pet.",
+      "ctaInvoiceHint": "Open invoicing with client and visit prefilled.",
+      "nextStepsTitle": "Next steps",
+      "nextStepsHint": "Visit report saved. Choose what to do next or finish the consultation."
     },
     "detail": {
       "title": "Client profile",
@@ -3148,6 +3157,8 @@
     "nextMonth": "Next month",
     "moreCount": "+{n}",
     "vacation": "Closed",
+    "openConsultation": "New consultation",
+    "viewConsultation": "View consultation",
     "visitDetail": "Appointment details",
     "walkInSession": "Walk-in consultation",
     "walkInShort": "Walk-in",

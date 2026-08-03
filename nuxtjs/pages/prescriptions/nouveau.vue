@@ -94,6 +94,7 @@ import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.write_clinical' })
 const { t } = useI18n()
+const route = useRoute()
 const { mapError } = usePrescriptionError()
 const runtimeConfig = useRuntimeConfig()
 const busy = ref(false)
@@ -167,6 +168,29 @@ async function ensurePets() {
   const data = unwrap(res)
   petsCache.value = Array.isArray(data) ? data : (data?.items ?? data?.pets ?? [])
 }
+
+async function prefillPetFromQuery() {
+  const petId = String(route.query.petId || '').trim()
+  if (!petId || pet.value?.id) return
+  try {
+    await ensurePets()
+    const match = petsCache.value.find((p: any) => String(p.id) === petId)
+    if (!match) return
+    pet.value = {
+      id: String(match.id),
+      label: `${match.name}${match.ownerName ? ` — ${match.ownerName}` : ''}`,
+      hint: match.species || undefined,
+      raw: match,
+    }
+  }
+  catch {
+    /* prefill best-effort */
+  }
+}
+
+onMounted(() => {
+  void prefillPetFromQuery()
+})
 
 async function searchPets(q: string): Promise<ProComboboxItem[]> {
   await ensurePets()

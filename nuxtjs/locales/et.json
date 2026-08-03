@@ -302,7 +302,9 @@
       }
     },
     "stagingEnv": "Staging keskkond",
-    "refresh": "Värskenda"
+    "refresh": "Värskenda",
+    "fullscreen": "Täisekraan",
+    "exitFullscreen": "Välju täisekraanist"
   },
   "settings": {
     "title": "Seaded",
@@ -858,7 +860,14 @@
       "stepInvoice": "4. Arve",
       "unsavedTreatmentsHint": "Salvestage DAF mustand enne lahkumist või loobuge muudatustest.",
       "draftsOrphanBadge": "Vana mustand",
-      "vamregIndicationDefault": "Antibakteriaalne ravi"
+      "vamregIndicationDefault": "Antibakteriaalne ravi",
+      "ctaDaf": "DAF",
+      "ctaDafHint": "Ava DAF viisard selle konsultatsiooni kontekstiga.",
+      "ctaPrescription": "Retsept",
+      "ctaPrescriptionHint": "Loo retsept sellele loomale.",
+      "ctaInvoiceHint": "Ava arveldus kliendi ja visiidiga eeltäidetult.",
+      "nextStepsTitle": "Konsultatsiooni järgmised sammud",
+      "nextStepsHint": "Raport salvestatud. Valige järgmine samm või lõpetage konsultatsioon."
     }
   },
   "consultations": {
@@ -3117,6 +3126,8 @@
     "nextMonth": "Järgmine kuu",
     "moreCount": "+{n}",
     "vacation": "Suletud",
+    "openConsultation": "Uus konsultatsioon",
+    "viewConsultation": "Vaata konsultatsiooni",
     "visitDetail": "Vastuvõtu üksikasjad",
     "walkInSession": "Kohene konsultatsioon",
     "walkInShort": "Walk-in",

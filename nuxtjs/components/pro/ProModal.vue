@@ -3,6 +3,7 @@
     <div
       v-if="open"
       class="pro-modal"
+      :class="{ 'pro-modal--expanded': isExpanded }"
       :data-testid="testId"
       :style="{ zIndex: String(1000 + stackDepth) }"
       @keydown.escape.prevent="close"
@@ -11,7 +12,13 @@
       <div
         ref="panelRef"
         class="pro-modal__panel"
-        :class="[sizeClass, { 'pro-modal__panel--contain': containScroll }]"
+        :class="[
+          sizeClass,
+          {
+            'pro-modal__panel--contain': containScroll,
+            'pro-modal__panel--viewport': isExpanded,
+          },
+        ]"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"
@@ -19,16 +26,28 @@
       >
         <header class="pro-modal__header">
           <h2 :id="titleId" class="pro-modal__title">{{ title }}</h2>
-          <button
-            type="button"
-            class="pro-modal__close"
-            :aria-label="resolvedCloseLabel"
-            data-testid="pro-modal-close"
-            :disabled="preventClose"
-            @click="close"
-          >
-            <ProIcon name="close" :size="22" />
-          </button>
+          <div class="pro-modal__header-actions">
+            <button
+              v-if="expandable"
+              type="button"
+              class="pro-modal__close"
+              :aria-label="expandLabel"
+              data-testid="pro-modal-expand"
+              @click="toggleExpanded"
+            >
+              <ProIcon :name="isExpanded ? 'fullscreen_exit' : 'fullscreen'" :size="22" />
+            </button>
+            <button
+              type="button"
+              class="pro-modal__close"
+              :aria-label="resolvedCloseLabel"
+              data-testid="pro-modal-close"
+              :disabled="preventClose"
+              @click="close"
+            >
+              <ProIcon name="close" :size="22" />
+            </button>
+          </div>
         </header>
         <div
           class="pro-modal__body"
@@ -61,20 +80,43 @@ const props = withDefaults(
      * (e.g. visit-report panel with pinned meta + actions).
      */
     containScroll?: boolean
+    /** Show fullscreen maximize toggle in the header. */
+    expandable?: boolean
+    /** Controlled expanded state (optional; falls back to internal state). */
+    expanded?: boolean
     /** data-testid on the root overlay (default keeps existing e2e selectors). */
     testId?: string
   }>(),
-  { size: 'md', testId: 'pro-modal', preventClose: false, containScroll: false },
+  {
+    size: 'md',
+    testId: 'pro-modal',
+    preventClose: false,
+    containScroll: false,
+    expandable: false,
+    expanded: undefined,
+  },
 )
 
-const emit = defineEmits<{ 'update:open': [boolean] }>()
+const emit = defineEmits<{
+  'update:open': [boolean]
+  'update:expanded': [boolean]
+}>()
 
 const { t } = useI18n()
 const panelRef = ref<HTMLElement | null>(null)
 const titleId = `pro-modal-title-${useId()}`
 const stackDepth = ref(0)
+const internalExpanded = ref(false)
+
+const isExpanded = computed(() =>
+  typeof props.expanded === 'boolean' ? props.expanded : internalExpanded.value,
+)
 
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
+const expandLabel = computed(() =>
+  isExpanded.value ? t('common.exitFullscreen') : t('common.fullscreen'),
+)
+
 const sizeClass = computed(() => {
   switch (props.size) {
     case 'full':
@@ -91,6 +133,16 @@ const sizeClass = computed(() => {
     }
   }
 })
+
+function toggleExpanded() {
+  const next = !isExpanded.value
+  if (typeof props.expanded === 'boolean') {
+    emit('update:expanded', next)
+  }
+  else {
+    internalExpanded.value = next
+  }
+}
 
 function close() {
   if (props.preventClose) return
@@ -114,6 +166,10 @@ watch(
       if (modalOpenCount === 0) {
         document.body.style.overflow = ''
       }
+      internalExpanded.value = false
+      if (typeof props.expanded === 'boolean' && props.expanded) {
+        emit('update:expanded', false)
+      }
     }
   },
 )
@@ -136,6 +192,10 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
+}
+
+.pro-modal--expanded {
+  padding: 0;
 }
 
 .pro-modal__backdrop {
@@ -173,12 +233,19 @@ onBeforeUnmount(() => {
   max-height: 96vh;
 }
 
+.pro-modal__panel--viewport {
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
 @media (max-width: 720px) {
-  .pro-modal:has(.pro-modal__panel--full) {
+  .pro-modal:has(.pro-modal__panel--full):not(.pro-modal--expanded) {
     padding: 0.5rem;
   }
 
-  .pro-modal__panel--full {
+  .pro-modal__panel--full:not(.pro-modal__panel--viewport) {
     width: 100%;
     height: 96vh;
     max-height: 96vh;
@@ -193,6 +260,13 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.pro-modal__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
 }
 
 .pro-modal__title {
@@ -253,7 +327,8 @@ onBeforeUnmount(() => {
   max-height: min(92vh, 52rem);
 }
 
-.pro-modal__panel--full .pro-modal__body {
+.pro-modal__panel--full .pro-modal__body,
+.pro-modal__panel--viewport .pro-modal__body {
   display: flex;
   flex-direction: column;
   overflow: hidden;

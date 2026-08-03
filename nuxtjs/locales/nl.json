@@ -302,7 +302,9 @@
       }
     },
     "stagingEnv": "Staging-omgeving",
-    "refresh": "Vernieuwen"
+    "refresh": "Vernieuwen",
+    "fullscreen": "Volledig scherm",
+    "exitFullscreen": "Volledig scherm verlaten"
   },
   "settings": {
     "title": "Instellingen",
@@ -566,7 +568,14 @@
       "stepInvoice": "4. Factureren",
       "unsavedTreatmentsHint": "Sla het DAF-brouillon op voor u vertrekt, of verwerp de wijzigingen.",
       "draftsOrphanBadge": "Oud brouillon",
-      "vamregIndicationDefault": "Antibacteriële behandeling"
+      "vamregIndicationDefault": "Antibacteriële behandeling",
+      "ctaDaf": "DAF",
+      "ctaDafHint": "Open de DAF-wizard met de context van deze consultatie.",
+      "ctaPrescription": "Voorschrift",
+      "ctaPrescriptionHint": "Maak een voorschrift voor dit dier.",
+      "ctaInvoiceHint": "Open facturatie met klant en bezoek vooraf ingevuld.",
+      "nextStepsTitle": "Vervolg van de consultatie",
+      "nextStepsHint": "Verslag opgeslagen. Kies de volgende stap of rond de consultatie af."
     },
     "detail": {
       "title": "Klantdossier",
@@ -3148,6 +3157,8 @@
     "nextMonth": "Volgende maand",
     "moreCount": "+{n}",
     "vacation": "Gesloten",
+    "openConsultation": "Nieuwe consultatie",
+    "viewConsultation": "Consultatie bekijken",
     "visitDetail": "Afspraakdetails",
     "walkInSession": "Directe consultatie",
     "walkInShort": "Walk-in",

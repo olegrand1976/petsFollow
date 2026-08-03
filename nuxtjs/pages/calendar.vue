@@ -313,18 +313,6 @@
           </div>
           <p v-if="addressMsg" class="pro-hint">{{ addressMsg }}</p>
         </div>
-        <div v-if="canWriteClinical" class="pro-field pro-mb-md">
-          <ProVisitReportPanel
-            :visit-id="selectedVisit.id"
-            :visit-scheduled-at="selectedVisit.scheduledAt || selectedVisit.proposedScheduledAt"
-          />
-          <ProConsultationTreatmentsPanel
-            v-if="showCalendarDafTreatments"
-            :visit-id="selectedVisit.id"
-            :client-user-id="selectedVisit.clientId || ''"
-            :pet-id="''"
-          />
-        </div>
         <div class="pro-field pro-mb-md" data-testid="calendar-desk-note">
           <label class="pro-label" for="calendar-desk-note-input">{{ $t('calendar.deskNote') }}</label>
           <textarea
@@ -348,6 +336,22 @@
           <p v-if="deskNoteMsg" class="pro-hint">{{ deskNoteMsg }}</p>
         </div>
         <div class="pro-flex-gap create-client-actions">
+          <ProButton
+            v-if="consultationCta === 'start'"
+            :disabled="busyId === selectedVisit.id"
+            test-id="calendar-open-consultation"
+            @click="openConsultationFromDetail"
+          >
+            {{ $t('calendar.openConsultation') }}
+          </ProButton>
+          <ProButton
+            v-else-if="consultationCta === 'view'"
+            variant="secondary"
+            test-id="calendar-view-consultation"
+            @click="viewConsultationFromDetail"
+          >
+            {{ $t('calendar.viewConsultation') }}
+          </ProButton>
           <label
             v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
             class="pro-checkbox-label"
@@ -479,6 +483,8 @@
 
 <script setup lang="ts">
 import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
+import { visitConsultationCta } from '~/composables/useCalendarGrid'
+import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'calendar.manage' })
 
@@ -489,11 +495,9 @@ const { t } = useI18n()
 const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
-const runtimeConfig = useRuntimeConfig()
+const activeConsult = useActiveConsultation()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
-const showCalendarDafTreatments = computed(
-  () => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled) && canPractice('pharmacy.write'),
-)
+const canViewConsultations = computed(() => canPractice('consultations.history.read'))
 const {
   startOfDay,
   startOfWeek,
@@ -631,6 +635,30 @@ const canSendPreconsult = computed(() => {
   const st = preconsult.value?.status || v.preconsultStatus || ''
   return !st
 })
+
+/** CTA consultation : écran « Nouvelle consultation » (RDV à venir) ou lecture du CR (RDV passé). */
+const consultationCta = computed<'start' | 'view' | null>(() => {
+  const v = selectedVisit.value
+  if (!v) return null
+  const cta = visitConsultationCta(v)
+  if (cta === 'start') return canWriteClinical.value ? 'start' : null
+  if (cta === 'view') return canViewConsultations.value ? 'view' : null
+  return null
+})
+
+function openConsultationFromDetail() {
+  const v = selectedVisit.value
+  if (!v?.clientId) return
+  detailOpen.value = false
+  activeConsult.openForVisit({ visitId: v.id, clientId: v.clientId, petId: v.petId })
+}
+
+async function viewConsultationFromDetail() {
+  const v = selectedVisit.value
+  if (!v) return
+  detailOpen.value = false
+  await navigateTo(`/consultations?visit=${encodeURIComponent(v.id)}`)
+}
 
 const mapsUrl = computed(() => {
   const v = selectedVisit.value

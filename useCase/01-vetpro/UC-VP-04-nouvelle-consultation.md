@@ -40,6 +40,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
    - **ou Terminer** → visite `done` + finalisation auto des brouillons CR non vides (visible côté app client).
 7. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**. Voir aussi [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md) pour le parcours stock/DAF détaillé.
+8. (Optionnel) Depuis **Agenda** → détail d’un RDV : le détail n’affiche **plus** le CR — bouton **Nouvelle consultation** (RDV confirmé à venir, ou walk-in à reprendre) ouvre le même écran CR **sur la visite du RDV** (pas de nouvelle visite ; fermer sans enregistrer **n’annule pas** le RDV) ; **Voir la consultation** (RDV passé / `done`) ouvre `/consultations?visit=<id>` sur le CR.
 
 ## Résultat attendu
 
@@ -50,7 +51,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - CR accessible immédiatement.
 - Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module prescriptions).
 - Traitements CNK en consult → brouillon DAF `visit_id` ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.
-- E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).
+- E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize · détail RDV agenda → CTA consultation avec visite conservée au close).
 - E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).
 
 ## Checklist

@@ -4,7 +4,7 @@ import { isPublicFlagOn } from '~/utils/public-feature-flag'
 /**
  * Orchestration « Nouvelle Consultation » (Nuxt Pro).
  * Étapes : 1) créer visite confirmée → 2) CR (ProVisitReportPanel) →
- * 3) CTA post-save → 4) deep-link DAF et/ou facture Billit.
+ * 3) hub post-save → 4) deep-link prescription / DAF / facture Billit.
  */
 export type ConsultationPet = {
   id: string
@@ -38,6 +38,8 @@ export function useConsultationFlow() {
   const scheduledAt = ref('')
   const starting = ref(false)
   const reportSaved = ref(false)
+  /** True quand la consultation porte sur un RDV agenda existant — ne jamais l'annuler à la fermeture. */
+  const preserveVisit = ref(false)
   /** True while ProVisitReportPanel save/improve/finalize/audio is in flight. */
   const reportBusy = ref(false)
   const error = ref('')
@@ -72,6 +74,7 @@ export function useConsultationFlow() {
     scheduledAt.value = ''
     starting.value = false
     reportSaved.value = false
+    preserveVisit.value = false
     error.value = ''
   }
 
@@ -123,9 +126,11 @@ export function useConsultationFlow() {
    * treats server 409 (consultation_has_report) as "already saved".
    */
   async function discardIfUnsaved() {
+    // Rien à annuler (CR déjà sauvé / RDV agenda) — ne pas attendre un idle qui peut ne jamais venir.
+    if (!visitId.value || reportSaved.value || preserveVisit.value) return
     await waitUntilReportIdle()
     const id = visitId.value
-    if (!id || reportSaved.value) return
+    if (!id || reportSaved.value || preserveVisit.value) return
     try {
       await $fetch(`/api/visits/${id}`, {
         method: 'PATCH',
@@ -175,6 +180,16 @@ export function useConsultationFlow() {
     return `/invoicing?${q.toString()}`
   }
 
+  /** Étape 4c — nouvelle prescription préremplie (pet / visit). */
+  function prescriptionWizardPath() {
+    const q = new URLSearchParams()
+    if (petId.value) q.set('petId', petId.value)
+    if (clientId.value) q.set('clientUserId', clientId.value)
+    if (visitId.value) q.set('visitId', visitId.value)
+    const qs = q.toString()
+    return qs ? `/prescriptions/nouveau?${qs}` : '/prescriptions/nouveau'
+  }
+
   async function loadClientPets(clientUserId: string): Promise<ConsultationPet[]> {
     const res: any = await $fetch(`/api/clients/${clientUserId}/pets`)
     const rows = (res?.data ?? res) as any[]
@@ -196,6 +211,7 @@ export function useConsultationFlow() {
     scheduledAt,
     starting,
     reportSaved,
+    preserveVisit,
     reportBusy,
     error,
     reset,
@@ -206,6 +222,7 @@ export function useConsultationFlow() {
     markDone,
     dafWizardPath,
     invoicingPath,
+    prescriptionWizardPath,
     loadClientPets,
   }
 }

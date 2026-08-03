@@ -76,6 +76,25 @@ describe('useActiveConsultation resume isolation', () => {
     expect(token['vet.demo@petsfollow.test']?.visitId).toBe('visit-a')
   })
 
+  it('openForVisit flags keepVisit and survives suspend/resume round-trip', async () => {
+    const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
+    const a = useActiveConsultation()
+    a.openForVisit({ visitId: 'visit-rdv', clientId: 'client-a', petId: 'pet-a' })
+    expect(a.open.value).toBe(true)
+    expect(a.resumeKeepVisit.value).toBe(true)
+    // Suspend (desk lock) : le token conserve keepVisit pour la reprise.
+    await a.flushBeforeSuspend('vet.demo@petsfollow.test', '/calendar')
+    expect(a.resumeKeepVisit.value).toBe(false)
+    const token = a.peekResumeForEmail('vet.demo@petsfollow.test')
+    expect(token?.keepVisit).toBe(true)
+    a.openResume(token!)
+    expect(a.resumeKeepVisit.value).toBe(true)
+    // Walk-in classique : pas de keepVisit.
+    a.close()
+    a.openForClient('client-b')
+    expect(a.resumeKeepVisit.value).toBe(false)
+  })
+
   it('tryResumeForCurrentUser opens once and clears token', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()

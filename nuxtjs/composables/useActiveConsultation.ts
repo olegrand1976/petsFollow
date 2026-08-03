@@ -8,6 +8,8 @@ export type ConsultationResume = {
   petId: string
   path: string
   updatedAt: number
+  /** Consultation ouverte sur un RDV agenda existant — ne pas annuler la visite à la fermeture. */
+  keepVisit?: boolean
 }
 
 const RESUME_KEY = 'pf_consult_resume'
@@ -17,7 +19,7 @@ type ResumeMap = Record<string, ConsultationResume>
 
 /** Module singletons — shared across all useActiveConsultation() callers. */
 let flushHandler: (() => Promise<void>) | null = null
-let activeSnapshot: { visitId: string, clientId: string, petId: string } | null = null
+let activeSnapshot: { visitId: string, clientId: string, petId: string, keepVisit?: boolean } | null = null
 
 function canUseStorage(): boolean {
   return typeof localStorage !== 'undefined'
@@ -54,6 +56,8 @@ export function useActiveConsultation() {
   const clientId = useState('pf-consult-client-id', () => '')
   const resumeVisitId = useState('pf-consult-resume-visit', () => '')
   const resumePetId = useState('pf-consult-resume-pet', () => '')
+  /** True quand la consultation porte sur un RDV agenda existant (openForVisit). */
+  const resumeKeepVisit = useState('pf-consult-keep-visit', () => false)
   /** Skip discardIfUnsaved on unmount (desk lock / switch). */
   const suspendDiscard = useState('pf-consult-suspend-discard', () => false)
 
@@ -66,13 +70,25 @@ export function useActiveConsultation() {
     if (!id) return
     resumeVisitId.value = ''
     resumePetId.value = preferredPetId || ''
+    resumeKeepVisit.value = false
     clientId.value = id
+    open.value = true
+  }
+
+  /** Open the consultation flow on an existing agenda visit (calendar RDV) — the visit is never discarded on close. */
+  function openForVisit(input: { visitId: string, clientId: string, petId?: string }) {
+    if (!input.visitId || !input.clientId) return
+    resumeVisitId.value = input.visitId
+    resumePetId.value = input.petId || ''
+    resumeKeepVisit.value = true
+    clientId.value = input.clientId
     open.value = true
   }
 
   function openResume(token: ConsultationResume) {
     resumeVisitId.value = token.visitId
     resumePetId.value = token.petId
+    resumeKeepVisit.value = !!token.keepVisit
     clientId.value = token.clientId
     open.value = true
   }
@@ -82,6 +98,7 @@ export function useActiveConsultation() {
     clientId.value = ''
     resumeVisitId.value = ''
     resumePetId.value = ''
+    resumeKeepVisit.value = false
   }
 
   function saveResumeForEmail(email: string, token: ConsultationResume) {
@@ -121,7 +138,7 @@ export function useActiveConsultation() {
     return token
   }
 
-  function resolveSnap(): { visitId: string, clientId: string, petId: string } | null {
+  function resolveSnap(): { visitId: string, clientId: string, petId: string, keepVisit?: boolean } | null {
     if (activeSnapshot?.visitId && activeSnapshot.clientId) {
       return activeSnapshot
     }
@@ -130,6 +147,7 @@ export function useActiveConsultation() {
         visitId: resumeVisitId.value,
         clientId: clientId.value,
         petId: resumePetId.value || '',
+        keepVisit: resumeKeepVisit.value,
       }
     }
     return null
@@ -171,6 +189,7 @@ export function useActiveConsultation() {
         petId: snap.petId || '',
         path: path || '/',
         updatedAt: Date.now(),
+        keepVisit: !!snap.keepVisit,
       })
       suspendDiscard.value = true
     }
@@ -181,11 +200,12 @@ export function useActiveConsultation() {
     clientId.value = ''
     resumeVisitId.value = ''
     resumePetId.value = ''
+    resumeKeepVisit.value = false
     activeSnapshot = null
     return flushOk
   }
 
-  function syncActiveVisit(snap: { visitId: string, clientId: string, petId: string } | null) {
+  function syncActiveVisit(snap: { visitId: string, clientId: string, petId: string, keepVisit?: boolean } | null) {
     activeSnapshot = snap && snap.visitId ? snap : null
   }
 
@@ -208,11 +228,13 @@ export function useActiveConsultation() {
     clientId,
     resumeVisitId,
     resumePetId,
+    resumeKeepVisit,
     suspendDiscard,
     registerFlush,
     syncActiveVisit,
     getActiveVisitSnapshot,
     openForClient,
+    openForVisit,
     openResume,
     close,
     saveResumeForEmail,

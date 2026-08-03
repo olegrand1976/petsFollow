@@ -34,6 +34,7 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 5. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits) — **Histo. consultations** visible.
 6. Se connecter en `secretary.demo` : focus secrétariat (**Agenda** + clients) ; **pas** d’entrée **Histo. consultations** dans le menu (droit `consultations.history.read` OFF par défaut ; réactivable via Équipe).
 7. Ouvrir **Agenda** → cliquer un RDV confirmé : le détail est un mode **desk** (note + enregistrer, envoyer pré-consultation si absente, modifier l’heure proposer/valider, supprimer avec confirm, « client en salle d’attente ») — **pas** de dictée / CR IA.
+8. Se reconnecter en `vet.demo` (ou `vet.assist`) → même RDV : détail desk **identique** (mêmes options que la secrétaire) ; le CR n’est plus dans le détail — bouton **Nouvelle consultation** (RDV à venir) ou **Voir la consultation** (RDV passé) à la place.
 
 ## Résultat attendu
 
@@ -41,6 +42,7 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 - Chaque rôle se connecte ; l’espace **Admin** reste inaccessible.
 - Différences de droits **perceptibles** entre assistante / secrétaire / collègue (dont historique consultations).
 - Secrétaire : détail RDV administratif (pas de panneau clinique) ; tags pré-consult / salle d’attente visibles sur l’agenda.
+- Véto / assistante : mêmes options desk que la secrétaire dans le détail RDV, plus le CTA consultation (nouvelle si RDV à venir, lecture si RDV passé) — la secrétaire ne voit pas ce CTA.
 
 ## Checklist
 

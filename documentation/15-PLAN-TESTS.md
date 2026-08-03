@@ -209,6 +209,7 @@ Compte : `vet.demo@petsfollow.test`
 | C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm |
 | C3.9 | P1 | Pré-consult urgente | Opt-in pré-consult → client soumet `urgency=high` | Badge Urgent calendrier ; détail + IA informatif ; email véto immédiat (alerte clinique) |
 | C3.10 | P1 | Desk secrétaire RDV | `/calendar` en `secretary.demo` → détail RDV | Pas de CR/dictée ; note + save ; send pré-consult si absente ; change heure propose/direct ; cancel confirm ; salle d’attente (tag + notif topbar clinique) ; tags pré-C tooltip ; e2e `13-team-staff-smoke` B2c |
+| C3.11 | P1 | Détail RDV véto/ASV | `/calendar` en `vet.demo` (ou `vet.assist`) → détail RDV | Mêmes options desk que secrétaire (note, modifier heure, supprimer, pré-consult, salle d’attente) ; **pas** de CR inline — CTA **Nouvelle consultation** (RDV à venir / walk-in : ouvre le flux consult sur la visite, fermer sans save n’annule pas le RDV) ou **Voir la consultation** (`done` ou créneau passé → `/consultations?visit={id}`) ; secrétaire : aucun CTA ; Vitest `visitConsultationCta` + `useConsultationFlow` (preserveVisit) ; e2e `13-team-staff-smoke` B2d + `03b-consultation` (RDV → CTA → visite conservée) |
 
 ### C4 — Messagerie Pro
 
@@ -795,7 +796,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
-| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly + histo. consultations OFF secrétaire + détail RDV desk (B2c) | `@p0` |
+| `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly + histo. consultations OFF secrétaire + détail RDV desk (B2c) + parité desk véto & CTA consultation (B2d) | `@p0` |
 | `13b-desk-switch` | Switch poste partagé + veille (lock overlay) + reprise consultation mid-veille (scénario G) | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
