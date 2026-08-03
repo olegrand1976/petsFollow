@@ -69,13 +69,20 @@ test('invitations clients dans l’en-tête Clients', async ({ page }) => {
   await expect(dialog).toBeVisible({ timeout: 10000 })
   await expect(dialog.getByRole('heading')).toContainText(/invitation/i)
 
-  const linkRow = page.locator('[data-testid^="link-request-"]').first()
-  if ((await linkRow.count()) === 0) {
+  const rows = page.locator('[data-testid^="link-request-"]')
+  if ((await rows.count()) === 0) {
     test.skip(true, 'Aucune invitation pending dans le seed')
     return
   }
 
-  const acceptBtn = linkRow.getByRole('button', { name: /accepter|accept|aanvaarden/i })
-  await acceptBtn.click()
-  await expect(linkRow).toHaveCount(0, { timeout: 15000 })
+  // On accepte toutes les invitations : chaque ligne traitée disparaît…
+  for (let i = 0; i < 20 && (await rows.count()) > 0; i++) {
+    const row = rows.first()
+    const rowId = await row.getAttribute('data-testid')
+    await row.getByRole('button', { name: /accepter|accept|aanvaarden/i }).click()
+    await expect(page.locator(`[data-testid="${rowId}"]`)).toHaveCount(0, { timeout: 15000 })
+  }
+
+  // …et quand il n'en reste plus aucune, la modale se ferme d'elle-même.
+  await expect(dialog).toBeHidden({ timeout: 10000 })
 })

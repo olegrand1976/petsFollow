@@ -180,7 +180,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.6 | P1 | Créer / rattacher client | Nouveau client (prénom/nom/email/tél/adresse/NISS, **sans** MDP temporaire) → lien cabinet + invite app ; client existant → link | 409 enrichi + link OK ; identité visible get/patch ; create sans password OK (`TestClientIdentityCreateWithoutPasswordAndPatch`) ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
-| C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié |
+| C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié ; **modale fermée automatiquement** quand plus aucune invitation en attente (Vitest `useVetLinkRequests.spec.ts` ; Playwright `08-requests`) |
 | C2.10 | P2 | Parrainage | `/recommend` | Flux confrère |
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |

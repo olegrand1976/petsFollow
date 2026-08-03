@@ -286,11 +286,20 @@ const appLinkFeedback = ref('')
 const loadError = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
 
-const invitationsOpen = ref(false)
 const appInviteOpen = ref(false)
-const linkRequests = ref<any[]>([])
-const busyInviteId = ref('')
-const inviteError = ref('')
+const {
+  open: invitationsOpen,
+  items: linkRequests,
+  busyId: busyInviteId,
+  error: inviteError,
+  load: loadLinkRequests,
+  accept: acceptLink,
+  reject: rejectLink,
+} = useVetLinkRequests({
+  canManage: () => canManageShares.value,
+  onAccepted: () => loadClients(),
+  onChanged: () => refreshNavBadges(),
+})
 
 const activeConsult = useActiveConsultation()
 
@@ -495,47 +504,6 @@ const kanbanColumns = computed(() => [
     items: filtered.value.filter((c) => c.petCount > 1),
   },
 ])
-
-async function loadLinkRequests() {
-  if (!canManageShares.value) {
-    linkRequests.value = []
-    return
-  }
-  inviteError.value = ''
-  try {
-    const res: any = await $fetch('/api/vet/link-requests')
-    linkRequests.value = res.data ?? res ?? []
-  } catch (e: any) {
-    linkRequests.value = []
-    inviteError.value = mapError(e)
-  }
-}
-
-async function acceptLink(id: string) {
-  busyInviteId.value = id
-  inviteError.value = ''
-  try {
-    await $fetch(`/api/vet/link-requests/${id}/accept`, { method: 'POST' })
-    await Promise.all([loadLinkRequests(), loadClients(), refreshNavBadges()])
-  } catch (e: any) {
-    inviteError.value = mapError(e)
-  } finally {
-    busyInviteId.value = ''
-  }
-}
-
-async function rejectLink(id: string) {
-  busyInviteId.value = id
-  inviteError.value = ''
-  try {
-    await $fetch(`/api/vet/link-requests/${id}/reject`, { method: 'POST' })
-    await Promise.all([loadLinkRequests(), refreshNavBadges()])
-  } catch (e: any) {
-    inviteError.value = mapError(e)
-  } finally {
-    busyInviteId.value = ''
-  }
-}
 
 onMounted(async () => {
   await Promise.all([loadClients(), loadLinkRequests()])
