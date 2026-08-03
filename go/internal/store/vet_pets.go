@@ -23,7 +23,9 @@ type VetPetListItem struct {
 }
 
 func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]VetPetListItem, error) {
-	rows, err := s.pool.Query(ctx, `
+	// lastVisitAt aligns with timeline: done OR confirmed with a persisted CR
+	// (save CR without Terminer still counts as the latest visit for the animals list).
+	q := `
 		SELECT
 			p.id::text,
 			COALESCE(p.practice_id::text,''),
@@ -43,7 +45,19 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 		LEFT JOIN LATERAL (
 			SELECT COALESCE(v.scheduled_at, v.created_at) AS last_visit_at
 			FROM visits.visits v
-			WHERE v.pet_id = p.id AND v.status = 'done' AND v.deleted_at IS NULL
+			WHERE v.pet_id = p.id
+			  AND v.deleted_at IS NULL
+			  AND (
+				v.status = 'done'
+				OR (
+					v.status = 'confirmed'
+					AND EXISTS (
+						SELECT 1 FROM visits.visit_reports r
+						WHERE r.visit_id = v.id
+						  AND ` + sqlVisitReportIsPersisted + `
+					)
+				)
+			  )
 			ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 			LIMIT 1
 		) lv ON TRUE
@@ -64,7 +78,8 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			  AND s.vet_seen_at IS NULL
 		) ur ON TRUE
 		WHERE p.practice_id = $1
-		ORDER BY p.name`, practiceID)
+		ORDER BY p.name`
+	rows, err := s.pool.Query(ctx, q, practiceID)
 	if err != nil {
 		return nil, err
 	}
