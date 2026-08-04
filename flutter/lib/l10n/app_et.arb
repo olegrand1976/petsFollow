@@ -467,6 +467,8 @@
   "notificationPrefMessages": "Sõnumid",
   "notificationPrefDiscovery": "Avastamise teekond",
   "notificationPrefBilling": "Arveldus",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Vastuvõtu kinnitused ja meeldetuletused SMS-iga. STOP vastamine lülitab selle kanali samuti välja.",
   "carePostponeDays": "Lükka edasi {days} päeva",
   "@carePostponeDays": {
     "placeholders": {

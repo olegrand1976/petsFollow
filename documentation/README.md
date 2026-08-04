@@ -45,6 +45,7 @@ Index des documents de référence du projet.
 | 40 | [40-PACS.md](40-PACS.md) · [plan P2](40-PACS-P2.md) | PACS Orthanc (tag `dev`) — V1+P0/P1 livrés · P2 = GA clinique |
 | 41 | [41-TENSION-LABOS.md](41-TENSION-LABOS.md) | Tension artérielle + panels labos V1 |
 | 42 | [42-RESEARCH.md](42-RESEARCH.md) | petsFollow Research — observatoire épidémio anonymisé (tag `dev`) |
+| 44 | [44-SMS-TELNYX.md](44-SMS-TELNYX.md) | SMS transactionnel Telnyx — confirmation / rappel J-1 / reprogrammation RDV (tag `dev`, dry-run) |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

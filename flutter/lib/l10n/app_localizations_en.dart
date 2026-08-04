@@ -1297,6 +1297,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationPrefBilling => 'Billing';
 
   @override
+  String get notificationPrefSms => 'SMS';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Appointment confirmations and reminders by SMS. Replying STOP also turns this channel off.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Postpone by $days days';
   }

@@ -210,6 +210,10 @@ Compte : `vet.demo@petsfollow.test`
 | C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm |
 | C3.9 | P1 | Pré-consult urgente | Opt-in pré-consult → client soumet `urgency=high` | Badge Urgent calendrier ; détail + IA informatif ; email véto immédiat (alerte clinique) |
 | C3.10 | P1 | Desk secrétaire RDV | `/calendar` en `secretary.demo` → détail RDV | Pas de CR/dictée ; note + save ; send pré-consult si absente ; change heure propose/direct ; cancel confirm ; salle d’attente (tag + notif topbar clinique) ; tags pré-C tooltip ; e2e `13-team-staff-smoke` B2c |
+| C3.12 | P1 | SMS confirmation (dry-run) | `api-dev` (SMS_ENABLED=true, SMS_DRY_RUN=true) → confirmer un RDV d'un client avec téléphone | Ligne `notifications.sms_log` kind `visit_confirmed`, status `dry_run`, `to_phone` en E.164 ; aucun envoi réel |
+| C3.13 | P1 | SMS reprogrammation (dry-run) | Déplacer le créneau (propose ou direct) | Ligne `visit_reschedule` ; le SMS annonce le **nouveau** créneau |
+| C3.14 | P2 | Rappel J-1 idempotent | `curl -X POST /internal/visit-reminders/run -H 'X-Visit-Reminders-Secret: dev-visit-reminders'` ×2 | 1er run : rappel journalisé ; 2e run : `smsSent`+`smsDryRun` = 0, aucune ligne en plus |
+| C3.15 | P2 | Rappel J-1 sans secret | Même appel sans header | 401 `unauthorized` |
 | C3.11 | P1 | Détail RDV véto/ASV | `/calendar` en `vet.demo` (ou `vet.assist`) → détail RDV | Mêmes options desk que secrétaire (note, modifier heure, supprimer, pré-consult, salle d’attente) ; **pas** de CR inline — CTA **Nouvelle consultation** (RDV à venir / walk-in : ouvre le flux consult sur la visite, fermer sans save n’annule pas le RDV) ou **Voir la consultation** (`done` ou créneau passé → `/consultations?visit={id}`) ; secrétaire : aucun CTA ; Vitest `visitConsultationCta` + `useConsultationFlow` (preserveVisit) ; e2e `13-team-staff-smoke` B2d (véto) + B2e (ASV) + `03b-consultation` (RDV → CTA → visite conservée) |
 
 ### C4 — Messagerie Pro
@@ -401,6 +405,8 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F4.6 | P1 | Replanif client | Proposer déplacement | Email/push véto selon prefs |
 | F4.7 | P2 | Booking disabled | Cabinet off | CTA masqué / erreur claire |
 | F4.8 | P2 | Reminder settings | Prefs rappels | Persist |
+| F4.9 | P1 | Pref canal SMS | Flutter → Préférences de notification → couper **SMS** → Enregistrer | Persist (`sms:false`) ; un RDV confirmé ensuite journalise `skipped/pref_opt_out`, aucun SMS |
+| F4.10 | P2 | Opt-out STOP | (staging live) répondre `STOP` au SMS reçu | Canal SMS repassé à OFF dans l'app ; ligne `notifications.sms_inbound` command `stop` |
 
 ### F5 — Vétos, settings, legal
 
@@ -623,6 +629,27 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 ### API (smoke)
 
 `make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404.
+
+### SMS transactionnel Telnyx (Go — C3.12→C3.15, F4.9)
+
+```
+go test ./internal/notifications/sms/ -count=1
+go test ./internal/platform/i18n/ -run 'TestSMS|TestAllSMS' -count=1
+go test ./internal/handlers/ -run 'TestVisitConfirmed|TestVisitReschedule|TestSMSDisabled|TestVisitReminders|TestTelnyxWebhook' -count=1 -p 1
+cd flutter && flutter test test/features/settings/notification_prefs_sms_test.dart
+```
+
+| Cas | Attendu |
+|-----|---------|
+| Client Telnyx | Succès (Bearer + corps v2), `telnyx_http_422`, dry-run **sans appel réseau**, clé API requise en live |
+| `NormalizeE164` | Formats BE/FR nationaux, `00…`, passthrough `+…` ; rejet des numéros non interprétables |
+| Signature webhook | Corps altéré, horodatage hors tolérance (5 min), mauvaise clé publique → rejet |
+| Gabarits i18n | 8 locales ; ≤160 GSM-7 (latines) / ≤70 UCS-2 (uk, ru) ; aucun caractère hors GSM-7 en latin |
+| Confirmation / reprogrammation | Ligne `sms_log` `sent` + E.164 ; opt-out → `skipped/pref_opt_out` sans appel du sender ; téléphone invalide → `invalid_phone` ; `SMS_ENABLED=false` → **zéro** ligne |
+| Rappel J-1 | 401 sans secret ; envoi unique puis run rejoué sans doublon (index `sms_log_reminder_once`) ; créneau déplacé = nouveau rappel autorisé ; walk-in et annulé exclus |
+| Webhooks | DLR `delivered` (pose `delivered_at`) / `delivery_failed` (pose `delivery_error`) ; STOP → `client_preferences.sms=false` + relivraison idempotente ; START réactive ; URL failover marque `via_failover` |
+
+Détail du module : [44-SMS-TELNYX.md](44-SMS-TELNYX.md).
 
 ### Pré-consultation + alerte urgence (Go — C3.9)
 

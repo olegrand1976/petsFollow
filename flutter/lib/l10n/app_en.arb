@@ -467,6 +467,8 @@
   "notificationPrefMessages": "Messages",
   "notificationPrefDiscovery": "Discovery journey",
   "notificationPrefBilling": "Billing",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Appointment confirmations and reminders by SMS. Replying STOP also turns this channel off.",
   "carePostponeDays": "Postpone by {days} days",
   "@carePostponeDays": {
     "placeholders": {

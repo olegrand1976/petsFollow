@@ -537,6 +537,8 @@
   "notificationPrefMessages": "Messaggi",
   "notificationPrefDiscovery": "Sentiero di scoperta",
   "notificationPrefBilling": "Fatturazione",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Conferme e promemoria degli appuntamenti via SMS. Rispondere STOP disattiva anche questo canale.",
   "carePostponeDays": "Rinviare {days} giorni",
   "@carePostponeDays": {
     "placeholders": {

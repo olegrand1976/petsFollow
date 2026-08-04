@@ -2492,6 +2492,18 @@ abstract class AppLocalizations {
   /// **'Facturation'**
   String get notificationPrefBilling;
 
+  /// No description provided for @notificationPrefSms.
+  ///
+  /// In fr, this message translates to:
+  /// **'SMS'**
+  String get notificationPrefSms;
+
+  /// No description provided for @notificationPrefSmsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmations et rappels de rendez-vous par SMS. Répondre STOP au message coupe aussi ce canal.'**
+  String get notificationPrefSmsHint;
+
   /// No description provided for @carePostponeDays.
   ///
   /// In fr, this message translates to:

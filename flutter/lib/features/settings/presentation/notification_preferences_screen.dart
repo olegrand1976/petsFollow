@@ -22,6 +22,7 @@ class _NotificationPreferencesScreenState
   bool messages = true;
   bool discovery = true;
   bool billing = true;
+  bool sms = true;
   bool saving = false;
 
   @override
@@ -40,6 +41,7 @@ class _NotificationPreferencesScreenState
         messages = prefs.messages;
         discovery = prefs.discovery;
         billing = prefs.billing;
+        sms = prefs.sms;
         loading = false;
       });
     }
@@ -58,6 +60,7 @@ class _NotificationPreferencesScreenState
           messages: messages,
           discovery: discovery,
           billing: billing,
+          sms: sms,
         ),
       );
       if (mounted) {
@@ -116,6 +119,15 @@ class _NotificationPreferencesScreenState
                 title: Text(l10n.notificationPrefBilling),
                 value: billing,
                 onChanged: (v) => setState(() => billing = v)),
+            const Divider(height: 24),
+            // Canal SMS : distinct des topics ci-dessus (qui pilotent push + email).
+            SwitchListTile(
+                key: const Key('settings_sms_pref_toggle'),
+                title: Text(l10n.notificationPrefSms),
+                subtitle: Text(l10n.notificationPrefSmsHint,
+                    style: TextStyle(color: p.textMuted)),
+                value: sms,
+                onChanged: (v) => setState(() => sms = v)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: saving ? null : _save,

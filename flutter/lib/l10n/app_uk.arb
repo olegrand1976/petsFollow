@@ -397,6 +397,8 @@
   "notificationPrefMessages": "Повідомлення",
   "notificationPrefDiscovery": "Ознайомлювальний шлях",
   "notificationPrefBilling": "Виставлення рахунків",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Підтвердження та нагадування про візити через SMS. Відповідь STOP також вимикає цей канал.",
   "carePostponeDays": "Відкласти на {days} днів",
   "noCareReminders": "Немає активних нагадувань про догляд",
   "careAddReminder": "Додати нагадування",

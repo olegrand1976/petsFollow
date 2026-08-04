@@ -1309,6 +1309,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notificationPrefBilling => 'Fatturazione';
 
   @override
+  String get notificationPrefSms => 'SMS';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Conferme e promemoria degli appuntamenti via SMS. Rispondere STOP disattiva anche questo canale.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Rinviare $days giorni';
   }

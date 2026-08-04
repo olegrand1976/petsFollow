@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -40,6 +40,7 @@ help:
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
+	@echo "  make gcp-visit-reminders-scheduler  Scheduler quotidien rappel J-1 RDV (VISIT_REMINDERS_SECRET=…)"
 	@echo "  make gcp-saas-invoices-scheduler  Scheduler mensuel brouillons SaaS Flux A C1"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
@@ -99,7 +100,7 @@ seed-mass: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} PACS_ENABLED=$${PACS_ENABLED:-true} PACS_ORTHANC_URL=$${PACS_ORTHANC_URL:-http://localhost:8042} PACS_ORTHANC_USER=$${PACS_ORTHANC_USER:-petsfollow} PACS_ORTHANC_PASSWORD=$${PACS_ORTHANC_PASSWORD:-petsfollow} PACS_ORTHANC_USE_ID_TOKEN=$${PACS_ORTHANC_USE_ID_TOKEN:-false} RESEARCH_ENABLED=$${RESEARCH_ENABLED:-true} RESEARCH_ETL_SECRET=$${RESEARCH_ETL_SECRET:-dev-research-etl} RESEARCH_ANON_SALT=$${RESEARCH_ANON_SALT:-petsfollow-research-dev-salt} CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} PACS_ENABLED=$${PACS_ENABLED:-true} PACS_ORTHANC_URL=$${PACS_ORTHANC_URL:-http://localhost:8042} PACS_ORTHANC_USER=$${PACS_ORTHANC_USER:-petsfollow} PACS_ORTHANC_PASSWORD=$${PACS_ORTHANC_PASSWORD:-petsfollow} PACS_ORTHANC_USE_ID_TOKEN=$${PACS_ORTHANC_USE_ID_TOKEN:-false} RESEARCH_ENABLED=$${RESEARCH_ENABLED:-true} RESEARCH_ETL_SECRET=$${RESEARCH_ETL_SECRET:-dev-research-etl} RESEARCH_ANON_SALT=$${RESEARCH_ANON_SALT:-petsfollow-research-dev-salt} CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} SMS_ENABLED=$${SMS_ENABLED:-true} SMS_DRY_RUN=$${SMS_DRY_RUN:-true} VISIT_REMINDERS_SECRET=$${VISIT_REMINDERS_SECRET:-dev-visit-reminders} go run ./cmd/petsfollow-api
 
 # Upload fixture DICOM sur pet client.demo (API + Orthanc requis).
 pacs-demo-seed: env
@@ -202,6 +203,9 @@ gcp-setup-stripe:
 
 gcp-retention-scheduler:
 	bash infra/gcp/setup-retention-scheduler.sh
+
+gcp-visit-reminders-scheduler:
+	bash infra/gcp/setup-visit-reminders-scheduler.sh
 
 gcp-saas-invoices-scheduler:
 	bash infra/gcp/setup-saas-invoices-scheduler.sh

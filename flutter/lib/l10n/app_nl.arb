@@ -474,6 +474,8 @@
   "notificationPrefMessages": "Berichten",
   "notificationPrefDiscovery": "Ontdekkingsreis",
   "notificationPrefBilling": "Facturering",
+  "notificationPrefSms": "Sms",
+  "notificationPrefSmsHint": "Afspraakbevestigingen en herinneringen via sms. STOP antwoorden schakelt dit kanaal ook uit.",
   "carePostponeDays": "Uitstellen met {days} dagen",
   "@carePostponeDays": {
     "placeholders": {

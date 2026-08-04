@@ -40,6 +40,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Messaging video upload basename | ✓ | · | · | `message_media_upload_test` |
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
+| Settings pref canal SMS (opt-out) | · | ✓ | · | `notification_prefs_sms_test` (toggle → PATCH sms:false + relecture STOP serveur) |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` (dictation/save/finalize ; no improve IA) |
 | Pro Light consultation keys | · | ✓ | · | `pro_light_consultation_keys_test` (nouvelle consultation + CTA post-CR) |

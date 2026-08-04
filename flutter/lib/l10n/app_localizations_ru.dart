@@ -1310,6 +1310,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationPrefBilling => 'Выставление счетов';
 
   @override
+  String get notificationPrefSms => 'SMS';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Подтверждения и напоминания о визитах по SMS. Ответ STOP также отключает этот канал.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Отложить на $days дней';
   }

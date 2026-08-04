@@ -1309,6 +1309,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notificationPrefBilling => 'Виставлення рахунків';
 
   @override
+  String get notificationPrefSms => 'SMS';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Підтвердження та нагадування про візити через SMS. Відповідь STOP також вимикає цей канал.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Відкласти на $days днів';
   }

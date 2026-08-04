@@ -1304,6 +1304,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notificationPrefBilling => 'Facturering';
 
   @override
+  String get notificationPrefSms => 'Sms';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Afspraakbevestigingen en herinneringen via sms. STOP antwoorden schakelt dit kanaal ook uit.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Uitstellen met $days dagen';
   }

@@ -397,6 +397,8 @@
   "notificationPrefMessages": "Сообщения",
   "notificationPrefDiscovery": "Ознакомительный путь",
   "notificationPrefBilling": "Выставление счетов",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Подтверждения и напоминания о визитах по SMS. Ответ STOP также отключает этот канал.",
   "carePostponeDays": "Отложить на {days} дней",
   "noCareReminders": "Нет активных напоминаний об уходе",
   "careAddReminder": "Добавить напоминание",

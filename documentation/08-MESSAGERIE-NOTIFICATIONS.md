@@ -24,7 +24,7 @@ Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon lo
 Préférences :
 
 - Véto : `GET/PUT /vet/notification-preferences` (`emailOnMessage`, `emailOnHeartrate`, `emailOnVisitRequest`)
-- Client : `GET/PATCH /me/notification-preferences` (`hr`, `care`, `visits`, `messages`, `discovery`, `billing`)
+- Client : `GET/PATCH /me/notification-preferences` (`hr`, `care`, `visits`, `messages`, `discovery`, `billing`, `sms`)
 
 Quand le **client** écrit un message et que le véto a `email_on_message`, un email est envoyé au véto.
 
@@ -45,6 +45,7 @@ Envoi serveur (API Go, package `internal/notifications/fcm`) via Firebase Admin 
 | Véto confirme un RDV | `visits` | `visit_confirmed` (+ `visitId`, `petId`) |
 | Véto propose un RDV | `visits` | `visit_proposed` |
 | Véto propose un déplacement | `visits` | `visit_reschedule` |
+| Rappel J-1 avant RDV (cron) | `visits` | `visit_reminder` |
 
 - Locale des titres/corps : `users.preferred_locale` (clés `push.*` dans `go/internal/platform/i18n/locales/`).
 - Sans credentials ADC / si `FCM_ENABLED=false` : no-op (handlers restent 200).
@@ -54,6 +55,19 @@ Flutter : handlers `onMessage` / `onMessageOpenedApp` + notif locale au premier 
 
 Prérequis ops : projet Firebase `premedica-prod-2025`, ADC (`GOOGLE_APPLICATION_CREDENTIALS` en local, ou SA Cloud Run avec droits FCM).
 
+## SMS transactionnel Telnyx (tag `dev`, dry-run)
+
+Troisième canal, **client uniquement**, pour trois messages liés au RDV : confirmation, **rappel J-1** (nouveau job cron 17:00 Europe/Brussels) et reprogrammation.
+
+- Double gate : topic `visits` **et** canal `sms` (`client_preferences.sms`, `DEFAULT TRUE` = opt-out).
+- **STOP entrant** → `sms = false` automatiquement (webhook Telnyx, signature Ed25519).
+- Journal `notifications.sms_log` (statuts + raisons de skip + DLR) ; corps jamais stocké.
+- `SMS_DRY_RUN=true` par défaut, forcé en staging/prod : aucun envoi facturé sans geste explicite.
+
+Détail complet (webhooks primaire/failover, idempotence du rappel, E.164, coûts, RGPD) : **[44-SMS-TELNYX.md](44-SMS-TELNYX.md)**.
+
 ## Hors scope actuel
 
 WebSocket temps réel — refresh à l’ouverture de l’onglet Messages / à la réception push.
+
+SMS : envoi manuel depuis la fiche client, SMS marketing, SMS vers les pros, quiet hours, et sink de failover webhook en domaine de panne distinct (cf. 44).

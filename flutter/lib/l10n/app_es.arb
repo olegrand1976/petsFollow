@@ -467,6 +467,8 @@
   "notificationPrefMessages": "Mensajes",
   "notificationPrefDiscovery": "Recorrido de descubrimiento",
   "notificationPrefBilling": "Facturación",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Confirmaciones y recordatorios de citas por SMS. Responder STOP también desactiva este canal.",
   "carePostponeDays": "Aplazar {days} días",
   "@carePostponeDays": {
     "placeholders": {

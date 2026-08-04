@@ -1304,6 +1304,13 @@ class AppLocalizationsEt extends AppLocalizations {
   String get notificationPrefBilling => 'Arveldus';
 
   @override
+  String get notificationPrefSms => 'SMS';
+
+  @override
+  String get notificationPrefSmsHint =>
+      'Vastuvõtu kinnitused ja meeldetuletused SMS-iga. STOP vastamine lülitab selle kanali samuti välja.';
+
+  @override
   String carePostponeDays(int days) {
     return 'Lükka edasi $days päeva';
   }

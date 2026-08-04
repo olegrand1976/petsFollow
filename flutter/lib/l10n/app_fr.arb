@@ -537,6 +537,8 @@
   "notificationPrefMessages": "Messages",
   "notificationPrefDiscovery": "Parcours découverte",
   "notificationPrefBilling": "Facturation",
+  "notificationPrefSms": "SMS",
+  "notificationPrefSmsHint": "Confirmations et rappels de rendez-vous par SMS. Répondre STOP au message coupe aussi ce canal.",
   "carePostponeDays": "Reporter de {days} jours",
   "@carePostponeDays": {
     "placeholders": {

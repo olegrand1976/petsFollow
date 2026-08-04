@@ -38,6 +38,7 @@ pf_write_api_env_file() {
   local redis_addr
   local billing_mock
   local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled client_ai_enabled
+  local sms_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -49,6 +50,7 @@ pf_write_api_env_file() {
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
     research_enabled="${RESEARCH_ENABLED:-true}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
+    sms_enabled="${SMS_ENABLED:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_enabled="${PACS_ENABLED:-true}"
@@ -67,6 +69,7 @@ pf_write_api_env_file() {
     pacs_enabled="${PACS_ENABLED:-false}"
     research_enabled="${RESEARCH_ENABLED:-false}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-false}"
+    sms_enabled="${SMS_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
@@ -104,6 +107,15 @@ PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 PACS_ENABLED: "${pacs_enabled}"
 RESEARCH_ENABLED: "${research_enabled}"
 CLIENT_AI_ENABLED: "${client_ai_enabled}"
+SMS_ENABLED: "${sms_enabled}"
+# Envoi SMS : dry-run FORCÉ (staging + prod) tant que TELNYX_API_KEY / la clé
+# publique webhook ne sont pas montées en Secret Manager. Passer à false est un
+# geste volontaire : cela déclenche des envois facturés et exige TELNYX_PUBLIC_KEY
+# (sinon un STOP entrant serait perdu) — voir documentation/44-SMS-TELNYX.md.
+SMS_DRY_RUN: "${SMS_DRY_RUN:-true}"
+SMS_DEFAULT_REGION: "${SMS_DEFAULT_REGION:-BE}"
+TELNYX_MESSAGING_PROFILE_ID: "${TELNYX_MESSAGING_PROFILE_ID:-}"
+TELNYX_FROM: "${TELNYX_FROM:-}"
 PACS_ORTHANC_URL: "${PACS_ORTHANC_URL:-}"
 PACS_ORTHANC_USER: "${PACS_ORTHANC_USER:-petsfollow}"
 PACS_ORTHANC_USE_ID_TOKEN: "${PACS_ORTHANC_USE_ID_TOKEN:-true}"
@@ -198,6 +210,21 @@ pf_api_secrets() {
   if gcloud secrets versions access latest \
     --secret=petsfollow-auth-health-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},AUTH_HEALTH_SECRET=petsfollow-auth-health-secret:latest"
+  fi
+  # SMS Telnyx : clé API d'envoi, clé publique de vérification des webhooks,
+  # secret du cron rappel J-1. Chacun optionnel — absent = fonctionnalité inactive
+  # (pas d'envoi live, webhooks rejetés, cron 401) plutôt qu'un déploiement cassé.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-telnyx-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},TELNYX_API_KEY=petsfollow-telnyx-api-key:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-telnyx-public-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},TELNYX_PUBLIC_KEY=petsfollow-telnyx-public-key:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-visit-reminders-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},VISIT_REMINDERS_SECRET=petsfollow-visit-reminders-secret:latest"
   fi
   # Import clients admin — mapping colonnes (Secret Manager).
   if gcloud secrets versions access latest \

@@ -7,6 +7,7 @@ class NotificationPrefs {
     this.messages = true,
     this.discovery = true,
     this.billing = true,
+    this.sms = true,
   });
 
   final String userId;
@@ -17,6 +18,10 @@ class NotificationPrefs {
   final bool discovery;
   final bool billing;
 
+  /// Canal SMS (confirmations et rappels de RDV). Opt-out : activé par défaut,
+  /// coupé aussi par un STOP envoyé au numéro du cabinet.
+  final bool sms;
+
   factory NotificationPrefs.fromJson(Map<String, dynamic> json) {
     return NotificationPrefs(
       userId: json['userId'] as String? ?? '',
@@ -26,6 +31,7 @@ class NotificationPrefs {
       messages: json['messages'] as bool? ?? true,
       discovery: json['discovery'] as bool? ?? true,
       billing: json['billing'] as bool? ?? true,
+      sms: json['sms'] as bool? ?? true,
     );
   }
 
@@ -36,6 +42,7 @@ class NotificationPrefs {
         'messages': messages,
         'discovery': discovery,
         'billing': billing,
+        'sms': sms,
       };
 
   NotificationPrefs copyWith({
@@ -45,6 +52,7 @@ class NotificationPrefs {
     bool? messages,
     bool? discovery,
     bool? billing,
+    bool? sms,
   }) {
     return NotificationPrefs(
       userId: userId,
@@ -54,6 +62,7 @@ class NotificationPrefs {
       messages: messages ?? this.messages,
       discovery: discovery ?? this.discovery,
       billing: billing ?? this.billing,
+      sms: sms ?? this.sms,
     );
   }
 }
