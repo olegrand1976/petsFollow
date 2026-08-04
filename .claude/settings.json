@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{print $2}')",
+      "Bash(timeout 570 make test-auth)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(python3 -c ' *)",
+      "Bash(gofmt -w internal/notifications/sms/webhook.go internal/notifications/sms/webhook_test.go)",
+      "Bash(ps -eo etime,pcpu,comm,args --sort=-etime)",
+      "Bash(rg -n '\"invoicing' go/internal/handlers/*.go)",
+      "Bash(rg -no 'allowPracticePerm\\\\\\(r, id, \"[a-z_.]+\"\\\\\\)' go/internal/handlers/*.go)",
+      "Bash(rg -n 'EnsureParty|CreateParty' go/internal/ -r '')",
+      "Bash(docker stop *)",
+      "Bash(gofmt -w internal/handlers/sms_webhook_integration_test.go)",
+      "Bash(bash -n infra/gcp/lib/deploy-run-args.sh)",
+      "Bash(chmod +x infra/gcp/setup-visit-reminders-scheduler.sh)",
+      "Bash(bash -n infra/gcp/setup-visit-reminders-scheduler.sh)",
+      "Bash(make -n gcp-visit-reminders-scheduler)",
+      "Bash(PGPASSWORD=petsfollow psql -h localhost -p 5437 -U petsfollow -d petsfollow -t -c \"SELECT count\\(*\\) FROM pets.species; SELECT count\\(*\\) FROM pets.species_country_rules; SELECT conname FROM pg_constraint WHERE conrelid='heartrate.species_alert_deltas'::regclass;\")",
+      "Bash(git fetch *)"
+    ]
+  }
+}
