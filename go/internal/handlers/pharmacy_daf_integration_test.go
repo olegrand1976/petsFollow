@@ -265,6 +265,7 @@ func TestPharmacyDAFWithVisitID(t *testing.T) {
 	if petID == "" {
 		t.Skip("no pets seeded")
 	}
+	makePetDAFEligible(t, api, petID)
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", tok, map[string]any{
 		"scheduledAt":     "2099-04-21T11:00:00Z",
@@ -482,6 +483,7 @@ func TestPharmacyDAFUpsertForVisit(t *testing.T) {
 	if petID == "" {
 		t.Skip("no pets seeded")
 	}
+	makePetDAFEligible(t, api, petID)
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", tok, map[string]any{
 		"scheduledAt":         time.Now().UTC().Format(time.RFC3339),
@@ -578,6 +580,7 @@ func TestPharmacyDAFFromPrescription(t *testing.T) {
 	if petID == "" {
 		t.Fatal("no pet with practice")
 	}
+	makePetDAFEligible(t, api, petID)
 
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prescriptions", vetTok, map[string]any{

@@ -21,6 +21,29 @@ func setPetSpecies(t *testing.T, api *testAPI, petID, species, foodChainStatus s
 	}
 }
 
+// makePetDAFEligible établit la précondition métier du DAF : un patient producteur de
+// denrées alimentaires. Les tests de plomberie DAF (lien visite, passerelle ordonnance,
+// dispensations) piochent le premier patient du seed, souvent un chien — ce qui n'est
+// pas un cas d'usage DAF valide. L'espèce d'origine est restaurée en fin de test.
+func makePetDAFEligible(t *testing.T, api *testAPI, petID string) {
+	t.Helper()
+	ctx := context.Background()
+	var species, status string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(species,''), COALESCE(food_chain_status,'companion')
+		FROM pets.pets WHERE id = $1`, petID).Scan(&species, &status); err != nil {
+		t.Fatalf("read pet species: %v", err)
+	}
+	// `companion` sur un bovin : le gate espèce passe (always) sans déclencher
+	// l'exigence de temps d'attente, hors sujet pour ces tests.
+	setPetSpecies(t, api, petID, "cattle", "companion")
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `
+			UPDATE pets.pets SET species = $2, food_chain_status = $3 WHERE id = $1`,
+			petID, species, status)
+	})
+}
+
 // dafGateFixture prépare un médicament, un patient véto et le corps d'un DAF minimal.
 func dafGateFixture(t *testing.T, api *testAPI) (tok, petID, clientID string, body map[string]any) {
 	t.Helper()

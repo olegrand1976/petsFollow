@@ -81,6 +81,7 @@ func TestPharmacyDAFPetDispensesAndDrafts(t *testing.T) {
 	if petID == "" {
 		t.Skip("no pets")
 	}
+	makePetDAFEligible(t, api, petID)
 
 	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/daf-dispenses", clientTok, nil)
