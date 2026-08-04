@@ -70,6 +70,8 @@ func (a *API) writeDAFErr(w http.ResponseWriter, r *http.Request, err error) boo
 		writeErr(w, r, http.StatusBadRequest, "food_chain_withdrawal_required", "food_chain_withdrawal_required")
 	case errors.Is(err, pharmacy.ErrFoodChainBannedMedication):
 		writeErr(w, r, http.StatusConflict, "food_chain_banned_medication", "food_chain_banned_medication")
+	case errors.Is(err, pharmacy.ErrDAFSpeciesNotApplicable):
+		writeErr(w, r, http.StatusConflict, "daf_species_not_applicable", "daf_species_not_applicable")
 	case errors.Is(err, pharmacy.ErrStockInsufficient):
 		if medID := pharmacy.StockMedID(err); medID != "" {
 			writeErrDetails(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient", map[string]any{"medicationId": medID})

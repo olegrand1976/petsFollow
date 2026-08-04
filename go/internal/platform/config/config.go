@@ -114,6 +114,23 @@ type Config struct {
 	ResearchAnonSalt string
 	// ClientAIEnabled enables Flutter client AI (CR explain + triage 24/7) — default off, tag dev.
 	ClientAIEnabled bool
+	// SMSEnabled enables transactional client SMS via Telnyx (visit confirm/reminder/reschedule) — default off, tag dev.
+	SMSEnabled bool
+	// SMSDryRun logs SMS instead of calling Telnyx (default true until live credentials).
+	SMSDryRun bool
+	// Telnyx* — Messages API credentials; From is an optional long code / alphanumeric sender.
+	TelnyxAPIKey             string
+	TelnyxMessagingProfileID string
+	TelnyxFrom               string
+	// TelnyxPublicKey (base64, portail Telnyx » Auth) valide la signature Ed25519
+	// des webhooks DLR / SMS entrants. Sans elle, aucun webhook n'est accepté.
+	TelnyxPublicKey string
+	// SMSDefaultRegion maps national numbers (0…) to a country prefix for E.164 (BE|FR|NL|LU).
+	SMSDefaultRegion string
+	// VisitRemindersSecret protège POST /internal/visit-reminders/run (rappel J-1).
+	VisitRemindersSecret string
+	// VisitReminderLookaheadHours — fin de fenêtre du rappel (défaut 30h ; début fixe now+1h).
+	VisitReminderLookaheadHours int
 
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
@@ -223,6 +240,17 @@ func Load() Config {
 		ResearchAnonSalt:        envOr("RESEARCH_ANON_SALT", ""),
 		ClientAIEnabled:         envBool("CLIENT_AI_ENABLED"),
 
+		// SMS transactionnel (Telnyx) : off par défaut ; dry-run tant que les creds live ne sont pas montés.
+		SMSEnabled:                  envBool("SMS_ENABLED"),
+		SMSDryRun:                   envBoolDefault("SMS_DRY_RUN", true),
+		TelnyxAPIKey:                envOr("TELNYX_API_KEY", ""),
+		TelnyxMessagingProfileID:    envOr("TELNYX_MESSAGING_PROFILE_ID", ""),
+		TelnyxFrom:                  envOr("TELNYX_FROM", ""),
+		TelnyxPublicKey:             envOr("TELNYX_PUBLIC_KEY", ""),
+		SMSDefaultRegion:            envOr("SMS_DEFAULT_REGION", "BE"),
+		VisitRemindersSecret:        envOr("VISIT_REMINDERS_SECRET", ""),
+		VisitReminderLookaheadHours: envInt("VISIT_REMINDER_LOOKAHEAD_HOURS", 30),
+
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
 		BillitEnabled:              envBool("BILLIT_ENABLED"),
 		BillitMockEnabled:          envBool("BILLIT_MOCK_ENABLED"),
@@ -303,6 +331,37 @@ func (c Config) ValidateVamreg() error {
 	}
 	if vamregBaseURLLooksLikeAFMPSReadonlyLists(c.VamregBaseURL) {
 		return errors.New("VAMREG_BASE_URL must not be the AFMPS readonly /vamreg/api host when VAMREG_DRY_RUN=false (use VAMREG_AFMPS_* for lists)")
+	}
+	return nil
+}
+
+// ValidateSMS refuses live SMS without Telnyx credentials outside seedable envs
+// (never silent dry-run) and requires the reminder-job secret in live mode.
+func (c Config) ValidateSMS() error {
+	if !c.SMSEnabled || c.SMSDryRun {
+		return nil
+	}
+	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	switch env {
+	case "local", "development", "dev", "test":
+		return nil
+	}
+	if c.DevSeedEnabled {
+		return nil
+	}
+	if strings.TrimSpace(c.TelnyxAPIKey) == "" {
+		return errors.New("TELNYX_API_KEY required when SMS_DRY_RUN=false")
+	}
+	if strings.TrimSpace(c.TelnyxMessagingProfileID) == "" && strings.TrimSpace(c.TelnyxFrom) == "" {
+		return errors.New("TELNYX_MESSAGING_PROFILE_ID or TELNYX_FROM required when SMS_DRY_RUN=false")
+	}
+	if strings.TrimSpace(c.VisitRemindersSecret) == "" {
+		return errors.New("VISIT_REMINDERS_SECRET required when SMS_DRY_RUN=false")
+	}
+	// Sans clé publique, les webhooks sont tous rejetés : un STOP entrant serait
+	// perdu, donc l'opt-out légal ne serait pas honoré. Exigée en envoi réel.
+	if strings.TrimSpace(c.TelnyxPublicKey) == "" {
+		return errors.New("TELNYX_PUBLIC_KEY required when SMS_DRY_RUN=false (inbound STOP must be honoured)")
 	}
 	return nil
 }

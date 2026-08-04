@@ -156,6 +156,21 @@ func (a *API) pushVisitReschedule(clientUserID, visitID, petID, petName string) 
 	})
 }
 
+func (a *API) pushVisitReminder(clientUserID, visitID, petID, petName string) {
+	locale := a.clientLocale(context.Background(), clientUserID)
+	if petName == "" {
+		petName = "…"
+	}
+	vars := map[string]string{"petName": petName}
+	title := i18n.T(locale, "push.visit_reminder_title", nil)
+	body := i18n.T(locale, "push.visit_reminder_body", vars)
+	a.notifyClientPushAsync(clientUserID, pushKindVisits, title, body, map[string]string{
+		"type":    "visit_reminder",
+		"visitId": visitID,
+		"petId":   petID,
+	})
+}
+
 func (a *API) notifyVetsVisitRequest(pet store.Pet, visit store.Visit) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)

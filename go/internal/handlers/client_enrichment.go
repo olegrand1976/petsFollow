@@ -1029,6 +1029,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			if pendingBy == "client" {
 				a.pushVisitReschedule(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+				a.smsVisitReschedule(pet, updated)
 			} else {
 				a.notifyVetsVisitRequest(pet, updated)
 			}
@@ -1050,6 +1051,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		updated, err = a.store.RescheduleVisitDirect(r.Context(), visit.ID, proposed)
 		if err == nil {
 			a.pushVisitReschedule(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+			a.smsVisitReschedule(pet, updated)
 		}
 	case "send_preconsult":
 		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
@@ -1319,6 +1321,7 @@ func (a *API) updateClientNotificationPrefs(w http.ResponseWriter, r *http.Reque
 		Messages  *bool `json:"messages"`
 		Discovery *bool `json:"discovery"`
 		Billing   *bool `json:"billing"`
+		SMS       *bool `json:"sms"`
 	}
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1346,6 +1349,9 @@ func (a *API) updateClientNotificationPrefs(w http.ResponseWriter, r *http.Reque
 	}
 	if req.Billing != nil {
 		current.Billing = *req.Billing
+	}
+	if req.SMS != nil {
+		current.SMS = *req.SMS
 	}
 	prefs, err := a.store.UpdateClientNotificationPrefs(r.Context(), id.UserID, current)
 	if err != nil {

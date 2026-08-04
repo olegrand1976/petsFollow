@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -190,6 +191,11 @@ type ClientSummary struct {
 
 type Store struct {
 	pool *pgxpool.Pool
+
+	// Catalogue d'espèces : lu à chaque création de patient et de DAF, muté rarement
+	// (admin only). Cache TTL court, invalidé explicitement sur mutation.
+	speciesMu    sync.RWMutex
+	speciesCache map[string]speciesCacheEntry
 }
 
 func New(pool *pgxpool.Pool) *Store {

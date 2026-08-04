@@ -17,6 +17,7 @@ import (
 	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/sms"
 	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
@@ -38,6 +39,7 @@ type API struct {
 	invoicing   *invoicing.Service
 	media       media.Store
 	pusher      fcm.Pusher
+	sms         sms.Sender
 	gemini      *gemini.Client
 	vamreg      *pharmacy.VamregDeclarer
 	vamregAFMPS *pharmacy.VamregAFMPSClient
@@ -46,6 +48,7 @@ type API struct {
 	vetLookupRL         *httpx.RateLimiter
 	vetSuggestRL        *httpx.RateLimiter
 	billitWebhookRL     *httpx.RateLimiter
+	smsWebhookRL        *httpx.RateLimiter
 	pharmacyOrderSendRL *httpx.RateLimiter
 	clientAiTriageRL    *httpx.RateLimiter
 	clientAiExplainRL   *httpx.RateLimiter
@@ -56,9 +59,12 @@ type API struct {
 	failNextPetStudyInsert bool
 }
 
-func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
+func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher, smsSender sms.Sender) *API {
 	if pusher == nil {
 		pusher = fcm.NopPusher{}
+	}
+	if smsSender == nil {
+		smsSender = sms.NopSender{}
 	}
 	var g *gemini.Client
 	if cfg.GeminiAPIKey != "" {
@@ -80,11 +86,12 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		vamregAFMPS = pharmacy.NewVamregAFMPSClient(cfg.VamregAfmpsBaseURL, cfg.VamregAfmpsAPIKey)
 	}
 	a := &API{
-		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
+		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, sms: smsSender, gemini: g,
 		vamreg: vamregDecl, vamregAFMPS: vamregAFMPS, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
 		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
 		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
 		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),
+		smsWebhookRL:        httpx.NewRateLimiter(120, time.Minute),
 		pharmacyOrderSendRL: httpx.NewRateLimiter(10, time.Minute),
 		clientAiTriageRL:    httpx.NewRateLimiter(20, time.Hour),
 		clientAiExplainRL:   httpx.NewRateLimiter(10, time.Hour),
@@ -109,6 +116,18 @@ func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEna
 func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
 
 func (a *API) TestSetSaasInvoicesSecret(secret string) { a.cfg.SaasInvoicesSecret = secret }
+
+// TestReplaceSMSSender swaps the SMS sender (integration tests only).
+func (a *API) TestReplaceSMSSender(s sms.Sender) { a.sms = s }
+
+// TestSetSMSEnabled toggles SMS_ENABLED (integration tests only).
+func (a *API) TestSetSMSEnabled(v bool) { a.cfg.SMSEnabled = v }
+
+// TestSetVisitRemindersSecret sets VISIT_REMINDERS_SECRET (integration tests only).
+func (a *API) TestSetVisitRemindersSecret(secret string) { a.cfg.VisitRemindersSecret = secret }
+
+// TestSetTelnyxPublicKey sets TELNYX_PUBLIC_KEY (integration tests only).
+func (a *API) TestSetTelnyxPublicKey(key string) { a.cfg.TelnyxPublicKey = key }
 
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
@@ -136,6 +155,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerBillingRoutes(r)
 	a.registerInvoicingRoutes(r)
 	a.registerInvoicingWebhookRoutes(r)
+	a.registerSMSWebhookRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerBrandAssetAdminRoutes(r)
 	a.registerCommissionRoutes(r)
@@ -151,6 +171,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
 	r.Post("/internal/research-etl/run", a.internalRunResearchETL)
+	r.Post("/internal/visit-reminders/run", a.internalRunVisitReminders)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -165,6 +186,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPrescriptionRoutes(pr)
 		a.registerPacsRoutes(pr)
 		a.registerResearchRoutes(pr)
+		a.registerSpeciesRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)

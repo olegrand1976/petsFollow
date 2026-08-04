@@ -180,6 +180,9 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 	if len(items) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
 	}
+	if err := s.validateDAFSpeciesApplicable(ctx, practiceID, petID); err != nil {
+		return DAFDocument{}, err
+	}
 	visitID = strings.TrimSpace(visitID)
 	// One draft per visit: collide → replace existing draft items.
 	if visitID != "" {
@@ -196,12 +199,18 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 	}
 	defer tx.Rollback(ctx)
 
+	// Sous quel régime réglementaire ce DAF est-il émis ? Snapshot, comme les ordonnances.
+	country, cerr := s.GetPracticeCountryCode(ctx, practiceID)
+	if cerr != nil && !errors.Is(cerr, ErrNotFound) {
+		return DAFDocument{}, cerr
+	}
+
 	docID := uuid.NewString()
 	_, err = tx.Exec(ctx, `
 		INSERT INTO pharmacy.daf_documents (
-			id, practice_id, daf_year, status, client_user_id, pet_id, visit_id, prescriber_user_id, notes
-		) VALUES ($1,$2,$3,'draft',NULLIF($4,'')::uuid,NULLIF($5,'')::uuid,NULLIF($6,'')::uuid,$7,NULLIF($8,''))`,
-		docID, practiceID, year, clientUserID, petID, visitID, prescriberID, strings.TrimSpace(notes),
+			id, practice_id, daf_year, status, client_user_id, pet_id, visit_id, prescriber_user_id, notes, country_code
+		) VALUES ($1,$2,$3,'draft',NULLIF($4,'')::uuid,NULLIF($5,'')::uuid,NULLIF($6,'')::uuid,$7,NULLIF($8,''),$9)`,
+		docID, practiceID, year, clientUserID, petID, visitID, prescriberID, strings.TrimSpace(notes), country,
 	)
 	if err != nil {
 		if visitID != "" && isUniqueViolation(err) {
@@ -260,6 +269,9 @@ func (s *Store) insertDAFItemTx(ctx context.Context, tx pgx.Tx, practiceID, dafI
 func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID string, clientUserID, petID, visitID, notes string, items []DAFItemInput) (DAFDocument, error) {
 	if len(items) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
+	}
+	if err := s.validateDAFSpeciesApplicable(ctx, practiceID, petID); err != nil {
+		return DAFDocument{}, err
 	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -645,6 +657,12 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
 	}
 
+	// Le patient a pu changer d'espèce ou sortir de la chaîne alimentaire depuis la
+	// création du brouillon : re-vérifier avant d'allouer un numéro inviolable.
+	if err := s.validateDAFSpeciesApplicable(ctx, practiceID, petID); err != nil {
+		return DAFDocument{}, err
+	}
+
 	if err := s.validateDAFFoodChain(ctx, practiceID, petID, draftItems); err != nil {
 		return DAFDocument{}, err
 	}
@@ -874,6 +892,50 @@ func (s *Store) validateDAFFoodChain(ctx context.Context, practiceID, petID stri
 		}
 	}
 	return nil
+}
+
+// validateDAFSpeciesApplicable refuse un DAF quand l'espèce du patient n'est pas
+// productrice de denrées alimentaires dans le pays de la clinique.
+//
+// Réglementation belge (AR du 21/07/2016) : le DAF vise les animaux producteurs de
+// denrées. Les équidés en relèvent sauf exclusion définitive de la chaîne alimentaire
+// via leur passeport — d'où la valeur `per_animal`, qui délègue l'arbitrage au statut
+// individuel du patient.
+//
+// Un DAF sans patient lié n'est pas gaté : l'espèce est alors indéterminable.
+func (s *Store) validateDAFSpeciesApplicable(ctx context.Context, practiceID, petID string) error {
+	if strings.TrimSpace(petID) == "" {
+		return nil
+	}
+	var species, foodChainStatus string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(species,''), COALESCE(food_chain_status,'companion')
+		FROM pets.pets WHERE id = $1`, petID).Scan(&species, &foodChainStatus)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	country, err := s.GetPracticeCountryCode(ctx, practiceID)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return err
+	}
+	rule, err := s.ResolveSpeciesRule(ctx, species, country)
+	if err != nil {
+		return err
+	}
+	switch rule.DAFRequired {
+	case DAFRequiredAlways:
+		return nil
+	case DAFRequiredPerAnimal:
+		if foodChainStatus == "excluded_from_food_chain" {
+			return pharmacy.ErrDAFSpeciesNotApplicable
+		}
+		return nil
+	default: // DAFRequiredNever
+		return pharmacy.ErrDAFSpeciesNotApplicable
+	}
 }
 
 // GetPetFoodChainStatus returns companion | food_producing | excluded_from_food_chain.

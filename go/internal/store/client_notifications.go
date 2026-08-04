@@ -16,6 +16,7 @@ type ClientNotificationPrefs struct {
 	Messages  bool   `json:"messages"`
 	Discovery bool   `json:"discovery"`
 	Billing   bool   `json:"billing"`
+	SMS       bool   `json:"sms"`
 }
 
 type DeviceToken struct {
@@ -65,12 +66,12 @@ func (s *Store) DeleteDeviceToken(ctx context.Context, userID, token string) err
 func (s *Store) GetClientNotificationPrefs(ctx context.Context, userID string) (ClientNotificationPrefs, error) {
 	var p ClientNotificationPrefs
 	err := s.pool.QueryRow(ctx, `
-		SELECT user_id::text, hr, care, visits, messages, discovery, billing
+		SELECT user_id::text, hr, care, visits, messages, discovery, billing, sms
 		FROM notifications.client_preferences WHERE user_id = $1`, userID,
-	).Scan(&p.UserID, &p.HR, &p.Care, &p.Visits, &p.Messages, &p.Discovery, &p.Billing)
+	).Scan(&p.UserID, &p.HR, &p.Care, &p.Visits, &p.Messages, &p.Discovery, &p.Billing, &p.SMS)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ClientNotificationPrefs{
-			UserID: userID, HR: true, Care: true, Visits: true, Messages: true, Discovery: true, Billing: true,
+			UserID: userID, HR: true, Care: true, Visits: true, Messages: true, Discovery: true, Billing: true, SMS: true,
 		}, nil
 	}
 	return p, err
@@ -79,13 +80,14 @@ func (s *Store) GetClientNotificationPrefs(ctx context.Context, userID string) (
 func (s *Store) UpdateClientNotificationPrefs(ctx context.Context, userID string, p ClientNotificationPrefs) (ClientNotificationPrefs, error) {
 	var out ClientNotificationPrefs
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO notifications.client_preferences (user_id, hr, care, visits, messages, discovery, billing)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO notifications.client_preferences (user_id, hr, care, visits, messages, discovery, billing, sms)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (user_id) DO UPDATE SET
 			hr = EXCLUDED.hr, care = EXCLUDED.care, visits = EXCLUDED.visits,
-			messages = EXCLUDED.messages, discovery = EXCLUDED.discovery, billing = EXCLUDED.billing
-		RETURNING user_id::text, hr, care, visits, messages, discovery, billing`,
-		userID, p.HR, p.Care, p.Visits, p.Messages, p.Discovery, p.Billing,
-	).Scan(&out.UserID, &out.HR, &out.Care, &out.Visits, &out.Messages, &out.Discovery, &out.Billing)
+			messages = EXCLUDED.messages, discovery = EXCLUDED.discovery, billing = EXCLUDED.billing,
+			sms = EXCLUDED.sms
+		RETURNING user_id::text, hr, care, visits, messages, discovery, billing, sms`,
+		userID, p.HR, p.Care, p.Visits, p.Messages, p.Discovery, p.Billing, p.SMS,
+	).Scan(&out.UserID, &out.HR, &out.Care, &out.Visits, &out.Messages, &out.Discovery, &out.Billing, &out.SMS)
 	return out, err
 }

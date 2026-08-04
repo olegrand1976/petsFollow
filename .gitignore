@@ -20,3 +20,4 @@ nuxtjs/playwright-report/
 !.cursor/rules/
 .idea/
 .vscode/
+.claude/settings.local.json

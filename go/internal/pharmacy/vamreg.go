@@ -20,6 +20,9 @@ var (
 	ErrDAFVAMRegInFlight           = errors.New("daf_vamreg_in_flight")
 	ErrFoodChainWithdrawalRequired = errors.New("food_chain_withdrawal_required")
 	ErrFoodChainBannedMedication   = errors.New("food_chain_banned_medication")
+	// ErrDAFSpeciesNotApplicable — l'espèce du patient n'est pas productrice de denrées
+	// alimentaires dans le pays de la clinique (ou l'individu en est exclu) : pas de DAF.
+	ErrDAFSpeciesNotApplicable = errors.New("daf_species_not_applicable")
 )
 
 // FormatDAFNumber returns DAF-YYYY-NNNNNN.

@@ -68,11 +68,35 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		"purgedWebhookEvents":            a.purgeOldInvoicingWebhooks(r.Context()),
 		"rejectedStaleSending":           a.rejectStaleInvoicingSending(r.Context()),
 		"cancelledStaleConsultations":    a.cancelStaleConsultationOrphans(r.Context()),
+		"purgedSmsLogs":                  a.purgeOldSmsLogs(r.Context()),
+		"purgedSmsInbound":               a.purgeOldSmsInbound(r.Context()),
 	})
 }
 
 const invoicingWebhookRetention = 90 * 24 * time.Hour
 const invoicingSendingStale = 7 * 24 * time.Hour
+
+// smsLogRetention — minimisation : le journal SMS (numéros) ne sert qu'à l'audit
+// d'envoi et à l'idempotence des rappels, purgé bien avant les 3 ans du compte.
+const smsLogRetention = 365 * 24 * time.Hour
+
+func (a *API) purgeOldSmsLogs(ctx context.Context) int {
+	n, err := a.store.PurgeOldSmsLogs(ctx, time.Now().Add(-smsLogRetention), 500)
+	if err != nil {
+		fmt.Printf("retention purge: sms logs failed: %v\n", err)
+		return 0
+	}
+	return n
+}
+
+func (a *API) purgeOldSmsInbound(ctx context.Context) int {
+	n, err := a.store.PurgeOldSmsInbound(ctx, time.Now().Add(-smsLogRetention), 500)
+	if err != nil {
+		fmt.Printf("retention purge: sms inbound failed: %v\n", err)
+		return 0
+	}
+	return n
+}
 
 func (a *API) purgeOldInvoicingWebhooks(ctx context.Context) int {
 	n, err := a.store.PurgeOldWebhookEvents(ctx, time.Now().Add(-invoicingWebhookRetention), 500)

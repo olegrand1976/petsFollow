@@ -47,6 +47,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/prospects", a.adminListProspects)
 		pr.Get("/admin/staging/seed", a.adminStagingSeedStatus)
 		pr.Post("/admin/staging/seed", a.adminStagingSeed)
+		a.registerAdminSpeciesRoutes(pr)
 		a.registerClientImportRoutes(pr)
 		a.registerCompendiumImportRoutes(pr)
 		a.registerAFMPSImportRoutes(pr)
@@ -619,6 +620,8 @@ func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
 		"billitMockEnabled":       a.cfg.BillitMockEnabled,
 		"mlmOrgEnabled":           a.cfg.MLMOrgEnabled,
 		"careProPublicRegister":   a.cfg.CareProPublicRegister,
+		"smsEnabled":              a.cfg.SMSEnabled,
+		"smsDryRun":               a.cfg.SMSDryRun,
 		"vamregDryRun":            a.cfg.VamregDryRun,
 		"vamregAfmpsConfigured":   strings.TrimSpace(a.cfg.VamregAfmpsAPIKey) != "",
 		"vamregAfmpsBaseURL":      a.cfg.VamregAfmpsBaseURL,

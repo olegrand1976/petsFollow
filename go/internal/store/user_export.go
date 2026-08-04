@@ -141,6 +141,23 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			'updatedAt', t.updated_at
 		) ORDER BY t.updated_at), '[]'::jsonb)
 			FROM notifications.device_tokens t WHERE t.user_id = $1`,
+		"smsNotifications": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'kind', l.kind,
+			'toPhone', l.to_phone,
+			'locale', l.locale,
+			'status', l.status,
+			'deliveryStatus', l.delivery_status,
+			'deliveredAt', l.delivered_at,
+			'createdAt', l.created_at
+		) ORDER BY l.created_at), '[]'::jsonb)
+			FROM notifications.sms_log l WHERE l.user_id = $1`,
+		"smsInbound": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'fromPhone', i.from_phone,
+			'body', i.body,
+			'command', i.command,
+			'createdAt', i.created_at
+		) ORDER BY i.created_at), '[]'::jsonb)
+			FROM notifications.sms_inbound i WHERE i.user_id = $1`,
 		"invoicingDocuments": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(d) - 'idempotency_key') ORDER BY d.created_at), '[]'::jsonb)
 			FROM invoicing.documents d WHERE d.created_by = $1`,

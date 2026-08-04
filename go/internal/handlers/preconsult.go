@@ -382,6 +382,7 @@ func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
 			visit = full
 		}
 		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+		a.smsVisitConfirmed(pet, visit)
 		if visit.RequestPreconsult {
 			if err := a.issuePreconsultInvite(ctx, pet, visit); err != nil && !errors.Is(err, errPreconsultAlreadySent) {
 				log.Printf("preconsult: issue invite visit %s: %v", visit.ID, err)
@@ -392,9 +393,10 @@ func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
 	}()
 }
 
-// onVisitRescheduleAccepted notifies via push only — never re-issues preconsult mail/token.
+// onVisitRescheduleAccepted notifies via push + SMS — never re-issues preconsult mail/token.
 func (a *API) onVisitRescheduleAccepted(pet store.Pet, visit store.Visit) {
 	go a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+	a.smsVisitConfirmed(pet, visit)
 }
 
 func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit store.Visit, token string) {

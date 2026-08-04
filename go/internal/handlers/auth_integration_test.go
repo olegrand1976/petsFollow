@@ -110,7 +110,7 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	} else {
 		bill = billing.NewService(st, cfg)
 	}
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, nil, nil)
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, nil, nil, nil)
 
 	r := httpx.NewBaseRouter()
 	r.Route("/api/v1", api.Routes)

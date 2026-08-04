@@ -17,6 +17,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/sms"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
@@ -65,6 +66,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	if err := cfg.ValidateResearch(); err != nil {
 		return nil, err
 	}
+	if err := cfg.ValidateSMS(); err != nil {
+		return nil, err
+	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -91,7 +95,8 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		return nil, err
 	}
 	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
+	smsSender := sms.NewFromConfig(cfg)
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher, smsSender)
 
 	if redisClient, err := redisx.New(cfg.RedisAddr, cfg.RedisKeyPrefix); err != nil {
 		log.Printf("redis cache unavailable (%v) — PACS status falls back to memory", err)
