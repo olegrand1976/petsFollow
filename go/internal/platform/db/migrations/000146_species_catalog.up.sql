@@ -159,16 +159,10 @@ ON CONFLICT (species_code, country_code) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- Débloquer le cardio : le CHECK figé sur dog/cat/horse empêchait toute extension.
 -- ---------------------------------------------------------------------------
+-- Pas de FK vers pets.species ici, volontairement : elle introduit une dépendance
+-- de verrous entre les schémas heartrate et pets qui fait deadlocker le seed
+-- (go/internal/seed, écritures concurrentes par profil). Le CHECK retiré suffit à
+-- ouvrir le catalogue ; l'intégrité est portée par le CRUD admin, qui n'autorise
+-- que la désactivation — jamais la suppression d'une espèce.
 ALTER TABLE heartrate.species_alert_deltas
     DROP CONSTRAINT IF EXISTS species_alert_deltas_species_check;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'species_alert_deltas_species_fkey'
-  ) THEN
-    ALTER TABLE heartrate.species_alert_deltas
-      ADD CONSTRAINT species_alert_deltas_species_fkey
-      FOREIGN KEY (species) REFERENCES pets.species(code) ON DELETE CASCADE;
-  END IF;
-END $$;

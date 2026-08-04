@@ -1,6 +1,3 @@
-ALTER TABLE heartrate.species_alert_deltas
-    DROP CONSTRAINT IF EXISTS species_alert_deltas_species_fkey;
-
 DELETE FROM heartrate.species_alert_deltas WHERE species NOT IN ('dog', 'cat', 'horse');
 
 DO $$
