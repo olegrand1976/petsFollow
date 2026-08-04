@@ -79,6 +79,10 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	if os.Getenv("BILLIT_WEBHOOK_SECRET") == "" {
 		_ = os.Setenv("BILLIT_WEBHOOK_SECRET", "test-billit-webhook-secret")
 	}
+	// SMS : module monté (les routes webhook sont conditionnées à SMS_ENABLED au
+	// montage) et dry-run — aucun appel Telnyx. Les tests injectent un faux Sender.
+	_ = os.Setenv("SMS_ENABLED", "true")
+	_ = os.Setenv("SMS_DRY_RUN", "true")
 	// seed.Run refuse de tourner hors environnement seedable (allowlist APP_ENV).
 	_ = os.Setenv("APP_ENV", "test")
 	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).

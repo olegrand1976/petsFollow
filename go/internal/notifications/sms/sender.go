@@ -21,11 +21,13 @@ type Sender interface {
 	Send(ctx context.Context, to, text string) (Result, error)
 }
 
-// NopSender absorbe les envois quand le module SMS est désactivé.
+// NopSender absorbe les envois quand le module SMS est désactivé ou mal configuré.
+// DryRun=true : aucun message n'a quitté le système, le journal doit le refléter
+// (jamais un statut « sent » pour un envoi qui n'a pas eu lieu).
 type NopSender struct{}
 
 func (NopSender) Send(context.Context, string, string) (Result, error) {
-	return Result{}, nil
+	return Result{DryRun: true}, nil
 }
 
 // NewFromConfig retourne le sender adapté à la config. Live sans clé API →
