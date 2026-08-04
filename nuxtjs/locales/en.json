@@ -89,7 +89,8 @@
     "researchGroups": "Groups",
     "researchDataroom": "Data room",
     "productFlows": "Product flows",
-    "aiFlows": "AI flows"
+    "aiFlows": "AI flows",
+    "adminInvoicing": "Billit invoicing"
   },
   "auth": {
     "login": {
@@ -360,7 +361,9 @@
       "es": "Español",
       "et": "Eesti",
       "saved": "Language saved.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Respiratory rate reading",
@@ -2292,7 +2295,7 @@
       }
     },
     "autofinanceTip": "≈ 8 triennial client activations / month ≈ covers the Pro monthly equivalent (≈ €69.56 excl. VAT).",
-    "clientIncludedLine": "Included on every plan: passport, messaging + push, RR checks 15/30/60 s, Care/Horse, household, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Included on every plan: passport, messaging + push, RR checks 15/30/60 s, Care/Horse, household, FR/NL/EN/ES/ET/IT/UK/RU."
   },
   "products": {
     "seoTitle": "petsFollow — Professional offer",
@@ -2339,7 +2342,7 @@
       "Guided respiratory rate checks 15 / 30 / 60 s",
       "Care / Horse / household included once the pet is paying"
     ],
-    "includedLine": "Included on every plan: passport, messaging + push, RR checks, Care/Horse reminders, household, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Included on every plan: passport, messaging + push, RR checks, Care/Horse reminders, household, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Self-funding & commitments",
     "partnerLead": "Commissions on client activations offset the Pro subscription (settled offline).",
     "partnerSteps": [
@@ -2377,7 +2380,7 @@
       "Secure client ↔ vet messaging + push notifications",
       "Care reminders (standard, meds, custom) and equine pack if horse",
       "Household view and multi-pet encoding",
-      "Languages FR / NL / EN / ES / ET / IT"
+      "Languages FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Client per-pet subscriptions (incl. VAT)",
     "plansLead": "One subscription per monitored pet. Stripe payment on the owner side.",
@@ -3051,7 +3054,7 @@
       "client1": "Passport / health book always in pocket",
       "client2": "Messaging with the practice + push",
       "client3": "Care reminders and Horse pack included",
-      "client4": "Multi-pet household — 6 languages",
+      "client4": "Multi-pet household — 8 languages",
       "offerTitle": "Offer (snapshot)",
       "offerProLabel": "Pro SaaS (excl. VAT, offline billing)",
       "offerProAnnual": "€834.71 / year (≈ €69.56 / month)",
@@ -3351,7 +3354,9 @@
     "reportQualityThanks": "Thanks — this improves the model",
     "reportMarkReference": "Reference consultation (continuous improvement)",
     "reportReferenceOn": "Marked as reference consultation",
-    "reportReferenceOff": "Removed from reference consultations"
+    "reportReferenceOff": "Removed from reference consultations",
+    "reportTargetLangUk": "Ukrainian",
+    "reportTargetLangRu": "Russian"
   },
   "manager": {
     "dashboard": {

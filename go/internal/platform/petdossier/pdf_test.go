@@ -83,3 +83,31 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+// TestBuildPDFCyrillic couvre les locales cyrilliques : libellés uk/ru ET
+// données utilisateur en cyrillique (nom d'animal / de propriétaire). Avant le
+// passage à une police UTF-8 (platform/pdffont), ces caractères sortaient en
+// parasites via le traducteur cp1252 — y compris dans un PDF français.
+func TestBuildPDFCyrillic(t *testing.T) {
+	for _, loc := range []string{"uk", "ru", "fr"} {
+		out, err := BuildPDF(PDFInput{
+			Marketing: Marketing{SiteURL: "https://petsfollow.app"},
+			Pet: PetInfo{
+				Name:      "Мурчик",
+				Species:   "cat",
+				Breed:     "Сфінкс",
+				OwnerName: "Олена Ґалаґан",
+			},
+			Visits:      []VisitLine{{When: "2026-01-01", Status: "done", PracticeName: "ВетПлюс", ProConsulted: "Др. Іваненко"}},
+			Timeline:    []TimelineLine{{When: "2026-01-01", Title: "Щеплення", Body: "Щеплення виконано"}},
+			GeneratedAt: time.Date(2026, 7, 27, 12, 0, 0, 0, time.UTC),
+			Locale:      loc,
+		})
+		if err != nil {
+			t.Fatalf("%s: %v", loc, err)
+		}
+		if !bytes.HasPrefix(out, []byte("%PDF")) {
+			t.Fatalf("%s: expected PDF magic", loc)
+		}
+	}
+}

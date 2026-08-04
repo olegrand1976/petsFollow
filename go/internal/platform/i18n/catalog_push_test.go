@@ -12,6 +12,8 @@ func TestAllPushCatalogKeys(t *testing.T) {
 		"push.visit_proposed_body",
 		"push.visit_reschedule_title",
 		"push.visit_reschedule_body",
+		"push.visit_reminder_title",
+		"push.visit_reminder_body",
 	}
 	vars := map[string]string{"preview": "Hello", "petName": "Rex"}
 	for _, loc := range Supported {

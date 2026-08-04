@@ -140,6 +140,10 @@
                   <option value="es">{{ $t('calendar.reportTargetLangEs') }}</option>
                   <option value="et">{{ $t('calendar.reportTargetLangEt') }}</option>
                   <option value="it">{{ $t('calendar.reportTargetLangIt') }}</option>
+                  <!-- uk / ru : masqués tant que les langues ne sont pas annoncées.
+                       L'API les accepte déjà (NormalizeVisitReportTargetLocale) et les
+                       clés calendar.reportTargetLang{Uk,Ru} existent — il suffit de
+                       remettre les deux <option> pour les réactiver. -->
                 </select>
               </label>
               <ProButton

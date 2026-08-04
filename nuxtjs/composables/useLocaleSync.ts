@@ -1,3 +1,15 @@
+/**
+ * Locales de la face Pro. Doit rester le miroir exact du tableau `i18n.locales`
+ * de `nuxt.config.ts` : une locale listée ici mais absente de la config ferait
+ * échouer `setLocale()`, et l'inverse la rendrait injoignable.
+ *
+ * L'API en supporte deux de plus — `uk` et `ru` (cf. `i18n.Supported` côté Go,
+ * utilisées par les e-mails, SMS et push clients Flutter). Elles ne reviennent
+ * ici qu'avec un catalogue Nuxt complet : `locales/{uk,ru}.json`,
+ * `presentation/` et `ai-flows/`. Tant qu'elles sont absentes,
+ * `applyPreferredLocale` ignore une préférence `uk`/`ru` et la face Pro reste
+ * en français — c'est volontaire, mieux qu'une UI à moitié traduite.
+ */
 const SUPPORTED_LOCALES = ['fr', 'nl', 'en', 'es', 'et', 'it'] as const
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 

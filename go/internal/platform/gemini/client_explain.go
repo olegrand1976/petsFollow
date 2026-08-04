@@ -22,7 +22,7 @@ type ClientExplainResult struct {
 
 // ClientExplainInput drives the owner-facing CR explain prompt.
 type ClientExplainInput struct {
-	Locale    string // fr|nl|en|es|et|it
+	Locale    string // fr|nl|en|es|et|it|uk|ru
 	PetName   string
 	Species   string
 	BodyTexts []string
@@ -40,6 +40,10 @@ func clientExplainLangName(locale string) string {
 		return "estonien"
 	case "it":
 		return "italien"
+	case "uk":
+		return "ukrainien"
+	case "ru":
+		return "russe"
 	default:
 		return "français"
 	}

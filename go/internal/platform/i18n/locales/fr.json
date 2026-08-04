@@ -345,7 +345,7 @@
         "preheader": "Récapitulatif de ce que petsFollow inclut.",
         "greeting": "Bonjour {fullName},",
         "intro": "Voilà déjà 14 jours : relevés, messagerie, timeline et rappels sont inclus dans votre abonnement animal. Continuez à rythmer les mesures selon les consignes du cabinet.",
-        "detail": "Inclus : relevés 15/30/60 s · messagerie + push · timeline · rappels · FR/NL/EN/ES/ET/IT",
+        "detail": "Inclus : relevés 15/30/60 s · messagerie + push · timeline · rappels · FR/NL/EN/ES/ET/IT/UK/RU",
         "cta": "Continuer dans l'app",
         "disclaimer": "Merci de faire confiance à petsFollow pour le suivi de votre animal."
       },
@@ -468,117 +468,117 @@
     "visit_confirmed_affiliate_cta": "Rejoindre petsFollow",
     "visit_confirmed_affiliate_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer.",
     "ai_cr_adhesion": {
-        "fallback_name": "Docteur",
-        "j0_activation": {
-          "subject": "CR IA inclus dans Pro — suivez l’adoption",
-          "tagline": "Compte-rendu IA",
-          "preheader": "CR IA inclus dans votre offre Pro — ROI suivi dès J60.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Le Compte-rendu IA est inclus dans le SaaS Pro pour {practiceName}. Fenêtre de suivi ROI jusqu’au {trialEnds}.",
-          "detail": "Pour ancrer l’habitude : réalisez 3 CR assistés cette semaine (dictée Pro Light ou upload Web).\n\nDès J60, votre bilan temps gagné s’affiche sur le tableau de bord.\nLe CR IA fait partie de votre abonnement Pro — aucun module payant séparé.",
-          "cta": "Ouvrir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j3_nudge": {
-          "subject": "CR IA — 3 jours : et si vous dictiez le premier ?",
-          "tagline": "Premier CR assisté",
-          "preheader": "Aucun usage IA détecté — 3 minutes pour le premier CR.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Le suivi CR IA a démarré il y a {days} jours sur {practiceName}, sans usage encore.",
-          "detail": "Ouvrez une visite → dictez (Pro Light) ou uploadez l’audio (Web) → Improve → finalisez.\nTrois CR suffisent pour ancrer le geste.",
-          "cta": "Aller au calendrier / dashboard",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j7_nudge": {
-          "subject": "CR IA — J7 : on vous aide à démarrer",
-          "tagline": "Relance adoption",
-          "preheader": "Toujours 0 CR IA — on est là pour vous.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "À J+{days}, aucun CR assisté n’a encore été détecté pour {practiceName}.",
-          "detail": "Bloqueur fréquent : micro, consentement oral, ou manque de temps. Votre commercial peut vous accompagner 15 min.\nFenêtre ROI jusqu’au {trialEnds} ({daysLeft} j restants).",
-          "cta": "Ouvrir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j14_nps": {
-          "subject": "CR IA — votre avis à 2 semaines ?",
-          "tagline": "Feedback J14",
-          "preheader": "Notez le module en 10 secondes.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Deux semaines de suivi sur {practiceName} — comment ça se passe ?",
-          "detail": "Sur le tableau de bord, notez de 0 à 10 et indiquez d’éventuelles frictions (audio, qualité, temps…). Ça nous aide à améliorer le produit.",
-          "cta": "Donner mon avis",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j15_digest": {
-          "subject": "CR IA — bilan usage J15",
-          "tagline": "Digest usage",
-          "preheader": "{finalize} CR finalisés assistés depuis l’activation.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Voici l’usage CR IA de {practiceName} depuis l’activation (J+{days}).",
-          "detail": "• Transcriptions : {transcribe}\n• Améliorations : {improve}\n• CR finalisés assistés : {finalize}\n\nContinuez à dicter : le bilan ROI arrive à J60.",
-          "cta": "Voir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j30_digest": {
-          "subject": "CR IA — un mois d’usage, où en êtes-vous ?",
-          "tagline": "Digest J30",
-          "preheader": "Usage : {finalize} CR finalisés assistés.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Un mois de suivi CR IA pour {practiceName} (J+{days}).",
-          "detail": "• Transcriptions : {transcribe}\n• Améliorations : {improve}\n• CR finalisés assistés : {finalize}\n\nDans 30 jours : preuve ROI (temps gagné estimé).",
-          "cta": "Voir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j45_nps": {
-          "subject": "CR IA — mi-parcours : note + usage",
-          "tagline": "Feedback J45",
-          "preheader": "NPS + digest avant la preuve ROI J60.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "À mi-parcours (J+{days}) pour {practiceName} — {daysLeft} j restants jusqu’au {trialEnds}.",
-          "detail": "Usage : {transcribe} transcriptions · {improve} improve · {finalize} CR finalisés.\n\nNotez le module (0–10) sur le dashboard et signalez les frictions. Le bilan ROI arrive à J60.",
-          "cta": "Noter le module",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j60_roi": {
-          "subject": "CR IA — votre bilan ROI (J60)",
-          "tagline": "Preuve de valeur",
-          "preheader": "~{minutesSaved} min gagnées estimées.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "À J+{days}, voici l’estimation de temps gagné pour {practiceName}.",
-          "detail": "• CR finalisés assistés : {crsIA}\n• Temps gagné estimé : {minutesSaved} minutes\n• Équivalent net estimé : ~{euroNet} €\n\n(Estimation indicative — baseline cabinet.)\nLe CR IA reste inclus dans votre offre Pro.",
-          "cta": "Voir le ROI sur le dashboard",
-          "disclaimer": "Email automatique petsFollow Pro — estimation non contractuelle."
-        },
-        "j75_convert": {
-          "subject": "CR IA — poursuite du suivi ROI",
-          "tagline": "Suivi adoption",
-          "preheader": "Fenêtre ROI jusqu’au {trialEnds} — CR IA inclus dans Pro.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Le suivi ROI pour {practiceName} se poursuit jusqu’au {trialEnds} ({daysLeft} j).",
-          "detail": "Bilan estimé : ~{minutesSaved} min / ~{euroNet} €.\nLe CR IA est inclus dans le SaaS Pro — aucun module payant séparé.\nContinuez à dicter et suivez l’adoption sur le dashboard.",
-          "cta": "Ouvrir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j85_urgency": {
-          "subject": "CR IA — fin de fenêtre ROI bientôt",
-          "tagline": "Rappel suivi",
-          "preheader": "Plus que {daysLeft} jours de fenêtre ROI — CR IA inclus.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "La fenêtre de suivi ROI de {practiceName} se termine le {trialEnds} ({daysLeft} j).",
-          "detail": "Le CR IA reste inclus dans Pro après cette date ; seule la fenêtre de preuve ROI se clôture.\nProfitez-en pour finaliser quelques CR assistés et consulter le bilan.",
-          "cta": "Voir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        },
-        "j90_last": {
-          "subject": "CR IA — fin de fenêtre ROI",
-          "tagline": "Fin fenêtre ROI",
-          "preheader": "Fin de la fenêtre ROI — le CR IA reste inclus dans Pro.",
-          "greeting": "Bonjour {fullName},",
-          "intro": "Fin de la fenêtre de suivi ROI pour {practiceName} ({trialEnds}).",
-          "detail": "Le CR IA (dictée / improve) reste inclus dans votre abonnement Pro.\nRetrouvez le bilan et l’historique d’usage sur le dashboard.",
-          "cta": "Ouvrir le tableau de bord",
-          "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
-        }
+      "fallback_name": "Docteur",
+      "j0_activation": {
+        "subject": "CR IA inclus dans Pro — suivez l’adoption",
+        "tagline": "Compte-rendu IA",
+        "preheader": "CR IA inclus dans votre offre Pro — ROI suivi dès J60.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Le Compte-rendu IA est inclus dans le SaaS Pro pour {practiceName}. Fenêtre de suivi ROI jusqu’au {trialEnds}.",
+        "detail": "Pour ancrer l’habitude : réalisez 3 CR assistés cette semaine (dictée Pro Light ou upload Web).\n\nDès J60, votre bilan temps gagné s’affiche sur le tableau de bord.\nLe CR IA fait partie de votre abonnement Pro — aucun module payant séparé.",
+        "cta": "Ouvrir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j3_nudge": {
+        "subject": "CR IA — 3 jours : et si vous dictiez le premier ?",
+        "tagline": "Premier CR assisté",
+        "preheader": "Aucun usage IA détecté — 3 minutes pour le premier CR.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Le suivi CR IA a démarré il y a {days} jours sur {practiceName}, sans usage encore.",
+        "detail": "Ouvrez une visite → dictez (Pro Light) ou uploadez l’audio (Web) → Improve → finalisez.\nTrois CR suffisent pour ancrer le geste.",
+        "cta": "Aller au calendrier / dashboard",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j7_nudge": {
+        "subject": "CR IA — J7 : on vous aide à démarrer",
+        "tagline": "Relance adoption",
+        "preheader": "Toujours 0 CR IA — on est là pour vous.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "À J+{days}, aucun CR assisté n’a encore été détecté pour {practiceName}.",
+        "detail": "Bloqueur fréquent : micro, consentement oral, ou manque de temps. Votre commercial peut vous accompagner 15 min.\nFenêtre ROI jusqu’au {trialEnds} ({daysLeft} j restants).",
+        "cta": "Ouvrir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j14_nps": {
+        "subject": "CR IA — votre avis à 2 semaines ?",
+        "tagline": "Feedback J14",
+        "preheader": "Notez le module en 10 secondes.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Deux semaines de suivi sur {practiceName} — comment ça se passe ?",
+        "detail": "Sur le tableau de bord, notez de 0 à 10 et indiquez d’éventuelles frictions (audio, qualité, temps…). Ça nous aide à améliorer le produit.",
+        "cta": "Donner mon avis",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j15_digest": {
+        "subject": "CR IA — bilan usage J15",
+        "tagline": "Digest usage",
+        "preheader": "{finalize} CR finalisés assistés depuis l’activation.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Voici l’usage CR IA de {practiceName} depuis l’activation (J+{days}).",
+        "detail": "• Transcriptions : {transcribe}\n• Améliorations : {improve}\n• CR finalisés assistés : {finalize}\n\nContinuez à dicter : le bilan ROI arrive à J60.",
+        "cta": "Voir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j30_digest": {
+        "subject": "CR IA — un mois d’usage, où en êtes-vous ?",
+        "tagline": "Digest J30",
+        "preheader": "Usage : {finalize} CR finalisés assistés.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Un mois de suivi CR IA pour {practiceName} (J+{days}).",
+        "detail": "• Transcriptions : {transcribe}\n• Améliorations : {improve}\n• CR finalisés assistés : {finalize}\n\nDans 30 jours : preuve ROI (temps gagné estimé).",
+        "cta": "Voir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j45_nps": {
+        "subject": "CR IA — mi-parcours : note + usage",
+        "tagline": "Feedback J45",
+        "preheader": "NPS + digest avant la preuve ROI J60.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "À mi-parcours (J+{days}) pour {practiceName} — {daysLeft} j restants jusqu’au {trialEnds}.",
+        "detail": "Usage : {transcribe} transcriptions · {improve} improve · {finalize} CR finalisés.\n\nNotez le module (0–10) sur le dashboard et signalez les frictions. Le bilan ROI arrive à J60.",
+        "cta": "Noter le module",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j60_roi": {
+        "subject": "CR IA — votre bilan ROI (J60)",
+        "tagline": "Preuve de valeur",
+        "preheader": "~{minutesSaved} min gagnées estimées.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "À J+{days}, voici l’estimation de temps gagné pour {practiceName}.",
+        "detail": "• CR finalisés assistés : {crsIA}\n• Temps gagné estimé : {minutesSaved} minutes\n• Équivalent net estimé : ~{euroNet} €\n\n(Estimation indicative — baseline cabinet.)\nLe CR IA reste inclus dans votre offre Pro.",
+        "cta": "Voir le ROI sur le dashboard",
+        "disclaimer": "Email automatique petsFollow Pro — estimation non contractuelle."
+      },
+      "j75_convert": {
+        "subject": "CR IA — poursuite du suivi ROI",
+        "tagline": "Suivi adoption",
+        "preheader": "Fenêtre ROI jusqu’au {trialEnds} — CR IA inclus dans Pro.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Le suivi ROI pour {practiceName} se poursuit jusqu’au {trialEnds} ({daysLeft} j).",
+        "detail": "Bilan estimé : ~{minutesSaved} min / ~{euroNet} €.\nLe CR IA est inclus dans le SaaS Pro — aucun module payant séparé.\nContinuez à dicter et suivez l’adoption sur le dashboard.",
+        "cta": "Ouvrir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j85_urgency": {
+        "subject": "CR IA — fin de fenêtre ROI bientôt",
+        "tagline": "Rappel suivi",
+        "preheader": "Plus que {daysLeft} jours de fenêtre ROI — CR IA inclus.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "La fenêtre de suivi ROI de {practiceName} se termine le {trialEnds} ({daysLeft} j).",
+        "detail": "Le CR IA reste inclus dans Pro après cette date ; seule la fenêtre de preuve ROI se clôture.\nProfitez-en pour finaliser quelques CR assistés et consulter le bilan.",
+        "cta": "Voir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      },
+      "j90_last": {
+        "subject": "CR IA — fin de fenêtre ROI",
+        "tagline": "Fin fenêtre ROI",
+        "preheader": "Fin de la fenêtre ROI — le CR IA reste inclus dans Pro.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Fin de la fenêtre de suivi ROI pour {practiceName} ({trialEnds}).",
+        "detail": "Le CR IA (dictée / improve) reste inclus dans votre abonnement Pro.\nRetrouvez le bilan et l’historique d’usage sur le dashboard.",
+        "cta": "Ouvrir le tableau de bord",
+        "disclaimer": "Email automatique petsFollow Pro — CR IA inclus."
+      }
     },
     "support_ticket_ops_subject": "Support petsFollow — {subject}",
     "support_ticket_ops_tagline": "Nouveau ticket support",
@@ -645,7 +645,14 @@
     "visit_proposed_title": "Proposition de rendez-vous",
     "visit_proposed_body": "Votre vétérinaire propose un rendez-vous pour {petName}.",
     "visit_reschedule_title": "Déplacement de rendez-vous",
-    "visit_reschedule_body": "Un nouveau créneau est proposé pour {petName}."
+    "visit_reschedule_body": "Un nouveau créneau est proposé pour {petName}.",
+    "visit_reminder_title": "Rappel de rendez-vous",
+    "visit_reminder_body": "Le rendez-vous pour {petName} a lieu demain."
+  },
+  "sms": {
+    "visit_confirmed": "petsFollow : rendez-vous confirmé pour {petName} le {when}.",
+    "visit_reminder": "petsFollow : rappel, rendez-vous pour {petName} demain {when}.",
+    "visit_reschedule": "petsFollow : nouveau créneau proposé pour {petName} : {when}. Ouvrez l'app pour confirmer."
   },
   "billing": {
     "monthly_label": "3,50 € / mois",

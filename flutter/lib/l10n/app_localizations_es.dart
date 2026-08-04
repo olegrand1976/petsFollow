@@ -692,6 +692,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageIt => 'Italiano';
 
   @override
+  String get languageUk => 'Українська';
+
+  @override
+  String get languageRu => 'Русский';
+
+  @override
   String get appearance => 'Apariencia';
 
   @override

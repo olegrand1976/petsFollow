@@ -11,7 +11,7 @@ import (
 type VisitReportPromptInput struct {
 	CountryCode string
 	Specialty   kernel.ProfessionalSpecialty // empty = practice vet
-	// LocaleHint: empty/auto = keep source language; fr|nl|en|es|et|it = force output language.
+	// LocaleHint: empty/auto = keep source language; fr|nl|en|es|et|it|uk|ru = force output language.
 	LocaleHint string
 }
 
@@ -31,6 +31,10 @@ func ResolveVisitReportOutputLang(localeHint string) string {
 		return "estonien"
 	case "it":
 		return "italien"
+	case "uk":
+		return "ukrainien"
+	case "ru":
+		return "russe"
 	case "fr":
 		return "français"
 	default:
@@ -39,14 +43,14 @@ func ResolveVisitReportOutputLang(localeHint string) string {
 }
 
 // NormalizeVisitReportTargetLocale allowlists improve targetLocale.
-// Returns normalized code (auto|fr|nl|en|es|et|it) and false if unsupported.
+// Returns normalized code (auto|fr|nl|en|es|et|it|uk|ru) and false if unsupported.
 func NormalizeVisitReportTargetLocale(raw string) (string, bool) {
 	v := strings.ToLower(strings.TrimSpace(raw))
 	if v == "" || v == "auto" || v == "source" {
 		return "auto", true
 	}
 	switch v {
-	case "fr", "nl", "en", "es", "et", "it":
+	case "fr", "nl", "en", "es", "et", "it", "uk", "ru":
 		return v, true
 	default:
 		return "", false

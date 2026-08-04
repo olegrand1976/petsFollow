@@ -17,6 +17,12 @@ func TestMatchSupported(t *testing.T) {
 		{"it", "it", true},
 		{"IT", "it", true},
 		{"it-IT", "it", true},
+		{"uk", "uk", true},
+		{"UK", "uk", true},
+		{"uk-UA", "uk", true},
+		{"ru", "ru", true},
+		{"RU", "ru", true},
+		{"ru-RU", "ru", true},
 		{"fr-FR", "fr", true},
 		{"nl", "nl", true},
 		{"en-GB", "en", true},
@@ -44,5 +50,24 @@ func TestNormalizeLocaleFallsBackToFr(t *testing.T) {
 	}
 	if got := NormalizeLocale("it-IT"); got != "it" {
 		t.Fatalf("NormalizeLocale(it-IT) = %q, want it", got)
+	}
+	if got := NormalizeLocale("uk-UA"); got != "uk" {
+		t.Fatalf("NormalizeLocale(uk-UA) = %q, want uk", got)
+	}
+	if got := NormalizeLocale("ru-RU"); got != "ru" {
+		t.Fatalf("NormalizeLocale(ru-RU) = %q, want ru", got)
+	}
+}
+
+func TestIsCyrillicLocale(t *testing.T) {
+	for _, loc := range []string{"uk", "ru", "uk-UA", "RU"} {
+		if !IsCyrillicLocale(loc) {
+			t.Errorf("IsCyrillicLocale(%q) = false, want true", loc)
+		}
+	}
+	for _, loc := range []string{"fr", "nl", "en", "es", "et", "it", "xx"} {
+		if IsCyrillicLocale(loc) {
+			t.Errorf("IsCyrillicLocale(%q) = true, want false", loc)
+		}
 	}
 }

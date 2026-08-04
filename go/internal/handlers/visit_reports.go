@@ -35,7 +35,7 @@ type visitReportBodyReq struct {
 type visitReportImproveReq struct {
 	// Optional override: improve from this text without requiring a prior PUT that overwrites body.
 	SourceText string `json:"sourceText,omitempty"`
-	// TargetLocale: empty/auto = keep source/transcription language; fr|nl|en|es|et|it = force translation.
+	// TargetLocale: empty/auto = keep source/transcription language; fr|nl|en|es|et|it|uk|ru = force translation.
 	TargetLocale string `json:"targetLocale,omitempty"`
 }
 

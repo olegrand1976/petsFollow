@@ -8,7 +8,9 @@ class LocaleController extends ChangeNotifier {
   static final instance = LocaleController._();
 
   static const _prefKey = 'pf_locale';
-  static const supportedCodes = ['fr', 'nl', 'en', 'es', 'et', 'it'];
+  // Miroir des app_*.arb présents : `test/l10n/arb_parity_test.dart` échoue si
+  // cette liste et AppLocalizations.supportedLocales divergent.
+  static const supportedCodes = ['fr', 'nl', 'en', 'es', 'et', 'it', 'uk', 'ru'];
   Locale _locale = const Locale('fr');
 
   Locale get locale => _locale;

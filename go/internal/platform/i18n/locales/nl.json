@@ -345,7 +345,7 @@
         "preheader": "Kort overzicht van wat petsFollow omvat.",
         "greeting": "Hallo {fullName},",
         "intro": "Al 14 dagen: metingen, berichten, tijdlijn en herinneringen zitten in uw dierenabonnement. Blijf meten volgens de richtlijnen van de praktijk.",
-        "detail": "Inbegrepen: metingen 15/30/60 s · berichten + push · tijdlijn · herinneringen · FR/NL/EN/ES/ET/IT",
+        "detail": "Inbegrepen: metingen 15/30/60 s · berichten + push · tijdlijn · herinneringen · FR/NL/EN/ES/ET/IT/UK/RU",
         "cta": "Verder in de app",
         "disclaimer": "Bedankt dat u petsFollow vertrouwt voor de opvolging van uw dier."
       },
@@ -468,117 +468,117 @@
     "visit_confirmed_affiliate_cta": "Word lid van petsFollow",
     "visit_confirmed_affiliate_disclaimer": "Als u deze e-mail niet verwachtte, kunt u ze negeren.",
     "ai_cr_adhesion": {
-        "fallback_name": "Doctor",
-        "j0_activation": {
-          "subject": "AI visit reports included in Pro — track adoption",
-          "tagline": "AI visit reports",
-          "preheader": "AI visit reports included in Pro — ROI tracked from day 60.",
-          "greeting": "Hello {fullName},",
-          "intro": "AI visit reports are included in Pro SaaS for {practiceName}. ROI tracking window until {trialEnds}.",
-          "detail": "Anchor the habit: complete 3 AI-assisted reports this week (Pro Light dictation or Web upload).\n\nFrom day 60, your time-saved ROI appears on the dashboard.\nAI visit reports are part of your Pro subscription — no separate paid module.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j3_nudge": {
-          "subject": "AI CR — day 3: try your first dictation",
-          "tagline": "First assisted report",
-          "preheader": "No AI usage yet — 3 minutes for the first report.",
-          "greeting": "Hello {fullName},",
-          "intro": "AI CR tracking started {days} days ago for {practiceName}, with no usage yet.",
-          "detail": "Open a visit → dictate (Pro Light) or upload audio (Web) → Improve → finalize.\nThree reports are enough to build the habit.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j7_nudge": {
-          "subject": "AI CR — day 7: let’s get you started",
-          "tagline": "Adoption nudge",
-          "preheader": "Still 0 AI reports — we can help.",
-          "greeting": "Hello {fullName},",
-          "intro": "At day {days}, no assisted reports yet for {practiceName}.",
-          "detail": "Common blockers: mic, oral consent, or time. Your sales rep can help for 15 minutes.\nROI window until {trialEnds} ({daysLeft} days left).",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j14_nps": {
-          "subject": "AI CR — how is it going after 2 weeks?",
-          "tagline": "Feedback day 14",
-          "preheader": "Rate the module in 10 seconds.",
-          "greeting": "Hello {fullName},",
-          "intro": "Two weeks of tracking for {practiceName} — how is it going?",
-          "detail": "On the dashboard, score 0–10 and flag any friction (audio, quality, time…). It helps us improve the product.",
-          "cta": "Give feedback",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j15_digest": {
-          "subject": "AI CR — usage digest day 15",
-          "tagline": "Usage digest",
-          "preheader": "{finalize} assisted finalized reports since activation.",
-          "greeting": "Hello {fullName},",
-          "intro": "AI CR usage for {practiceName} since activation (day {days}).",
-          "detail": "• Transcriptions: {transcribe}\n• Improvements: {improve}\n• Assisted finalized reports: {finalize}\n\nKeep dictating — ROI proof arrives at day 60.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j30_digest": {
-          "subject": "AI CR — one month in",
-          "tagline": "Digest day 30",
-          "preheader": "Usage: {finalize} assisted finalized reports.",
-          "greeting": "Hello {fullName},",
-          "intro": "One month of AI CR tracking for {practiceName} (day {days}).",
-          "detail": "• Transcriptions: {transcribe}\n• Improvements: {improve}\n• Assisted finalized reports: {finalize}\n\nIn 30 days: ROI proof (estimated time saved).",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j45_nps": {
-          "subject": "AI CR — mid-window feedback + usage",
-          "tagline": "Feedback day 45",
-          "preheader": "NPS + digest before day-60 ROI.",
-          "greeting": "Hello {fullName},",
-          "intro": "Mid-window (day {days}) for {practiceName} — {daysLeft} days left until {trialEnds}.",
-          "detail": "Usage: {transcribe} transcriptions · {improve} improve · {finalize} finalized.\n\nRate 0–10 on the dashboard and flag friction. ROI lands at day 60.",
-          "cta": "Rate the module",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j60_roi": {
-          "subject": "AI CR — your ROI summary (day 60)",
-          "tagline": "Value proof",
-          "preheader": "~{minutesSaved} min saved (estimate).",
-          "greeting": "Hello {fullName},",
-          "intro": "At day {days}, here is the estimated time saved for {practiceName}.",
-          "detail": "• Assisted finalized reports: {crsIA}\n• Estimated time saved: {minutesSaved} minutes\n• Estimated net equivalent: ~€{euroNet}\n\n(Indicative estimate — practice baseline.)\nAI visit reports remain included in your Pro offer.",
-          "cta": "View ROI on dashboard",
-          "disclaimer": "Automated petsFollow Pro email — non-binding estimate."
-        },
-        "j75_convert": {
-          "subject": "AI CR — keep tracking ROI",
-          "tagline": "Adoption follow-up",
-          "preheader": "ROI window until {trialEnds} — AI CR included in Pro.",
-          "greeting": "Hello {fullName},",
-          "intro": "ROI tracking for {practiceName} continues until {trialEnds} ({daysLeft} days).",
-          "detail": "Estimated summary: ~{minutesSaved} min / ~€{euroNet}.\nAI visit reports are included in Pro SaaS — no separate paid module.\nKeep dictating and track adoption on the dashboard.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j85_urgency": {
-          "subject": "AI CR — ROI window ending soon",
-          "tagline": "Tracking reminder",
-          "preheader": "{daysLeft} days left in the ROI window — AI CR included.",
-          "greeting": "Hello {fullName},",
-          "intro": "The ROI tracking window for {practiceName} ends on {trialEnds} ({daysLeft} days).",
-          "detail": "AI visit reports stay included in Pro after this date; only the ROI proof window closes.\nUse the remaining days to finalize a few assisted reports and review the summary.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        },
-        "j90_last": {
-          "subject": "AI CR — ROI window ended",
-          "tagline": "ROI window end",
-          "preheader": "ROI window ended — AI visit reports stay included in Pro.",
-          "greeting": "Hello {fullName},",
-          "intro": "The ROI tracking window for {practiceName} ended ({trialEnds}).",
-          "detail": "Dictate / improve AI remains included in your Pro subscription.\nFind the summary and usage history on the dashboard.",
-          "cta": "Open dashboard",
-          "disclaimer": "Automated petsFollow Pro email — AI CR included."
-        }
+      "fallback_name": "Doctor",
+      "j0_activation": {
+        "subject": "AI visit reports included in Pro — track adoption",
+        "tagline": "AI visit reports",
+        "preheader": "AI visit reports included in Pro — ROI tracked from day 60.",
+        "greeting": "Hello {fullName},",
+        "intro": "AI visit reports are included in Pro SaaS for {practiceName}. ROI tracking window until {trialEnds}.",
+        "detail": "Anchor the habit: complete 3 AI-assisted reports this week (Pro Light dictation or Web upload).\n\nFrom day 60, your time-saved ROI appears on the dashboard.\nAI visit reports are part of your Pro subscription — no separate paid module.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j3_nudge": {
+        "subject": "AI CR — day 3: try your first dictation",
+        "tagline": "First assisted report",
+        "preheader": "No AI usage yet — 3 minutes for the first report.",
+        "greeting": "Hello {fullName},",
+        "intro": "AI CR tracking started {days} days ago for {practiceName}, with no usage yet.",
+        "detail": "Open a visit → dictate (Pro Light) or upload audio (Web) → Improve → finalize.\nThree reports are enough to build the habit.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j7_nudge": {
+        "subject": "AI CR — day 7: let’s get you started",
+        "tagline": "Adoption nudge",
+        "preheader": "Still 0 AI reports — we can help.",
+        "greeting": "Hello {fullName},",
+        "intro": "At day {days}, no assisted reports yet for {practiceName}.",
+        "detail": "Common blockers: mic, oral consent, or time. Your sales rep can help for 15 minutes.\nROI window until {trialEnds} ({daysLeft} days left).",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j14_nps": {
+        "subject": "AI CR — how is it going after 2 weeks?",
+        "tagline": "Feedback day 14",
+        "preheader": "Rate the module in 10 seconds.",
+        "greeting": "Hello {fullName},",
+        "intro": "Two weeks of tracking for {practiceName} — how is it going?",
+        "detail": "On the dashboard, score 0–10 and flag any friction (audio, quality, time…). It helps us improve the product.",
+        "cta": "Give feedback",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j15_digest": {
+        "subject": "AI CR — usage digest day 15",
+        "tagline": "Usage digest",
+        "preheader": "{finalize} assisted finalized reports since activation.",
+        "greeting": "Hello {fullName},",
+        "intro": "AI CR usage for {practiceName} since activation (day {days}).",
+        "detail": "• Transcriptions: {transcribe}\n• Improvements: {improve}\n• Assisted finalized reports: {finalize}\n\nKeep dictating — ROI proof arrives at day 60.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j30_digest": {
+        "subject": "AI CR — one month in",
+        "tagline": "Digest day 30",
+        "preheader": "Usage: {finalize} assisted finalized reports.",
+        "greeting": "Hello {fullName},",
+        "intro": "One month of AI CR tracking for {practiceName} (day {days}).",
+        "detail": "• Transcriptions: {transcribe}\n• Improvements: {improve}\n• Assisted finalized reports: {finalize}\n\nIn 30 days: ROI proof (estimated time saved).",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j45_nps": {
+        "subject": "AI CR — mid-window feedback + usage",
+        "tagline": "Feedback day 45",
+        "preheader": "NPS + digest before day-60 ROI.",
+        "greeting": "Hello {fullName},",
+        "intro": "Mid-window (day {days}) for {practiceName} — {daysLeft} days left until {trialEnds}.",
+        "detail": "Usage: {transcribe} transcriptions · {improve} improve · {finalize} finalized.\n\nRate 0–10 on the dashboard and flag friction. ROI lands at day 60.",
+        "cta": "Rate the module",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j60_roi": {
+        "subject": "AI CR — your ROI summary (day 60)",
+        "tagline": "Value proof",
+        "preheader": "~{minutesSaved} min saved (estimate).",
+        "greeting": "Hello {fullName},",
+        "intro": "At day {days}, here is the estimated time saved for {practiceName}.",
+        "detail": "• Assisted finalized reports: {crsIA}\n• Estimated time saved: {minutesSaved} minutes\n• Estimated net equivalent: ~€{euroNet}\n\n(Indicative estimate — practice baseline.)\nAI visit reports remain included in your Pro offer.",
+        "cta": "View ROI on dashboard",
+        "disclaimer": "Automated petsFollow Pro email — non-binding estimate."
+      },
+      "j75_convert": {
+        "subject": "AI CR — keep tracking ROI",
+        "tagline": "Adoption follow-up",
+        "preheader": "ROI window until {trialEnds} — AI CR included in Pro.",
+        "greeting": "Hello {fullName},",
+        "intro": "ROI tracking for {practiceName} continues until {trialEnds} ({daysLeft} days).",
+        "detail": "Estimated summary: ~{minutesSaved} min / ~€{euroNet}.\nAI visit reports are included in Pro SaaS — no separate paid module.\nKeep dictating and track adoption on the dashboard.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j85_urgency": {
+        "subject": "AI CR — ROI window ending soon",
+        "tagline": "Tracking reminder",
+        "preheader": "{daysLeft} days left in the ROI window — AI CR included.",
+        "greeting": "Hello {fullName},",
+        "intro": "The ROI tracking window for {practiceName} ends on {trialEnds} ({daysLeft} days).",
+        "detail": "AI visit reports stay included in Pro after this date; only the ROI proof window closes.\nUse the remaining days to finalize a few assisted reports and review the summary.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      },
+      "j90_last": {
+        "subject": "AI CR — ROI window ended",
+        "tagline": "ROI window end",
+        "preheader": "ROI window ended — AI visit reports stay included in Pro.",
+        "greeting": "Hello {fullName},",
+        "intro": "The ROI tracking window for {practiceName} ended ({trialEnds}).",
+        "detail": "Dictate / improve AI remains included in your Pro subscription.\nFind the summary and usage history on the dashboard.",
+        "cta": "Open dashboard",
+        "disclaimer": "Automated petsFollow Pro email — AI CR included."
+      }
     },
     "support_ticket_ops_subject": "petsFollow Support — {subject}",
     "support_ticket_ops_tagline": "Nieuw supportticket",
@@ -645,7 +645,14 @@
     "visit_proposed_title": "Afspraakvoorstel",
     "visit_proposed_body": "Uw dierenarts stelde een afspraak voor {petName} voor.",
     "visit_reschedule_title": "Afspraak verplaatsen",
-    "visit_reschedule_body": "Er werd een nieuw tijdstip voorgesteld voor {petName}."
+    "visit_reschedule_body": "Er werd een nieuw tijdstip voorgesteld voor {petName}.",
+    "visit_reminder_title": "Afspraakherinnering",
+    "visit_reminder_body": "De afspraak voor {petName} is morgen."
+  },
+  "sms": {
+    "visit_confirmed": "petsFollow: afspraak voor {petName} bevestigd op {when}.",
+    "visit_reminder": "petsFollow: herinnering, afspraak voor {petName} morgen {when}.",
+    "visit_reschedule": "petsFollow: nieuw voorstel voor {petName}: {when}. Open de app om te bevestigen."
   },
   "billing": {
     "monthly_label": "3,50 € / maand",

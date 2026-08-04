@@ -13,6 +13,9 @@ export default defineNuxtConfig({
       { code: 'es', language: 'es-ES', files: ['es.json', 'presentation/es.json', 'ai-flows/es.json'] },
       { code: 'et', language: 'et-EE', files: ['et.json', 'presentation/et.json', 'ai-flows/et.json'] },
       { code: 'it', language: 'it-IT', files: ['it.json', 'presentation/it.json', 'ai-flows/it.json'] },
+      // uk / ru : supportés côté API (SMS + push clients Flutter) mais pas encore
+      // sur la face Pro — le catalogue Nuxt (3702 clés) n'est pas traduit. Ne les
+      // réactiver ici qu'avec locales/{uk,ru}.json + presentation/ + ai-flows/.
     ],
     defaultLocale: 'fr',
     strategy: 'no_prefix',

@@ -89,7 +89,8 @@
     "researchGroups": "Grupid",
     "researchDataroom": "Data room",
     "productFlows": "Tootevoogud",
-    "aiFlows": "AI vood"
+    "aiFlows": "AI vood",
+    "adminInvoicing": "Billiti arveldus"
   },
   "auth": {
     "login": {
@@ -360,7 +361,9 @@
       "es": "Español",
       "et": "Eesti",
       "saved": "Keel salvestatud.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Hingamissageduse mõõtmine",
@@ -978,7 +981,33 @@
     "relatedInvoicePlaceholder": "Vali arve…",
     "relatedInvoiceEmpty": "Väljastatud/kohale toimetatud arvet pole — saatke esmalt arve.",
     "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve.",
-    "prefillDafAmount": "Hinnanguline summa ilma KM {amount} € (laohinnad)"
+    "prefillDafAmount": "Hinnanguline summa ilma KM {amount} € (laohinnad)",
+    "counterparty": {
+      "name": "Klient",
+      "country": "Riik",
+      "vatNumber": "KMKR number",
+      "companyNumber": "Registrikood (valikuline)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 tähemärki)",
+      "pec": "PEC (sertifitseeritud e-post)",
+      "taxId": "NIF / CIF",
+      "street": "Tänav",
+      "postal": "Postiindeks",
+      "city": "Linn"
+    },
+    "create": "Loo arve",
+    "createDocument": "Loo dokument",
+    "docType": "Dokumendi tüüp",
+    "lineAmountExcl": "Summa käibemaksuta (€)",
+    "lineDescription": "Rida — kirjeldus",
+    "newDocument": "Uus dokument",
+    "prefillDafLines": "{n} DAF-i rida",
+    "prefillDirect": "Otsearveldus pärast konsultatsiooni",
+    "prefillFromDaf": "Eeltäidetud DAF-ist",
+    "typeCreditNote": "Kreeditarve",
+    "typeInvoice": "Arve",
+    "typeProforma": "Proforma / pakkumus"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiootikum",
@@ -1094,7 +1123,12 @@
         "na": "N/A"
       },
       "fromConsultation": "Konsultatsioonist",
-      "backToConsultations": "Tagasi konsultatsioonide juurde"
+      "backToConsultations": "Tagasi konsultatsioonide juurde",
+      "contextBanner": "Konsultatsiooni kontekst: {context}",
+      "contextClient": "Klient",
+      "contextPet": "Loom",
+      "contextVisit": "Seotud visiit",
+      "goInvoice": "Arveta"
     },
     "errors": {
       "daf_vamreg_already_sent": "Tühistamine võimatu: VAMReg deklaratsioon on juba saadetud.",
@@ -2261,7 +2295,7 @@
       }
     },
     "autofinanceTip": "≈ 8 kolmeaastast kliendi aktiveerimist / kuu ≈ katab Pro kuu ekvivalendi (≈ 69,56 € KM-ta).",
-    "clientIncludedLine": "Igas plaanis: pass, sõnumid + push, RR 15/30/60 s, Care/Horse, kodu, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Igas plaanis: pass, sõnumid + push, RR 15/30/60 s, Care/Horse, kodu, FR/NL/EN/ES/ET/IT/UK/RU."
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
@@ -2308,7 +2342,7 @@
       "Juhendatud hingamissageduse mõõtmised 15 / 30 / 60 s",
       "Care / Horse / leibkond kaasatud alates maksvast loomast"
     ],
-    "includedLine": "Kaasatud igas plaanis: pass, sõnumside + push, RR mõõtmised, Care/Horse meeldetuletused, leibkond, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Kaasatud igas plaanis: pass, sõnumside + push, RR mõõtmised, Care/Horse meeldetuletused, leibkond, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Isefinantseerimine ja kohustused",
     "partnerLead": "Komisjonid aktiveerimistelt kompenseerivad Pro tellimuse (offline arveldus).",
     "partnerSteps": [
@@ -2346,7 +2380,7 @@
       "Turvaline sõnumside klient ↔ loomaarst + push-teavitused",
       "Care meeldetuletused (standard, ravimid, isiklik) ja hobuste pakett vajadusel",
       "Leibkonna vaade ja mitme looma kodeerimine",
-      "Keeled FR / NL / EN / ES / ET / IT"
+      "Keeled FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Kliendi tellimused looma kohta (km-ga)",
     "plansLead": "Üks tellimus jälgitava looma kohta. Stripe-makse omaniku poolel.",
@@ -3020,7 +3054,7 @@
       "client1": "Pass / terviseraamat alati taskus",
       "client2": "Sõnumside kliinikuga + push",
       "client3": "Care meeldetuletused ja Horse pack kaasas",
-      "client4": "Mitme looma kodu — 6 keelt",
+      "client4": "Mitme looma kodu — 8 keelt",
       "offerTitle": "Pakkumine (ülevaade)",
       "offerProLabel": "Pro SaaS (ilma KM, offline arveldus)",
       "offerProAnnual": "834,71 € / aasta (≈ 69,56 € / kuu)",
@@ -3320,7 +3354,9 @@
     "reportQualityThanks": "Aitäh — see täiustab mudelit",
     "reportMarkReference": "Viitekonsultatsioon (pidev täiustamine)",
     "reportReferenceOn": "Märgitud viitekonsultatsiooniks",
-    "reportReferenceOff": "Eemaldatud viitekonsultatsioonidest"
+    "reportReferenceOff": "Eemaldatud viitekonsultatsioonidest",
+    "reportTargetLangUk": "Ukraina",
+    "reportTargetLangRu": "Vene"
   },
   "manager": {
     "dashboard": {

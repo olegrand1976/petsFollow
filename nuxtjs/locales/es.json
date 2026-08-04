@@ -89,7 +89,8 @@
     "researchGroups": "Grupos",
     "researchDataroom": "Data room",
     "productFlows": "Flujos producto",
-    "aiFlows": "Flujos IA"
+    "aiFlows": "Flujos IA",
+    "adminInvoicing": "Facturación Billit"
   },
   "auth": {
     "login": {
@@ -360,7 +361,9 @@
       "es": "Español",
       "et": "Eesti",
       "saved": "Idioma guardado.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Lectura de frecuencia respiratoria",
@@ -978,7 +981,33 @@
     "relatedInvoicePlaceholder": "Elegir una factura…",
     "relatedInvoiceEmpty": "No hay factura emitida/entregada — envíe primero una factura.",
     "relatedInvoiceRequired": "Seleccione la factura vinculada a esta nota de crédito.",
-    "prefillDafAmount": "Importe HT estimado {amount} € (precios stock)"
+    "prefillDafAmount": "Importe HT estimado {amount} € (precios stock)",
+    "counterparty": {
+      "name": "Cliente",
+      "country": "País",
+      "vatNumber": "N.º de IVA",
+      "companyNumber": "Número de empresa (opcional)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 car.)",
+      "pec": "PEC (correo certificado)",
+      "taxId": "NIF / CIF",
+      "street": "Calle",
+      "postal": "Código postal",
+      "city": "Ciudad"
+    },
+    "create": "Crear la factura",
+    "createDocument": "Crear el documento",
+    "docType": "Tipo de documento",
+    "lineAmountExcl": "Importe sin IVA (€)",
+    "lineDescription": "Línea — descripción",
+    "newDocument": "Nuevo documento",
+    "prefillDafLines": "{n} línea(s) DAF",
+    "prefillDirect": "Facturación directa tras la consulta",
+    "prefillFromDaf": "Rellenado desde un DAF",
+    "typeCreditNote": "Nota de crédito",
+    "typeInvoice": "Factura",
+    "typeProforma": "Proforma / presupuesto"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiótico",
@@ -1094,7 +1123,12 @@
         "na": "N/D"
       },
       "fromConsultation": "Desde una consulta",
-      "backToConsultations": "Volver a consultas"
+      "backToConsultations": "Volver a consultas",
+      "contextBanner": "Contexto de la consulta: {context}",
+      "contextClient": "Cliente",
+      "contextPet": "Animal",
+      "contextVisit": "Visita vinculada",
+      "goInvoice": "Facturar"
     },
     "errors": {
       "daf_vamreg_already_sent": "No se puede anular: declaración VAMReg ya enviada.",
@@ -2261,7 +2295,7 @@
       }
     },
     "autofinanceTip": "≈ 8 activaciones cliente trienales / mes ≈ cubren el equivalente mensual Pro (≈ 69,56 € sin IVA).",
-    "clientIncludedLine": "Incluido en cualquier plan: pasaporte, mensajería + push, lecturas FR 15/30/60 s, Care/Horse, hogar, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Incluido en cualquier plan: pasaporte, mensajería + push, lecturas FR 15/30/60 s, Care/Horse, hogar, FR/NL/EN/ES/ET/IT/UK/RU."
   },
   "products": {
     "seoTitle": "petsFollow — Oferta profesional",
@@ -2308,7 +2342,7 @@
       "Lecturas respiratorias guiadas 15 / 30 / 60 s",
       "Care / Horse / hogar incluidos desde animal de pago"
     ],
-    "includedLine": "Incluido en cualquier plan: pasaporte, mensajería + push, lecturas FR, recordatorios Care/Horse, hogar, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Incluido en cualquier plan: pasaporte, mensajería + push, lecturas FR, recordatorios Care/Horse, hogar, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Autofinanciación y compromisos",
     "partnerLead": "Las comisiones por activaciones compensan la suscripción Pro (liquidación offline).",
     "partnerSteps": [
@@ -2346,7 +2380,7 @@
       "Mensajería segura cliente ↔ veterinario + notificaciones push",
       "Recordatorios Care (estándar, medicamentos, personal) y pack equino si caballo",
       "Vista hogar y multicodificación de animales",
-      "Idiomas FR / NL / EN / ES / ET / IT"
+      "Idiomas FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Suscripciones clientes por animal (IVA incl.)",
     "plansLead": "Una suscripción por animal seguido. Pago Stripe del propietario.",
@@ -3020,7 +3054,7 @@
       "client1": "Pasaporte / cartilla siempre en el bolsillo",
       "client2": "Mensajería con la clínica + push",
       "client3": "Recordatorios Care y pack Horse incluidos",
-      "client4": "Hogar multi-mascotas — 6 idiomas",
+      "client4": "Hogar multi-mascotas — 8 idiomas",
       "offerTitle": "Oferta (resumen)",
       "offerProLabel": "SaaS Pro (sin IVA, facturación offline)",
       "offerProAnnual": "834,71 € / año (≈ 69,56 € / mes)",
@@ -3320,7 +3354,9 @@
     "reportQualityThanks": "Gracias — esto mejora el modelo",
     "reportMarkReference": "Consulta de referencia (mejora continua)",
     "reportReferenceOn": "Marcada como consulta de referencia",
-    "reportReferenceOff": "Retirada de consultas de referencia"
+    "reportReferenceOff": "Retirada de consultas de referencia",
+    "reportTargetLangUk": "Ucraniano",
+    "reportTargetLangRu": "Ruso"
   },
   "manager": {
     "dashboard": {

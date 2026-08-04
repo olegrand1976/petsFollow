@@ -89,7 +89,8 @@
     "researchGroups": "Groepen",
     "researchDataroom": "Data room",
     "productFlows": "Productstromen",
-    "aiFlows": "AI-stromen"
+    "aiFlows": "AI-stromen",
+    "adminInvoicing": "Billit-facturatie"
   },
   "auth": {
     "login": {
@@ -360,7 +361,9 @@
       "es": "Español",
       "et": "Eesti",
       "saved": "Taal opgeslagen.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Ademhalingsmeting",
@@ -2292,7 +2295,7 @@
       }
     },
     "autofinanceTip": "≈ 8 driejarige cliëntactivaties / maand ≈ dekt het maandelijkse Pro-equivalent (≈ 69,56 € excl. btw).",
-    "clientIncludedLine": "Inbegrepen bij elk plan: paspoort, berichten + push, AF 15/30/60 s, Care/Horse, huishouden, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Inbegrepen bij elk plan: paspoort, berichten + push, AF 15/30/60 s, Care/Horse, huishouden, FR/NL/EN/ES/ET/IT/UK/RU."
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
@@ -2339,7 +2342,7 @@
       "Begeleide hartmetingen 15 / 30 / 60 s",
       "Care / Horse / huishouden inbegrepen zodra het dier betaalt"
     ],
-    "includedLine": "Inbegrepen ongeacht het plan: paspoort, berichten + push, AF-metingen, Care/Horse-herinneringen, huishouden, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Inbegrepen ongeacht het plan: paspoort, berichten + push, AF-metingen, Care/Horse-herinneringen, huishouden, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Zelffinanciering & verbintenissen",
     "partnerLead": "Commissies op cliëntactivaties compenseren het Pro-abonnement (offline verrekening).",
     "partnerSteps": [
@@ -2377,7 +2380,7 @@
       "Veilige berichten cliënt ↔ dierenarts + pushmeldingen",
       "Care-herinneringen (standaard, medicatie, persoonlijk) en equine pack indien paard",
       "Huishoudenweergave en multi-dier encoding",
-      "Talen FR / NL / EN / ES / ET / IT"
+      "Talen FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Cliëntabonnementen per dier (incl. btw)",
     "plansLead": "Eén abonnement per opgevolgd dier. Stripe-betaling aan eigenaarszijde.",
@@ -3051,7 +3054,7 @@
       "client1": "Paspoort / gezondheidsboekje altijd op zak",
       "client2": "Messaging met de praktijk + push",
       "client3": "Care-herinneringen en Horse-pack inbegrepen",
-      "client4": "Multi-dier huishouden — 6 talen",
+      "client4": "Multi-dier huishouden — 8 talen",
       "offerTitle": "Aanbod (overzicht)",
       "offerProLabel": "Pro SaaS (excl. btw, offline facturatie)",
       "offerProAnnual": "834,71 € / jaar (≈ 69,56 € / maand)",
@@ -3351,7 +3354,9 @@
     "reportQualityThanks": "Bedankt — dit verbetert het model",
     "reportMarkReference": "Referentieconsultatie (continue verbetering)",
     "reportReferenceOn": "Gemarkeerd als referentieconsultatie",
-    "reportReferenceOff": "Verwijderd uit referentieconsultaties"
+    "reportReferenceOff": "Verwijderd uit referentieconsultaties",
+    "reportTargetLangUk": "Oekraïens",
+    "reportTargetLangRu": "Russisch"
   },
   "manager": {
     "dashboard": {

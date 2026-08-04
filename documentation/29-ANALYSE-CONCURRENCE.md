@@ -21,7 +21,7 @@ Fichier machine-readable :
 2. **Sources** : sites publics, grilles affichées, observations terrain commercial, documentation interne tarifaire petsFollow ([17-POLITIQUE-TARIFAIRE](17-POLITIQUE-TARIFAIRE.md), [22-FICHE-PRODUIT-COMMERCIAL](22-FICHE-PRODUIT-COMMERCIAL.md)).
 3. **Prix** : si non publics → `rangeHint` / notes = **« sur devis »**. Pas d’invention de montants cabinet. Exception BE : **Pégase/ByVets** publie une grille (~856 € HTVA/an sur [byvets.be/souscrire](https://www.byvets.be/souscrire)).
 4. **Ton** : factuel, complémentaire vs substitutif quand le concurrent est un PMS ; distinguer clairement **GPS / wellness grand public** vs **continuité de soins prescrite** (FR = feature, pas identité).
-5. **Angle petsFollow (récurrent)** : **Pro (Web) · Pro Light (mobile) · app client (mobile)** · prescription véto · B2B2C · Pro **834,71 € HTVA/an** (+ setup ; triennal −10 %) · client **3,50 / 35 / 95 €** · Care/Horse inclus · relevés FR en feature · 6 langues (FR/NL/EN/ES/ET/IT).
+5. **Angle petsFollow (récurrent)** : **Pro (Web) · Pro Light (mobile) · app client (mobile)** · prescription véto · B2B2C · Pro **834,71 € HTVA/an** (+ setup ; triennal −10 %) · client **3,50 / 35 / 95 €** · Care/Horse inclus · relevés FR en feature · 8 langues côté apps mobiles (FR/NL/EN/ES/ET/IT/UK/RU ; Web Pro à 6).
 
 ## Caveats
 

@@ -7,7 +7,20 @@ import (
 
 type ctxKey struct{}
 
-var Supported = []string{"fr", "nl", "en", "es", "et", "it"}
+var Supported = []string{"fr", "nl", "en", "es", "et", "it", "uk", "ru"}
+
+// cyrillicLocales lists the supported locales written in the Cyrillic script.
+// They matter wherever the output medium is charset-bound:
+//   - SMS: Cyrillic is outside GSM-7, so a message falls back to UCS-2 and a
+//     single segment holds 70 characters instead of 160.
+//   - PDF: the gofpdf core fonts encode cp1252, which has no Cyrillic — those
+//     generators must register a UTF-8 TTF instead.
+var cyrillicLocales = map[string]bool{"uk": true, "ru": true}
+
+// IsCyrillicLocale reports whether loc is rendered in the Cyrillic script.
+func IsCyrillicLocale(loc string) bool {
+	return cyrillicLocales[NormalizeLocale(loc)]
+}
 
 func NormalizeLocale(raw string) string {
 	if loc, ok := MatchSupported(raw); ok {

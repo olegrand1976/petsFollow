@@ -111,19 +111,25 @@ make smoke
 - **Purge RGPD (one-shot ops)** : après premier deploy du câblage secret, exécuter `RETENTION_PURGE_SECRET=… make gcp-retention-scheduler` puis **redeploy** l'API (sinon `pf_api_secrets` ignore le secret absent et `/internal/retention/run` reste en 401). Lifecycle filet : `make gcp-setup-media` (préfixe `dossier-shares/`, 2 jours, **merge** avec les règles existantes). Même convention manuelle pour auth-health / ai-module-friction / saas-invoices / sales-branches-auto / pharmacy-expiry / research-etl (`SAAS_INVOICES_SECRET=… make gcp-saas-invoices-scheduler`, `SALES_BRANCHES_AUTO_SECRET=… make gcp-sales-branches-scheduler`, `PHARMACY_EXPIRY_SECRET=… make gcp-pharmacy-expiry-scheduler`, `RESEARCH_ETL_SECRET=… RESEARCH_ANON_SALT=… make gcp-research-etl-scheduler` puis `--update-secrets` ou redeploy). Le secret du job Scheduler est en clair dans la config HTTP du job : restreindre `scheduler.jobs.get` ; le script n'affiche plus le YAML du job.
 - **2FA** : anti-replay TOTP (`totpReplayGuard`) — un code ne passe qu'une fois par fenêtre.
 
-## Langues (FR / NL / EN / ES / ET / IT)
+## Langues (FR / NL / EN / ES / ET / IT + UK / RU)
 
-Locales supportées : `fr` (défaut), `nl`, `en`, `es`, `et`, `it`.
+`fr` est le défaut et le template de traduction partout. **La couverture diffère par face** — l'API accepte plus de locales que les faces n'en servent :
 
-| Face | Mécanisme | Persistance |
-|------|-----------|-------------|
-| **Nuxt Pro** | `@nuxtjs/i18n`, cookie `pf_locale` | `PATCH /api/v1/me/locale` via `/settings` |
-| **Flutter** | `gen-l10n` + `LocaleController` | `shared_preferences` + `PATCH /me/locale` |
-| **API Go** | middleware `Accept-Language` + `users.preferred_locale` | emails/billing/erreurs traduits |
+| Face | Locales servies | Mécanisme | Persistance |
+|------|-----------------|-----------|-------------|
+| **API Go** | fr nl en es et it **uk ru** | middleware `Accept-Language` + `users.preferred_locale` ; `i18n.Supported` | emails/SMS/push/billing/erreurs traduits |
+| **Flutter** | fr nl en es et it **uk ru** | `gen-l10n` + `LocaleController.supportedCodes` | `shared_preferences` + `PATCH /me/locale` |
+| **Nuxt Pro** | fr nl en es et it | `@nuxtjs/i18n`, cookie `pf_locale` | `PATCH /api/v1/me/locale` via `/settings` |
+
+**uk / ru : complets sur l'API et Flutter, en attente sur la face Pro.** `nuxtjs/locales/{uk,ru}.json` existent (uk ~80 %, ru ~70 %) mais sont **volontairement hors** `nuxt.config.ts` — le Web Pro reste à 6 langues et un compte `uk`/`ru` y retombe en français. Ne les réactiver qu'avec les sections `admin` / `commercial` finies **et** `presentation/` + `ai-flows/` traduits.
+
+Garde-fous de parité (à lancer avant toute PR i18n) : `TestCatalogParity` (Go), `tests/unit/locales-parity.spec.ts` (Nuxt), `test/l10n/arb_parity_test.dart` (Flutter).
+
+Spécificités cyrilliques : polices auto-hébergées (`nuxtjs/public/fonts/README.md`), PDF via `go/internal/platform/pdffont`, SMS en UCS-2 → **70 caractères** par segment.
 
 Compte démo NL : `client.marie@petsfollow.test` (`preferred_locale = nl`).
 
-Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_locale_et, 000063_locale_it).
+Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_locale_et, 000063_locale_it, 000144_locale_uk_ru).
 
 ## Google OAuth + 2FA (optionnel)
 

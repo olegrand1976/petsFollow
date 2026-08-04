@@ -94,3 +94,31 @@ func TestSanitizePDFTextMapsDashes(t *testing.T) {
 		t.Fatalf("unexpected: %q", got)
 	}
 }
+
+// TestBuildPDFCyrillic couvre les locales cyrilliques : libellés uk/ru ET corps
+// de compte-rendu en cyrillique. Avant le passage à une police UTF-8
+// (platform/pdffont), le traducteur cp1252 rendait ces caractères illisibles.
+func TestBuildPDFCyrillic(t *testing.T) {
+	for _, loc := range []string{"uk", "ru", "fr"} {
+		b, err := BuildPDF(PDFInput{
+			Marketing:    Marketing{SiteURL: "https://petsfollow.app"},
+			PetName:      "Мурчик",
+			Species:      "cat",
+			OwnerName:    "Олена Ґалаґан",
+			PracticeName: "ВетПлюс",
+			VisitWhen:    "2026-01-15 10:00",
+			Reports: []ReportSection{{
+				AuthorName:  "Др. Іваненко",
+				FinalizedAt: "2026-01-15",
+				BodyText:    "**Анамнез:**\n- Клінічний огляд у нормі\n- Контроль за два тижні",
+			}},
+			Locale: loc,
+		})
+		if err != nil {
+			t.Fatalf("%s: %v", loc, err)
+		}
+		if len(b) < 100 || string(b[:5]) != "%PDF-" {
+			t.Fatalf("%s: bad pdf magic len=%d", loc, len(b))
+		}
+	}
+}

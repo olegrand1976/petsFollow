@@ -11,6 +11,8 @@ import (
 	"unicode"
 
 	"github.com/phpdave11/gofpdf"
+
+	"github.com/olegrand1976/petsFollow/go/internal/platform/pdffont"
 )
 
 //go:embed assets/emblem.png
@@ -165,6 +167,42 @@ func labelsFor(locale string) labels {
 			NoBody:         "(vuoto)",
 			Confidential:   "Riservato — solo per il professionista destinatario.",
 		}
+	case "uk":
+		return labels{
+			Subtitle:       "Звіт про консультацію — надіслано через petsFollow",
+			CTA:            "petsFollow допомагає фахівцям спостерігати за пацієнтами, спілкуватися з власниками та централізувати догляд.",
+			Register:       "Створити професійний акаунт: ",
+			Offer:          "Тарифи: ",
+			ContactTitle:   "Контакт менеджера з продажу",
+			DefaultContact: "petsFollow",
+			Phone:          "Тел. ",
+			Email:          "Email ",
+			Pet:            "Тварина",
+			Visit:          "Візит",
+			Practice:       "Клініка",
+			ReportBy:       "Звіт від ",
+			Finalized:      "Завершено: ",
+			NoBody:         "(порожньо)",
+			Confidential:   "Конфіденційно — лише для фахівця-одержувача.",
+		}
+	case "ru":
+		return labels{
+			Subtitle:       "Отчёт о консультации — отправлено через petsFollow",
+			CTA:            "petsFollow помогает специалистам наблюдать за пациентами, общаться с владельцами и централизовать уход.",
+			Register:       "Создать профессиональный аккаунт: ",
+			Offer:          "Тарифы: ",
+			ContactTitle:   "Контакт менеджера по продажам",
+			DefaultContact: "petsFollow",
+			Phone:          "Тел. ",
+			Email:          "Email ",
+			Pet:            "Животное",
+			Visit:          "Визит",
+			Practice:       "Клиника",
+			ReportBy:       "Отчёт от ",
+			Finalized:      "Завершено: ",
+			NoBody:         "(пусто)",
+			Confidential:   "Конфиденциально — только для специалиста-получателя.",
+		}
 	default:
 		return labels{
 			Subtitle:       "Compte-rendu de consultation — partagé via petsFollow",
@@ -219,7 +257,9 @@ func StripMarkdown(s string) string {
 	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
-// sanitizePDFText maps characters that break WinAnsi / some mobile PDF viewers.
+// sanitizePDFText normalise la ponctuation typographique que certains lecteurs
+// PDF mobiles rendent mal. La police est UTF-8 (cf. platform/pdffont), donc les
+// lettres non latines — cyrillique inclus — passent telles quelles via IsPrint.
 func sanitizePDFText(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
@@ -251,7 +291,10 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	// Top margin clears the navy brand band (subtitle is page-1 body only).
 	pdf.SetMargins(14, 34, 14)
 	pdf.SetAutoPageBreak(true, 22)
-	tr := pdf.UnicodeTranslatorFromDescriptor("")
+	// Police UTF-8 embarquée : le texte (accents FR, cadratin, cyrillique uk/ru,
+	// noms d'animaux et de propriétaires) est dessiné tel quel.
+	pdffont.Register(pdf)
+	tr := pdffont.Translate
 	L := labelsFor(in.Locale)
 
 	site := strings.TrimRight(strings.TrimSpace(in.Marketing.SiteURL), "/")
@@ -286,7 +329,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 		pdf.SetLineWidth(0.4)
 		pdf.Line(14, pdf.GetY(), 196, pdf.GetY())
 		pdf.Ln(2)
-		pdf.SetFont("Arial", "", 7)
+		pdf.SetFont(pdffont.Family, "", 7)
 		pdf.SetTextColor(colorMuted[0], colorMuted[1], colorMuted[2])
 		pdf.CellFormat(120, 4, tr(fmt.Sprintf("petsFollow · %s", gen.Format("2006-01-02 15:04 UTC"))), "", 0, "L", false, 0, "")
 		pdf.CellFormat(0, 4, fmt.Sprintf("%d", pdf.PageNo()), "", 0, "R", false, 0, "")
@@ -294,14 +337,14 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 
 	pdf.AddPage()
 
-	pdf.SetFont("Arial", "B", 11)
+	pdf.SetFont(pdffont.Family, "B", 11)
 	pdf.SetTextColor(colorNavy[0], colorNavy[1], colorNavy[2])
 	pdf.MultiCell(0, 5, tr(sanitizePDFText(L.Subtitle)), "", "L", false)
 	pdf.Ln(2)
 
 	pdf.SetFillColor(colorSurface[0], colorSurface[1], colorSurface[2])
 	pdf.SetDrawColor(colorBorder[0], colorBorder[1], colorBorder[2])
-	pdf.SetFont("Arial", "", 9)
+	pdf.SetFont(pdffont.Family, "", 9)
 	pdf.SetTextColor(colorBody[0], colorBody[1], colorBody[2])
 	cta := sanitizePDFText(L.CTA)
 	if register != "" {
@@ -313,10 +356,10 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.MultiCell(0, 5, tr(cta), "1", "L", true)
 
 	pdf.Ln(3)
-	pdf.SetFont("Arial", "B", 10)
+	pdf.SetFont(pdffont.Family, "B", 10)
 	pdf.SetTextColor(colorNavy[0], colorNavy[1], colorNavy[2])
 	pdf.CellFormat(0, 6, tr(sanitizePDFText(L.ContactTitle)), "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 9)
+	pdf.SetFont(pdffont.Family, "", 9)
 	pdf.SetTextColor(colorBody[0], colorBody[1], colorBody[2])
 	name := strings.TrimSpace(in.Marketing.CommercialName)
 	if name == "" {
@@ -330,7 +373,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 		pdf.CellFormat(0, 5, tr(sanitizePDFText(L.Email+email)), "", 1, "L", false, 0, "")
 	}
 	pdf.Ln(2)
-	pdf.SetFont("Arial", "I", 8)
+	pdf.SetFont(pdffont.Family, "I", 8)
 	pdf.SetTextColor(colorMuted[0], colorMuted[1], colorMuted[2])
 	pdf.MultiCell(0, 4, tr(sanitizePDFText(L.Confidential)), "", "L", false)
 	pdf.Ln(3)
@@ -339,7 +382,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 		pdf.Ln(1)
 		pdf.SetFillColor(colorNavy[0], colorNavy[1], colorNavy[2])
 		pdf.SetTextColor(colorWhite[0], colorWhite[1], colorWhite[2])
-		pdf.SetFont("Arial", "B", 11)
+		pdf.SetFont(pdffont.Family, "B", 11)
 		pdf.CellFormat(0, 8, "  "+tr(sanitizePDFText(title)), "", 1, "L", true, 0, "")
 		pdf.SetDrawColor(colorTeal[0], colorTeal[1], colorTeal[2])
 		pdf.SetLineWidth(0.8)
@@ -350,7 +393,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	}
 
 	section(L.Pet)
-	pdf.SetFont("Arial", "", 10)
+	pdf.SetFont(pdffont.Family, "", 10)
 	line := in.PetName
 	if sp := strings.TrimSpace(in.Species); sp != "" {
 		line += " · " + sp
@@ -360,7 +403,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	}
 	pdf.MultiCell(0, 5, tr(sanitizePDFText(line)), "", "L", false)
 	if owner := strings.TrimSpace(in.OwnerName); owner != "" {
-		pdf.SetFont("Arial", "", 9)
+		pdf.SetFont(pdffont.Family, "", 9)
 		pdf.SetTextColor(colorMuted[0], colorMuted[1], colorMuted[2])
 		pdf.MultiCell(0, 5, tr(sanitizePDFText(owner)), "", "L", false)
 		pdf.SetTextColor(colorBody[0], colorBody[1], colorBody[2])
@@ -368,7 +411,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.Ln(1)
 
 	section(L.Visit)
-	pdf.SetFont("Arial", "", 10)
+	pdf.SetFont(pdffont.Family, "", 10)
 	if when := strings.TrimSpace(in.VisitWhen); when != "" {
 		pdf.MultiCell(0, 5, tr(sanitizePDFText(when)), "", "L", false)
 	}
@@ -385,13 +428,13 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 		}
 		section(title)
 		if fa := strings.TrimSpace(rep.FinalizedAt); fa != "" {
-			pdf.SetFont("Arial", "I", 9)
+			pdf.SetFont(pdffont.Family, "I", 9)
 			pdf.SetTextColor(colorMuted[0], colorMuted[1], colorMuted[2])
 			pdf.MultiCell(0, 5, tr(sanitizePDFText(L.Finalized+fa)), "", "L", false)
 			pdf.Ln(1)
 			pdf.SetTextColor(colorBody[0], colorBody[1], colorBody[2])
 		}
-		pdf.SetFont("Arial", "", 10)
+		pdf.SetFont(pdffont.Family, "", 10)
 		body := StripMarkdown(strings.TrimSpace(rep.BodyText))
 		if body == "" {
 			body = L.NoBody
@@ -420,10 +463,10 @@ func drawBrandBand(pdf *gofpdf.Fpdf, site string) {
 	}
 
 	pdf.SetTextColor(colorWhite[0], colorWhite[1], colorWhite[2])
-	pdf.SetFont("Arial", "B", 16)
+	pdf.SetFont(pdffont.Family, "B", 16)
 	pdf.SetXY(34, 6)
 	pdf.CellFormat(0, 8, "petsFollow", "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 8)
+	pdf.SetFont(pdffont.Family, "", 8)
 	pdf.SetX(34)
 	if site != "" {
 		pdf.SetTextColor(180, 230, 220)

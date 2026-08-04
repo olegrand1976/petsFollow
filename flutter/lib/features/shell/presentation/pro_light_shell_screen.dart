@@ -571,6 +571,8 @@ class _SettingsTab extends StatelessWidget {
                   DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
                   DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
                   DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
+                  DropdownMenuItem(value: 'uk', child: Text(l10n.languageUk)),
+                  DropdownMenuItem(value: 'ru', child: Text(l10n.languageRu)),
                 ],
                 onChanged: (next) async {
                   if (next == null || next == code) return;

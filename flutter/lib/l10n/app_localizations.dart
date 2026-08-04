@@ -11,6 +11,8 @@ import 'app_localizations_et.dart';
 import 'app_localizations_fr.dart';
 import 'app_localizations_it.dart';
 import 'app_localizations_nl.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_uk.dart';
 
 // ignore_for_file: type=lint
 
@@ -103,7 +105,9 @@ abstract class AppLocalizations {
     Locale('et'),
     Locale('fr'),
     Locale('it'),
-    Locale('nl')
+    Locale('nl'),
+    Locale('ru'),
+    Locale('uk')
   ];
 
   /// No description provided for @appTitle.
@@ -1377,6 +1381,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Italiano'**
   String get languageIt;
+
+  /// No description provided for @languageUk.
+  ///
+  /// In fr, this message translates to:
+  /// **'Українська'**
+  String get languageUk;
+
+  /// No description provided for @languageRu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Русский'**
+  String get languageRu;
 
   /// No description provided for @appearance.
   ///
@@ -4059,7 +4075,9 @@ class _AppLocalizationsDelegate
         'et',
         'fr',
         'it',
-        'nl'
+        'nl',
+        'ru',
+        'uk'
       ].contains(locale.languageCode);
 
   @override
@@ -4081,6 +4099,10 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsIt();
     case 'nl':
       return AppLocalizationsNl();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'uk':
+      return AppLocalizationsUk();
   }
 
   throw FlutterError(

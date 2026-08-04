@@ -56,7 +56,7 @@ Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal ac
 - Trois surfaces logicielles : **Pro (Web) · Pro Light (mobile) · app client (mobile)**
 - Prescription véto (pas un gadget grand public isolé)
 - **Passeport multi-acteurs** : vet / care pro / foyer sur le même animal
-- Continuité multi-profil : Pro · Pro Light · Client · Care pro — 6 langues
+- Continuité multi-profil : Pro · Pro Light · Client · Care pro — 8 langues sur les apps mobiles (6 sur le Web Pro)
 - Complémentaire du PMS cabinet (ne le remplace pas)
 - Alignement économique véto + commercial (pas de pénalité co-selling)
 

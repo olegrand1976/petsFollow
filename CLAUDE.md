@@ -85,9 +85,22 @@ Flutter appelle directement l'API Go. Nuxt passe par sa **BFF** (`nuxtjs/server/
 - Deux shells dans la même app : client (pets) et `ProLightShell` (care_pro)
 - Auth = API Go (PostgreSQL) — **ne pas** activer Firebase Auth ; Firebase = FCM/App Distribution uniquement
 
-### i18n — 6 locales obligatoires
+### i18n — couverture par face
 
-`fr` (défaut), `nl`, `en`, `es`, `et`, `it`. Toute chaîne UI Nuxt passe par `nuxtjs/locales/*.json` — **les 6 fichiers** à chaque ajout de clé. Flutter : `gen-l10n`. API Go : middleware `Accept-Language` + `users.preferred_locale`.
+L'API accepte **8** locales, les faces n'en servent pas autant : ne pas raisonner sur un chiffre global.
+
+| Face | Locales servies | Source de vérité |
+|------|-----------------|------------------|
+| **API Go** | `fr` `nl` `en` `es` `et` `it` `uk` `ru` | `i18n.Supported` (`platform/i18n/locale.go`) |
+| **Flutter** | idem (les 8) | `LocaleController.supportedCodes` + les `app_*.arb` présents |
+| **Nuxt Pro** | `fr` `nl` `en` `es` `et` `it` | `i18n.locales` (`nuxt.config.ts`) ⇄ `SUPPORTED_LOCALES` (`useLocaleSync.ts`) |
+
+`fr` est le template partout. Règles :
+
+- **Nuxt** : toute chaîne UI passe par `nuxtjs/locales/*.json` — **les 6 fichiers servis** à chaque ajout de clé. `nuxtjs/locales/{uk,ru}.json` existent mais sont **hors config** (traduction incomplète) : ne pas les réactiver sans `presentation/` et `ai-flows/` complets. `tests/unit/locales-parity.spec.ts` verrouille la parité.
+- **Flutter** : `flutter gen-l10n` puis **committer** les `app_localizations*.dart` générés. `test/l10n/arb_parity_test.dart` verrouille parité, placeholders et cohérence `supportedCodes` ⇄ `AppLocalizations.supportedLocales`.
+- **API Go** : middleware `Accept-Language` + `users.preferred_locale`. `TestCatalogParity` verrouille les catalogues.
+- **Cyrillique** : DM Sans / IBM Plex Mono n'ont pas de glyphes cyrilliques → sous-sets Noto auto-hébergés (`nuxtjs/public/fonts/README.md`) ; PDF Go via `platform/pdffont` (Liberation Sans, métriquement compatible Arial) ; Flutter via `fontFamilyFallback`. SMS cyrilliques = UCS-2, **70 caractères** par segment (cf. `catalog_sms_test.go`).
 
 ### Modules tag `dev` (pas GA)
 
@@ -109,7 +122,7 @@ Toute mutation métier = test **au niveau le plus bas possible** : intégration 
 
 ### Sync produit/commercial
 
-- Changement d'offre/prix → maj `pages/produits.vue` + `index.productHighlights` dans **les 6 locales**, aligné sur `documentation/17-POLITIQUE-TARIFAIRE.md` et `billing/domain.go` (`produits-sync.mdc`).
+- Changement d'offre/prix → maj `pages/produits.vue` + `index.productHighlights` dans **les 6 locales servies par Nuxt**, aligné sur `documentation/17-POLITIQUE-TARIFAIRE.md` et `billing/domain.go` (`produits-sync.mdc`).
 - Nouveau parcours démo / changement d'écran / compte seed → maj `useCase/**/UC-*.md` + `make usecases-sync` (CI : `make usecases-check`) ; nouveau compte seed → aussi `AGENTS.md` (`usecase-sync.mdc`).
 
 ### Flutter (`flutter-action-tests.mdc`, `firebase-android-dist-version.mdc`)

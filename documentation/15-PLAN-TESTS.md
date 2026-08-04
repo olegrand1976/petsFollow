@@ -141,7 +141,8 @@ Parcours minimum avant toute dist / staging.
 | B3.2 | P1 | Locale Flutter | Settings → autre langue | UI + sync `PATCH /me/locale` |
 | B3.3 | P2 | Client NL seed | Login `client.marie` | UI NL par défaut |
 | B3.4 | P2 | Avatar / profil | Upload photo (Web ou Flutter) | Visible après refresh |
-| B3.5 | P2 | Spot-check i18n | FR/NL/EN/ES/ET/IT sur login + dashboard | Pas de clés brutes `xxx.yyy` |
+| B3.5 | P2 | Spot-check i18n **Web Pro** | FR/NL/EN/ES/ET/IT sur login + dashboard (6 locales servies — uk/ru hors `nuxt.config.ts`) | Pas de clés brutes `xxx.yyy` |
+| B3.6 | P2 | Spot-check i18n **apps mobiles** | UK + RU dans Réglages → Langue (client **et** Pro Light) | Libellés traduits, glyphes cyrilliques rendus (pas de carrés) |
 
 ---
 

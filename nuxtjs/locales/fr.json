@@ -896,7 +896,7 @@
       "client1": "Carnet / passeport toujours en poche",
       "client2": "Messagerie avec le cabinet + push",
       "client3": "Rappels Care et pack Horse inclus",
-      "client4": "Foyer multi-animaux — 6 langues",
+      "client4": "Foyer multi-animaux — 8 langues",
       "offerTitle": "Offre (aperçu)",
       "offerProLabel": "SaaS Pro (HTVA, facturation hors ligne)",
       "offerProAnnual": "834,71 € / an (≈ 69,56 € / mois)",
@@ -972,7 +972,9 @@
       "es": "Español",
       "et": "Eesti",
       "saved": "Langue enregistrée.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Relevé respiratoire",
@@ -2353,7 +2355,7 @@
       "commitHint": "Crée les comptes clients prêts (hors exclus / erreurs).",
       "commit": "Importer",
       "commitConfirm": "Créer les comptes clients pour les lignes prêtes ?",
-      "commitOk": "{created} créés, {skipped} ignorés.",
+      "commitOk": "{created} créés, {errors} erreur(s).",
       "commitFailed": "Échec de l’import",
       "downloadCredentials": "Télécharger les mots de passe",
       "rowPatchFailed": "Mise à jour ligne impossible",
@@ -2876,7 +2878,9 @@
     "reportTranscriptHint": "Dictée ou notes brutes…",
     "reportDirtyHint": "Modifications non enregistrées.",
     "reportDiscardEdits": "Annuler les modifications",
-    "reportStatusFinal": "Finalisé"
+    "reportStatusFinal": "Finalisé",
+    "reportTargetLangUk": "Ukrainien",
+    "reportTargetLangRu": "Russe"
   },
   "commissions": {
     "title": "Mes rétributions",
@@ -3166,7 +3170,7 @@
     "autofinanceTip": "≈ 8 activations clients triennales / mois ≈ couverture de l’équivalent mensuel Pro (≈ 69,56 € HTVA).",
     "clientPlansTitle": "Ce que paient vos clients",
     "clientPlansLead": "Le propriétaire finance le passeport de son animal — trois formules, tout inclus dès l'abonnement actif.",
-    "clientIncludedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR 15/30/60 s, Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
+    "clientIncludedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR 15/30/60 s, Care/Horse, foyer, FR/NL/EN/ES/ET/IT/UK/RU.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / mois",
@@ -3231,7 +3235,7 @@
       "Relevés respiratoires guidés 15 / 30 / 60 s",
       "Care / Horse / foyer inclus dès animal payant"
     ],
-    "includedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés FR, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Autofinancement & engagements",
     "partnerLead": "Les commissions sur activations clients compensent l’abonnement Pro (règlement hors ligne).",
     "partnerSteps": [
@@ -3269,7 +3273,7 @@
       "Messagerie sécurisée client ↔ vétérinaire + notifications push",
       "Rappels de soins (standards, médicaments, perso) et pack équine si cheval",
       "Vue foyer et encodage multi-animaux",
-      "Langues FR / NL / EN / ES / ET / IT"
+      "Langues FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Abonnements clients par animal (TTC)",
     "plansLead": "Un abonnement par animal suivi. Paiement Stripe côté propriétaire.",

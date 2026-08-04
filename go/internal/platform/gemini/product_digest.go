@@ -18,7 +18,7 @@ type ProductDigestCommit struct {
 // ProductDigestSummary is the multilingual functional summary produced by Gemini.
 type ProductDigestSummary struct {
 	Empty    bool                       `json:"empty"`
-	Headline map[string]string          `json:"headline"` // fr/en/nl/es/et/it
+	Headline map[string]string          `json:"headline"` // fr/en/nl/es/et/it/uk/ru
 	Body     map[string]string          `json:"body"`     // plain-text bullets per locale
 	Reason   string                     `json:"reason,omitempty"`
 }
@@ -31,7 +31,7 @@ Règles strictes :
 - Ignore les commits purement techniques (chore, ci, test, docs internes, bump deps, fix lint) sauf s'ils ont un impact produit visible.
 - Si aucun changement fonctionnel : empty=true et reason court.
 - Sinon empty=false : 3 à 8 puces max, phrases courtes.
-- Fournis headline + body pour fr, en, nl, es, et, it. body = texte plain avec puces "• " (une par ligne).
+- Fournis headline + body pour fr, en, nl, es, et, it, uk, ru. body = texte plain avec puces "• " (une par ligne).
 Réponds UNIQUEMENT en JSON valide.`
 
 // SummarizeProductDigest turns git commits into a functional multilingual digest.
@@ -49,8 +49,8 @@ Schéma de sortie JSON :
 {
   "empty": false,
   "reason": "",
-  "headline": {"fr":"…","en":"…","nl":"…","es":"…","et":"…","it":"…"},
-  "body": {"fr":"• …\n• …","en":"…","nl":"…","es":"…","et":"…","it":"…"}
+  "headline": {"fr":"…","en":"…","nl":"…","es":"…","et":"…","it":"…","uk":"…","ru":"…"},
+  "body": {"fr":"• …\n• …","en":"…","nl":"…","es":"…","et":"…","it":"…","uk":"…","ru":"…"}
 }`
 	raw, err := c.GenerateJSONLite(ctx, productDigestSystem, user, 0.3)
 	if err != nil {

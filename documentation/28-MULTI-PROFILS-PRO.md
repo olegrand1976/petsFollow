@@ -46,7 +46,7 @@ Seed démo Pro (hors `client`, masqué sur Nuxt) :
 
 Staff cabinet : une ligne `team_members` VetPlus (accès switch) ; `ListTeamMembers` / desk masque les comptes dont le home n’est pas staff. Au switch staff, `team_role` aligné sur le profil actif (pas de demote `reference_vet`).
 
-Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
+Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 8 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 
 ## ACL
 

@@ -89,7 +89,8 @@
     "researchGroups": "Gruppi",
     "researchDataroom": "Data room",
     "productFlows": "Flussi prodotto",
-    "aiFlows": "Flussi IA"
+    "aiFlows": "Flussi IA",
+    "adminInvoicing": "Fatturazione Billit"
   },
   "training": {
     "title": "Allenamento AI",
@@ -195,7 +196,7 @@
     "badgeOn": "ON.",
     "badgeOff": "OFF",
     "badgeCurrent": "fund size",
-    "feedbackCount": "RESI",
+    "feedbackCount": "{count} feedback",
     "feedbackMeta": "veto {vet}/5 · coach {coach}/5 · {felt}",
     "colName": "Nome",
     "colEmail": "Email",
@@ -851,7 +852,7 @@
       "client1": "Passaporto / libretto sempre in tasca",
       "client2": "Messaggistica con la clinica + push",
       "client3": "Promemoria Care e pack Horse inclusi",
-      "client4": "Nucleo multi-animali — 6 lingue",
+      "client4": "Nucleo multi-animali — 8 lingue",
       "offerTitle": "Offerta (sintesi)",
       "offerProLabel": "SaaS Pro (IVA esclusa, fatturazione offline)",
       "offerProAnnual": "834,71 € / anno (≈ 69,56 € / mese)",
@@ -921,13 +922,15 @@
     "language": {
       "title": "Lingua",
       "subtitle": "Scegli la lingua dell'interfaccia e dei messaggi.",
-      "fr": "francese",
-      "nl": "Paesi Bassi",
-      "en": "Inglese",
-      "es": "spagnolo",
+      "fr": "Français",
+      "nl": "Nederlands",
+      "en": "English",
+      "es": "Español",
       "et": "Eesti",
       "saved": "Lingua salvata.",
-      "it": "Italiano"
+      "it": "Italiano",
+      "uk": "Українська",
+      "ru": "Русский"
     },
     "heartrate": {
       "title": "Lettura respiratoria",
@@ -1545,7 +1548,33 @@
     "relatedInvoicePlaceholder": "Scegliere una fattura…",
     "relatedInvoiceEmpty": "Nessuna fattura emessa/consegnata — inviare prima una fattura.",
     "relatedInvoiceRequired": "Selezionare la fattura collegata a questa nota di credito.",
-    "prefillDafAmount": "Importo HT stimato {amount} € (prezzi stock)"
+    "prefillDafAmount": "Importo HT stimato {amount} € (prezzi stock)",
+    "counterparty": {
+      "name": "Cliente",
+      "country": "Paese",
+      "vatNumber": "Partita IVA",
+      "companyNumber": "Numero azienda (opzionale)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 car.)",
+      "pec": "PEC (posta certificata)",
+      "taxId": "NIF / CIF",
+      "street": "Via",
+      "postal": "CAP",
+      "city": "Città"
+    },
+    "create": "Crea la fattura",
+    "createDocument": "Crea il documento",
+    "docType": "Tipo di documento",
+    "lineAmountExcl": "Importo IVA esclusa (€)",
+    "lineDescription": "Riga — descrizione",
+    "newDocument": "Nuovo documento",
+    "prefillDafLines": "{n} riga/righe DAF",
+    "prefillDirect": "Fatturazione diretta dopo la consultazione",
+    "prefillFromDaf": "Precompilato da un DAF",
+    "typeCreditNote": "Nota di credito",
+    "typeInvoice": "Fattura",
+    "typeProforma": "Proforma / preventivo"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotico",
@@ -1661,7 +1690,12 @@
         "na": "N/D"
       },
       "fromConsultation": "Da una consultazione",
-      "backToConsultations": "Torna alle consultazioni"
+      "backToConsultations": "Torna alle consultazioni",
+      "contextBanner": "Contesto della consultazione: {context}",
+      "contextClient": "Cliente",
+      "contextPet": "Animale",
+      "contextVisit": "Visita collegata",
+      "goInvoice": "Fattura"
     },
     "errors": {
       "daf_vamreg_already_sent": "Impossibile annullare: dichiarazione VAMReg già inviata.",
@@ -2026,7 +2060,7 @@
       "sheetTitle": "Modello di messa in servizio (panoramica)",
       "planRatesHint": "Tariffe commerciali fisse (IVA esclusa): 8% mensile · 8% annuo · 12% triennale – nessuna maggiorazione. Non modificabile qui.",
       "tiersTitle": "Griglia del tasso di veto (modificabile)",
-      "tierLine": "{min}1__ clienti → {pct} %",
+      "tierLine": "{min}{max} clienti → {pct} %",
       "saveTiers": "Salva la griglia veterinaria",
       "tiersHint": "Livelli contigui da 1 cliente; ultimo livello senza max (= aperto). Tasso base tra 7,47% e 8%; fattore di piano all'incrementale (annuale/quintale×0,67, triennale×1) poi bound effettivo 5–8%.",
       "openEnded": "∞",
@@ -2800,7 +2834,9 @@
     "reportQualityThanks": "Grazie — questo migliora il modello",
     "reportMarkReference": "Consulto di riferimento (miglioramento continuo)",
     "reportReferenceOn": "Segnato come consulto di riferimento",
-    "reportReferenceOff": "Rimosso dai consulti di riferimento"
+    "reportReferenceOff": "Rimosso dai consulti di riferimento",
+    "reportTargetLangUk": "Ucraino",
+    "reportTargetLangRu": "Russo"
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -2818,7 +2854,7 @@
     "sheetTitle": "Capire il mio compenso",
     "detailsSummary": "Griglia tariffaria e bonus",
     "tiersTitle": "Griglia progressiva",
-    "tierLine": "{min}1__ clienti → {pct} %",
+    "tierLine": "{min}{max} clienti → {pct} %",
     "nextTier": "Livello successivo per {n} clienti paganti.",
     "ledgerTitle": "Commissioni generate",
     "ledgerEmpty": "Nessuna commissione al momento",
@@ -3108,7 +3144,7 @@
       }
     },
     "autofinanceTip": "≈ 8 attivazioni clienti triennali / mese ≈ coprono l’equivalente mensile Pro (≈ 69,56 € IVA esclusa).",
-    "clientIncludedLine": "Incluso in ogni piano: passaporto, messaggistica + push, FR 15/30/60 s, Care/Horse, nucleo familiare, FR/NL/EN/ES/ET/IT."
+    "clientIncludedLine": "Incluso in ogni piano: passaporto, messaggistica + push, FR 15/30/60 s, Care/Horse, nucleo familiare, FR/NL/EN/ES/ET/IT/UK/RU."
   },
   "products": {
     "seoTitle": "petsFollow — Offerta professionale",
@@ -3155,7 +3191,7 @@
       "Rilevazioni respiratorie guidate 15 / 30 / 60 s",
       "Care / Horse / nucleo familiare inclusi dall’animale a pagamento"
     ],
-    "includedLine": "Incluso in ogni piano: passaporto, messaggistica + push, rilevazioni FR, promemoria Care/Horse, nucleo, FR/NL/EN/ES/ET/IT.",
+    "includedLine": "Incluso in ogni piano: passaporto, messaggistica + push, rilevazioni FR, promemoria Care/Horse, nucleo, FR/NL/EN/ES/ET/IT/UK/RU.",
     "economyTitle": "Autofinanziamento e impegni",
     "partnerLead": "Le commissioni sulle attivazioni clienti compensano l’abbonamento Pro (regolamento offline).",
     "partnerSteps": [
@@ -3193,7 +3229,7 @@
       "Messaggistica sicura cliente ↔ veterinario + notifiche push",
       "Promemoria di cura (standard, farmaci, personali) e pack equino se cavallo",
       "Vista nucleo familiare e codifica multi-animale",
-      "Lingue FR / NL / EN / ES / ET / IT"
+      "Lingue FR / NL / EN / ES / ET / IT / UK / RU"
     ],
     "plansTitle": "Abbonamenti cliente per animale (tasse incluse)",
     "plansLead": "Un abbonamento per animale monitorato. Pagamento Stripe a carico del proprietario.",

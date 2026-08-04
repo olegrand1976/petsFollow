@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/phpdave11/gofpdf"
+
+	"github.com/olegrand1976/petsFollow/go/internal/platform/pdffont"
 )
 
 type Marketing struct {
@@ -88,8 +90,10 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.SetMargins(14, 14, 14)
 	pdf.SetAutoPageBreak(true, 18)
 	pdf.AddPage()
-	// Core Arial is WinAnsi — translate UTF-8 (FR accents, em dash) before drawing.
-	tr := pdf.UnicodeTranslatorFromDescriptor("")
+	// Police UTF-8 embarquée : le texte (accents FR, cadratin, cyrillique uk/ru,
+	// noms d'animaux et de propriétaires) est dessiné tel quel.
+	pdffont.Register(pdf)
+	tr := pdffont.Translate
 	L := labelsFor(in.Locale)
 
 	site := strings.TrimRight(strings.TrimSpace(in.Marketing.SiteURL), "/")
@@ -103,23 +107,23 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	}
 
 	// Header brand
-	pdf.SetFont("Arial", "B", 18)
+	pdf.SetFont(pdffont.Family, "B", 18)
 	pdf.SetTextColor(27, 58, 75)
 	pdf.CellFormat(0, 10, "petsFollow", "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 10)
+	pdf.SetFont(pdffont.Family, "", 10)
 	pdf.SetTextColor(42, 157, 143)
 	if site != "" {
 		pdf.CellFormat(0, 6, site, "", 1, "L", false, 0, site)
 	}
 	pdf.Ln(2)
-	pdf.SetFont("Arial", "B", 11)
+	pdf.SetFont(pdffont.Family, "B", 11)
 	pdf.SetTextColor(27, 58, 75)
 	pdf.MultiCell(0, 5, tr(L.Subtitle), "", "L", false)
 	pdf.Ln(2)
 
 	// Marketing CTA
 	pdf.SetFillColor(247, 249, 251)
-	pdf.SetFont("Arial", "", 9)
+	pdf.SetFont(pdffont.Family, "", 9)
 	pdf.SetTextColor(27, 58, 75)
 	cta := L.CTA
 	if register != "" {
@@ -132,9 +136,9 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.Ln(3)
 
 	// Commercial band
-	pdf.SetFont("Arial", "B", 10)
+	pdf.SetFont(pdffont.Family, "B", 10)
 	pdf.CellFormat(0, 6, tr(L.ContactTitle), "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 9)
+	pdf.SetFont(pdffont.Family, "", 9)
 	name := strings.TrimSpace(in.Marketing.CommercialName)
 	if name == "" {
 		name = L.DefaultContact
@@ -149,22 +153,22 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.Ln(4)
 
 	section := func(title string) {
-		pdf.SetFont("Arial", "B", 12)
+		pdf.SetFont(pdffont.Family, "B", 12)
 		pdf.SetTextColor(27, 58, 75)
 		pdf.CellFormat(0, 7, tr(title), "", 1, "L", false, 0, "")
 		pdf.SetDrawColor(226, 230, 237)
 		pdf.Line(14, pdf.GetY(), 196, pdf.GetY())
 		pdf.Ln(2)
-		pdf.SetFont("Arial", "", 9)
+		pdf.SetFont(pdffont.Family, "", 9)
 		pdf.SetTextColor(40, 40, 40)
 	}
 	line := func(label, value string) {
 		if strings.TrimSpace(value) == "" {
 			return
 		}
-		pdf.SetFont("Arial", "B", 9)
+		pdf.SetFont(pdffont.Family, "B", 9)
 		pdf.CellFormat(45, 5, tr(label), "", 0, "L", false, 0, "")
-		pdf.SetFont("Arial", "", 9)
+		pdf.SetFont(pdffont.Family, "", 9)
 		pdf.MultiCell(0, 5, tr(value), "", "L", false)
 	}
 
@@ -219,9 +223,9 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 			if v.PracticeName != "" {
 				head += " — " + v.PracticeName
 			}
-			pdf.SetFont("Arial", "B", 9)
+			pdf.SetFont(pdffont.Family, "B", 9)
 			pdf.MultiCell(0, 5, tr(head), "", "L", false)
-			pdf.SetFont("Arial", "", 9)
+			pdf.SetFont(pdffont.Family, "", 9)
 			if v.ProConsulted != "" {
 				pdf.MultiCell(0, 5, tr(L.ProConsulted+v.ProConsulted), "", "L", false)
 			}
@@ -235,9 +239,9 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	if len(in.Timeline) > 0 {
 		section(L.Timeline)
 		for _, t := range in.Timeline {
-			pdf.SetFont("Arial", "B", 9)
+			pdf.SetFont(pdffont.Family, "B", 9)
 			pdf.MultiCell(0, 5, tr(t.When+" — "+t.Title), "", "L", false)
-			pdf.SetFont("Arial", "", 9)
+			pdf.SetFont(pdffont.Family, "", 9)
 			if t.Body != "" {
 				pdf.MultiCell(0, 5, tr(t.Body), "", "L", false)
 			}
@@ -262,7 +266,7 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	pdf.Ln(4)
 
 	// Footer marketing
-	pdf.SetFont("Arial", "I", 8)
+	pdf.SetFont(pdffont.Family, "I", 8)
 	pdf.SetTextColor(107, 114, 128)
 	gen := in.GeneratedAt
 	if gen.IsZero() {

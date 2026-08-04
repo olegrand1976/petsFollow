@@ -124,7 +124,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 | CR / IA | Édition structurée des rapports de visite ; historique transcription / IA / version finale |
 | Équipe | Page équipe, partage animal / client (ACL) |
 | Business | Commissions véto, overview dashboard, Care overdue |
-| i18n | FR / NL / EN / ES / ET / IT |
+| i18n | FR / NL / EN / ES / ET / IT — 6 locales (Web Pro ; UK / RU réservés aux apps mobiles) |
 
 ### Parcours type (VetPro)
 
@@ -191,7 +191,7 @@ Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’a
 | Messagerie | Threads care_pro ↔ client (ACL) ; staff cabinet = fil practice |
 | CR | Micro → transcription Gemini → éditer → enregistrer / finaliser (Améliorer IA = Web Pro) |
 | Sécurité PHI | Audio CR non public ; stream auth ; purge à la finalisation |
-| Langues | FR / NL / EN / ES / ET / IT |
+| Langues | FR / NL / EN / ES / ET / IT / UK / RU |
 
 ### Parcours type (VetLight)
 
@@ -239,7 +239,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Timeline | Messages + événements + relevés validés |
 | Cardiaque | Sessions 15/30/60 s → BPM + commentaire → envoi véto (**feature**) |
 | Engagement | Missions discovery in-app + emails éducatifs (opt-out possible) |
-| Langues | FR / NL / EN / ES / ET / IT |
+| Langues | FR / NL / EN / ES / ET / IT / UK / RU |
 
 ### Parcours type (Client)
 
@@ -297,7 +297,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 - Trois surfaces logicielles : **Web Pro · mobile ProLight · mobile Client**  
 - Prescription vétérinaire (pas un gadget grand public)  
 - **Passeport multi-acteurs** : vet / care pro / foyer sur le même animal  
-- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 6 langues  
+- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 8 langues sur les apps mobiles (6 sur le Web Pro)  
 - Complémentaire du PMS (ne le remplace pas)  
 - VetLight gratuit pour le terrain + CR (IA sur Web) + partage ACL + messagerie client  
 - Alignement économique véto / commercial (pas de pénalité co-selling)  

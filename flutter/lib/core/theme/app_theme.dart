@@ -35,6 +35,11 @@ ThemeData buildAppLightTheme() => _buildTheme(Brightness.light, PetsPalette.ligh
 /// Legacy alias — dark pets theme.
 ThemeData buildAppTheme() => buildAppDarkTheme();
 
+/// Familles de repli couvrant le cyrillique, dans l'ordre de préférence :
+/// Roboto / Noto Sans côté Android, Helvetica / Arial côté iOS et macOS.
+/// Une famille absente est simplement ignorée par le moteur de rendu.
+const _cyrillicFallback = <String>['Roboto', 'Noto Sans', 'Helvetica', 'Arial'];
+
 ThemeData _buildTheme(Brightness brightness, PetsPalette palette) {
   final isDark = brightness == Brightness.dark;
   final base = ThemeData(useMaterial3: true, brightness: brightness);
@@ -58,6 +63,10 @@ ThemeData _buildTheme(Brightness brightness, PetsPalette palette) {
     textTheme: GoogleFonts.dmSansTextTheme(base.textTheme).apply(
       bodyColor: palette.text,
       displayColor: palette.text,
+      // DM Sans n'a pas de glyphes cyrilliques : sans repli, l'ukrainien (et le
+      // russe à venir) s'affiche en tofu sur les cibles sans substitution
+      // automatique. On délègue aux familles système qui couvrent le cyrillique.
+      fontFamilyFallback: _cyrillicFallback,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,

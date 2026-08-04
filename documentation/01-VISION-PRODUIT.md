@@ -26,7 +26,7 @@ Le relevé respiratoire est un **module** différenciant, pas l’identité prod
 | Extension | Statut |
 |-----------|--------|
 | Inscription véto + confirmation email + onboarding profil cabinet | Livré |
-| i18n FR / NL / EN / ES / ET / IT (UI + erreurs API) | Livré |
+| i18n — 6 locales UI Web Pro · 8 apps mobiles + erreurs API (FR / NL / EN / ES / ET / IT / UK / RU) | Livré |
 | Google OAuth + 2FA TOTP (optionnel) | Livré |
 | Admin plateforme (métriques, users, payments, commercials) | Livré |
 | Stripe billing par animal (monthly / annual / triennial ; quinquennial + addons = legacy hors vente) | Livré |

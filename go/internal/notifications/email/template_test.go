@@ -110,7 +110,9 @@ func TestAllEmailLocalesResolve(t *testing.T) {
 		"emails.footer_powered_by",
 		"emails.footer_visit_llit",
 	}
-	for _, loc := range []string{"fr", "en", "nl", "es", "et", "it"} {
+	// i18n.Supported plutôt qu'une liste figée : toute nouvelle locale est
+	// couverte automatiquement au lieu d'être oubliée ici.
+	for _, loc := range i18n.Supported {
 		for _, key := range keys {
 			got := i18n.T(loc, key, map[string]string{"fullName": "Ada", "bpm": "120", "body": "hi"})
 			if got == key {

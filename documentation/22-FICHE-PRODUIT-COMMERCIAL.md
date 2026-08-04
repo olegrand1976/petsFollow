@@ -30,7 +30,7 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
 - **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — **inclus dans Pro** ([32](32-MODULE-IA-CR.md))
 - Agenda terrain (Pro Light) + calendrier cabinet (Pro)
-- Langues **FR / NL / EN / ES / ET / IT**
+- Langues **FR / NL / EN / ES / ET / IT** (+ **UK / RU** sur les apps mobiles ; Web Pro à 6 pour l’instant)
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
 Ne pas promettre : appareil à vendre, WebSocket temps réel (refresh via ouverture app / push), pitch centré « sans boîtier », **messagerie entre care pro** (parler partage dossier / CR / notes).

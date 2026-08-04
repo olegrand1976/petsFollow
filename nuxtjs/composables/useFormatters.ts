@@ -13,6 +13,10 @@ export function useFormatters() {
         return 'et-EE'
       case 'it':
         return 'it-IT'
+      case 'uk':
+        return 'uk-UA'
+      case 'ru':
+        return 'ru-RU'
       default:
         return 'fr-FR'
     }
