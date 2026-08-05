@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "See juhiste mustand kustutatakse jäädavalt.",
     "deleteConfirmCta": "Kustuta",
     "loadError": "Juhiseid ei õnnestunud laadida.",
-    "limitHint": "Kuvatakse 200 uusimat. Täpsustage filtreid."
+    "limitHint": "Kuvatakse 200 uusimat. Täpsustage filtreid.",
+    "errorPdf": "PDF-lehte ei õnnestunud avada."
   },
   "pacs": {
     "title": "PACS-kuvamine",

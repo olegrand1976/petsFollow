@@ -305,10 +305,11 @@ export async function proxyUpload(
   }
 }
 
-/** Proxy binary GET (DICOM / preview) — streams ArrayBuffer to the client. */
+/** Proxy binary GET (DICOM / preview / PDF) — returns a Node Buffer to the client. */
 export async function proxyBinary(
   event: H3Event,
   path: string,
+  opts?: { contentDispositionFallback?: string },
 ) {
   const url = `${apiBase()}${path}`
   const fetchOnce = async (accessToken?: string) => {
@@ -328,10 +329,14 @@ export async function proxyBinary(
       })
       throw err
     }
+    // Buffer (not ArrayBuffer): Nitro/H3 can stall when serializing raw ArrayBuffer.
     const buf = Buffer.from(await res.arrayBuffer())
     const ct = res.headers.get('content-type') || 'application/octet-stream'
     setHeader(event, 'content-type', ct)
     setHeader(event, 'cache-control', res.headers.get('cache-control') || 'private, no-store')
+    setHeader(event, 'content-length', String(buf.length))
+    const cd = res.headers.get('content-disposition') || opts?.contentDispositionFallback
+    if (cd) setHeader(event, 'content-disposition', cd)
     return buf
   }
 

@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "Dit concept van zorginstructies wordt definitief verwijderd.",
     "deleteConfirmCta": "Verwijderen",
     "loadError": "Zorginstructies laden mislukt.",
-    "limitHint": "Weergave beperkt tot de 200 meest recente. Verfijn de filters."
+    "limitHint": "Weergave beperkt tot de 200 meest recente. Verfijn de filters.",
+    "errorPdf": "PDF-fiche openen mislukt."
   },
   "pacs": {
     "title": "PACS-beeldvorming",

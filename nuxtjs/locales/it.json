@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "Questa bozza di consegne sarà eliminata definitivamente.",
     "deleteConfirmCta": "Elimina",
     "loadError": "Impossibile caricare le consegne.",
-    "limitHint": "Visualizzazione limitata alle 200 più recenti. Affina i filtri."
+    "limitHint": "Visualizzazione limitata alle 200 più recenti. Affina i filtri.",
+    "errorPdf": "Impossibile aprire la scheda PDF."
   },
   "pacs": {
     "title": "Imaging PACS",

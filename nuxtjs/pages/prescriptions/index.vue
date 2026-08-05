@@ -19,6 +19,7 @@
 
     <p class="pro-hint">{{ $t('prescriptions.v1Hint') }}</p>
     <p v-if="loadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ loadError }}</p>
+    <p v-if="actionError" class="pro-inline-feedback pro-inline-feedback--error" role="alert" data-testid="prescriptions-pdf-error">{{ actionError }}</p>
 
     <ProCard>
       <ProListToolbar :show-view-toggle="false">
@@ -184,6 +185,8 @@
 </template>
 
 <script setup lang="ts">
+import { openPrescriptionPdfBlob } from '~/utils/prescription-pdf'
+
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 type PrescriptionRow = {
@@ -213,6 +216,8 @@ const deleteOpen = ref(false)
 const deleteBusy = ref(false)
 const deleteError = ref('')
 const pendingDeleteId = ref('')
+const pdfBusyId = ref('')
+const actionError = ref('')
 
 function canDeleteDraft(row: PrescriptionRow) {
   return canWriteClinical.value && row.status === 'draft'
@@ -243,9 +248,19 @@ async function confirmDelete() {
   }
 }
 
-function openPdf(row: PrescriptionRow) {
-  if (!row.id) return
-  window.open(`/api/vet/prescriptions/${row.id}/pdf`, '_blank')
+async function openPdf(row: PrescriptionRow) {
+  if (!row.id || pdfBusyId.value) return
+  pdfBusyId.value = row.id
+  actionError.value = ''
+  try {
+    await openPrescriptionPdfBlob(row.id)
+  }
+  catch (e: any) {
+    actionError.value = mapError(e) || t('prescriptions.errorPdf')
+  }
+  finally {
+    pdfBusyId.value = ''
+  }
 }
 
 function formatDate(iso?: string) {

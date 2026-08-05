@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "Cette consigne brouillon sera définitivement supprimée.",
     "deleteConfirmCta": "Supprimer",
     "loadError": "Impossible de charger les consignes.",
-    "limitHint": "Affichage limité aux 200 consignes les plus récentes. Affinez les filtres pour réduire le résultat."
+    "limitHint": "Affichage limité aux 200 consignes les plus récentes. Affinez les filtres pour réduire le résultat.",
+    "errorPdf": "Impossible d’ouvrir la fiche PDF."
   },
   "pacs": {
     "title": "Imagerie PACS",

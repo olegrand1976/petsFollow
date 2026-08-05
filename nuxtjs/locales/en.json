@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "This draft care instructions sheet will be permanently deleted.",
     "deleteConfirmCta": "Delete",
     "loadError": "Unable to load care instructions.",
-    "limitHint": "Showing the 200 most recent sheets. Refine filters to narrow results."
+    "limitHint": "Showing the 200 most recent sheets. Refine filters to narrow results.",
+    "errorPdf": "Unable to open the PDF sheet."
   },
   "pacs": {
     "title": "PACS Imaging",

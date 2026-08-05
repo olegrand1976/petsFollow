@@ -6,8 +6,8 @@
     >
       <template #actions>
         <ProBadge variant="warning" data-testid="prescriptions-detail-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
-        <ProButton variant="secondary" test-id="prescriptions-open-pdf" :disabled="loading || !doc" @click="openPdf">
-          {{ $t('prescriptions.openPdf') }}
+        <ProButton variant="secondary" test-id="prescriptions-open-pdf" :disabled="loading || !doc || pdfBusy" @click="openPdf">
+          {{ pdfBusy ? $t('prescriptions.loading') : $t('prescriptions.openPdf') }}
         </ProButton>
         <ProButton
           v-if="canEditDraft"
@@ -154,6 +154,7 @@ import {
   visitIdForSave,
   withEnsuredLinkedVisit,
 } from '~/utils/prescription-visit'
+import { openPrescriptionPdfBlob } from '~/utils/prescription-pdf'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 const { t } = useI18n()
@@ -163,6 +164,7 @@ const runtimeConfig = useRuntimeConfig()
 const route = useRoute()
 const busy = ref(false)
 const aiBusy = ref(false)
+const pdfBusy = ref(false)
 const loading = ref(true)
 const visitsLoading = ref(false)
 const error = ref('')
@@ -308,7 +310,16 @@ async function load() {
 }
 
 function openPdf() {
-  window.open(`/api/vet/prescriptions/${route.params.id}/pdf`, '_blank')
+  if (!doc.value?.id || pdfBusy.value) return
+  pdfBusy.value = true
+  error.value = ''
+  void openPrescriptionPdfBlob(String(doc.value.id))
+    .catch((e: any) => {
+      error.value = mapError(e) || t('prescriptions.errorPdf')
+    })
+    .finally(() => {
+      pdfBusy.value = false
+    })
 }
 
 function medPayload() {

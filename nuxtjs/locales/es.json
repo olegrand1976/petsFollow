@@ -4008,7 +4008,8 @@
     "deleteConfirmBody": "Este borrador de indicaciones se eliminará definitivamente.",
     "deleteConfirmCta": "Eliminar",
     "loadError": "No se pueden cargar las indicaciones.",
-    "limitHint": "Se muestran las 200 más recientes. Ajuste los filtros."
+    "limitHint": "Se muestran las 200 más recientes. Ajuste los filtros.",
+    "errorPdf": "No se puede abrir la ficha PDF."
   },
   "pacs": {
     "title": "Imagen PACS",
