@@ -507,10 +507,23 @@ const kanbanColumns = computed(() => [
 
 onMounted(async () => {
   await Promise.all([loadClients(), loadLinkRequests()])
-  if (canManageShares.value && (route.query.invitations === '1' || linkRequests.value.length > 0)) {
+  // Ne pas empiler la modale invitations au-dessus d'une consultation (reprise desk / CTA).
+  const forceInvites = route.query.invitations === '1'
+  if (
+    canManageShares.value
+    && (forceInvites || linkRequests.value.length > 0)
+    && (forceInvites || !activeConsult.open.value)
+  ) {
     invitationsOpen.value = true
   }
 })
+
+watch(
+  () => activeConsult.open.value,
+  (open) => {
+    if (open) invitationsOpen.value = false
+  },
+)
 </script>
 
 <style scoped>

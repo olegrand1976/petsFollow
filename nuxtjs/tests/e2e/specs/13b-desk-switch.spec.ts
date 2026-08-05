@@ -29,14 +29,14 @@ async function unlockWithPassword(page: Page, password = STAFF_PASSWORD) {
   await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 25000 })
 }
 
-/** /clients ouvre ProModal si link-requests seedés — bloque les clics topbar. */
+/** /clients ouvre ProModal si link-requests seedés — bloque les clics topbar / CR. */
 async function dismissProModals(page: Page) {
   const modal = page.getByTestId('pro-modal')
   for (let i = 0; i < 3; i++) {
     if ((await modal.count()) === 0) return
-    const close = page.getByTestId('pro-modal-close')
+    const close = modal.first().getByTestId('pro-modal-close')
     if ((await close.count()) > 0) {
-      await close.first().click({ force: true })
+      await close.click({ force: true })
     } else {
       await page.keyboard.press('Escape')
     }
@@ -259,6 +259,10 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('consultation-report')).toBeVisible()
     await expect(page.getByTestId('consultation-workspace')).toBeVisible()
+    // /clients peut rouvrir la modale invitations après hard reload — la fermer
+    // pour ne pas bloquer consultation-cancel derrière le backdrop.
+    await dismissProModals(page)
+    await expect(page.getByTestId('consultation-modal')).toBeVisible()
     await page.getByTestId('consultation-cancel').click()
     const leavePrompt = page.getByTestId('consultation-leave-prompt')
     if (await leavePrompt.isVisible().catch(() => false)) {
