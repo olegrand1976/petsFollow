@@ -3974,7 +3974,6 @@
     "careAdvice": "Care and advice",
     "aiPrefill": "Prefill from consultation (AI)",
     "aiPrefillConfirm": "Replace current content with the AI suggestion?",
-    "aiPrefillBusy": "Prefilling…",
     "linkedVisit": "Linked consultation",
     "linkedVisitNone": "No consultation",
     "linkedVisitEmpty": "No consultations for this pet.",

@@ -14,13 +14,40 @@ export function unwrapApiData(res: any) {
   return res?.data ?? res
 }
 
+/** Wall time Europe/Brussels as `YYYY-MM-DD HH:mm` (API stores UTC). */
+export function formatBrusselsDateTime(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Brussels',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(d)
+      .filter(p => p.type !== 'literal')
+      .map(p => [p.type, p.value]),
+  ) as Record<string, string>
+  const y = parts.year
+  const m = parts.month
+  const day = parts.day
+  const h = parts.hour
+  const mi = parts.minute
+  if (!y || !m || !day || !h || !mi) return '—'
+  return `${y}-${m}-${day} ${h}:${mi}`
+}
+
 export function formatPrescriptionVisitLabel(
   v: PrescriptionVisitOption,
   unavailableLabel?: string,
 ): string {
   if (!v?.id) return ''
   if (v.orphan) return unavailableLabel || '—'
-  const when = v.scheduledAt ? String(v.scheduledAt).slice(0, 16).replace('T', ' ') : '—'
+  const when = v.scheduledAt ? formatBrusselsDateTime(v.scheduledAt) : '—'
   const status = v.status || ''
   const report = v.hasFinalReport || v.reportStatus === 'final'
     ? ' · CR'

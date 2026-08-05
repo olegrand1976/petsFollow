@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatBrusselsDateTime,
   formatPrescriptionVisitLabel,
   isOrphanLinkedVisit,
   visitIdForSave,
@@ -29,8 +30,16 @@ describe('prescription-visit helpers', () => {
     expect(isOrphanLinkedVisit(withOrphan, 'v1')).toBe(false)
   })
 
+  it('formatBrusselsDateTime converts UTC to Europe/Brussels wall time', () => {
+    // CEST (UTC+2)
+    expect(formatBrusselsDateTime('2026-08-01T10:00:00Z')).toBe('2026-08-01 12:00')
+    // CET (UTC+1)
+    expect(formatBrusselsDateTime('2026-01-15T10:00:00Z')).toBe('2026-01-15 11:00')
+    expect(formatBrusselsDateTime('not-a-date')).toBe('—')
+  })
+
   it('formatPrescriptionVisitLabel handles orphan + CR', () => {
     expect(formatPrescriptionVisitLabel({ id: 'x', orphan: true }, 'Indispo')).toBe('Indispo')
-    expect(formatPrescriptionVisitLabel(base[0]!)).toContain('· CR')
+    expect(formatPrescriptionVisitLabel(base[0]!)).toBe('2026-08-01 12:00 · completed · CR')
   })
 })

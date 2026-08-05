@@ -69,12 +69,13 @@
         </p>
         <div v-if="linkedVisitId && !linkedVisitOrphan" class="rx-ai">
           <ProButton
-            variant="secondary"
             test-id="prescriptions-ai-prefill"
-            :disabled="busy || aiBusy"
+            :disabled="busy"
+            :loading="aiBusy"
             @click="aiPrefill"
           >
-            {{ aiBusy ? $t('prescriptions.aiPrefillBusy') : $t('prescriptions.aiPrefill') }}
+            <ProIcon name="auto_awesome" :size="16" />
+            {{ $t('prescriptions.aiPrefill') }}
           </ProButton>
         </div>
         <label class="pro-label">{{ $t('prescriptions.paperFormat') }}</label>
