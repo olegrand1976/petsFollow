@@ -122,7 +122,7 @@ Toute mutation métier = test **au niveau le plus bas possible** : intégration 
 
 ### Sync produit/commercial
 
-- Changement d'offre/prix → maj `pages/produits.vue` + `index.productHighlights` dans **les 6 locales servies par Nuxt**, aligné sur `documentation/17-POLITIQUE-TARIFAIRE.md` et `billing/domain.go` (`produits-sync.mdc`).
+- Changement d'offre/prix → maj `pages/produits.vue` (`products.*`) dans **les 6 locales servies par Nuxt**, aligné sur `documentation/17-POLITIQUE-TARIFAIRE.md` et `billing/domain.go` (`produits-sync.mdc`). La landing `/` n’affiche plus les tarifs.
 - Nouveau parcours démo / changement d'écran / compte seed → maj `useCase/**/UC-*.md` + `make usecases-sync` (CI : `make usecases-check`) ; nouveau compte seed → aussi `AGENTS.md` (`usecase-sync.mdc`).
 
 ### Flutter (`flutter-action-tests.mdc`, `firebase-android-dist-version.mdc`)

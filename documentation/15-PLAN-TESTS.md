@@ -115,7 +115,7 @@ Parcours minimum avant toute dist / staging.
 | B1.7 | P2 | 2FA | Settings → activer TOTP → logout → login + code | Gate 2FA ; refuse code faux |
 | B1.8 | P1 | Must-change password | Compte force change | `/change-password` puis accès app |
 | B1.9 | P2 | Pages légales | `/legal/mentions` `/privacy` `/terms` | Contenu + i18n |
-| B1.10 | P2 | Landing | `/` sections produits / CTA | Aligné offre (3,50 / 35 / 95 €) |
+| B1.10 | P2 | Landing | `/` hero / faces / continuité / CTA | Pas de grille tarif ; CTA register OK |
 | B1.11 | P2 | Invite landing | `/invite/[code]` (code seed si dispo) | Landing invite + CTA app |
 
 ### B2 — Auth Flutter
@@ -490,7 +490,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I6 | Médias avatars | Upload puis reload cold | Toujours affichés |
 | I7 | Isolation rôles URLs | Accès croisés `/admin` `/commercial-manager` | 403 / redirect |
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
-| I9 | Offre sync | Landing `#produits` + `/produits` | Même prix / inclus |
+| I9 | Offre sync | `/produits` (+ écran tarif public quand livré) | Aligné docs + `domain.go` |
 
 **Pharmacie BE (dev)** : stock + DAF/PDF + VAMReg dry-run + prix/seuils/commandes/BL/inventaire + chaîne alimentaire sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` (dont `TestPharmacyPlanCoverage`) + Playwright `@p0`/`@p1` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts). Roadmap : [37](37-ROADMAP-STOCK-FACTURATION.md). DAF→Billit (BIL-9) **gelé** (gate `EnqueueInvoicesConnect`) jusqu’accès reseller. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
 

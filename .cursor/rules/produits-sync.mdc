@@ -1,11 +1,11 @@
 ---
-description: Garder / et /produits alignés avec toute évolution offre ou prix
+description: Garder /produits aligné avec toute évolution offre ou prix
 alwaysApply: true
 ---
 
-# Offre — sync landing `/` + `/produits` (shell Pro)
+# Offre — sync `/produits` (shell Pro)
 
-À chaque changement d’**offre**, **prix**, **plans**, **bénéfices inclus** ou **positionnement** commercial :
+La landing `/` n’affiche plus les tarifs (écran tarif dédié à venir). À chaque changement d’**offre**, **prix**, **plans**, **bénéfices inclus** ou **positionnement** commercial :
 
 1. Mettre à jour la page Pro [`nuxtjs/pages/produits.vue`](nuxtjs/pages/produits.vue) (shell authentifié, pas full-page) via les clés i18n `products.*` dans **les 6 locales servies par Nuxt** (`uk`/`ru` sont hors `nuxt.config.ts` tant que leur catalogue est incomplet — cf. `AGENTS.md` § Langues) :
    - [`nuxtjs/locales/fr.json`](nuxtjs/locales/fr.json)
@@ -14,7 +14,7 @@ alwaysApply: true
    - [`nuxtjs/locales/es.json`](nuxtjs/locales/es.json)
    - [`nuxtjs/locales/et.json`](nuxtjs/locales/et.json)
    - [`nuxtjs/locales/it.json`](nuxtjs/locales/it.json)
-2. Aligner `index.productHighlights` (landing `#produits` sur [`nuxtjs/pages/index.vue`](nuxtjs/pages/index.vue)).
+2. Quand l’écran tarif public sera créé, y aligner aussi les montants (clés `index.productHighlights` / `index.saas` encore présentes dans les locales).
 3. Sources de vérité (dans cet ordre) :
    - [`documentation/17-POLITIQUE-TARIFAIRE.md`](documentation/17-POLITIQUE-TARIFAIRE.md)
    - [`documentation/22-FICHE-PRODUIT-COMMERCIAL.md`](documentation/22-FICHE-PRODUIT-COMMERCIAL.md)
@@ -32,6 +32,6 @@ alwaysApply: true
 | Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT/UK/RU |
 
 ```text
-# ❌ BAD — docs/billing changés, / ou /produits inchangés
-# ✅ GOOD — même PR/commit : docs + domain.go + products.* (6 locales) + highlights landing
+# ❌ BAD — docs/billing changés, /produits inchangé
+# ✅ GOOD — même PR/commit : docs + domain.go + products.* (6 locales)
 ```
