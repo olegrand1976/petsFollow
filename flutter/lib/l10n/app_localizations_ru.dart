@@ -1062,6 +1062,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get discoveryTitle => 'Знакомство с petsFollow';
 
   @override
+  String get homeRecentActivity => 'Недавняя активность';
+
+  @override
   String get discoveryMission => 'Ваш путь в petsFollow';
 
   @override

@@ -19,6 +19,7 @@ import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
@@ -43,12 +44,16 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   bool? hasVets;
   DiscoveryProgress? discoveryProgress;
   int householdEpoch = 0;
+  List<_HomeActivityItem> recentActivity = [];
+  static const _recentActivityLimit = 15;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) load();
+    });
   }
 
   @override
@@ -90,9 +95,17 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     }
     try {
       final data = await ApiClient.instance.getPets();
+      final petList =
+          data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
+      var activity = <_HomeActivityItem>[];
+      final journeyDone = discoveryProgress?.isJourneyComplete ?? false;
+      if (journeyDone && petList.isNotEmpty) {
+        activity = await _fetchRecentActivity(petList);
+      }
       if (mounted) {
         setState(() {
-          pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
+          pets = petList;
+          recentActivity = activity;
           loading = false;
           loadError = null;
           _hasLoadedOnce = true;
@@ -115,6 +128,39 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     }
   }
 
+  Future<List<_HomeActivityItem>> _fetchRecentActivity(List<Pet> petList) async {
+    final results = await Future.wait(
+      petList.map((pet) async {
+        try {
+          final rows = await ApiClient.instance.getTimeline(pet.id);
+          return rows
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .map((m) {
+                final createdRaw = m['createdAt'] as String? ?? '';
+                final createdAt = DateTime.tryParse(createdRaw);
+                if (createdAt == null) return null;
+                return _HomeActivityItem(
+                  petId: pet.id,
+                  petName: pet.name,
+                  type: m['type']?.toString() ?? '',
+                  title: m['title']?.toString() ?? '',
+                  body: m['body']?.toString() ?? '',
+                  createdAt: createdAt,
+                );
+              })
+              .whereType<_HomeActivityItem>()
+              .toList();
+        } catch (_) {
+          return <_HomeActivityItem>[];
+        }
+      }),
+    );
+    final merged = results.expand((e) => e).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (merged.length <= _recentActivityLimit) return merged;
+    return merged.sublist(0, _recentActivityLimit);
+  }
+
   List<DiscoveryCard> _discoveryCards(AppLocalizations l10n, DiscoveryProgress progress) {
     final base = [
       DiscoveryCard(dayIndex: 0, title: l10n.discoveryDay0Title, body: l10n.discoveryDay0Body),
@@ -127,7 +173,18 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
 
   Future<void> _completeMission(DiscoveryCard card) async {
     final progress = await DiscoveryController.instance.completeCard(card.cardKey);
-    if (mounted) setState(() => discoveryProgress = progress);
+    if (!mounted) return;
+    if (progress.isJourneyComplete && pets.isNotEmpty) {
+      final activity = await _fetchRecentActivity(pets);
+      if (mounted) {
+        setState(() {
+          discoveryProgress = progress;
+          recentActivity = activity;
+        });
+      }
+    } else {
+      setState(() => discoveryProgress = progress);
+    }
   }
 
   Future<void> _openPetForm() => openPetFormAndFollowUp(
@@ -258,6 +315,28 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         onComplete: card.locked || card.completed ? null : () => _completeMission(card),
                       ),
                     ),
+                  ] else if (pets.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.homeRecentActivity,
+                      key: const Key('home_recent_activity_title'),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    if (recentActivity.isEmpty)
+                      Text(
+                        l10n.timelineEmpty,
+                        key: const Key('home_recent_activity_empty'),
+                        style: TextStyle(color: p.textMuted),
+                      )
+                    else
+                      ...recentActivity.map(
+                        (item) => _HomeActivityTile(
+                          item: item,
+                          l10n: l10n,
+                          onTap: () => _openPetTimeline(item.petId, item.petName),
+                        ),
+                      ),
                   ],
                 ],
               ),
@@ -269,6 +348,15 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
               icon: const Icon(Icons.add),
               label: Text(l10n.newPet),
             ),
+    );
+  }
+
+  void _openPetTimeline(String petId, String petName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PetTimelineScreen(petId: petId, petName: petName),
+      ),
     );
   }
 
@@ -296,6 +384,106 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => PetDetailScreen(pet: pet, onUpdated: load)),
+    );
+  }
+}
+
+class _HomeActivityItem {
+  const _HomeActivityItem({
+    required this.petId,
+    required this.petName,
+    required this.type,
+    required this.title,
+    required this.body,
+    required this.createdAt,
+  });
+
+  final String petId;
+  final String petName;
+  final String type;
+  final String title;
+  final String body;
+  final DateTime createdAt;
+}
+
+class _HomeActivityTile extends StatelessWidget {
+  const _HomeActivityTile({
+    required this.item,
+    required this.l10n,
+    required this.onTap,
+  });
+
+  final _HomeActivityItem item;
+  final AppLocalizations l10n;
+  final VoidCallback onTap;
+
+  String _typeLabel(String type) {
+    switch (type) {
+      case 'heartrate':
+        return l10n.timelineTypeHeartrate;
+      case 'weight':
+        return l10n.timelineTypeWeight;
+      case 'blood_pressure':
+        return l10n.bloodPressureShort;
+      case 'lab_panel':
+        return l10n.labsTitle;
+      case 'message':
+        return l10n.timelineTypeMessage;
+      case 'care':
+        return l10n.timelineTypeCare;
+      case 'visit':
+        return l10n.timelineTypeVisit;
+      case 'event':
+        return l10n.timelineTypeEvent;
+      default:
+        return type;
+    }
+  }
+
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'heartrate':
+        return Icons.favorite_outline;
+      case 'weight':
+        return Icons.monitor_weight_outlined;
+      case 'blood_pressure':
+        return Icons.monitor_heart_outlined;
+      case 'lab_panel':
+        return Icons.science_outlined;
+      case 'message':
+        return Icons.chat_bubble_outline;
+      case 'care':
+        return Icons.medical_services_outlined;
+      case 'visit':
+        return Icons.event_available;
+      case 'event':
+        return Icons.flag_outlined;
+      default:
+        return Icons.circle_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = PetsPalette.of(context);
+    final dateLabel = DateFormat.yMMMd(l10n.localeName).add_Hm().format(item.createdAt.toLocal());
+    final subtitle = item.title.isNotEmpty
+        ? item.title
+        : (item.body.isNotEmpty ? item.body : _typeLabel(item.type));
+    return Card(
+      key: Key('home_activity_${item.petId}_${item.createdAt.toIso8601String()}'),
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(_iconForType(item.type), color: AppColors.primary),
+        title: Text(item.petName),
+        subtitle: Text(
+          '$subtitle\n$dateLabel',
+          style: TextStyle(color: p.textMuted, height: 1.3),
+        ),
+        isThreeLine: true,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
     );
   }
 }

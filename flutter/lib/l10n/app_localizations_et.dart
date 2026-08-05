@@ -1056,6 +1056,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get discoveryTitle => 'Avastage petsFollow';
 
   @override
+  String get homeRecentActivity => 'Viimane tegevus';
+
+  @override
   String get discoveryMission => 'Teie petsFollow teekond';
 
   @override

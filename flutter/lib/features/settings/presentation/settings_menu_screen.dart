@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/config/app_env.dart';
-import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/locale/language_picker_sheet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
 import 'package:petsfollow_mobile/features/client_ai/presentation/explain_reports_list_screen.dart';
@@ -39,42 +39,7 @@ class SettingsMenuScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           ),
         ),
-        ListenableBuilder(
-          listenable: LocaleController.instance,
-          builder: (context, _) {
-            final code = LocaleController.instance.languageCode;
-            return ListTile(
-              leading: const Icon(Icons.language),
-              title: Text(l10n.language),
-              trailing: DropdownButton<String>(
-                value: code,
-                underline: const SizedBox.shrink(),
-                items: [
-                  DropdownMenuItem(value: 'fr', child: Text(l10n.languageFr)),
-                  DropdownMenuItem(value: 'nl', child: Text(l10n.languageNl)),
-                  DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
-                  DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
-                  DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
-                  DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
-                  DropdownMenuItem(value: 'uk', child: Text(l10n.languageUk)),
-                  DropdownMenuItem(value: 'ru', child: Text(l10n.languageRu)),
-                ],
-                onChanged: (next) async {
-                  if (next == null || next == code) return;
-                  try {
-                    if (ApiClient.instance.token != null) {
-                      await ApiClient.instance.updateLocale(next);
-                    } else {
-                      await LocaleController.instance.setLocale(next);
-                    }
-                  } catch (_) {
-                    await LocaleController.instance.setLocale(next);
-                  }
-                },
-              ),
-            );
-          },
-        ),
+        const LanguageSettingsTile(),
         const AppearanceSettingsTile(),
         ListTile(
           leading: const Icon(Icons.play_circle_outline),

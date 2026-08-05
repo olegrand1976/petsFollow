@@ -2036,6 +2036,12 @@ abstract class AppLocalizations {
   /// **'Découvrir petsFollow'**
   String get discoveryTitle;
 
+  /// No description provided for @homeRecentActivity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activité récente'**
+  String get homeRecentActivity;
+
   /// No description provided for @discoveryMission.
   ///
   /// In fr, this message translates to:

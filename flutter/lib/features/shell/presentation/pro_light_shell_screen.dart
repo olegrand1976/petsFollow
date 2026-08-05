@@ -7,7 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/locale/language_picker_sheet.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
@@ -554,42 +554,7 @@ class _SettingsTab extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const AppInviteQrScreen()),
           ),
         ),
-        ListenableBuilder(
-          listenable: LocaleController.instance,
-          builder: (context, _) {
-            final code = LocaleController.instance.languageCode;
-            return ListTile(
-              leading: const Icon(Icons.language),
-              title: Text(l10n.language),
-              trailing: DropdownButton<String>(
-                value: code,
-                underline: const SizedBox.shrink(),
-                items: [
-                  DropdownMenuItem(value: 'fr', child: Text(l10n.languageFr)),
-                  DropdownMenuItem(value: 'nl', child: Text(l10n.languageNl)),
-                  DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
-                  DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
-                  DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
-                  DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
-                  DropdownMenuItem(value: 'uk', child: Text(l10n.languageUk)),
-                  DropdownMenuItem(value: 'ru', child: Text(l10n.languageRu)),
-                ],
-                onChanged: (next) async {
-                  if (next == null || next == code) return;
-                  try {
-                    if (ApiClient.instance.token != null) {
-                      await ApiClient.instance.updateLocale(next);
-                    } else {
-                      await LocaleController.instance.setLocale(next);
-                    }
-                  } catch (_) {
-                    await LocaleController.instance.setLocale(next);
-                  }
-                },
-              ),
-            );
-          },
-        ),
+        const LanguageSettingsTile(),
         const AppearanceSettingsTile(),
         ListTile(
           key: const Key('pro_light_settings_support'),

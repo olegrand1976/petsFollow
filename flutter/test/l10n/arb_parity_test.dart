@@ -97,7 +97,7 @@ void main() {
   });
 
   test('les libellés de langue existent pour chaque locale supportée', () {
-    // languageFr, languageNl… : un oubli casse le DropdownMenuItem du picker.
+    // languageFr, languageNl… : un oubli casse le LanguagePickerSheet.
     for (final loc in locales) {
       final key = 'language${loc[0].toUpperCase()}${loc.substring(1)}';
       expect(

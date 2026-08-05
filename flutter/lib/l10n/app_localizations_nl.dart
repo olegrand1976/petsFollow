@@ -1057,6 +1057,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get discoveryTitle => 'Ontdek petsFollow';
 
   @override
+  String get homeRecentActivity => 'Recente activiteit';
+
+  @override
   String get discoveryMission => 'Uw petsFollow-traject';
 
   @override

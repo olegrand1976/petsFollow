@@ -1059,6 +1059,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get discoveryTitle => 'Scopri petsFollow';
 
   @override
+  String get homeRecentActivity => 'Attività recente';
+
+  @override
   String get discoveryMission => 'Il tuo percorso petsFollow';
 
   @override

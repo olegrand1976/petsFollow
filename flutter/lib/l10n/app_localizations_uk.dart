@@ -1061,6 +1061,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get discoveryTitle => 'Знайомство з petsFollow';
 
   @override
+  String get homeRecentActivity => 'Остання активність';
+
+  @override
   String get discoveryMission => 'Ваш шлях у petsFollow';
 
   @override
