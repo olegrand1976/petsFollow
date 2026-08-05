@@ -51,6 +51,15 @@ type PrescriptionPatch struct {
 	VisitID     *string // set / clear: empty string clears
 }
 
+// ListPrescriptionsFilter filters practice consignes (newest first, max 200).
+type ListPrescriptionsFilter struct {
+	Status string
+	PetID  string
+	Query  string
+	From   *time.Time
+	To     *time.Time
+}
+
 const prescriptionSelectCols = `
 		SELECT p.id::text, p.practice_id::text, p.veterinary_id::text, COALESCE(v.full_name,''),
 		       p.pet_id::text, COALESCE(pet.name,''), COALESCE(pet.species,''),
@@ -123,18 +132,35 @@ func (s *Store) CreatePrescriptionDraft(
 	return s.GetPrescription(ctx, practiceID, id)
 }
 
-func (s *Store) ListPrescriptions(ctx context.Context, practiceID, status, petID string) ([]Prescription, error) {
+func (s *Store) ListPrescriptions(ctx context.Context, practiceID string, f ListPrescriptionsFilter) ([]Prescription, error) {
 	q := prescriptionSelectCols + ` WHERE p.practice_id = $1`
 	args := []any{practiceID}
 	n := 2
-	if status != "" {
+	if status := strings.TrimSpace(f.Status); status != "" {
 		q += ` AND p.status = $` + strconv.Itoa(n)
 		args = append(args, status)
 		n++
 	}
-	if petID != "" {
+	if petID := strings.TrimSpace(f.PetID); petID != "" {
 		q += ` AND p.pet_id = $` + strconv.Itoa(n)
 		args = append(args, petID)
+		n++
+	}
+	if query := strings.TrimSpace(f.Query); query != "" {
+		q += ` AND (pet.name ILIKE $` + strconv.Itoa(n) +
+			` OR o.full_name ILIKE $` + strconv.Itoa(n) +
+			` OR COALESCE(o.email,'') ILIKE $` + strconv.Itoa(n) + `)`
+		args = append(args, "%"+query+"%")
+		n++
+	}
+	if f.From != nil {
+		q += ` AND p.created_at >= $` + strconv.Itoa(n)
+		args = append(args, *f.From)
+		n++
+	}
+	if f.To != nil {
+		q += ` AND p.created_at <= $` + strconv.Itoa(n)
+		args = append(args, *f.To)
 	}
 	q += ` ORDER BY p.created_at DESC LIMIT 200`
 	rows, err := s.pool.Query(ctx, q, args...)

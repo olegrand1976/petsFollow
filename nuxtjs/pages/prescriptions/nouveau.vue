@@ -105,7 +105,7 @@
           <label class="pro-label">{{ $t('prescriptions.withdrawal') }}</label>
           <input v-model="line.withdrawal_period" class="pro-input" />
         </div>
-        <div v-if="lines.length > 1" class="rx-line__full">
+        <div class="rx-line__full">
           <ProButton variant="ghost" :test-id="`prescriptions-remove-line-${idx}`" @click="removeLine(idx)">
             {{ $t('prescriptions.removeLine') }}
           </ProButton>
@@ -190,8 +190,8 @@ function addLine() {
 }
 
 function removeLine(idx: number) {
-  if (lines.value.length <= 1) return
   lines.value.splice(idx, 1)
+  if (!lines.value.length) lines.value.push(emptyLine())
 }
 
 function onMedPicked(idx: number, v: ProComboboxItem) {
@@ -205,9 +205,7 @@ function onMedPicked(idx: number, v: ProComboboxItem) {
   if (m.pharmaceuticalForm && !line.form) line.form = String(m.pharmaceuticalForm)
 }
 
-const canSubmit = computed(() =>
-  !!pet.value?.id && lines.value.every(l => l.name.trim()),
-)
+const canSubmit = computed(() => !!pet.value?.id)
 
 async function ensurePets() {
   if (petsCache.value.length) return
@@ -365,19 +363,21 @@ async function saveDraft() {
       paperFormat: paperFormat.value,
       notes: notes.value,
       careAdvice: careAdvice.value,
-      medications: lines.value.map((l) => {
-        const med: any = {
-          name: l.name.trim(),
-          dosage: l.dosage.trim(),
-          form: l.form.trim(),
-          quantity: l.quantity.trim(),
-          posology: l.posology.trim(),
-          withdrawal_period: l.withdrawal_period.trim(),
-        }
-        if (l.cnk) med.cnk = l.cnk
-        if (l.ref_medication_id) med.ref_medication_id = l.ref_medication_id
-        return med
-      }),
+      medications: lines.value
+        .filter(l => l.name.trim())
+        .map((l) => {
+          const med: any = {
+            name: l.name.trim(),
+            dosage: l.dosage.trim(),
+            form: l.form.trim(),
+            quantity: l.quantity.trim(),
+            posology: l.posology.trim(),
+            withdrawal_period: l.withdrawal_period.trim(),
+          }
+          if (l.cnk) med.cnk = l.cnk
+          if (l.ref_medication_id) med.ref_medication_id = l.ref_medication_id
+          return med
+        }),
     }
     if (validUntil.value) body.validUntil = validUntil.value
     const vid = visitIdForSave(visits.value, linkedVisitId.value)

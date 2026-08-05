@@ -92,18 +92,38 @@ func (a *API) listPrescriptions(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	status := strings.TrimSpace(r.URL.Query().Get("status"))
-	if status != "" && status != prescription.StatusDraft &&
-		status != prescription.StatusSigned && status != prescription.StatusSent && status != prescription.StatusArchived {
+	q := r.URL.Query()
+	f := store.ListPrescriptionsFilter{
+		Status: strings.TrimSpace(q.Get("status")),
+		PetID:  strings.TrimSpace(q.Get("petId")),
+		Query:  strings.TrimSpace(q.Get("q")),
+	}
+	if f.Status != "" && f.Status != prescription.StatusDraft &&
+		f.Status != prescription.StatusSigned && f.Status != prescription.StatusSent && f.Status != prescription.StatusArchived {
 		writeErr(w, r, http.StatusBadRequest, "invalid_status", "invalid_status")
 		return
 	}
-	petID := strings.TrimSpace(r.URL.Query().Get("petId"))
-	if petID != "" && !isUUID(petID) {
+	if f.PetID != "" && !isUUID(f.PetID) {
 		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
 		return
 	}
-	items, err := a.store.ListPrescriptions(r.Context(), id.PracticeID, status, petID)
+	if raw := strings.TrimSpace(q.Get("from")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_from")
+			return
+		}
+		f.From = &t
+	}
+	if raw := strings.TrimSpace(q.Get("to")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_to")
+			return
+		}
+		f.To = &t
+	}
+	items, err := a.store.ListPrescriptions(r.Context(), id.PracticeID, f)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

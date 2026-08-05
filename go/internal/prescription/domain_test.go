@@ -7,19 +7,23 @@ import (
 )
 
 func TestNormalizeMedications(t *testing.T) {
-	_, err := NormalizeMedications(nil)
-	if err != ErrEmptyMeds {
-		t.Fatalf("nil: %v", err)
+	list, err := NormalizeMedications(nil)
+	if err != nil || len(list) != 0 {
+		t.Fatalf("nil: list=%v err=%v", list, err)
 	}
-	_, err = NormalizeMedications([]byte(`[]`))
-	if err != ErrEmptyMeds {
-		t.Fatalf("empty: %v", err)
+	list, err = NormalizeMedications([]byte(`[]`))
+	if err != nil || len(list) != 0 {
+		t.Fatalf("empty: list=%v err=%v", list, err)
+	}
+	list, err = NormalizeMedications([]byte(`null`))
+	if err != nil || len(list) != 0 {
+		t.Fatalf("null: list=%v err=%v", list, err)
 	}
 	_, err = NormalizeMedications([]byte(`[{"name":""}]`))
 	if err != ErrInvalidMeds {
 		t.Fatalf("blank name: %v", err)
 	}
-	list, err := NormalizeMedications([]byte(`[{"name":" Amox ","dosage":"50mg","form":"tablet","quantity":"1 box","posology":"1/j","withdrawal_period":"","cnk":"123"}]`))
+	list, err = NormalizeMedications([]byte(`[{"name":" Amox ","dosage":"50mg","form":"tablet","quantity":"1 box","posology":"1/j","withdrawal_period":"","cnk":"123"}]`))
 	if err != nil {
 		t.Fatal(err)
 	}

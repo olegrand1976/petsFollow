@@ -160,10 +160,18 @@ func TestPrescriptionsValidation(t *testing.T) {
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
 
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prescriptions", vetTok, map[string]any{
-		"petId": petID, "medications": []any{},
+		"petId": petID, "medications": []any{}, "careAdvice": "repos 48h",
 	})
-	if code != http.StatusBadRequest || errCode(env) != "invalid_medications" {
-		t.Fatalf("empty meds want 400 invalid_medications got %d %q %#v", code, errCode(env), env)
+	if code != http.StatusCreated {
+		t.Fatalf("empty meds draft want 201 got %d %#v", code, env)
+	}
+	emptyDoc := dataMap(t, env)
+	if emptyDoc["status"] != "draft" {
+		t.Fatalf("empty meds status %#v", emptyDoc)
+	}
+	medsRaw, _ := emptyDoc["medications"].([]any)
+	if len(medsRaw) != 0 {
+		t.Fatalf("empty meds want [] got %#v", emptyDoc["medications"])
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prescriptions", vetTok, map[string]any{

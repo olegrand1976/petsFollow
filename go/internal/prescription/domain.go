@@ -80,16 +80,18 @@ func fieldOK(s string) bool {
 	return utf8.RuneCountInString(s) <= MaxMedFieldRunes
 }
 
+// NormalizeMedications accepts an empty list (draft consignes without medication).
+// nil / null / [] → empty slice. Non-empty lines still require a name.
 func NormalizeMedications(raw json.RawMessage) ([]Medication, error) {
 	if len(raw) == 0 || string(raw) == "null" {
-		return nil, ErrEmptyMeds
+		return []Medication{}, nil
 	}
 	var list []Medication
 	if err := json.Unmarshal(raw, &list); err != nil {
 		return nil, ErrInvalidMeds
 	}
 	if len(list) == 0 {
-		return nil, ErrEmptyMeds
+		return []Medication{}, nil
 	}
 	if len(list) > MaxMedications {
 		return nil, ErrPayloadTooLarge
@@ -124,6 +126,9 @@ func NormalizeMedications(raw json.RawMessage) ([]Medication, error) {
 }
 
 func MedicationsJSON(list []Medication) (json.RawMessage, error) {
+	if list == nil {
+		list = []Medication{}
+	}
 	b, err := json.Marshal(list)
 	if err != nil {
 		return nil, err

@@ -23,12 +23,13 @@ L’**ordonnance légale** reste sur **papier carbone**, remplissage **manuel ob
 
 | Inclus | Exclus |
 |--------|--------|
-| CRUD brouillons (`status=draft`) | Ordonnance légale / signature / eIDAS |
+| CRUD brouillons (`status=draft`), **sans médication obligatoire** | Ordonnance légale / signature / eIDAS |
 | Preview PDF A4/A5 (fiche consignes) | PDF immuable + `pdf_sha256` stocké |
 | `care_advice` (conseils / soins client) | Partage client / messagerie |
 | `visit_id` optionnel (lien consultation) | Finalize / sent / archived métier |
 | Pré-remplissage IA depuis le CR (`suggest-from-visit`) | Inventaire structuré de gestes hors texte |
 | Soft-link CNK / `ref_medication_id` (UI picker) | |
+| Liste filtrable (statut, recherche, dates) + actions (ouvrir, PDF, fiche animal, supprimer brouillon) | |
 | Pont optionnel `POST …/daf/from-prescription` → draft DAF | |
 | Export RGPD `owner_id` | |
 
@@ -49,8 +50,8 @@ Base : `/api/v1/vet/prescriptions` (BFF `/api/vet/prescriptions`).
 
 | Méthode | Route | Rôle |
 |---------|-------|------|
-| `GET` | `/` | Liste (`status`, `petId`) |
-| `POST` | `/` | Crée un draft (`careAdvice`, `visitId` optionnels) |
+| `GET` | `/` | Liste (`status`, `petId`, `q`, `from`, `to` RFC3339) |
+| `POST` | `/` | Crée un draft (`careAdvice`, `visitId` optionnels ; `medications` peut être `[]`) |
 | `POST` | `/suggest-from-visit` | Proposition IA depuis CR (`{ visitId }`) — non persistée |
 | `GET/PATCH/DELETE` | `/{id}` | Détail / maj / delete draft |
 | `GET` | `/{id}/pdf` | Stream PDF fiche consignes (généré, non persisté) |

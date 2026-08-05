@@ -530,7 +530,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
-| C8.1 | P1 | Créer draft (consignes) | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` ; `careAdvice` persisté |
+| C8.1 | P1 | Créer draft (consignes) | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` ; `careAdvice` persisté ; médications optionnelles (`[]` OK) |
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` (fiche consignes) |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
 | C8.4 | P1 | Lien visite + suggest | `visitId` cohérent ; `suggest-from-visit` sans CR → `no_visit_report` ; Gemini off → 503 |

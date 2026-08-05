@@ -119,7 +119,7 @@
           <input v-model="line.quantity" class="pro-input" :placeholder="$t('prescriptions.quantity')" />
           <input v-model="line.posology" class="pro-input" :placeholder="$t('prescriptions.posology')" />
           <input v-model="line.withdrawal_period" class="pro-input" :placeholder="$t('prescriptions.withdrawal')" />
-          <div v-if="lines.length > 1" class="rx-line__full">
+          <div class="rx-line__full">
             <ProButton variant="ghost" :test-id="`prescriptions-remove-line-${idx}`" @click="removeLine(idx)">
               {{ $t('prescriptions.removeLine') }}
             </ProButton>
@@ -204,8 +204,8 @@ function emptyLine() {
 }
 
 function removeLine(idx: number) {
-  if (lines.value.length <= 1) return
   lines.value.splice(idx, 1)
+  if (!lines.value.length) lines.value.push(emptyLine())
 }
 
 function onMedPicked(idx: number, v: ProComboboxItem) {
