@@ -1,15 +1,16 @@
 <template>
   <ProModal
     :open="open"
-    :size="visitId ? 'full' : 'md'"
+    :size="modalSize"
     :title="modalTitle"
     test-id="consultation-modal"
-    :prevent-close="reportBusy || closing || leavePromptOpen || nextPromptOpen"
-    :expandable="!!visitId"
+    :prevent-close="workspaceBusy || closing || starting || leavePromptBlocking"
+    :expandable="modalExpandable"
     v-model:expanded="modalExpanded"
+    contain-scroll
     @update:open="onOpenUpdate"
   >
-    <!-- Étape A : choisir l'animal puis démarrer la visite -->
+    <!-- Étape A : choisir l'animal -->
     <div v-if="!visitId" class="consultation-setup pro-form" data-testid="consultation-setup">
       <p class="pro-hint">{{ $t('clients.consultation.hint') }}</p>
       <p v-if="loadError" class="pro-error" role="alert">{{ loadError }}</p>
@@ -38,187 +39,44 @@
       />
     </div>
 
-    <!-- Étape B : CR médical -->
+    <!-- Étape B/C : workspace CR + hub (même coque partout) -->
     <div
-      v-else-if="!nextStepsOpen"
-      class="consultation-report"
-      data-testid="consultation-report"
+      v-else
+      class="consultation-modal-shell"
+      data-testid="consultation-detail-surface"
     >
-      <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
-      <ProVisitReportPanel
-        ref="reportPanelRef"
-        fill-height
+      <ProConsultationWorkspace
+        :key="visitId"
+        ref="workspaceRef"
         :visit-id="visitId"
-        :visit-scheduled-at="scheduledAt"
-        @saved="onReportSaved"
-        @finalized="onReportFinalized"
-        @busy="onReportBusy"
+        :client-id="workspaceClientId"
+        :pet-id="workspacePetId"
+        :scheduled-at="scheduledAt || undefined"
+        :preserve-visit="preserveVisit"
+        :readonly="readonly"
+        @stage="onStage"
+        @leave-prompt="onLeavePrompt"
+        @busy="onWorkspaceBusy"
+        @closed="onWorkspaceClosed"
       />
     </div>
 
-    <!-- Étape C : hub post-save -->
-    <div
-      v-else
-      class="consultation-next-steps"
-      data-testid="consultation-next-steps"
-    >
-      <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
-      <p class="pro-hint">{{ $t('clients.consultation.nextStepsHint') }}</p>
-      <div class="consultation-next-steps__grid">
-        <button
-          v-if="showPrescriptionCta"
-          type="button"
-          class="consultation-next-card"
-          data-testid="consultation-cta-prescription"
-          :disabled="closing"
-          @click="goPrescription"
-        >
-          <ProIcon name="clinical_notes" :size="28" />
-          <span class="consultation-next-card__title">
-            {{ $t('clients.consultation.ctaPrescription') }}
-            <ProBadge variant="warning">{{ $t('nav.tagDev') }}</ProBadge>
-          </span>
-          <span class="consultation-next-card__desc">{{ $t('clients.consultation.ctaPrescriptionHint') }}</span>
-        </button>
-        <button
-          v-if="showDafCta"
-          type="button"
-          class="consultation-next-card"
-          data-testid="consultation-cta-daf"
-          :disabled="closing"
-          @click="goDaf"
-        >
-          <ProIcon name="medication" :size="28" />
-          <span class="consultation-next-card__title">{{ $t('clients.consultation.ctaDaf') }}</span>
-          <span class="consultation-next-card__desc">{{ $t('clients.consultation.ctaDafHint') }}</span>
-        </button>
-        <button
-          v-if="showInvoiceCta"
-          type="button"
-          class="consultation-next-card"
-          data-testid="consultation-cta-invoice"
-          :disabled="closing"
-          @click="goInvoice"
-        >
-          <ProIcon name="receipt_long" :size="28" />
-          <span class="consultation-next-card__title">{{ $t('clients.consultation.ctaInvoice') }}</span>
-          <span class="consultation-next-card__desc">{{ $t('clients.consultation.ctaInvoiceHint') }}</span>
-        </button>
-      </div>
-      <p
-        v-if="!showPrescriptionCta && !showDafCta && !showInvoiceCta"
-        class="pro-hint"
-        data-testid="consultation-next-steps-empty"
-      >
-        {{ $t('clients.consultation.nextStepsEmpty') }}
-      </p>
-    </div>
-
-    <template #footer>
+    <template v-if="!visitId" #footer>
       <ProButton
         variant="ghost"
-        test-id="consultation-cancel"
-        :disabled="reportBusy || closing"
+        test-id="consultation-setup-cancel"
+        :disabled="starting"
         @click="close"
       >
         {{ $t('common.cancel') }}
       </ProButton>
-
-      <template v-if="!visitId">
-        <ProButton
-          test-id="consultation-start"
-          :loading="starting"
-          :disabled="!selectedPetId || starting || petsLoading"
-          @click="start"
-        >
-          {{ $t('clients.consultation.start') }}
-        </ProButton>
-      </template>
-
-      <template v-else-if="nextStepsOpen">
-        <ProButton
-          variant="secondary"
-          test-id="consultation-cta-done"
-          :disabled="closing"
-          @click="finishDone"
-        >
-          {{ $t('clients.consultation.ctaDone') }}
-        </ProButton>
-      </template>
-
-      <!-- CR déjà enregistré mais resté à l'écran (IA / « Continuer l'édition ») :
-           garder un accès au hub sans imposer la bascule. -->
-      <template v-else-if="reportSaved">
-        <ProButton
-          variant="secondary"
-          test-id="consultation-goto-next-steps"
-          :disabled="reportBusy || closing"
-          @click="openNextSteps"
-        >
-          {{ $t('clients.consultation.nextStepsTitle') }}
-        </ProButton>
-      </template>
-    </template>
-  </ProModal>
-
-  <ProModal
-    :open="nextPromptOpen"
-    size="md"
-    :title="$t('clients.consultation.nextPromptTitle')"
-    test-id="consultation-next-prompt"
-    @update:open="onNextPromptOpen"
-  >
-    <p class="pro-hint">{{ $t('clients.consultation.nextPromptHint') }}</p>
-    <template #footer>
       <ProButton
-        variant="ghost"
-        test-id="consultation-next-stay"
-        @click="nextPromptOpen = false"
+        test-id="consultation-start"
+        :loading="starting"
+        :disabled="!selectedPetId || starting || petsLoading"
+        @click="start"
       >
-        {{ $t('clients.consultation.nextPromptStay') }}
-      </ProButton>
-      <ProButton
-        test-id="consultation-next-continue"
-        @click="openNextSteps"
-      >
-        {{ $t('clients.consultation.nextPromptContinue') }}
-      </ProButton>
-    </template>
-  </ProModal>
-
-  <ProModal
-    :open="leavePromptOpen"
-    size="md"
-    :title="$t('clients.consultation.leaveTitle')"
-    test-id="consultation-leave-prompt"
-    :prevent-close="leaveBusy"
-    @update:open="onLeavePromptOpen"
-  >
-    <p class="pro-hint">{{ $t('clients.consultation.leaveHint') }}</p>
-    <p v-if="leaveError" class="pro-error" role="alert">{{ leaveError }}</p>
-    <template #footer>
-      <ProButton
-        variant="ghost"
-        test-id="consultation-leave-stay"
-        :disabled="leaveBusy"
-        @click="leavePromptOpen = false"
-      >
-        {{ $t('clients.consultation.leaveStay') }}
-      </ProButton>
-      <ProButton
-        variant="secondary"
-        test-id="consultation-leave-discard"
-        :disabled="leaveBusy"
-        @click="confirmDiscardLeave"
-      >
-        {{ $t('clients.consultation.leaveDiscard') }}
-      </ProButton>
-      <ProButton
-        test-id="consultation-leave-save"
-        :loading="leaveBusy"
-        @click="confirmSaveLeave"
-      >
-        {{ $t('clients.consultation.leaveSave') }}
+        {{ $t('clients.consultation.start') }}
       </ProButton>
     </template>
   </ProModal>
@@ -227,23 +85,16 @@
 <script setup lang="ts">
 import type { ConsultationPet } from '~/composables/useConsultationFlow'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
-import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
-/** Miroir de `VisitReportSavedOrigin` (ProVisitReportPanel) — évite un import de type cross-SFC. */
-type ReportSavedOrigin = 'save' | 'improve' | 'flush'
-
-type ReportPanelExpose = {
-  forceSave: () => Promise<boolean>
-  flushForSuspend: () => Promise<boolean>
-  isDirty: () => boolean
-  currentBody: () => string
-  isDictating: () => boolean
+type WorkspaceExpose = {
+  requestLeave: () => void
+  isBusy: () => boolean
 }
 
 const props = defineProps<{
   open: boolean
   clientId: string
-  /** Reprise après veille : visite déjà créée. */
+  /** Reprise / historique / agenda : visite déjà créée. */
   resumeVisitId?: string
   resumePetId?: string
 }>()
@@ -255,64 +106,48 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { mapError } = useApiError()
-const runtimeConfig = useRuntimeConfig()
 const active = useActiveConsultation()
+const { user } = useProUser()
+const { canPractice } = usePracticePerms()
 const {
-  pharmacyEnabled,
-  billitEnabled,
-  invoicingUiEnabled,
   visitId,
   petId,
   clientId: flowClientId,
   scheduledAt,
   starting,
-  reportSaved,
   preserveVisit,
-  reportBusy,
   error: flowError,
   reset,
   startConsultation,
-  afterSaved,
-  setReportBusy,
-  discardIfUnsaved,
-  markDone,
-  dafWizardPath,
-  invoicingPath,
-  prescriptionWizardPath,
   loadClientPets,
 } = useConsultationFlow()
-
-const { canPractice } = usePracticePerms()
-const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
-const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
-const prescriptionsEnabled = computed(() => isPublicFlagOn(runtimeConfig.public.prescriptionsEnabled))
-const showDafCta = computed(() => pharmacyEnabled.value && canWritePharmacy.value)
-const showInvoiceCta = computed(() => invoicingUiEnabled && billitEnabled.value)
-const showPrescriptionCta = computed(() => prescriptionsEnabled.value && canWriteClinical.value)
 
 const pets = ref<ConsultationPet[]>([])
 const petsLoading = ref(false)
 const loadError = ref('')
-const actionError = ref('')
 const selectedPetId = ref('')
 const notes = ref('')
 const closing = ref(false)
-/** Étape C affichée — distincte de `reportSaved` (persistance) : la bascule est explicite. */
-const nextStepsOpen = ref(false)
-/** Confirmation « aller vers la suite » après un Enregistrer / Finaliser explicite. */
-const nextPromptOpen = ref(false)
-const leavePromptOpen = ref(false)
-const leaveBusy = ref(false)
-const leaveError = ref('')
-const reportPanelRef = ref<ReportPanelExpose | null>(null)
+const leavePromptBlocking = ref(false)
+const workspaceBusy = ref(false)
+const stage = ref<'report' | 'hub'>('report')
 const modalExpanded = ref(false)
-const { user } = useProUser()
+const workspaceRef = ref<WorkspaceExpose | null>(null)
+
+const readonly = computed(() => !canPractice('pets.write_clinical'))
+
+const workspaceClientId = computed(() => flowClientId.value || props.clientId)
+const workspacePetId = computed(() => petId.value || selectedPetId.value || props.resumePetId || '')
+
+/** CR (après start ou reprise) = toujours coque full + bouton plein écran. */
+const hasVisitShell = computed(() => Boolean(visitId.value || props.resumeVisitId))
+const modalSize = computed<'md' | 'full'>(() => (hasVisitShell.value ? 'full' : 'md'))
+const modalExpandable = computed(() => hasVisitShell.value)
 
 const modalTitle = computed(() => {
-  if (visitId.value && nextStepsOpen.value) {
-    return t('clients.consultation.nextStepsTitle')
-  }
-  return t('clients.consultation.title')
+  if (!hasVisitShell.value) return t('clients.consultation.title')
+  if (stage.value === 'hub') return t('clients.consultation.nextStepsTitle')
+  return t('consultations.detailTitle')
 })
 
 async function loadPets() {
@@ -343,8 +178,8 @@ function applyResume() {
   petId.value = props.resumePetId || ''
   flowClientId.value = props.clientId
   selectedPetId.value = props.resumePetId || ''
-  reportSaved.value = false
   preserveVisit.value = active.resumeKeepVisit.value
+  stage.value = 'report'
   active.syncActiveVisit({
     visitId: props.resumeVisitId,
     clientId: props.clientId,
@@ -352,30 +187,6 @@ function applyResume() {
     keepVisit: preserveVisit.value,
   })
   void hydrateResumeSchedule(props.resumeVisitId, props.resumePetId || '')
-  // RDV agenda : pas de risque d'orphelin (preserveVisit) — on rouvre toujours le CR en édition.
-  if (!preserveVisit.value) {
-    void hydrateResumeSaved(props.resumeVisitId)
-  }
-}
-
-/** Mark reportSaved when server already has persisted CR (avoid orphan cancel on leave). */
-async function hydrateResumeSaved(id: string) {
-  try {
-    const res: any = await $fetch(`/api/visits/${id}/report`)
-    const data = (res?.data ?? res) as Record<string, unknown> | null
-    if (!data) return
-    const hasContent = Boolean(
-      String(data.bodyText || '').trim()
-      || String(data.transcriptText || '').trim()
-      || String(data.improvedText || '').trim()
-      || data.hasAudio === true
-      || data.status === 'final',
-    )
-    if (hasContent) reportSaved.value = true
-  }
-  catch {
-    /* leave-guard still protected by 409 consultation_has_report */
-  }
 }
 
 /** No GET /visits/:id — resolve date via pet visit list when possible. */
@@ -387,13 +198,12 @@ async function hydrateResumeSchedule(id: string, petHint: string) {
     const visit = list.find((v: any) => v?.id === id)
     const at = visit?.scheduledAt || visit?.proposedScheduledAt || visit?.createdAt || ''
     if (at) scheduledAt.value = String(at)
-  } catch {
+  }
+  catch {
     /* date label optional on resume */
   }
 }
 
-// immediate: host monte le modal avec v-if="clientId" déjà open=true —
-// sans ça, loadPets ne part jamais au premier open walk-in.
 watch(
   () => [props.open, props.clientId, props.resumeVisitId] as const,
   ([isOpen]) => {
@@ -401,22 +211,21 @@ watch(
     reset()
     selectedPetId.value = ''
     notes.value = ''
-    actionError.value = ''
     closing.value = false
-    nextStepsOpen.value = false
-    nextPromptOpen.value = false
-    leavePromptOpen.value = false
-    leaveError.value = ''
+    leavePromptBlocking.value = false
+    workspaceBusy.value = false
+    stage.value = 'report'
     modalExpanded.value = false
     if (props.resumeVisitId) {
       applyResume()
     }
-    void loadPets()
+    else {
+      void loadPets()
+    }
   },
   { immediate: true },
 )
 
-/** Prefer pet from openForClient without tearing down an in-progress visit. */
 watch(
   () => props.resumePetId,
   (petIdHint) => {
@@ -429,7 +238,7 @@ watch(
   () => [props.open, visitId.value, props.clientId, petId.value || selectedPetId.value] as const,
   ([isOpen, vid, cid, pid]) => {
     if (!isOpen || !vid || !cid) {
-      active.syncActiveVisit(null)
+      if (!isOpen) active.syncActiveVisit(null)
       return
     }
     active.syncActiveVisit({
@@ -441,49 +250,21 @@ watch(
   },
 )
 
-async function flushReport() {
-  const panel = reportPanelRef.value
-  if (!visitId.value || !panel) return
-  const ok = await panel.flushForSuspend()
-  if (!ok) {
-    throw new Error('consultation_flush_failed')
-  }
+function onStage(s: 'report' | 'hub') {
+  stage.value = s
 }
 
-onMounted(() => {
-  active.registerFlush(flushReport)
-})
+function onLeavePrompt(open: boolean) {
+  leavePromptBlocking.value = open
+}
 
-onBeforeUnmount(() => {
-  active.registerFlush(null)
-  active.syncActiveVisit(null)
-  if (active.suspendDiscard.value) {
-    // Desk lock / visibility — do not cancel the visit.
-    active.suspendDiscard.value = false
-    reset()
-    return
-  }
-})
+function onWorkspaceBusy(busy: boolean) {
+  workspaceBusy.value = busy
+}
 
-onBeforeRouteLeave((_to, _from, next) => {
-  if (!props.open || !visitId.value) {
-    next()
-    return
-  }
-  if (!reportSaved.value) {
-    leavePromptOpen.value = true
-    next(false)
-    return
-  }
-  next()
-})
-
-async function finishClose(discard: boolean) {
+async function onWorkspaceClosed() {
   closing.value = true
   try {
-    if (discard) {
-      await discardIfUnsaved()
-    }
     const email = user.value?.email
     if (email) active.clearResumeForEmail(email)
     reset()
@@ -496,71 +277,25 @@ async function finishClose(discard: boolean) {
   }
 }
 
-async function onOpenUpdate(v: boolean) {
+function onOpenUpdate(v: boolean) {
   if (!v) {
-    if (reportBusy.value || closing.value || leaveBusy.value) return
-    if (visitId.value && !reportSaved.value) {
-      leaveError.value = ''
-      leavePromptOpen.value = true
+    if (starting.value || closing.value || workspaceBusy.value || leavePromptBlocking.value) return
+    if (visitId.value) {
+      workspaceRef.value?.requestLeave()
       return
     }
-    await finishClose(true)
+    reset()
+    active.syncActiveVisit(null)
+    emit('update:open', false)
+    emit('closed')
     return
   }
   emit('update:open', v)
 }
 
-function onLeavePromptOpen(v: boolean) {
-  if (!v && !leaveBusy.value) leavePromptOpen.value = false
-}
-
 function close() {
-  if (reportBusy.value || closing.value) return
-  void onOpenUpdate(false)
-}
-
-async function confirmDiscardLeave() {
-  leaveBusy.value = true
-  leaveError.value = ''
-  try {
-    leavePromptOpen.value = false
-    await finishClose(true)
-  }
-  finally {
-    leaveBusy.value = false
-  }
-}
-
-async function confirmSaveLeave() {
-  leaveBusy.value = true
-  leaveError.value = ''
-  try {
-    const panel = reportPanelRef.value
-    if (!panel) {
-      leaveError.value = t('clients.consultation.leaveSaveEmpty')
-      return
-    }
-    const ok = await panel.forceSave()
-    if (!ok) {
-      leaveError.value = t('clients.consultation.leaveSaveEmpty')
-      return
-    }
-    afterSaved()
-    try {
-      await markDone()
-    }
-    catch {
-      // CR already saved — leave prompt closes even if done fails.
-    }
-    leavePromptOpen.value = false
-    await finishClose(false)
-  }
-  catch (e: any) {
-    leaveError.value = mapError(e) || t('clients.consultation.leaveSaveEmpty')
-  }
-  finally {
-    leaveBusy.value = false
-  }
+  if (starting.value || closing.value) return
+  onOpenUpdate(false)
 }
 
 async function start() {
@@ -571,100 +306,18 @@ async function start() {
       petId: selectedPetId.value,
       notes: notes.value,
     })
-    if (id) {
-      active.syncActiveVisit({
-        visitId: id,
-        clientId: props.clientId,
-        petId: selectedPetId.value,
-      })
-    }
+    if (!id) return
+    preserveVisit.value = false
+    active.syncActiveVisit({
+      visitId: id,
+      clientId: props.clientId,
+      petId: selectedPetId.value,
+      keepVisit: false,
+    })
+    stage.value = 'report'
   }
   catch {
     // error already on flowError
-  }
-}
-
-/**
- * `saved` marque la persistance (leave-guard, CTA suite) mais ne bascule jamais
- * d'écran tout seul : Enregistrer propose la suite via prompt ; Finaliser ouvre
- * le hub directement (CR déjà verrouillé) ; l'IA (`improve`) laisse relire.
- */
-function onReportSaved(origin: ReportSavedOrigin = 'save') {
-  afterSaved()
-  if (origin !== 'save') return
-  nextPromptOpen.value = true
-}
-
-function onReportFinalized() {
-  afterSaved()
-  // CR déjà verrouillé (final) — pas de prompt « Continuer le CR ».
-  openNextSteps()
-}
-
-function openNextSteps() {
-  nextPromptOpen.value = false
-  nextStepsOpen.value = true
-}
-
-function onNextPromptOpen(v: boolean) {
-  if (!v) nextPromptOpen.value = false
-}
-
-function onReportBusy(busy: boolean) {
-  setReportBusy(busy)
-}
-
-async function closeAndNavigate(path: string) {
-  const target = path
-  closing.value = true
-  try {
-    await discardIfUnsaved()
-    const email = user.value?.email
-    if (email) active.clearResumeForEmail(email)
-    reset()
-    active.syncActiveVisit(null)
-    emit('update:open', false)
-    emit('closed')
-  }
-  finally {
-    closing.value = false
-  }
-  await nextTick()
-  await navigateTo(target)
-}
-
-async function goDaf() {
-  await closeAndNavigate(dafWizardPath())
-}
-
-async function goInvoice() {
-  await closeAndNavigate(invoicingPath({ mode: 'direct' }))
-}
-
-async function goPrescription() {
-  await closeAndNavigate(prescriptionWizardPath())
-}
-
-async function finishDone() {
-  actionError.value = ''
-  try {
-    await markDone()
-    closing.value = true
-    try {
-      await discardIfUnsaved()
-      const email = user.value?.email
-      if (email) active.clearResumeForEmail(email)
-      reset()
-      active.syncActiveVisit(null)
-      emit('update:open', false)
-      emit('closed')
-    }
-    finally {
-      closing.value = false
-    }
-  }
-  catch (e: any) {
-    actionError.value = mapError(e) || t('clients.consultation.markDoneError')
   }
 }
 </script>
@@ -676,66 +329,19 @@ async function finishDone() {
   gap: 0.85rem;
 }
 
-.consultation-report {
+.consultation-modal-shell {
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  overflow: hidden;
 }
 
-.consultation-next-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0.5rem 0 0.25rem;
-}
-
-.consultation-next-steps__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.85rem;
-}
-
-.consultation-next-card {
-  appearance: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.45rem;
-  text-align: left;
-  padding: 1.1rem 1.15rem;
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius, 8px);
-  background: var(--pf-vet-surface, #fff);
-  box-shadow: var(--pf-vet-shadow-sm, none);
-  color: var(--pf-vet-primary);
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.consultation-next-card:hover:not(:disabled) {
-  border-color: var(--pf-vet-accent);
-  box-shadow: var(--pf-vet-shadow-hover, var(--pf-vet-shadow-md, none));
-}
-
-.consultation-next-card:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.consultation-next-card__title {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.consultation-next-card__desc {
-  font-size: 0.85rem;
-  color: var(--pf-vet-text-muted, #64748b);
-  line-height: 1.35;
+.consultation-modal-shell :deep(.consultation-workspace),
+.consultation-modal-shell :deep(.pro-visit-report) {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 </style>

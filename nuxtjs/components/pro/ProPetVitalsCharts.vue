@@ -309,14 +309,19 @@ function onLabAnalyteChange(value: string) {
 .pro-pet-vitals-charts {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: 1.25rem;
+  margin-bottom: 0;
+}
+
+.pro-pet-vitals-charts :deep(.pro-card) {
+  margin-bottom: 0;
+  height: 100%;
 }
 
 .pro-pet-vitals-charts--grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .pro-pet-filter {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const store = new Map<string, string>()
 const stateStore = new Map<string, { value: unknown }>()
+const navigateTo = vi.fn()
 
 vi.stubGlobal('localStorage', {
   getItem: (k: string) => store.get(k) ?? null,
@@ -17,11 +18,27 @@ vi.stubGlobal('useState', (key: string, init?: () => unknown) => {
   return stateStore.get(key)!
 })
 
+vi.stubGlobal('navigateTo', navigateTo)
+
 describe('useActiveConsultation resume isolation', () => {
   beforeEach(() => {
     store.clear()
     stateStore.clear()
+    navigateTo.mockReset()
     vi.resetModules()
+    vi.stubGlobal('navigateTo', navigateTo)
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v) },
+      removeItem: (k: string) => { store.delete(k) },
+      clear: () => { store.clear() },
+    })
+    vi.stubGlobal('useState', (key: string, init?: () => unknown) => {
+      if (!stateStore.has(key)) {
+        stateStore.set(key, { value: init ? init() : null })
+      }
+      return stateStore.get(key)!
+    })
   })
 
   it('peek keeps token; consume deletes it; no cross-user leak', async () => {
@@ -76,26 +93,28 @@ describe('useActiveConsultation resume isolation', () => {
     expect(token['vet.demo@petsfollow.test']?.visitId).toBe('visit-a')
   })
 
-  it('openForVisit flags keepVisit and survives suspend/resume round-trip', async () => {
+  it('openForVisit opens modal shell with keepVisit (no page navigate)', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
     a.openForVisit({ visitId: 'visit-rdv', clientId: 'client-a', petId: 'pet-a' })
     expect(a.open.value).toBe(true)
+    expect(a.resumeVisitId.value).toBe('visit-rdv')
     expect(a.resumeKeepVisit.value).toBe(true)
-    // Suspend (desk lock) : le token conserve keepVisit pour la reprise.
+    expect(navigateTo).not.toHaveBeenCalled()
     await a.flushBeforeSuspend('vet.demo@petsfollow.test', '/calendar')
     expect(a.resumeKeepVisit.value).toBe(false)
     const token = a.peekResumeForEmail('vet.demo@petsfollow.test')
     expect(token?.keepVisit).toBe(true)
     a.openResume(token!)
+    expect(a.open.value).toBe(true)
     expect(a.resumeKeepVisit.value).toBe(true)
-    // Walk-in classique : pas de keepVisit.
     a.close()
     a.openForClient('client-b')
+    expect(a.open.value).toBe(true)
     expect(a.resumeKeepVisit.value).toBe(false)
   })
 
-  it('tryResumeForCurrentUser opens once and clears token', async () => {
+  it('tryResumeForCurrentUser opens modal once and clears token', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
     a.saveResumeForEmail('vet.demo@petsfollow.test', {
@@ -108,6 +127,7 @@ describe('useActiveConsultation resume isolation', () => {
     expect(a.tryResumeForCurrentUser('vet.demo@petsfollow.test')).toBe(true)
     expect(a.open.value).toBe(true)
     expect(a.resumeVisitId.value).toBe('visit-b')
+    expect(navigateTo).not.toHaveBeenCalled()
     expect(a.peekResumeForEmail('vet.demo@petsfollow.test')).toBeNull()
     expect(a.tryResumeForCurrentUser('vet.demo@petsfollow.test')).toBe(false)
   })

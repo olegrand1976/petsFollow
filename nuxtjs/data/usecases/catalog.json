@@ -245,12 +245,12 @@
       "steps": [
         "Se connecter en véto → Clients.",
         "Sur une ligne client, cliquer Nouvelle Consultation.",
-        "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer.",
-        "Écran CR split :",
-        "(Optionnel) Panneau Traitements (DAF) : protocole 1 clic ou search CNK → AMM auto → enregistrer brouillon ; preview FEFO ; finaliser dans la modal (confirm ProModal) ou ouvrir le wizard pour édition avancée.",
+        "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer → ouverture de la fiche /consultations/{id} (même écran que l’historique / le CR).",
+        "Écran CR split (workspace unique) :",
+        "Hub post-CR : CTA DAF (wizard /daf/nouveau prérempli visitId) / Facturer / Consignes (si flags) — pas de panneau traitements in-workspace ; parcours DAF détaillé → UC-VP-05.",
         "Choisir :",
         "(Optionnel) Même CTA depuis la fiche client ou la fiche animal. Voir aussi UC-VP-05 pour le parcours stock/DAF détaillé.",
-        "(Optionnel) Depuis Agenda → détail d’un RDV : le détail n’affiche plus le CR — bouton Nouvelle consultation (RDV confirmé à venir, ou walk-in à reprendre) ouvre le même écran CR sur la visite du RDV (pas de nouvelle visite ; fermer sans enregistrer n’annule pas le RDV) ; Voir la consultation (RDV passé / done) ouvre la fiche /consultations/{id} (compte-rendu plein écran)."
+        "(Optionnel) Depuis Agenda → détail d’un RDV : le détail n’affiche plus le CR — bouton Nouvelle consultation (RDV confirmé à venir, ou walk-in à reprendre) et Voir la consultation (RDV passé / done) ouvrent le même écran /consultations/{id} (stade édition ou lecture selon droits / statut ; fermer sans enregistrer n’annule pas un RDV agenda)."
       ],
       "expected": [
         "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
@@ -259,13 +259,13 @@
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
         "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module prescriptions).",
-        "Traitements CNK en consult → brouillon DAF visit_id ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.",
-        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize · détail RDV agenda → CTA consultation avec visite conservée au close).",
+        "Hub CTA DAF → wizard avec visitId ; finalize FEFO + déduction stock dans le wizard (jamais silencieux à la clôture CR).",
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · leave-save · dirty post-save · CTA DAF/facture · hub sans traitements in-workspace · détail RDV agenda → visite conservée).",
         "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
       ],
       "checklist": [
         "CTA liste clients",
-        "Modal + CR",
+        "Setup modal → workspace page",
         "CTA DAF / facture"
       ]
     },

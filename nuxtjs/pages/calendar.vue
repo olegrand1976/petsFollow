@@ -655,9 +655,9 @@ function openConsultationFromDetail() {
 
 async function viewConsultationFromDetail() {
   const v = selectedVisit.value
-  if (!v) return
+  if (!v?.clientId) return
   detailOpen.value = false
-  await navigateTo(`/consultations/${encodeURIComponent(v.id)}`)
+  activeConsult.openForVisit({ visitId: v.id, clientId: v.clientId, petId: v.petId })
 }
 
 const mapsUrl = computed(() => {

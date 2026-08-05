@@ -125,6 +125,8 @@ async function openConsultationReport(page: Page) {
   const createdBody = await created.json().catch(() => null)
   const visitId = String((createdBody as any)?.data?.id ?? (createdBody as any)?.id ?? '')
   expect(visitId).toBeTruthy()
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
   await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('visit-report-pane-left')).toBeVisible()
   await expect(page.getByTestId('visit-report-pane-right')).toBeVisible()

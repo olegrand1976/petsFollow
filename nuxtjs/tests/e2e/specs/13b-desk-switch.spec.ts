@@ -242,6 +242,7 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     expect(value).toBeTruthy()
     await petSelect.selectOption(value!)
     await page.getByTestId('consultation-start').click()
+    await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
     await page.getByTestId('visit-report-body').fill(`Desk resume CR ${Date.now()}`)
 
@@ -250,19 +251,14 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
       w.__PF_DESK_FORCE_LOCK?.()
     })
     await expect(page.getByTestId('pro-desk-lock')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByTestId('consultation-modal')).toHaveCount(0)
 
     // Autosave may be in-flight before tokens cleared — wait for lock settle.
     await page.waitForTimeout(500)
     await unlockWithPassword(page)
+    await expect(page.getByTestId('pro-desk-lock')).toHaveCount(0, { timeout: 15000 })
     await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('consultation-report')).toBeVisible()
-    // /clients réouvre la modale invitations (pro-modal) au-dessus du footer consultation.
-    const invite = page.getByTestId('pro-modal')
-    if (await invite.count()) {
-      await invite.getByTestId('pro-modal-close').first().click({ force: true })
-      await expect(invite).toHaveCount(0, { timeout: 5000 })
-    }
+    await expect(page.getByTestId('consultation-workspace')).toBeVisible()
     await page.getByTestId('consultation-cancel').click()
     const leavePrompt = page.getByTestId('consultation-leave-prompt')
     if (await leavePrompt.isVisible().catch(() => false)) {

@@ -2,9 +2,8 @@ import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 /**
- * Orchestration « Nouvelle Consultation » (Nuxt Pro).
- * Étapes : 1) créer visite confirmée → 2) CR (ProVisitReportPanel) →
- * 3) hub post-save → 4) deep-link prescription / DAF / facture Billit.
+ * Orchestration consultation (Nuxt Pro).
+ * Setup (modal) → workspace `/consultations/{id}` (CR + hub DAF/facture).
  */
 export type ConsultationPet = {
   id: string

@@ -31,7 +31,6 @@ function onClosed() {
 
 function onVisibility() {
   if (document.visibilityState !== 'hidden') return
-  // Tab sleep: autosave CR only — resume token is owned by desk lock/switch.
   void active.autosaveOnly()
 }
 

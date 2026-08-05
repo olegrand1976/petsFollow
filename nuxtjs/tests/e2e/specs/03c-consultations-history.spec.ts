@@ -59,7 +59,9 @@ async function createWalkInWithReport(page: Page): Promise<string> {
   const visitId = String((body?.data ?? body)?.id || '')
   expect(visitId).toBeTruthy()
 
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
   const reportBody = page.getByTestId('visit-report-body')
   // Wait until hydrate unlocks the textarea (avoids racing GET /report → empty PUT).
   await expect(reportBody).toBeEnabled({ timeout: 20000 })
@@ -102,9 +104,10 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
       { timeout: 20000 },
     )
     await page.getByTestId(`consultation-open-cr-${visitId}`).click()
-    await expect(page).toHaveURL(new RegExp(`/consultations/${visitId}`), { timeout: 10000 })
-    await expect(page.getByTestId('consultation-detail-page')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
     await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+    await expect(page).toHaveURL(/\/consultations\/?$/, { timeout: 5000 })
     await getReport
     await expect(page.getByTestId('visit-report-body')).toHaveValue(/E2E history CR/, { timeout: 15000 })
   })

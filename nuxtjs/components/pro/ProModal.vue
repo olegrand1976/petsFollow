@@ -227,13 +227,14 @@ onBeforeUnmount(() => {
   max-height: min(92vh, 52rem);
 }
 
-.pro-modal__panel--full {
+/* Spécificité > base panel : largeur/hauteur full ne doivent jamais retomber à 28rem. */
+.pro-modal__panel.pro-modal__panel--full {
   width: min(98vw, 90rem);
   height: 96vh;
   max-height: 96vh;
 }
 
-.pro-modal__panel--viewport {
+.pro-modal__panel.pro-modal__panel--viewport {
   width: 100vw;
   height: 100vh;
   max-height: 100vh;
@@ -245,7 +246,7 @@ onBeforeUnmount(() => {
     padding: 0.5rem;
   }
 
-  .pro-modal__panel--full:not(.pro-modal__panel--viewport) {
+  .pro-modal__panel.pro-modal__panel--full:not(.pro-modal__panel--viewport) {
     width: 100%;
     height: 96vh;
     max-height: 96vh;
@@ -325,6 +326,17 @@ onBeforeUnmount(() => {
 .pro-modal__panel--contain.pro-modal__panel--xl {
   height: min(92vh, 52rem);
   max-height: min(92vh, 52rem);
+}
+
+/* Full + contain : forcer aussi la hauteur (sinon seul md/lg/xl avaient une règle contain). */
+.pro-modal__panel--contain.pro-modal__panel--full {
+  height: 96vh;
+  max-height: 96vh;
+}
+
+.pro-modal__panel--contain.pro-modal__panel--viewport {
+  height: 100vh;
+  max-height: 100vh;
 }
 
 .pro-modal__panel--full .pro-modal__body,

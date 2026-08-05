@@ -1,5 +1,5 @@
 <template>
-  <div data-testid="pet-detail-page">
+  <div class="pro-pet-detail" data-testid="pet-detail-page">
     <nav class="pro-breadcrumb" :aria-label="$t('common.breadcrumb')">
       <NuxtLink to="/pets">{{ $t('nav.pets') }}</NuxtLink>
       <span class="pro-breadcrumb-sep">/</span>
@@ -92,75 +92,77 @@
 
     <div
       v-show="activeTab === 'overview'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-overview"
       data-testid="pet-tab-overview"
     >
-      <ProCard :title="$t('clients.pet.photoTitle')" class="pro-settings-card">
-        <ProAvatarUpload
-          v-model="petPhotoUrl"
-          :name="pet?.name || ''"
-          :upload-url="`/api/pets/${petId}/photo`"
-          :label="$t('clients.pet.photoChange')"
-          :hint="$t('clients.pet.photoHint')"
-          :disabled="!canWriteClinical"
-          @uploaded="onPetPhotoUploaded"
-        />
-      </ProCard>
-      <ProCard v-if="pet" :title="$t('clients.pet.summaryTitle')" class="pro-mb-lg" data-testid="pet-medical-data">
-        <dl class="pro-pet-summary">
-          <div>
-            <dt>{{ $t('pets.columnSpecies') }}</dt>
-            <dd>{{ speciesLabel(pet.species) }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('pets.columnBreed') }}</dt>
-            <dd>{{ pet.breed || $t('common.unknownBreed') }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('pets.columnBirthDate') }}</dt>
-            <dd data-testid="pet-birth-date">{{ formatPetDay(pet.birthDate) }}</dd>
-          </div>
-          <div v-if="pet.weightKg != null">
-            <dt>{{ $t('clients.pet.columnWeight') }}</dt>
-            <dd>{{ pet.weightKg }} kg</dd>
-          </div>
-          <div>
-            <dt>{{ $t('clients.pet.microchip') }}</dt>
-            <dd data-testid="pet-microchip">{{ pet.microchipNumber || $t('common.dash') }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('clients.pet.healthBookNumber') }}</dt>
-            <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber || $t('common.dash') }}</dd>
-          </div>
-          <div v-if="pet.healthBookPdfAttached">
-            <dt>{{ $t('clients.pet.healthBookPdf') }}</dt>
-            <dd>
-              <a
-                class="pro-link"
-                :href="`/api/pets/${petId}/health-book`"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="pet-health-book-pdf"
-              >{{ $t('clients.pet.healthBookOpenPdf') }}</a>
-            </dd>
-          </div>
-          <div>
-            <dt>{{ $t('clients.pet.summaryPlan') }}</dt>
-            <dd>{{ petPlanLabel }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('clients.pet.summaryStatus') }}</dt>
-            <dd>
-              <ProBadge :variant="petStatusVariant">{{ petStatusLabel }}</ProBadge>
-            </dd>
-          </div>
-        </dl>
-      </ProCard>
+      <div class="pro-pet-overview-hero">
+        <ProCard :title="$t('clients.pet.photoTitle')">
+          <ProAvatarUpload
+            v-model="petPhotoUrl"
+            :name="pet?.name || ''"
+            :upload-url="`/api/pets/${petId}/photo`"
+            :label="$t('clients.pet.photoChange')"
+            :hint="$t('clients.pet.photoHint')"
+            :disabled="!canWriteClinical"
+            @uploaded="onPetPhotoUploaded"
+          />
+        </ProCard>
+        <ProCard v-if="pet" :title="$t('clients.pet.summaryTitle')" data-testid="pet-medical-data">
+          <dl class="pro-pet-summary">
+            <div>
+              <dt>{{ $t('pets.columnSpecies') }}</dt>
+              <dd>{{ speciesLabel(pet.species) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('pets.columnBreed') }}</dt>
+              <dd>{{ pet.breed || $t('common.unknownBreed') }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('pets.columnBirthDate') }}</dt>
+              <dd data-testid="pet-birth-date">{{ formatPetDay(pet.birthDate) }}</dd>
+            </div>
+            <div v-if="pet.weightKg != null">
+              <dt>{{ $t('clients.pet.columnWeight') }}</dt>
+              <dd>{{ pet.weightKg }} kg</dd>
+            </div>
+            <div>
+              <dt>{{ $t('clients.pet.microchip') }}</dt>
+              <dd data-testid="pet-microchip">{{ pet.microchipNumber || $t('common.dash') }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('clients.pet.healthBookNumber') }}</dt>
+              <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber || $t('common.dash') }}</dd>
+            </div>
+            <div v-if="pet.healthBookPdfAttached">
+              <dt>{{ $t('clients.pet.healthBookPdf') }}</dt>
+              <dd>
+                <a
+                  class="pro-link"
+                  :href="`/api/pets/${petId}/health-book`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="pet-health-book-pdf"
+                >{{ $t('clients.pet.healthBookOpenPdf') }}</a>
+              </dd>
+            </div>
+            <div>
+              <dt>{{ $t('clients.pet.summaryPlan') }}</dt>
+              <dd>{{ petPlanLabel }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('clients.pet.summaryStatus') }}</dt>
+              <dd>
+                <ProBadge :variant="petStatusVariant">{{ petStatusLabel }}</ProBadge>
+              </dd>
+            </div>
+          </dl>
+        </ProCard>
+      </div>
       <ProCard
         v-if="pet"
         :title="$t('clients.pet.lifecycleTitle')"
-        class="pro-mb-lg"
         data-testid="pet-lifecycle"
       >
         <div class="pro-pet-horse-reg">
@@ -213,7 +215,6 @@
       <ProCard
         v-if="pharmacyEnabled && canReadPharmacy"
         :title="$t('clients.pet.dafDispensesTitle')"
-        class="pro-mb-lg"
         data-testid="pet-daf-dispenses"
       >
         <p v-if="dafDispensesLoading" class="pro-hint">{{ $t('common.loading') }}</p>
@@ -237,7 +238,6 @@
       <ProCard
         v-if="pet && isFoodChainSpecies(pet.species)"
         :title="$t('clients.pet.horseRegulatoryTitle')"
-        class="pro-mb-lg"
         data-testid="pet-horse-regulatory"
       >
         <p class="pro-hint pro-mb-md">{{ $t('clients.pet.horseRegulatoryHint') }}</p>
@@ -284,7 +284,6 @@
       <ProCard
         v-if="hasAnyVitalsData"
         :title="$t('clients.pet.chartsToggle')"
-        class="pro-mb-lg"
         data-testid="pet-overview-charts"
       >
         <p class="pro-hint pro-mb-md">{{ $t('clients.pet.chartsPreviewHint') }}</p>
@@ -321,13 +320,13 @@
 
       <ProPetDayTimeline
         :items="timeline"
-        class="pro-mb-lg"
         @open-visit="openVisitReport"
       />
     </div>
 
     <div
       v-show="activeTab === 'vitals'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-vitals"
       data-testid="pet-tab-vitals"
@@ -370,7 +369,7 @@
         @update:lab-trend-analyte="onLabTrendAnalyte"
       />
 
-      <ProCard :title="$t('clients.pet.heartrateTitle')" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.heartrateTitle')">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.heartrateTitle')">
         <button
           type="button"
@@ -444,7 +443,7 @@
       </ProTable>
       </ProCard>
 
-      <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card">
       <ProTable
         :empty="!weights.length"
         :empty-title="$t('clients.pet.weightEmptyTitle')"
@@ -475,7 +474,7 @@
       </ProTable>
       </ProCard>
 
-      <ProCard :title="$t('clients.pet.bpTitle')" data-testid="pet-bp-table-card" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.bpTitle')" data-testid="pet-bp-table-card">
         <form
           v-if="canWriteClinical"
           class="pro-pet-inline-form"
@@ -871,11 +870,12 @@
 
     <div
       v-show="activeTab === 'care'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-care"
       data-testid="pet-tab-care"
     >
-      <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.careTitle')">
       <form v-if="canManageCare" class="pro-pet-inline-form" @submit.prevent="createCare">
         <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
         <select v-model="careDraft.type" class="pro-input" :aria-label="$t('clients.pet.careType')">
@@ -934,7 +934,7 @@
       </ProTable>
       </ProCard>
 
-      <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.visitsTitle')">
       <form v-if="canManageCalendar" class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
         <select v-model="visitDraft.visitTypeId" class="pro-select" :aria-label="$t('calendar.visitType')" data-testid="pet-visit-type">
@@ -1052,11 +1052,12 @@
 
     <div
       v-show="activeTab === 'documents'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-documents"
       data-testid="pet-tab-documents"
     >
-      <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.documentsTitle')">
       <form v-if="canWriteClinical" class="pro-pet-inline-form" @submit.prevent="uploadDocument">
         <input
           ref="docInputEl"
@@ -1129,22 +1130,24 @@
     <div
       v-if="pacsEnabled"
       v-show="activeTab === 'imaging'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-imaging"
       data-testid="pet-tab-imaging"
     >
-      <ProCard class="pro-mb-lg">
+      <ProCard>
         <PacsViewerContainer :pet-id="petId" />
       </ProCard>
     </div>
 
     <div
       v-show="activeTab === 'sharing'"
+      class="pro-pet-stack"
       role="tabpanel"
       aria-labelledby="tab-sharing"
       data-testid="pet-tab-sharing"
     >
-      <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
+      <ProCard :title="$t('share.petTitle')" data-testid="pet-shares-card">
       <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
       <form v-if="canManageShares" class="pro-pet-inline-form" @submit.prevent="addPetShare">
         <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
@@ -1202,31 +1205,7 @@
       </ProCard>
     </div>
 
-    <ProModal
-      v-model:open="visitReportOpen"
-      :title="$t('calendar.reportTitle')"
-      size="lg"
-      contain-scroll
-    >
-      <div class="pet-visit-report-modal">
-        <ProVisitReportPanel
-          v-if="visitReportId"
-          fill-height
-          :visit-id="visitReportId"
-          :visit-scheduled-at="visitReportScheduledAt"
-          :readonly="!canWriteClinical"
-        />
-        <p class="pro-hint pet-visit-report-modal__link">
-          <NuxtLink
-            v-if="visitReportId"
-            :to="`/calendar?visit=${visitReportId}`"
-            data-testid="pet-visit-report-calendar-link"
-          >
-            {{ $t('clients.pet.openReportInCalendar') }}
-          </NuxtLink>
-        </p>
-      </div>
-    </ProModal>
+    <!-- CR : coque globale ProConsultationModal (host layout) via openForVisit -->
   </div>
 </template>
 
@@ -1360,9 +1339,6 @@ const labDetailDocument = computed(() => {
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
-const visitReportOpen = ref(false)
-const visitReportId = ref('')
-const visitReportScheduledAt = ref('')
 const messagingBusy = ref(false)
 const messagingError = ref('')
 const pageError = ref('')
@@ -2291,9 +2267,13 @@ async function visitAction(id: string, action: string) {
 }
 
 function openVisitReport(v: { id: string, scheduledAt?: string, createdAt?: string }) {
-  visitReportId.value = v.id
-  visitReportScheduledAt.value = v.scheduledAt || v.createdAt || ''
-  visitReportOpen.value = true
+  // Même coque modale que Nouvelle consultation / historique.
+  activeConsult.openForVisit({
+    visitId: v.id,
+    clientId,
+    petId,
+    keepVisit: true,
+  })
 }
 
 async function loadDafDispenses() {
@@ -2380,12 +2360,65 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.pro-pet-detail :deep(.pro-page-header) {
+  margin-bottom: 1.25rem;
+}
+
+.pro-inline-feedback {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pf-vet-radius);
+  background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-surface));
+  border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 30%, transparent);
+}
+.pro-inline-feedback--error {
+  background: color-mix(in srgb, var(--pf-vet-alert) 10%, var(--pf-vet-surface));
+  border-color: color-mix(in srgb, var(--pf-vet-alert) 35%, transparent);
+  color: var(--pf-vet-alert);
+}
+
+.pro-mt-md { margin-top: 1rem; }
+
+.pro-hint {
+  color: var(--pf-vet-text-muted, #64748b);
+  font-size: 0.875rem;
+}
+p.pro-hint {
+  margin: 0 0 0.75rem;
+}
+
+.pro-pet-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.pro-pet-stack :deep(.pro-card),
+.pro-pet-stack :deep(.pro-pet-vitals-charts) {
+  margin-bottom: 0;
+}
+
+.pro-pet-overview-hero {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+.pro-pet-overview-hero :deep(.pro-card) {
+  margin-bottom: 0;
+  height: 100%;
+}
+@media (max-width: 720px) {
+  .pro-pet-overview-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pro-alert-banner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1.25rem;
   border-radius: var(--pf-vet-radius);
   border: 1px solid color-mix(in srgb, var(--pf-vet-alert) 35%, transparent);
   background: color-mix(in srgb, var(--pf-vet-alert) 8%, var(--pf-vet-surface));
@@ -2449,13 +2482,42 @@ onBeforeUnmount(() => {
 .pro-pet-inline-form {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
+}
+.pro-pet-inline-form:last-child {
+  margin-bottom: 0;
 }
 
-.pro-pet-inline-form .pro-input {
+.pro-pet-inline-form .pro-input,
+.pro-pet-inline-form .pro-select {
   flex: 1 1 10rem;
   min-width: 8rem;
+}
+
+.pro-pet-labs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-bg, var(--pf-vet-surface));
+}
+.pro-pet-labs-form .pro-pet-inline-form {
+  margin-bottom: 0;
+}
+
+.pro-pet-lab-detail {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pf-vet-border);
+}
+.pro-pet-lab-detail h3 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .pro-pet-charts-preview {
@@ -2496,18 +2558,5 @@ onBeforeUnmount(() => {
   padding-left: 1rem;
   font-size: 0.9rem;
   color: var(--pf-vet-muted, #64748b);
-}
-
-.pet-visit-report-modal {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.pet-visit-report-modal__link {
-  flex-shrink: 0;
-  margin: 0;
 }
 </style>

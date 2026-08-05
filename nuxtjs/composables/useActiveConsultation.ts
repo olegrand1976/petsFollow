@@ -75,22 +75,34 @@ export function useActiveConsultation() {
     open.value = true
   }
 
-  /** Open the consultation flow on an existing agenda visit (calendar RDV) — the visit is never discarded on close. */
-  function openForVisit(input: { visitId: string, clientId: string, petId?: string }) {
+  /**
+   * Open the consultation modal on an existing visit (agenda / historique / reprise).
+   * Même coque full que « Nouvelle consultation » après Démarrer.
+   */
+  function openForVisit(input: { visitId: string, clientId: string, petId?: string, keepVisit?: boolean }) {
     if (!input.visitId || !input.clientId) return
     resumeVisitId.value = input.visitId
     resumePetId.value = input.petId || ''
-    resumeKeepVisit.value = true
+    resumeKeepVisit.value = input.keepVisit !== false
     clientId.value = input.clientId
     open.value = true
+    syncActiveVisit({
+      visitId: input.visitId,
+      clientId: input.clientId,
+      petId: input.petId || '',
+      keepVisit: resumeKeepVisit.value,
+    })
   }
 
+  /** Reprise desk-lock / veille → même modale CR. */
   function openResume(token: ConsultationResume) {
-    resumeVisitId.value = token.visitId
-    resumePetId.value = token.petId
-    resumeKeepVisit.value = !!token.keepVisit
-    clientId.value = token.clientId
-    open.value = true
+    if (!token.visitId || !token.clientId) return
+    openForVisit({
+      visitId: token.visitId,
+      clientId: token.clientId,
+      petId: token.petId,
+      keepVisit: !!token.keepVisit,
+    })
   }
 
   function close() {
@@ -179,9 +191,13 @@ export function useActiveConsultation() {
    * Returns false if CR flush failed after retry (caller may still lock for security).
    */
   async function flushBeforeSuspend(email: string | undefined, path: string): Promise<boolean> {
-    const hadOpenConsult = Boolean(open.value && (resolveSnap()?.visitId || resumeVisitId.value))
+    const snapBefore = resolveSnap()
+    const hadOpenConsult = Boolean(
+      snapBefore?.visitId
+      || (open.value && (resumeVisitId.value || clientId.value)),
+    )
     const flushOk = await runFlushWithRetry()
-    const snap = resolveSnap()
+    const snap = resolveSnap() || snapBefore
     if (email && snap?.visitId && snap.clientId) {
       saveResumeForEmail(email, {
         visitId: snap.visitId,

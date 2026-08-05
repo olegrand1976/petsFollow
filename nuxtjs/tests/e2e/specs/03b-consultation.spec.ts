@@ -83,8 +83,13 @@ async function startConsultationVisit(page: Page): Promise<{ id: string }> {
   const visitPayload = (createdBody as any)?.data ?? createdBody
   expect(visitPayload?.id).toBeTruthy()
   expect(visitPayload?.consultationSession).toBe(true)
+  const visitId = String(visitPayload.id)
+  // Même coque modale (full + expandable) — pas de navigation page.
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
   await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
-  return { id: String(visitPayload.id) }
+  await expect(page.getByTestId('consultation-setup')).toHaveCount(0)
+  return { id: visitId }
 }
 
 async function fillVisitReportBody(page: Page, text: string) {
@@ -134,7 +139,7 @@ async function finalizeConsultationReport(page: Page) {
 test.describe('nouvelle consultation', { tag: '@p0' }, () => {
   test.describe.configure({ mode: 'serial' })
 
-  test('clients → modal → CR save → CTA Terminer', async ({ page }) => {
+  test('clients → setup → CR save → CTA Terminer', async ({ page }) => {
     await loginAsVet(page)
     await openConsultationSetup(page)
     await startConsultationVisit(page)
@@ -142,9 +147,10 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
 
     await page.getByTestId('consultation-cta-done').click()
     await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+    await expect(page.getByTestId('consultation-workspace')).toHaveCount(0)
   })
 
-  test('clients → modal → CR finalize → hub direct (sans prompt)', async ({ page }) => {
+  test('clients → setup → CR finalize → hub direct (sans prompt)', async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
     await finalizeConsultationReport(page)
@@ -174,6 +180,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     )
     await page.getByTestId('consultation-cancel').click()
     await expect(page.getByTestId('consultation-leave-prompt')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('consultation-leave-hint')).toHaveAttribute('data-leave-mode', 'cancel')
     await page.getByTestId('consultation-leave-discard').click()
     const cancelled = await cancelRes
     expect([200, 204]).toContain(cancelled.status())
@@ -184,6 +191,79 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     if (visit?.status) {
       expect(visit.status).toBe('cancelled')
     }
+  })
+
+  test('leave-save → CR persisté + visite non cancelled', async ({ page }) => {
+    await openConsultationSetup(page)
+    const { id: visitId } = await startConsultationVisit(page)
+    await fillVisitReportBody(page, `E2E leave-save ${Date.now()}`)
+
+    const putRes = page.waitForResponse(
+      (r) => r.url().includes(`/api/visits/${visitId}/report`) && r.request().method() === 'PUT',
+      { timeout: 20000 },
+    )
+    const doneRes = page.waitForResponse(
+      (r) => {
+        if (r.request().method() !== 'PATCH') return false
+        if (!r.url().includes(`/api/visits/${visitId}`)) return false
+        try {
+          const body = r.request().postDataJSON() as { status?: string } | null
+          return body?.status === 'done'
+        }
+        catch {
+          return false
+        }
+      },
+      { timeout: 20000 },
+    )
+    await page.getByTestId('consultation-cancel').click()
+    await expect(page.getByTestId('consultation-leave-prompt')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('consultation-leave-hint')).toHaveAttribute('data-leave-mode', 'cancel')
+    await page.getByTestId('consultation-leave-save').click()
+    expect([200, 201, 204]).toContain((await putRes).status())
+    expect([200, 204]).toContain((await doneRes).status())
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+
+    const after = await page.request.get(`/api/vet/consultations/${visitId}`)
+    expect(after.ok()).toBeTruthy()
+    const row = (await after.json()) as any
+    const visit = row?.data ?? row
+    expect(visit?.status).not.toBe('cancelled')
+  })
+
+  test('dirty post-save → leave abandon (visite conservée)', async ({ page }) => {
+    await openConsultationSetup(page)
+    const { id: visitId } = await startConsultationVisit(page)
+    await fillVisitReportBody(page, `E2E dirty base ${Date.now()}`)
+    await page.getByTestId('visit-report-save').click()
+    await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('consultation-next-stay').click()
+    await expect(page.getByTestId('consultation-report')).toBeVisible()
+
+    await fillVisitReportBody(page, `E2E dirty edit ${Date.now()}`)
+    await page.getByTestId('consultation-cancel').click()
+    await expect(page.getByTestId('consultation-leave-prompt')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('consultation-leave-hint')).toHaveAttribute('data-leave-mode', 'abandon')
+
+    // Discard dirty edits — must NOT cancel a visit that already has a CR.
+    const cancelledHits: string[] = []
+    page.on('request', (req) => {
+      if (req.method() !== 'PATCH' || !req.url().includes(`/api/visits/${visitId}`)) return
+      try {
+        const body = req.postDataJSON() as { status?: string } | null
+        if (body?.status === 'cancelled') cancelledHits.push(req.url())
+      }
+      catch { /* ignore */ }
+    })
+    await page.getByTestId('consultation-leave-discard').click()
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+    expect(cancelledHits).toEqual([])
+
+    const after = await page.request.get(`/api/vet/consultations/${visitId}`)
+    expect(after.ok()).toBeTruthy()
+    const row = (await after.json()) as any
+    const visit = row?.data ?? row
+    expect(visit?.status).not.toBe('cancelled')
   })
 
   test('pendant save CR → close désactivé (pas d’orphelin)', async ({ page }) => {
@@ -219,8 +299,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       await page.getByTestId('visit-report-save').click()
 
       await expect(page.getByTestId('consultation-cancel')).toBeDisabled({ timeout: 5000 })
-      await expect(page.getByTestId('pro-modal-close')).toBeDisabled()
-      await expect(page.getByTestId('consultation-modal')).toBeVisible()
+      await expect(page.getByTestId('consultation-workspace')).toBeVisible()
     }
     finally {
       // Unblock PUT first — do not unroute until continue() has finished.
@@ -286,7 +365,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('daf-from-consultation-banner')).toBeVisible()
   })
 
-  test('après CR → hub next-steps (pas de traitements in-modal)', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
+  test('après CR → hub next-steps (pas de traitements in-workspace)', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
     await saveConsultationReport(page)
@@ -294,6 +373,8 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('consultation-next-steps')).toBeVisible()
     await expect(page.getByTestId('consultation-treatments')).toHaveCount(0)
     await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
+    await expect(page.getByTestId('consultation-workspace')).toBeVisible()
+    await expect(page.getByTestId('consultation-modal')).toBeVisible()
     await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
 
     const dafCta = page.getByTestId('consultation-cta-daf')
@@ -344,11 +425,13 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       await expect(openCta).toBeVisible({ timeout: 15000 })
       await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
 
-      // CTA → écran Nouvelle consultation directement sur la visite du RDV (pas d'étape setup).
+      // CTA → même workspace `/consultations/{id}` (pas de setup, RDV conservé).
       await openCta.click()
-      await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
       await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
       await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('consultation-setup')).toHaveCount(0)
 
       // Fermer sans enregistrer : confirm leave → le RDV n'est PAS annulé.
       await page.getByTestId('consultation-cancel').click()

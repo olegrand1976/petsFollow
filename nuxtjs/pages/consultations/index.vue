@@ -140,11 +140,11 @@
                   {{ formatAudioClock(row.audioDurationSec) }}
                 </span>
                 <ProIconAction
-                  v-if="canReadPets"
+                  v-if="canReadPets && row.clientId"
                   icon="description"
                   :label="$t('consultations.openReport')"
-                  :to="`/consultations/${row.id}`"
                   :test-id="`consultation-open-cr-${row.id}`"
+                  @click="openReport(row)"
                 />
                 <ProIconAction
                   v-if="canReadPets && row.clientId && row.petId"
@@ -252,6 +252,7 @@ const route = useRoute()
 const { t, locale } = useI18n()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
+const activeConsult = useActiveConsultation()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
 /** Soft-delete API : history.read ∧ write_clinical ∧ (walk-in | done/cancelled). */
@@ -499,17 +500,45 @@ async function playAudio(row: ConsultationRow) {
   }
 }
 
-/** Deep-link legacy agenda : /consultations?visit=<id> → fiche /consultations/:id. */
+/** Deep-link : /consultations?visit=<id> → même modale CR (coque Nouvelle consultation). */
 async function redirectVisitQuery(): Promise<boolean> {
   const visitQ = route.query.visit
   const visitId = typeof visitQ === 'string' ? visitQ.trim() : ''
   if (!visitId) return false
-  await navigateTo(`/consultations/${encodeURIComponent(visitId)}`, { replace: true })
+  try {
+    const res: any = await $fetch(`/api/vet/consultations/${encodeURIComponent(visitId)}`)
+    const row = (res?.data ?? res) as ConsultationRow
+    if (row?.id && row.clientId) {
+      activeConsult.openForVisit({
+        visitId: row.id,
+        clientId: row.clientId,
+        petId: row.petId,
+        keepVisit: !row.consultationSession,
+      })
+    }
+  }
+  catch {
+    /* liste normale si meta absente */
+  }
+  await navigateTo({ path: '/consultations', query: {} }, { replace: true })
   return true
 }
 
+function openReport(row: ConsultationRow) {
+  if (!row.id || !row.clientId) return
+  activeConsult.openForVisit({
+    visitId: row.id,
+    clientId: row.clientId,
+    petId: row.petId,
+    keepVisit: !row.consultationSession,
+  })
+}
+
 onMounted(async () => {
-  if (await redirectVisitQuery()) return
+  if (await redirectVisitQuery()) {
+    await load()
+    return
+  }
   await load()
 })
 onBeforeUnmount(() => {
