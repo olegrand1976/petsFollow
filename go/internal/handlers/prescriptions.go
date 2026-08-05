@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/prescription"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -16,6 +17,7 @@ import (
 func (a *API) registerPrescriptionRoutes(pr chi.Router) {
 	pr.Get("/vet/prescriptions", a.listPrescriptions)
 	pr.Post("/vet/prescriptions", a.createPrescription)
+	pr.Post("/vet/prescriptions/suggest-from-visit", a.suggestPrescriptionFromVisit)
 	pr.Get("/vet/prescriptions/{id}", a.getPrescription)
 	pr.Patch("/vet/prescriptions/{id}", a.patchPrescription)
 	pr.Delete("/vet/prescriptions/{id}", a.deletePrescription)
@@ -54,6 +56,32 @@ func (a *API) writePrescriptionErr(w http.ResponseWriter, r *http.Request, err e
 		return false
 	}
 	return true
+}
+
+// resolvePrescriptionVisit checks visit belongs to practice + pet and returns visitID (or "" if unset).
+func (a *API) resolvePrescriptionVisit(w http.ResponseWriter, r *http.Request, practiceID, petID, visitID string) (string, bool) {
+	visitID = strings.TrimSpace(visitID)
+	if visitID == "" {
+		return "", true
+	}
+	if !isUUID(visitID) {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		return "", false
+	}
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+			return "", false
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return "", false
+	}
+	if visit.PracticeID != practiceID || visit.PetID != petID {
+		writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+		return "", false
+	}
+	return visitID, true
 }
 
 func (a *API) listPrescriptions(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +124,9 @@ func (a *API) createPrescription(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		PetID       string          `json:"petId"`
+		VisitID     string          `json:"visitId"`
 		Notes       string          `json:"notes"`
+		CareAdvice  string          `json:"careAdvice"`
 		PaperFormat string          `json:"paperFormat"`
 		ValidUntil  *string         `json:"validUntil"`
 		Medications json.RawMessage `json:"medications"`
@@ -127,6 +157,10 @@ func (a *API) createPrescription(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
+	visitID, ok := a.resolvePrescriptionVisit(w, r, id.PracticeID, pet.ID, body.VisitID)
+	if !ok {
+		return
+	}
 	meds, err := prescription.NormalizeMedications(body.Medications)
 	if err != nil {
 		a.writePrescriptionErr(w, r, err)
@@ -142,7 +176,7 @@ func (a *API) createPrescription(w http.ResponseWriter, r *http.Request) {
 		validUntil = &t
 	}
 	doc, err := a.store.CreatePrescriptionDraft(
-		r.Context(), id.PracticeID, id.UserID, pet, meds, body.Notes, body.PaperFormat, validUntil,
+		r.Context(), id.PracticeID, id.UserID, pet, meds, body.Notes, body.CareAdvice, body.PaperFormat, validUntil, visitID,
 	)
 	if err != nil {
 		if a.writePrescriptionErr(w, r, err) {
@@ -200,8 +234,10 @@ func (a *API) patchPrescription(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		Notes       *string         `json:"notes"`
+		CareAdvice  *string         `json:"careAdvice"`
 		PaperFormat *string         `json:"paperFormat"`
 		ValidUntil  *string         `json:"validUntil"`
+		VisitID     *string         `json:"visitId"`
 		Medications json.RawMessage `json:"medications"`
 		Status      *string         `json:"status"`
 	}
@@ -217,8 +253,17 @@ func (a *API) patchPrescription(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	cur, err := a.store.GetPrescription(r.Context(), id.PracticeID, rxID)
+	if err != nil {
+		if a.writePrescriptionErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	patch := store.PrescriptionPatch{
 		Notes:       body.Notes,
+		CareAdvice:  body.CareAdvice,
 		PaperFormat: body.PaperFormat,
 	}
 	if body.Medications != nil {
@@ -237,6 +282,13 @@ func (a *API) patchPrescription(w http.ResponseWriter, r *http.Request) {
 			}
 			patch.ValidUntil = &t
 		}
+	}
+	if body.VisitID != nil {
+		vid, ok := a.resolvePrescriptionVisit(w, r, id.PracticeID, cur.PetID, *body.VisitID)
+		if !ok {
+			return
+		}
+		patch.VisitID = &vid
 	}
 	doc, err := a.store.PatchPrescriptionDraft(r.Context(), id.PracticeID, rxID, patch)
 	if err != nil {
@@ -318,6 +370,7 @@ func (a *API) getPrescriptionPDF(w http.ResponseWriter, r *http.Request) {
 		DateIssued:     issued,
 		ValidUntil:     valid,
 		Notes:          doc.Notes,
+		CareAdvice:     doc.CareAdvice,
 		Medications:    meds,
 		DraftWatermark: doc.Status == prescription.StatusDraft,
 	})
@@ -326,13 +379,137 @@ func (a *API) getPrescriptionPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/pdf")
-	fname := "prescription.pdf"
+	fname := "consignes.pdf"
 	if isUUID(doc.ID) {
-		fname = "prescription-" + doc.ID + ".pdf"
+		fname = "consignes-" + doc.ID + ".pdf"
 	}
 	w.Header().Set("Content-Disposition", `inline; filename="`+fname+`"`)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(pdfBytes)
+}
+
+func (a *API) suggestPrescriptionFromVisit(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePrescriptionsEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	if !ok {
+		return
+	}
+	if a.vetSuggestRL != nil && !a.vetSuggestRL.Allow("consignes-suggest:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
+	var body struct {
+		VisitID string `json:"visitId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	visitID := strings.TrimSpace(body.VisitID)
+	if visitID == "" || !isUUID(visitID) {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		return
+	}
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if visit.PracticeID != id.PracticeID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	pet, err := a.store.GetPet(r.Context(), visit.PetID)
+	if err != nil {
+		if a.writePrescriptionErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	can, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !can {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+
+	reports, err := a.store.ListVisitReportsForVisit(r.Context(), visitID, id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	source := pickVisitReportTextForConsignes(reports)
+	if strings.TrimSpace(source) == "" {
+		writeErr(w, r, http.StatusBadRequest, "no_visit_report", "no_visit_report")
+		return
+	}
+	source = truncateRunes(source, maxConsignesSuggestSourceRunes)
+
+	if a.gemini == nil || !a.gemini.Configured() {
+		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
+		return
+	}
+
+	country := "BE"
+	if contact, cerr := a.store.GetPracticeContact(r.Context(), visit.PracticeID); cerr == nil && contact.CountryCode != "" {
+		country = store.NormalizeCountryCode(contact.CountryCode)
+	}
+	system := gemini.BuildConsignesSuggestPrompt(gemini.ConsignesSuggestPromptInput{
+		CountryCode: country,
+		PetName:     pet.Name,
+		PetSpecies:  pet.Species,
+	})
+	raw, err := a.gemini.GenerateJSON(r.Context(), system, "Compte-rendu source:\n\n"+source, 0.2)
+	if err != nil {
+		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
+		return
+	}
+	suggestion, err := gemini.ParseConsignesSuggestJSON(raw)
+	if err != nil {
+		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, suggestion)
+}
+
+const maxConsignesSuggestSourceRunes = 12000
+
+func pickVisitReportTextForConsignes(reports []store.VisitReportSummary) string {
+	// Prefer finalized, then improved, then body, then transcript — newest list first.
+	bestFinal := ""
+	bestDraft := ""
+	for _, r := range reports {
+		text := strings.TrimSpace(r.ImprovedText)
+		if text == "" {
+			text = strings.TrimSpace(r.BodyText)
+		}
+		if text == "" {
+			text = strings.TrimSpace(r.TranscriptText)
+		}
+		if text == "" {
+			continue
+		}
+		if r.Status == "final" && bestFinal == "" {
+			bestFinal = text
+		}
+		if bestDraft == "" {
+			bestDraft = text
+		}
+	}
+	if bestFinal != "" {
+		return bestFinal
+	}
+	return bestDraft
 }
 
 func parsePrescriptionTime(s string) (time.Time, error) {

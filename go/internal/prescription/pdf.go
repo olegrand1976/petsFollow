@@ -9,23 +9,24 @@ import (
 	"github.com/phpdave11/gofpdf"
 )
 
-// PDFInput is the printable prescription content.
+// PDFInput is the printable consignes (care instructions) content — not a legal prescription.
 type PDFInput struct {
-	PaperFormat   string
-	CountryCode   string
-	PracticeName  string
-	Prescriber    string
-	OwnerName     string
-	PetName       string
-	PetSpecies    string
-	DateIssued    *time.Time
-	ValidUntil    *time.Time
-	Notes         string
-	Medications   []Medication
+	PaperFormat    string
+	CountryCode    string
+	PracticeName   string
+	Prescriber     string
+	OwnerName      string
+	PetName        string
+	PetSpecies     string
+	DateIssued     *time.Time
+	ValidUntil     *time.Time
+	Notes          string
+	CareAdvice     string
+	Medications    []Medication
 	DraftWatermark bool
 }
 
-// BuildPDF renders an A4/A5 veterinary prescription PDF (V1 preview / draft).
+// BuildPDF renders an A4/A5 consignes sheet PDF (V1 preview / draft).
 func BuildPDF(in PDFInput) ([]byte, error) {
 	size := FormatA4
 	if strings.EqualFold(in.PaperFormat, FormatA5) {
@@ -111,6 +112,15 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 		pdf.Ln(2)
 	}
 
+	if strings.TrimSpace(in.CareAdvice) != "" {
+		pdf.Ln(2)
+		pdf.SetFont("Arial", "B", 10)
+		pdf.Cell(0, 6, label(in.CountryCode, "careAdvice"))
+		pdf.Ln(6)
+		pdf.SetFont("Arial", "", 9)
+		pdf.MultiCell(0, 4, sanitize(in.CareAdvice), "", "", false)
+	}
+
 	if strings.TrimSpace(in.Notes) != "" {
 		pdf.Ln(2)
 		pdf.SetFont("Arial", "I", 9)
@@ -130,45 +140,55 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 
 func documentTitle(cc string) string {
 	switch strings.ToUpper(cc) {
-	case "FR":
-		return "Prescription veterinaire"
 	case "IT":
-		return "Ricetta veterinaria"
+		return "Consegne di cura"
 	case "ES":
-		return "Receta veterinaria"
+		return "Instrucciones de cuidados"
+	case "NL":
+		return "Zorginstructies"
 	default:
-		return "Prescription veterinaire"
+		return "Consignes"
 	}
 }
 
 func label(cc, key string) string {
-	// V1: French labels for BE/FR; light variants for IT/ES.
+	// V1: French labels for BE/FR; light variants for IT/ES/NL.
 	fr := map[string]string{
-		"practice":   "Cabinet",
-		"prescriber": "Veterinaire",
-		"owner":      "Proprietaire",
-		"pet":        "Animal",
-		"issued":     "Date d'emission",
-		"valid":      "Valable jusqu'au",
+		"practice":    "Cabinet",
+		"prescriber":  "Veterinaire",
+		"owner":       "Proprietaire",
+		"pet":         "Animal",
+		"issued":      "Date",
+		"valid":       "Valable jusqu'au",
 		"medications": "Medicaments",
-		"dosage":     "Dosage",
-		"form":       "Forme",
-		"qty":        "Quantite",
-		"posology":   "Posologie",
-		"withdrawal": "Delai d'attente",
-		"notes":      "Notes",
+		"dosage":      "Dosage",
+		"form":        "Forme",
+		"qty":         "Quantite",
+		"posology":    "Posologie",
+		"withdrawal":  "Delai d'attente",
+		"notes":       "Notes",
+		"careAdvice":  "Conseils et soins",
 	}
 	it := map[string]string{
 		"practice": "Clinica", "prescriber": "Veterinario", "owner": "Proprietario",
-		"pet": "Animale", "issued": "Data di emissione", "valid": "Valida fino al",
+		"pet": "Animale", "issued": "Data", "valid": "Valida fino al",
 		"medications": "Farmaci", "dosage": "Dosaggio", "form": "Forma",
-		"qty": "Quantita", "posology": "Posologia", "withdrawal": "Tempo di sospensione", "notes": "Note",
+		"qty": "Quantita", "posology": "Posologia", "withdrawal": "Tempo di sospensione",
+		"notes": "Note", "careAdvice": "Consigli e cure",
 	}
 	es := map[string]string{
 		"practice": "Clinica", "prescriber": "Veterinario", "owner": "Propietario",
-		"pet": "Animal", "issued": "Fecha de emision", "valid": "Valida hasta",
+		"pet": "Animal", "issued": "Fecha", "valid": "Valida hasta",
 		"medications": "Medicamentos", "dosage": "Dosis", "form": "Forma",
-		"qty": "Cantidad", "posology": "Posologia", "withdrawal": "Periodo de espera", "notes": "Notas",
+		"qty": "Cantidad", "posology": "Posologia", "withdrawal": "Periodo de espera",
+		"notes": "Notas", "careAdvice": "Consejos y cuidados",
+	}
+	nl := map[string]string{
+		"practice": "Praktijk", "prescriber": "Dierenarts", "owner": "Eigenaar",
+		"pet": "Dier", "issued": "Datum", "valid": "Geldig tot",
+		"medications": "Geneesmiddelen", "dosage": "Dosering", "form": "Vorm",
+		"qty": "Hoeveelheid", "posology": "Posologie", "withdrawal": "Wachttijd",
+		"notes": "Notities", "careAdvice": "Advies en zorg",
 	}
 	var m map[string]string
 	switch strings.ToUpper(cc) {
@@ -176,6 +196,8 @@ func label(cc, key string) string {
 		m = it
 	case "ES":
 		m = es
+	case "NL":
+		m = nl
 	default:
 		m = fr
 	}
@@ -188,11 +210,13 @@ func label(cc, key string) string {
 func disclaimer(cc string) string {
 	switch strings.ToUpper(cc) {
 	case "IT":
-		return "Documento generato da petsFollow (anteprima bozza). Non sostituisce una ricetta certificata."
+		return "Foglio consegne generato da petsFollow (bozza). Non sostituisce una ricetta cartacea legale."
 	case "ES":
-		return "Documento generado por petsFollow (vista previa borrador). No sustituye una receta certificada."
+		return "Ficha de instrucciones generada por petsFollow (borrador). No sustituye una receta legal en papel."
+	case "NL":
+		return "Zorgfiche gegenereerd door petsFollow (concept). Vervangt geen wettelijk papieren voorschrift."
 	default:
-		return "Document genere par petsFollow (apercu brouillon). Ne remplace pas une prescription certifiee / eIDAS. Mentions reglementaires pays a completer en phase 2."
+		return "Fiche consignes generee par petsFollow (brouillon). Ne remplace pas une ordonnance legale (papier carbone)."
 	}
 }
 

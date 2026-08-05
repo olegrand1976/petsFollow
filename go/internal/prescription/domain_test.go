@@ -38,6 +38,9 @@ func TestNormalizeMedications(t *testing.T) {
 	if _, err := NormalizeNotes(strings.Repeat("a", MaxNotesRunes+1)); err != ErrPayloadTooLarge {
 		t.Fatalf("notes: %v", err)
 	}
+	if _, err := NormalizeCareAdvice(strings.Repeat("a", MaxCareAdviceRunes+1)); err != ErrPayloadTooLarge {
+		t.Fatalf("careAdvice: %v", err)
+	}
 }
 
 func TestBuildPDF(t *testing.T) {

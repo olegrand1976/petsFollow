@@ -20,6 +20,15 @@ export function usePrescriptionError() {
         return t('prescriptions.errorNotDraft')
       case 'payload_too_large':
         return t('prescriptions.errorPayload')
+      case 'no_visit_report':
+        return t('prescriptions.errorNoVisitReport')
+      case 'visit_mismatch':
+        return t('prescriptions.errorVisitMismatch')
+      case 'not_configured':
+      case 'gemini_error':
+        return t('prescriptions.errorAi')
+      case 'rate_limited':
+        return t('prescriptions.errorRateLimited')
       case 'validation_error':
       case 'invalid_valid_until':
       case 'invalid_status':

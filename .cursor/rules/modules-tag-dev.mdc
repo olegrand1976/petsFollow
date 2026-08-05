@@ -12,16 +12,17 @@ Tant qu’un module Pro n’est **pas GA**, il doit rester clairement marqué **
 3. **Flag API** : endpoints gated (404 `*_disabled` si off) ; `make api-dev` force le flag à `true` en local.
 4. **Pas de useCase commercial** inventé tant que tag `dev` ([`usecase-sync.mdc`](usecase-sync.mdc)).
 
-## Prescriptions (actuel)
+## Consignes (actuel — code `prescriptions`)
 
 | Surface | Valeur |
 |---------|--------|
 | Routes UI | `/prescriptions`, `/prescriptions/nouveau`, `/prescriptions/[id]` |
+| Label UI | **Consignes** (`nav.prescriptions`) — ≠ ordonnance légale (papier carbone hors app) |
 | Flag | `PRESCRIPTIONS_ENABLED` / `NUXT_PUBLIC_PRESCRIPTIONS_ENABLED` |
 | Doc | [`documentation/35-PRESCRIPTIONS.md`](documentation/35-PRESCRIPTIONS.md) |
 | ≠ | DAF pharmacie (`PHARMACY_ENABLED`) — autre module |
 
-V1 = brouillons + preview PDF uniquement. Ne pas présenter comme produit signé / partagé client / conforme multi-pays.
+V1 = brouillons + preview fiche PDF + pré-remplissage IA depuis CR. Ne pas présenter comme ordonnance signée / partagée client / conforme multi-pays.
 
 ## Autres modules tag `dev` (réf.)
 

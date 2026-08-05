@@ -514,7 +514,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject UI 1 clic `03b` (`consultation-treatments-protocols`) |
 | C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h (`TestPharmacyDAFPetDispensesAndDrafts` stale>1h + e2e `03c` badge mock + `09` `pet-daf-dispenses`) ; événement dossier client post-finalize |
 
-**Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
+**Consignes** (tag `dev`, code `/prescriptions`) : fiche consignes client sous flag `PRESCRIPTIONS_ENABLED` — UI label **Consignes** + badge `nav.tagDev` ; `care_advice` + `visit_id` ; pré-remplissage IA `POST …/suggest-from-visit` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). **≠ ordonnance légale** (papier carbone hors app). Pas de useCase commercial tant que tag `dev`.
 
 **PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` (wake inclus) sous `PACS_ENABLED` — Go `TestPacs*` (upload · preview/file via `ParentSeries` · isolation cross-cabinet · `UNIQUE(orthanc_study_id)` 409 · purge Orthanc rétention · admin wake 202 · frame OOR 404 · commentaires étude POST/GET + isolation · fixture `demo-rx` PixelSpacing · playground-clients → pets) · Vitest `pacsPoll` + `pacs-measure` (calibration mm + spacing scalé + coords image + demo 0.5→5 mm) · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) (badge `data-calibrated=1`) + [`20c-pacs-ga-net.spec.ts`](../nuxtjs/tests/e2e/specs/20c-pacs-ga-net.spec.ts) (download + EOF) · doc [40](40-PACS.md) / [40-P2](40-PACS-P2.md). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
 
@@ -530,10 +530,11 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
-| C8.1 | P1 | Créer draft (prescriptions) | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
-| C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
+| C8.1 | P1 | Créer draft (consignes) | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` ; `careAdvice` persisté |
+| C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` (fiche consignes) |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
-| C8.5 | P1 | Prescription → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
+| C8.4 | P1 | Lien visite + suggest | `visitId` cohérent ; `suggest-from-visit` sans CR → `no_visit_report` ; Gemini off → 503 |
+| C8.5 | P1 | Consignes → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
 
 ---
 
