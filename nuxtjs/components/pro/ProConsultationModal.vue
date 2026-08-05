@@ -586,8 +586,8 @@ async function start() {
 
 /**
  * `saved` marque la persistance (leave-guard, CTA suite) mais ne bascule jamais
- * d'écran tout seul : seul un Enregistrer explicite propose la suite, et l'IA
- * (`improve`) doit laisser le véto relire la proposition.
+ * d'écran tout seul : Enregistrer propose la suite via prompt ; Finaliser ouvre
+ * le hub directement (CR déjà verrouillé) ; l'IA (`improve`) laisse relire.
  */
 function onReportSaved(origin: ReportSavedOrigin = 'save') {
   afterSaved()
@@ -597,7 +597,8 @@ function onReportSaved(origin: ReportSavedOrigin = 'save') {
 
 function onReportFinalized() {
   afterSaved()
-  nextPromptOpen.value = true
+  // CR déjà verrouillé (final) — pas de prompt « Continuer le CR ».
+  openNextSteps()
 }
 
 function openNextSteps() {

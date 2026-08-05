@@ -332,61 +332,14 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
       })
     })
 
-    let referencePatched: boolean | null = null
-    await page.route('**/api/visits/*/report-reference', async (route) => {
-      const payload = route.request().postDataJSON() as { isReference?: boolean } | null
-      referencePatched = payload?.isReference === true
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            id: 'e2e-mock-report',
-            visitId,
-            status: 'final',
-            bodyText: improved,
-            transcriptText: notes,
-            improvedText: improved,
-            isReference: true,
-          },
-        }),
-      })
-    })
-
     await page.getByTestId('visit-report-finalize').click()
-    // Finaliser propose la suite : rester sur le CR pour vérifier le verrou.
-    await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
-    await page.getByTestId('consultation-next-stay').click()
-    await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0, { timeout: 5000 })
-    await expect(page.getByTestId('visit-report-status-final')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('visit-report-status-final')).toContainText(/Finaliz|Afgerond|Lõplik|Finalis/i)
-    await expect(page.getByTestId('visit-report-footer')).toHaveCount(0)
-    await expect(page.getByTestId('visit-report-improve')).toHaveCount(0)
-    await expect(page.getByTestId('visit-report-dictate')).toHaveCount(0)
-
-    // History <details> + fill layout can cover the reference checkbox (pointer intercept).
-    await setVisitReportHistoryOpen(page, false)
-    await expect(page.getByTestId('visit-report-reference')).toBeVisible({ timeout: 10000 })
-    const refCheck = page.getByTestId('visit-report-reference-check')
-    await refCheck.evaluate((el) => {
-      const pane = el.closest('.visit-report-pane') as HTMLElement | null
-      const scroll = el.closest('.pro-visit-report__scroll') as HTMLElement | null
-      const target = pane || scroll
-      if (target) {
-        const er = el.getBoundingClientRect()
-        const sr = target.getBoundingClientRect()
-        target.scrollTop += er.top - sr.top - sr.height / 2 + er.height / 2
-      }
-      else {
-        el.scrollIntoView({ block: 'center', inline: 'nearest' })
-      }
-      ;(el as HTMLInputElement).click()
-    })
-    await expect.poll(() => referencePatched, { timeout: 10000 }).toBe(true)
-    await expect(refCheck).toBeChecked()
+    // Finaliser ouvre le hub directement (CR verrouillé — pas de prompt).
+    await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0)
+    await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
+    await expect(page.getByTestId('consultation-cta-done')).toBeVisible()
 
     await page.unroute('**/api/visits/*/report-improve')
     await page.unroute('**/api/visits/*/report-finalize')
-    await page.unroute('**/api/visits/*/report-reference')
   })
 })

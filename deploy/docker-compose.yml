@@ -82,6 +82,13 @@ services:
       # garde-fou seed (env_guard.go) refuse de tourner sans APP_ENV seedable.
       APP_ENV: "${APP_ENV:-local}"
       BILLING_MOCK_ENABLED: "${BILLING_MOCK_ENABLED:-true}"
+      # Modules tag `dev` — parity make api-dev si absents du .env.
+      PHARMACY_ENABLED: "${PHARMACY_ENABLED:-true}"
+      PRESCRIPTIONS_ENABLED: "${PRESCRIPTIONS_ENABLED:-true}"
+      BILLIT_ENABLED: "${BILLIT_ENABLED:-true}"
+      PACS_ENABLED: "${PACS_ENABLED:-true}"
+      RESEARCH_ENABLED: "${RESEARCH_ENABLED:-true}"
+      CLIENT_AI_ENABLED: "${CLIENT_AI_ENABLED:-true}"
     ports:
       - "${PETSFOLLOW_API_PORT:-8291}:8080"
     depends_on:
@@ -98,8 +105,22 @@ services:
       dockerfile: deploy/Dockerfile.nuxtjs
       args:
         NUXT_PUBLIC_API_BASE: http://api:8080
+        # Local `make up` = parity make nuxtjs-dev (modules tag `dev` on).
+        # Prod/staging Cloud Build passe false ou true explicitement.
+        NUXT_PUBLIC_APP_ENV: ${NUXT_PUBLIC_APP_ENV:-local}
+        NUXT_PUBLIC_PHARMACY_ENABLED: ${NUXT_PUBLIC_PHARMACY_ENABLED:-true}
+        NUXT_PUBLIC_BILLIT_ENABLED: ${NUXT_PUBLIC_BILLIT_ENABLED:-true}
+        NUXT_PUBLIC_PRESCRIPTIONS_ENABLED: ${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}
+        NUXT_PUBLIC_PACS_ENABLED: ${NUXT_PUBLIC_PACS_ENABLED:-true}
+        NUXT_PUBLIC_RESEARCH_ENABLED: ${NUXT_PUBLIC_RESEARCH_ENABLED:-true}
     environment:
       NUXT_PUBLIC_API_BASE: http://api:8080
+      NUXT_PUBLIC_APP_ENV: ${NUXT_PUBLIC_APP_ENV:-local}
+      NUXT_PUBLIC_PHARMACY_ENABLED: ${NUXT_PUBLIC_PHARMACY_ENABLED:-true}
+      NUXT_PUBLIC_BILLIT_ENABLED: ${NUXT_PUBLIC_BILLIT_ENABLED:-true}
+      NUXT_PUBLIC_PRESCRIPTIONS_ENABLED: ${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}
+      NUXT_PUBLIC_PACS_ENABLED: ${NUXT_PUBLIC_PACS_ENABLED:-true}
+      NUXT_PUBLIC_RESEARCH_ENABLED: ${NUXT_PUBLIC_RESEARCH_ENABLED:-true}
       NITRO_PORT: "3000"
     ports:
       - "${PETSFOLLOW_NUXTJS_PORT:-3002}:3000"

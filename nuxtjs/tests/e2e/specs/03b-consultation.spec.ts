@@ -108,7 +108,7 @@ async function saveConsultationReport(page: Page) {
   await confirmGoToNextSteps(page)
 }
 
-/** Enregistrer/Finaliser ne bascule jamais seul : confirmation explicite → hub. */
+/** Enregistrer ne bascule jamais seul : confirmation explicite → hub. */
 async function confirmGoToNextSteps(page: Page) {
   await expect(page.getByTestId('consultation-next-prompt')).toBeVisible({ timeout: 15000 })
   // Tant que la confirmation n'est pas acceptée, le CR reste à l'écran.
@@ -116,6 +116,19 @@ async function confirmGoToNextSteps(page: Page) {
   await page.getByTestId('consultation-next-continue').click()
   await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 10000 })
   await expect(page.getByTestId('consultation-cta-done')).toBeVisible()
+}
+
+/** Finaliser → hub direct (CR déjà verrouillé, pas de prompt). */
+async function finalizeConsultationReport(page: Page) {
+  await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+  await expect(page.getByTestId('visit-report-pane-left')).toBeVisible()
+  await expect(page.getByTestId('visit-report-pane-right')).toBeVisible()
+  await fillVisitReportBody(page, `E2E consultation CR finalize ${Date.now()}`)
+  await expect(page.getByTestId('visit-report-finalize')).toBeEnabled()
+  await page.getByTestId('visit-report-finalize').click()
+  await expect(page.getByTestId('consultation-next-steps')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('consultation-cta-done')).toBeVisible()
+  await expect(page.getByTestId('consultation-next-prompt')).toHaveCount(0)
 }
 
 test.describe('nouvelle consultation', { tag: '@p0' }, () => {
@@ -127,6 +140,16 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await startConsultationVisit(page)
     await saveConsultationReport(page)
 
+    await page.getByTestId('consultation-cta-done').click()
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+  })
+
+  test('clients → modal → CR finalize → hub direct (sans prompt)', async ({ page }) => {
+    await openConsultationSetup(page)
+    await startConsultationVisit(page)
+    await finalizeConsultationReport(page)
+
+    await expect(page.getByTestId('visit-report-panel')).toHaveCount(0)
     await page.getByTestId('consultation-cta-done').click()
     await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
   })
