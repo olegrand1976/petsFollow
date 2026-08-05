@@ -40,13 +40,13 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
    - **ou Terminer** → visite `done` + finalisation auto des brouillons CR non vides (visible côté app client).
 7. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**. Voir aussi [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md) pour le parcours stock/DAF détaillé.
-8. (Optionnel) Depuis **Agenda** → détail d’un RDV : le détail n’affiche **plus** le CR — bouton **Nouvelle consultation** (RDV confirmé à venir, ou walk-in à reprendre) ouvre le même écran CR **sur la visite du RDV** (pas de nouvelle visite ; fermer sans enregistrer **n’annule pas** le RDV) ; **Voir la consultation** (RDV passé / `done`) ouvre `/consultations?visit=<id>` sur le CR.
+8. (Optionnel) Depuis **Agenda** → détail d’un RDV : le détail n’affiche **plus** le CR — bouton **Nouvelle consultation** (RDV confirmé à venir, ou walk-in à reprendre) ouvre le même écran CR **sur la visite du RDV** (pas de nouvelle visite ; fermer sans enregistrer **n’annule pas** le RDV) ; **Voir la consultation** (RDV passé / `done`) ouvre la fiche `/consultations/{id}` (compte-rendu plein écran).
 
 ## Résultat attendu
 
 - Visite créée en `confirmed` sans friction agenda (session walk-in : **n’occupe pas** un créneau client ; hors congés cabinet ; `source=care_pro` en terrain).
 - Fermeture sans enregistrement CR → **confirm** Enregistrer / Annuler la consultation / Rester ; Annuler → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.
-- Historique cabinet : `/consultations` (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
+- Historique cabinet : `/consultations` (walk-ins + RDV avec CR, date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
 - Veille / switch profil : autosave CR + reprise de la consultation pour le **même** utilisateur.
 - CR accessible immédiatement.
 - Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module prescriptions).

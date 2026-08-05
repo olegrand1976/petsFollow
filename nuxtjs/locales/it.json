@@ -1447,7 +1447,7 @@
   },
   "consultations": {
     "title": "Consultazioni",
-    "subtitle": "Cronologia delle consultazioni in clinica (walk-in), dalla più recente alla più vecchia.",
+    "subtitle": "Cronologia delle consultazioni in clinica (walk-in e appuntamenti con referto), dalla più recente alla più vecchia.",
     "search": "Ricerca",
     "searchPlaceholder": "Cliente o animale…",
     "statusFilter": "Stato",
@@ -1456,7 +1456,7 @@
     "to": "Al",
     "audioOnly": "Audio disponibile",
     "emptyTitle": "Nessuna consultazione",
-    "emptyDescription": "Le consultazioni avviate da Clienti appariranno qui.",
+    "emptyDescription": "I walk-in e gli appuntamenti con referto appariranno qui.",
     "columnDate": "Data",
     "columnClient": "Cliente",
     "columnPet": "Animale",
@@ -1465,7 +1465,6 @@
     "listen": "Ascolta",
     "audioDuration": "Durata: {duration}",
     "openReport": "Apri referto",
-    "reportModalTitle": "Referto",
     "audioModalTitle": "Audio consultazione",
     "audioLoading": "Caricamento audio…",
     "audioError": "Audio non disponibile (finalizzato o assente).",
@@ -1482,9 +1481,16 @@
     },
     "delete": "Elimina",
     "deleteConfirmTitle": "Eliminare la consultazione?",
-    "deleteConfirmBody": "Scomparirà dalla cronologia. Il referto resta archiviato (soft delete).",
+    "deleteConfirmBody": "Scomparirà dalla cronologia e dall'agenda. Il referto resta archiviato (soft delete).",
     "deleteConfirmCta": "Elimina",
-    "dafDraftOrphan": "Bozza DAF >1 h"
+    "dafDraftOrphan": "Bozza DAF >1 h",
+    "detailTitle": "Referto di consultazione",
+    "detailTitleNamed": "Referto — {pet}",
+    "detailSubtitle": "Scheda consultazione",
+    "backToList": "Torna all'elenco",
+    "detailLoadError": "Impossibile caricare la consultazione.",
+    "detailNotFound": "Consultazione non trovata.",
+    "detailForbidden": "Non hai accesso ai referti."
   },
   "pets": {
     "title": "Animali monitorati",
@@ -3657,7 +3663,7 @@
         "history": {
           "read": {
             "label": "Storico consultazioni",
-            "tip": "Vedere l'elenco delle consultazioni walk-in e aprire i referti."
+            "tip": "Vedere l'elenco delle consultazioni (walk-in e appuntamenti con referto) e aprire i referti."
           }
         }
       },

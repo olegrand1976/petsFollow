@@ -880,7 +880,7 @@
   },
   "consultations": {
     "title": "Consultaties",
-    "subtitle": "Geschiedenis van kliniekconsultaties (walk-in), van nieuw naar oud.",
+    "subtitle": "Geschiedenis van kliniekconsultaties (walk-in en afspraken met verslag), van nieuw naar oud.",
     "search": "Zoeken",
     "searchPlaceholder": "Cliënt of dier…",
     "statusFilter": "Status",
@@ -889,7 +889,7 @@
     "to": "Tot",
     "audioOnly": "Audio beschikbaar",
     "emptyTitle": "Geen consultaties",
-    "emptyDescription": "Consultaties gestart via Cliënten verschijnen hier.",
+    "emptyDescription": "Walk-ins en afspraken met verslag verschijnen hier.",
     "columnDate": "Datum",
     "columnClient": "Cliënt",
     "columnPet": "Dier",
@@ -898,7 +898,6 @@
     "listen": "Beluisteren",
     "audioDuration": "Duur: {duration}",
     "openReport": "Verslag openen",
-    "reportModalTitle": "Consultatieverslag",
     "audioModalTitle": "Consultatie-audio",
     "audioLoading": "Audio laden…",
     "audioError": "Audio niet beschikbaar (afgerond of ontbreekt).",
@@ -915,9 +914,16 @@
     },
     "delete": "Verwijderen",
     "deleteConfirmTitle": "Consultatie verwijderen?",
-    "deleteConfirmBody": "Ze verdwijnt uit de geschiedenis. Het verslag blijft gearchiveerd (soft delete).",
+    "deleteConfirmBody": "Ze verdwijnt uit de geschiedenis en de agenda. Het verslag blijft gearchiveerd (soft delete).",
     "deleteConfirmCta": "Verwijderen",
-    "dafDraftOrphan": "DAF-concept >1 u"
+    "dafDraftOrphan": "DAF-concept >1 u",
+    "detailTitle": "Consultatieverslag",
+    "detailTitleNamed": "Consultatieverslag — {pet}",
+    "detailSubtitle": "Consultatiedetail",
+    "backToList": "Terug naar lijst",
+    "detailLoadError": "Consultatie laden mislukt.",
+    "detailNotFound": "Consultatie niet gevonden.",
+    "detailForbidden": "Geen toegang tot verslagen."
   },
   "pets": {
     "title": "Opgevolgde dieren",
@@ -3657,7 +3663,7 @@
         "history": {
           "read": {
             "label": "Consultatiegeschiedenis",
-            "tip": "Walk-in consultaties bekijken en verslagen openen."
+            "tip": "Consultaties bekijken (walk-in en afspraken met verslag) en verslagen openen."
           }
         }
       },

@@ -107,7 +107,8 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 	return scanVisitsFull(rows)
 }
 
-// ConsultationListItem is a walk-in consultation with report summary flags (no audio keys).
+// ConsultationListItem is a cabinet consultation with report summary flags (no audio keys).
+// Included: walk-ins (consultation_session) and agenda visits with a persisted CR.
 type ConsultationListItem struct {
 	Visit
 	HasReport        bool   `json:"hasReport"`
@@ -116,7 +117,7 @@ type ConsultationListItem struct {
 	ReportStatus     string `json:"reportStatus,omitempty"`
 }
 
-// ListConsultationsFilter filters practice walk-in consultations.
+// ListConsultationsFilter filters practice consultations (walk-ins + visits with CR).
 type ListConsultationsFilter struct {
 	Status   string
 	Query    string
@@ -127,7 +128,8 @@ type ListConsultationsFilter struct {
 	Offset   int
 }
 
-// ListPracticeConsultations returns consultation_session visits newest first.
+// ListPracticeConsultations returns cabinet consultations newest first:
+// walk-ins (consultation_session) or visits with a persisted report.
 func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string, f ListConsultationsFilter) ([]ConsultationListItem, error) {
 	limit := f.Limit
 	if limit <= 0 || limit > 200 {
@@ -141,7 +143,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 	args := []any{practiceID}
 	where := []string{
 		`v.practice_id = $1`,
-		`COALESCE(v.consultation_session, false) = true`,
+		sqlVisitIsConsultationHistory,
 		`v.deleted_at IS NULL`,
 	}
 	argN := 2
@@ -431,6 +433,33 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	return v, err
 }
 
+// GetPracticeVisit returns a non-deleted visit for the practice, with pet/owner names.
+func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string) (Visit, error) {
+	var v Visit
+	err := s.pool.QueryRow(ctx, `
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+			COALESCE(v.notes,''), v.source, v.created_at,
+			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+		FROM visits.visits v
+		JOIN pets.pets p ON p.id = v.pet_id
+		JOIN identity.users u ON u.id = p.owner_user_id
+		WHERE v.id = $1 AND v.practice_id = $2 AND v.deleted_at IS NULL`,
+		visitID, practiceID,
+	).Scan(
+		&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status,
+		&v.Notes, &v.Source, &v.CreatedAt,
+		&v.PetName, &v.ClientName, &v.ClientID,
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+		&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Visit{}, ErrNotFound
+	}
+	return v, err
+}
+
 // UpdateVisitNotes sets agenda / desk notes (calendar.manage — not clinical CR).
 func (s *Store) UpdateVisitNotes(ctx context.Context, id, notes string) (Visit, error) {
 	if len(notes) > 1000 {
@@ -543,17 +572,19 @@ func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string,
 	return s.GetVisit(ctx, id)
 }
 
-// SoftDeleteVisit marks a visit as soft-deleted (hidden from consultations history).
-// Allowed for walk-in consultations regardless of status / persisted CR.
+// SoftDeleteVisit marks a consultation-history visit as soft-deleted (hidden from
+// /consultations and calendar). Eligible = walk-in OR (done/cancelled + persisted CR).
 func (s *Store) SoftDeleteVisit(ctx context.Context, id string) (Visit, error) {
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
-		UPDATE visits.visits
+		UPDATE visits.visits v
 		SET deleted_at = now()
-		WHERE id = $1 AND deleted_at IS NULL
-		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)`,
+		WHERE v.id = $1
+		  AND v.deleted_at IS NULL
+		  AND `+sqlVisitSoftDeleteEligible+`
+		RETURNING v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status, COALESCE(v.notes,''), v.source, v.created_at,
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.request_preconsult,false), COALESCE(v.consultation_session,false)`,
 		id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,

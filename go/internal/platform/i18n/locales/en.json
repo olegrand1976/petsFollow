@@ -191,7 +191,9 @@
     "pacs_error": "PACS / Orthanc error",
     "research_dataroom_forbidden": "Data room not allowed — join a group enabled by an admin",
     "research_disabled": "Research module disabled",
-    "research_anon_salt_required": "Research misconfigured (anonymisation salt missing)"
+    "research_anon_salt_required": "Research misconfigured (anonymisation salt missing)",
+    "not_consultation_history": "This visit is not part of consultation history (or the agenda appointment is still open)",
+    "not_consultation_session": "Only walk-in consultations can be deleted this way"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

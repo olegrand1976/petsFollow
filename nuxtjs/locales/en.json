@@ -880,7 +880,7 @@
   },
   "consultations": {
     "title": "Consultations",
-    "subtitle": "Clinic consultation history (walk-in), newest first.",
+    "subtitle": "Clinic consultation history (walk-ins and visits with a report), newest first.",
     "search": "Search",
     "searchPlaceholder": "Client or pet…",
     "statusFilter": "Status",
@@ -889,7 +889,7 @@
     "to": "To",
     "audioOnly": "Audio available",
     "emptyTitle": "No consultations",
-    "emptyDescription": "Consultations started from Clients will appear here.",
+    "emptyDescription": "Walk-ins and appointments with a visit report will appear here.",
     "columnDate": "Date",
     "columnClient": "Client",
     "columnPet": "Pet",
@@ -898,7 +898,6 @@
     "listen": "Listen",
     "audioDuration": "Duration: {duration}",
     "openReport": "Open report",
-    "reportModalTitle": "Visit report",
     "audioModalTitle": "Consultation audio",
     "audioLoading": "Loading audio…",
     "audioError": "Audio unavailable (finalized or missing).",
@@ -915,9 +914,16 @@
     },
     "delete": "Delete",
     "deleteConfirmTitle": "Delete this consultation?",
-    "deleteConfirmBody": "It will disappear from the history. The visit report stays archived (soft delete).",
+    "deleteConfirmBody": "It will disappear from the history and the calendar. The visit report stays archived (soft delete).",
     "deleteConfirmCta": "Delete",
-    "dafDraftOrphan": "DAF draft >1 h"
+    "dafDraftOrphan": "DAF draft >1 h",
+    "detailTitle": "Visit report",
+    "detailTitleNamed": "Visit report — {pet}",
+    "detailSubtitle": "Consultation details",
+    "backToList": "Back to list",
+    "detailLoadError": "Unable to load the consultation.",
+    "detailNotFound": "Consultation not found.",
+    "detailForbidden": "You do not have access to visit reports."
   },
   "pets": {
     "title": "Monitored pets",
@@ -3657,7 +3663,7 @@
         "history": {
           "read": {
             "label": "Consultation history",
-            "tip": "View the walk-in consultation list and open visit reports."
+            "tip": "View the consultation list (walk-ins and visits with a report) and open visit reports."
           }
         }
       },

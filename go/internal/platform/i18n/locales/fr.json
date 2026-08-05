@@ -191,7 +191,9 @@
     "pacs_error": "Erreur PACS / Orthanc",
     "research_dataroom_forbidden": "Data room non autorisée — rejoignez un groupe activé par un admin",
     "research_disabled": "Module Research désactivé",
-    "research_anon_salt_required": "Configuration Research incomplète (sel d’anonymisation manquant)"
+    "research_anon_salt_required": "Configuration Research incomplète (sel d’anonymisation manquant)",
+    "not_consultation_history": "Cette visite n'appartient pas à l'historique des consultations (ou RDV agenda encore ouvert)",
+    "not_consultation_session": "Seules les consultations walk-in peuvent être supprimées ainsi"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

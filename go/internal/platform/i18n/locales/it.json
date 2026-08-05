@@ -191,7 +191,9 @@
     "pacs_error": "PACS error",
     "research_dataroom_forbidden": "Data room non autorizzata — unisciti a un gruppo attivato da un admin",
     "research_disabled": "Modulo Research disattivato",
-    "research_anon_salt_required": "Research non configurato (sale di anonimizzazione mancante)"
+    "research_anon_salt_required": "Research non configurato (sale di anonimizzazione mancante)",
+    "not_consultation_history": "Questa visita non fa parte dello storico consultazioni (o l'appuntamento in agenda è ancora aperto)",
+    "not_consultation_session": "Solo le consultazioni walk-in possono essere eliminate così"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

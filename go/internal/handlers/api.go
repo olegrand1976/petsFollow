@@ -222,6 +222,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
 		pr.Get("/vet/visits", a.listVetVisits)
 		pr.Get("/vet/consultations", a.listVetConsultations)
+		pr.Get("/vet/consultations/{visitID}", a.getVetConsultation)
 		pr.Get("/vet/schedule", a.getVetSchedule)
 		pr.Put("/vet/schedule", a.putVetSchedule)
 		pr.Get("/vet/vacations", a.listVetVacations)

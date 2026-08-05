@@ -191,7 +191,9 @@
     "pacs_error": "PACS error",
     "research_dataroom_forbidden": "Data room niet toegestaan — word lid van een door een admin geactiveerde groep",
     "research_disabled": "Research-module uitgeschakeld",
-    "research_anon_salt_required": "Research verkeerd geconfigureerd (anonimisatiesalt ontbreekt)"
+    "research_anon_salt_required": "Research verkeerd geconfigureerd (anonimisatiesalt ontbreekt)",
+    "not_consultation_history": "Deze visit hoort niet bij de consultatiegeschiedenis (of de agenda-afspraak is nog open)",
+    "not_consultation_session": "Alleen walk-in consultaties kunnen zo worden verwijderd"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

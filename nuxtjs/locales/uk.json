@@ -1509,7 +1509,6 @@
     "listen": "Прослухати",
     "audioDuration": "Тривалість: {duration}",
     "openReport": "Відкрити звіт",
-    "reportModalTitle": "Звіт",
     "audioModalTitle": "Аудіо консультації",
     "audioLoading": "Завантаження аудіо…",
     "audioError": "Аудіо недоступне (завершено або відсутнє).",

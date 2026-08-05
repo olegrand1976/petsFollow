@@ -1056,7 +1056,6 @@
     "listen": "Прослушать",
     "audioDuration": "Длительность: {duration}",
     "openReport": "Открыть отчёт",
-    "reportModalTitle": "Отчёт",
     "audioModalTitle": "Аудио консультации",
     "audioLoading": "Загрузка аудио…",
     "audioError": "Аудио недоступно (завершено или отсутствует).",

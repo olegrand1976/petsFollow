@@ -880,7 +880,7 @@
   },
   "consultations": {
     "title": "Consultas",
-    "subtitle": "Historial de consultas clínicas (sin cita), de más reciente a más antigua.",
+    "subtitle": "Historial de consultas clínicas (sin cita y citas con informe), de más reciente a más antigua.",
     "search": "Búsqueda",
     "searchPlaceholder": "Cliente o animal…",
     "statusFilter": "Estado",
@@ -889,7 +889,7 @@
     "to": "Hasta",
     "audioOnly": "Audio disponible",
     "emptyTitle": "Ninguna consulta",
-    "emptyDescription": "Las consultas iniciadas desde Clientes aparecerán aquí.",
+    "emptyDescription": "Las consultas sin cita y las citas con informe aparecerán aquí.",
     "columnDate": "Fecha",
     "columnClient": "Cliente",
     "columnPet": "Animal",
@@ -898,7 +898,6 @@
     "listen": "Escuchar",
     "audioDuration": "Duración: {duration}",
     "openReport": "Abrir informe",
-    "reportModalTitle": "Informe de visita",
     "audioModalTitle": "Audio de la consulta",
     "audioLoading": "Cargando el audio…",
     "audioError": "Audio no disponible (finalizado o ausente).",
@@ -915,9 +914,16 @@
     },
     "delete": "Eliminar",
     "deleteConfirmTitle": "¿Eliminar la consulta?",
-    "deleteConfirmBody": "Desaparecerá del historial. El informe queda archivado (borrado lógico).",
+    "deleteConfirmBody": "Desaparecerá del historial y del calendario. El informe queda archivado (borrado lógico).",
     "deleteConfirmCta": "Eliminar",
-    "dafDraftOrphan": "Borrador DAF >1 h"
+    "dafDraftOrphan": "Borrador DAF >1 h",
+    "detailTitle": "Informe de consulta",
+    "detailTitleNamed": "Informe de consulta — {pet}",
+    "detailSubtitle": "Ficha de consulta",
+    "backToList": "Volver a la lista",
+    "detailLoadError": "No se pudo cargar la consulta.",
+    "detailNotFound": "Consulta no encontrada.",
+    "detailForbidden": "No tiene acceso a los informes."
   },
   "pets": {
     "title": "Animales seguidos",
@@ -3657,7 +3663,7 @@
         "history": {
           "read": {
             "label": "Historial de consultas",
-            "tip": "Ver la lista de consultas walk-in y abrir los informes."
+            "tip": "Ver la lista de consultas (sin cita y citas con informe) y abrir los informes."
           }
         }
       },

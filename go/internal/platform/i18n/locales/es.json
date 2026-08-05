@@ -191,7 +191,9 @@
     "pacs_error": "PACS error",
     "research_dataroom_forbidden": "Data room no autorizada — únase a un grupo activado por un admin",
     "research_disabled": "Módulo Research desactivado",
-    "research_anon_salt_required": "Research mal configurado (falta la sal de anonimización)"
+    "research_anon_salt_required": "Research mal configurado (falta la sal de anonimización)",
+    "not_consultation_history": "Esta visita no forma parte del historial de consultas (o la cita del agenda sigue abierta)",
+    "not_consultation_session": "Solo las consultas walk-in se pueden eliminar así"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

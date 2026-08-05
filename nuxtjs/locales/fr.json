@@ -1491,7 +1491,7 @@
   },
   "consultations": {
     "title": "Consultations",
-    "subtitle": "Historique des consultations cabinet (walk-in), du plus récent au plus ancien.",
+    "subtitle": "Historique des consultations cabinet (walk-in et RDV avec CR), du plus récent au plus ancien.",
     "search": "Recherche",
     "searchPlaceholder": "Client ou animal…",
     "statusFilter": "Statut",
@@ -1500,7 +1500,7 @@
     "to": "Au",
     "audioOnly": "Audio disponible",
     "emptyTitle": "Aucune consultation",
-    "emptyDescription": "Les consultations démarrées depuis Clients apparaîtront ici.",
+    "emptyDescription": "Les walk-ins et les RDV avec compte-rendu apparaîtront ici.",
     "columnDate": "Date",
     "columnClient": "Client",
     "columnPet": "Animal",
@@ -1509,7 +1509,6 @@
     "listen": "Écouter",
     "audioDuration": "Durée : {duration}",
     "openReport": "Ouvrir le CR",
-    "reportModalTitle": "Compte-rendu",
     "audioModalTitle": "Audio consultation",
     "audioLoading": "Chargement de l'audio…",
     "audioError": "Audio indisponible (finalisé ou absent).",
@@ -1526,9 +1525,16 @@
     },
     "delete": "Supprimer",
     "deleteConfirmTitle": "Supprimer la consultation ?",
-    "deleteConfirmBody": "Elle disparaîtra de l’historique. Le compte-rendu reste archivé (suppression logique).",
+    "deleteConfirmBody": "Elle disparaîtra de l’historique et de l’agenda. Le compte-rendu reste archivé (suppression logique).",
     "deleteConfirmCta": "Supprimer",
-    "dafDraftOrphan": "Brouillon DAF >1 h"
+    "dafDraftOrphan": "Brouillon DAF >1 h",
+    "detailTitle": "Compte-rendu",
+    "detailTitleNamed": "Compte-rendu — {pet}",
+    "detailSubtitle": "Fiche consultation",
+    "backToList": "Retour à la liste",
+    "detailLoadError": "Impossible de charger la consultation.",
+    "detailNotFound": "Consultation introuvable.",
+    "detailForbidden": "Vous n’avez pas accès aux comptes-rendus."
   },
   "pets": {
     "title": "Animaux suivis",
@@ -3701,7 +3707,7 @@
         "history": {
           "read": {
             "label": "Historique des consultations",
-            "tip": "Voir la liste des consultations walk-in (Histo. consultations) et ouvrir les comptes-rendus."
+            "tip": "Voir la liste des consultations (walk-in et RDV avec CR) et ouvrir les comptes-rendus."
           }
         }
       },

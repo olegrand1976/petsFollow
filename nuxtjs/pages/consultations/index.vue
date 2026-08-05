@@ -143,24 +143,23 @@
                   v-if="canReadPets"
                   icon="description"
                   :label="$t('consultations.openReport')"
+                  :to="`/consultations/${row.id}`"
                   :test-id="`consultation-open-cr-${row.id}`"
-                  @click="openReport(row)"
                 />
                 <ProIconAction
-                  v-if="canDeleteConsultation"
+                  v-if="canReadPets && row.clientId && row.petId"
+                  icon="pets"
+                  :label="$t('common.profile')"
+                  :to="`/clients/${row.clientId}/pets/${row.petId}`"
+                  :test-id="`consultation-pet-link-${row.id}`"
+                />
+                <ProIconAction
+                  v-if="canSoftDeleteRow(row)"
                   icon="delete"
                   :label="$t('consultations.delete')"
                   :test-id="`consultation-delete-${row.id}`"
                   @click="askDelete(row)"
                 />
-                <NuxtLink
-                  v-else-if="row.clientId && row.petId"
-                  :to="`/clients/${row.clientId}/pets/${row.petId}`"
-                  class="pro-link"
-                  :data-testid="`consultation-pet-link-${row.id}`"
-                >
-                  {{ $t('common.profile') }}
-                </NuxtLink>
               </div>
             </td>
           </tr>
@@ -174,22 +173,6 @@
         {{ $t('consultations.limitHint') }}
       </p>
     </ProCard>
-
-    <ProModal
-      v-model:open="reportOpen"
-      size="xl"
-      contain-scroll
-      :title="$t('consultations.reportModalTitle')"
-      test-id="consultation-history-report-modal"
-    >
-      <ProVisitReportPanel
-        v-if="selectedVisitId"
-        fill-height
-        :visit-id="selectedVisitId"
-        :visit-scheduled-at="selectedVisitScheduledAt || undefined"
-        :readonly="!canWriteClinical"
-      />
-    </ProModal>
 
     <ProModal
       v-model:open="deleteOpen"
@@ -257,6 +240,8 @@ type ConsultationRow = {
   status: string
   scheduledAt?: string
   createdAt: string
+  /** Présent si walk-in (omit false côté API). */
+  consultationSession?: boolean
   hasReport?: boolean
   hasAudio?: boolean
   audioDurationSec?: number
@@ -269,10 +254,17 @@ const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
-/** Aligné API softDeleteVisit : consultations.history.read ∧ pets.write_clinical. */
+/** Soft-delete API : history.read ∧ write_clinical ∧ (walk-in | done/cancelled). */
 const canDeleteConsultation = computed(
   () => canPractice('consultations.history.read') && canWriteClinical.value,
 )
+
+/** Aligné softDeleteVisit : pas de soft-delete d’un RDV agenda encore ouvert. */
+function canSoftDeleteRow(row: ConsultationRow) {
+  if (!canDeleteConsultation.value) return false
+  if (row.consultationSession) return true
+  return row.status === 'done' || row.status === 'cancelled'
+}
 
 const rows = ref<ConsultationRow[]>([])
 const staleDafDrafts = ref<Record<string, string>>({})
@@ -287,9 +279,6 @@ const pharmacyEnabled = computed(() => isPublicFlagOn(useRuntimeConfig().public.
 const canReadPharmacy = computed(() => canPractice('pharmacy.read'))
 const showDafDraftBadges = computed(() => pharmacyEnabled.value && canReadPharmacy.value)
 
-const reportOpen = ref(false)
-const selectedVisitId = ref('')
-const selectedVisitScheduledAt = ref('')
 const audioOpen = ref(false)
 const audioUrl = ref('')
 const audioLoading = ref(false)
@@ -452,13 +441,6 @@ function scheduleLoad() {
 
 watch([query, statusFilter, fromDate, toDate, audioOnly], scheduleLoad)
 
-function openReport(row: ConsultationRow) {
-  if (!canReadPets.value) return
-  selectedVisitId.value = row.id
-  selectedVisitScheduledAt.value = row.scheduledAt || row.createdAt || ''
-  reportOpen.value = true
-}
-
 function audioListenLabel(row: ConsultationRow) {
   const base = t('consultations.listen')
   const sec = Number(row.audioDurationSec) || 0
@@ -517,24 +499,18 @@ async function playAudio(row: ConsultationRow) {
   }
 }
 
-/** Deep-link depuis l'agenda : /consultations?visit=<id> ouvre directement le CR. */
-function openReportFromQuery() {
+/** Deep-link legacy agenda : /consultations?visit=<id> → fiche /consultations/:id. */
+async function redirectVisitQuery(): Promise<boolean> {
   const visitQ = route.query.visit
   const visitId = typeof visitQ === 'string' ? visitQ.trim() : ''
-  if (!visitId || !canReadPets.value) return
-  const row = rows.value.find(r => r.id === visitId)
-  if (row) {
-    openReport(row)
-    return
-  }
-  selectedVisitId.value = visitId
-  selectedVisitScheduledAt.value = ''
-  reportOpen.value = true
+  if (!visitId) return false
+  await navigateTo(`/consultations/${encodeURIComponent(visitId)}`, { replace: true })
+  return true
 }
 
 onMounted(async () => {
+  if (await redirectVisitQuery()) return
   await load()
-  openReportFromQuery()
 })
 onBeforeUnmount(() => {
   revokeAudioUrl()

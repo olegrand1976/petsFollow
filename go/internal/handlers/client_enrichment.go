@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -831,6 +832,29 @@ func (a *API) listVetConsultations(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, items)
 }
 
+// getVetConsultation returns one practice visit (pet/owner names) for the CR detail page.
+func (a *API) getVetConsultation(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "consultations.history.read")
+	if !ok {
+		return
+	}
+	visitID := strings.TrimSpace(chi.URLParam(r, "visitID"))
+	if _, err := uuid.Parse(visitID); err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return
+	}
+	visit, err := a.store.GetPracticeVisit(r.Context(), id.PracticeID, visitID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, visit)
+}
+
 func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "care.manage")
 	if !ok {
@@ -1179,8 +1203,9 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, updated)
 }
 
-// softDeleteVisit hides a walk-in consultation from /consultations history (deleted_at).
-// Allowed even when done / with persisted CR — unlike cancel.
+// softDeleteVisit hides a consultation-history row from /consultations (and calendar via deleted_at).
+// Eligible: walk-in (any status), or done/cancelled visit with persisted CR.
+// Upcoming agenda RDVs with a draft CR stay undeletable here (use agenda cancel instead).
 func (a *API) softDeleteVisit(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
@@ -1208,8 +1233,20 @@ func (a *API) softDeleteVisit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !visit.ConsultationSession {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "not_consultation_session")
-		return
+		closed := visit.Status == "done" || visit.Status == "cancelled"
+		if !closed {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "not_consultation_history")
+			return
+		}
+		hasCR, herr := a.store.VisitHasPersistedReport(r.Context(), visit.ID)
+		if herr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !hasCR {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "not_consultation_history")
+			return
+		}
 	}
 	updated, err := a.store.SoftDeleteVisit(r.Context(), visit.ID)
 	if err != nil {

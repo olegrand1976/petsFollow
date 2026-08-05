@@ -207,6 +207,30 @@ const sqlVisitReportIsPersisted = `(
   OR length(trim(COALESCE(r.audio_object_key, ''))) > 0
 )`
 
+// sqlVisitIsConsultationHistory — predicate on alias `v` (visits.visits):
+// walk-in session or visit with a persisted CR (same scope as /consultations list).
+const sqlVisitIsConsultationHistory = `(
+  COALESCE(v.consultation_session, false) = true
+  OR EXISTS (
+    SELECT 1 FROM visits.visit_reports r
+    WHERE r.visit_id = v.id AND ` + sqlVisitReportIsPersisted + `
+  )
+)`
+
+// sqlVisitSoftDeleteEligible — narrower than list: walk-in (any status), or
+// done/cancelled visit with persisted CR. Blocks soft-delete of upcoming agenda RDVs
+// that only have a draft CR (would remove them from the calendar).
+const sqlVisitSoftDeleteEligible = `(
+  COALESCE(v.consultation_session, false) = true
+  OR (
+    v.status IN ('done', 'cancelled')
+    AND EXISTS (
+      SELECT 1 FROM visits.visit_reports r
+      WHERE r.visit_id = v.id AND ` + sqlVisitReportIsPersisted + `
+    )
+  )
+)`
+
 // VisitHasPersistedReport is true when any author saved content (not an empty Ensure draft).
 func (s *Store) VisitHasPersistedReport(ctx context.Context, visitID string) (bool, error) {
 	var ok bool

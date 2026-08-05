@@ -191,7 +191,9 @@
     "pacs_error": "PACS error",
     "research_dataroom_forbidden": "Data room pole lubatud — liituge admini aktiveeritud grupiga",
     "research_disabled": "Research moodul on keelatud",
-    "research_anon_salt_required": "Research on valesti seadistatud (anonüümsuse sool puudub)"
+    "research_anon_salt_required": "Research on valesti seadistatud (anonüümsuse sool puudub)",
+    "not_consultation_history": "See visiit ei kuulu konsultatsioonide ajalukku (või agenda kohtumine on veel avatud)",
+    "not_consultation_session": "Nii saab kustutada ainult walk-in konsultatsioone"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

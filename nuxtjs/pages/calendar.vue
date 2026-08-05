@@ -657,7 +657,7 @@ async function viewConsultationFromDetail() {
   const v = selectedVisit.value
   if (!v) return
   detailOpen.value = false
-  await navigateTo(`/consultations?visit=${encodeURIComponent(v.id)}`)
+  await navigateTo(`/consultations/${encodeURIComponent(v.id)}`)
 }
 
 const mapsUrl = computed(() => {
