@@ -123,9 +123,10 @@ Flux Web : édition notes → « améliorer » (sections structurées) → **fin
 **Entitlement CR IA** (inclus dans Pro) : `transcribe` / `improve` autorisés sauf statut `disabled` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
 
 Sections CR vétérinaire (improve) :
-- Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi
+- Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi (libellés FR de référence)
+- Titres localisés selon `targetLocale` (`fr`/`nl`/`en`/…) ; en `auto`, titres dans la langue de la source (ancre sémantique FR)
 - Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas de prescription auto)
-- Care_pro : templates specialty (farrier/physio/…) sans section médication véto
+- Care_pro : templates specialty (farrier/physio/…) sans section médication véto — titres aussi localisés
 
 Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée), `is_reference` (consultation de référence pour amélioration continue, CR final uniquement) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
 Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.

@@ -53,8 +53,12 @@ func (a *API) adminStagingSeed(w http.ResponseWriter, r *http.Request) {
 	seedCtx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), stagingSeedTimeout)
 	defer cancel()
 
+	run := a.stagingSeedRun
+	if run == nil {
+		run = seed.Run
+	}
 	err := a.store.TryWithAdvisoryLock(seedCtx, store.StagingSeedLockKey, func(ctx context.Context) error {
-		return seed.Run(ctx, a.store.Pool())
+		return run(ctx, a.store.Pool())
 	})
 	if errors.Is(err, store.ErrAdvisoryLockBusy) {
 		writeErr(w, r, http.StatusConflict, "conflict", "seed_in_progress")

@@ -20,4 +20,6 @@ nuxtjs/playwright-report/
 !.cursor/rules/
 .idea/
 .vscode/
+# Claude Code : .claude/settings.json est versionné (config agent partagée),
+# seuls les overrides machine restent locaux.
 .claude/settings.local.json

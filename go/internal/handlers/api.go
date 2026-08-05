@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
@@ -25,6 +26,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/redisx"
+	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
@@ -55,6 +57,10 @@ type API struct {
 	authPulse           *authPulse
 	redis               *redisx.Client
 	orthancClient       *orthancClient
+	// stagingSeedRun — seed destructif de POST /admin/staging/seed (défaut seed.Run).
+	// Injectable pour que les tests d'intégration couvrent l'endpoint sans tronquer
+	// la base partagée en cours de run (cf. TestSetStagingSeedRunner).
+	stagingSeedRun func(ctx context.Context, pool *pgxpool.Pool) error
 	// failNextPetStudyInsert — armed only via TestArmFailNextPetStudyInsert (integration tests).
 	failNextPetStudyInsert bool
 }
@@ -96,6 +102,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		clientAiTriageRL:    httpx.NewRateLimiter(20, time.Hour),
 		clientAiExplainRL:   httpx.NewRateLimiter(10, time.Hour),
 		authPulse:           newAuthPulse(),
+		stagingSeedRun:      seed.Run,
 	}
 	return a
 }
@@ -111,6 +118,16 @@ func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
 // TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
 func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
+
+// TestSetStagingSeedRunner remplace le seed destructif de POST /admin/staging/seed
+// (integration tests only) — évite de tronquer la base partagée pendant la suite.
+// fn == nil restaure seed.Run.
+func (a *API) TestSetStagingSeedRunner(fn func(ctx context.Context, pool *pgxpool.Pool) error) {
+	if fn == nil {
+		fn = seed.Run
+	}
+	a.stagingSeedRun = fn
+}
 
 // TestSetBillitWebhookSecret sets BILLIT_WEBHOOK_SECRET (integration tests only).
 func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
