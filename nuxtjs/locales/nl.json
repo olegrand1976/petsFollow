@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Verwijderen",
     "loadError": "Zorginstructies laden mislukt.",
     "limitHint": "Weergave beperkt tot de 200 meest recente. Verfijn de filters.",
-    "errorPdf": "PDF-fiche openen mislukt."
+    "errorPdf": "PDF-fiche openen mislukt.",
+    "pdfPopupBlocked": "Pop-up geblokkeerd — de fiche is gedownload. Sta pop-ups toe om te bekijken."
   },
   "pacs": {
     "title": "PACS-beeldvorming",

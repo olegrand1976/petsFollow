@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Elimina",
     "loadError": "Impossibile caricare le consegne.",
     "limitHint": "Visualizzazione limitata alle 200 più recenti. Affina i filtri.",
-    "errorPdf": "Impossibile aprire la scheda PDF."
+    "errorPdf": "Impossibile aprire la scheda PDF.",
+    "pdfPopupBlocked": "Finestra bloccata — la scheda è stata scaricata. Consenti i popup per l’anteprima."
   },
   "pacs": {
     "title": "Imaging PACS",

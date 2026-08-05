@@ -11,7 +11,6 @@ var (
 	ErrNotFound        = errors.New("prescription_not_found")
 	ErrNotDraft        = errors.New("prescription_not_draft")
 	ErrInvalidStatus   = errors.New("prescription_invalid_status")
-	ErrEmptyMeds       = errors.New("prescription_empty_medications")
 	ErrInvalidMeds     = errors.New("prescription_invalid_medications")
 	ErrInvalidFormat   = errors.New("prescription_invalid_format")
 	ErrPayloadTooLarge = errors.New("prescription_payload_too_large")

@@ -38,7 +38,7 @@ func (a *API) writePrescriptionErr(w http.ResponseWriter, r *http.Request, err e
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 	case errors.Is(err, prescription.ErrNotDraft):
 		writeErr(w, r, http.StatusConflict, "prescription_not_draft", "prescription_not_draft")
-	case errors.Is(err, prescription.ErrEmptyMeds), errors.Is(err, prescription.ErrInvalidMeds):
+	case errors.Is(err, prescription.ErrInvalidMeds):
 		writeErr(w, r, http.StatusBadRequest, "invalid_medications", "invalid_medications")
 	case errors.Is(err, prescription.ErrInvalidFormat):
 		writeErr(w, r, http.StatusBadRequest, "invalid_format", "invalid_format")

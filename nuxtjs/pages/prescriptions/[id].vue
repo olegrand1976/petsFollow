@@ -314,8 +314,13 @@ function openPdf() {
   pdfBusy.value = true
   error.value = ''
   void openPrescriptionPdfBlob(String(doc.value.id))
+    .then((mode) => {
+      if (mode === 'download') {
+        error.value = t('prescriptions.pdfPopupBlocked')
+      }
+    })
     .catch((e: any) => {
-      error.value = mapError(e) || t('prescriptions.errorPdf')
+      error.value = mapError(e)
     })
     .finally(() => {
       pdfBusy.value = false

@@ -29,6 +29,9 @@ export function usePrescriptionError() {
         return t('prescriptions.errorAi')
       case 'rate_limited':
         return t('prescriptions.errorRateLimited')
+      case 'pdf_failed':
+      case 'missing_id':
+        return t('prescriptions.errorPdf')
       case 'validation_error':
       case 'invalid_valid_until':
       case 'invalid_status':

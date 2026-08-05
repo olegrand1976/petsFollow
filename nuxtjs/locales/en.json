@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Delete",
     "loadError": "Unable to load care instructions.",
     "limitHint": "Showing the 200 most recent sheets. Refine filters to narrow results.",
-    "errorPdf": "Unable to open the PDF sheet."
+    "errorPdf": "Unable to open the PDF sheet.",
+    "pdfPopupBlocked": "Popup blocked — the sheet was downloaded. Allow popups to preview it."
   },
   "pacs": {
     "title": "PACS Imaging",

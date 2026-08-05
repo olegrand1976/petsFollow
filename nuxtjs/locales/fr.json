@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Supprimer",
     "loadError": "Impossible de charger les consignes.",
     "limitHint": "Affichage limité aux 200 consignes les plus récentes. Affinez les filtres pour réduire le résultat.",
-    "errorPdf": "Impossible d’ouvrir la fiche PDF."
+    "errorPdf": "Impossible d’ouvrir la fiche PDF.",
+    "pdfPopupBlocked": "Fenêtre bloquée — la fiche a été téléchargée. Autorisez les popups pour la prévisualiser."
   },
   "pacs": {
     "title": "Imagerie PACS",

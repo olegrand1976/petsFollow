@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Eliminar",
     "loadError": "No se pueden cargar las indicaciones.",
     "limitHint": "Se muestran las 200 más recientes. Ajuste los filtros.",
-    "errorPdf": "No se puede abrir la ficha PDF."
+    "errorPdf": "No se puede abrir la ficha PDF.",
+    "pdfPopupBlocked": "Ventana bloqueada — se descargó la ficha. Permita ventanas emergentes para previsualizarla."
   },
   "pacs": {
     "title": "Imagen PACS",

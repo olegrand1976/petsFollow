@@ -4009,7 +4009,8 @@
     "deleteConfirmCta": "Kustuta",
     "loadError": "Juhiseid ei õnnestunud laadida.",
     "limitHint": "Kuvatakse 200 uusimat. Täpsustage filtreid.",
-    "errorPdf": "PDF-lehte ei õnnestunud avada."
+    "errorPdf": "PDF-lehte ei õnnestunud avada.",
+    "pdfPopupBlocked": "Hüpikaken blokeeritud — leht laaditi alla. Lubage hüpikaknad eelvaateks."
   },
   "pacs": {
     "title": "PACS-kuvamine",

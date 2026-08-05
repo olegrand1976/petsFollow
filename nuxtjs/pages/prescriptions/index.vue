@@ -253,10 +253,13 @@ async function openPdf(row: PrescriptionRow) {
   pdfBusyId.value = row.id
   actionError.value = ''
   try {
-    await openPrescriptionPdfBlob(row.id)
+    const mode = await openPrescriptionPdfBlob(row.id)
+    if (mode === 'download') {
+      actionError.value = t('prescriptions.pdfPopupBlocked')
+    }
   }
   catch (e: any) {
-    actionError.value = mapError(e) || t('prescriptions.errorPdf')
+    actionError.value = mapError(e)
   }
   finally {
     pdfBusyId.value = ''
