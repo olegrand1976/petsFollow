@@ -1,4 +1,5 @@
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,11 +48,68 @@ class DiscoveryController {
     try {
       final remote = await ApiClient.instance.getDiscovery();
       bindUser(remote.userId.isNotEmpty ? remote.userId : _userId);
-      await _saveLocal(remote);
-      return remote;
+      // Union local ∪ remote — avoid wiping local completions when a prior
+      // POST /complete failed silently then GET overwrote prefs.
+      final mergedKeys = <String>{
+        ...local.completedCards,
+        ...remote.completedCards,
+      };
+      var progress = DiscoveryProgress(
+        userId: remote.userId.isNotEmpty ? remote.userId : local.userId,
+        startedAt: remote.startedAt,
+        completedCards: mergedKeys.toList(),
+        streakDays: remote.streakDays >= local.streakDays ? remote.streakDays : local.streakDays,
+      );
+      await _saveLocal(progress);
+      // Push any local-only keys so the server catches up.
+      for (final key in local.completedCards) {
+        if (remote.completedCards.contains(key)) continue;
+        try {
+          progress = await ApiClient.instance.completeDiscoveryCard(key);
+          await _saveLocal(progress);
+        } catch (_) {}
+      }
+      progress = await _closeLegacySeedJourneyIfNeeded(progress);
+      return progress;
     } catch (_) {
       return local;
     }
+  }
+
+  /// Old staging seed left `day0`+`day2` only with `started_at ≈ now-2d`, so the
+  /// home "Découvrir" block never ended for demo accounts. Close remaining
+  /// stages once the journey is clearly stale (not a user mid-onboarding).
+  Future<DiscoveryProgress> _closeLegacySeedJourneyIfNeeded(DiscoveryProgress progress) async {
+    if (!AppEnv.isStaging || progress.isJourneyComplete) return progress;
+    final age = DateTime.now().toUtc().difference(progress.startedAt.toUtc());
+    if (age.inHours < 36) return progress;
+    if (!progress.isCardCompleted(0) || !progress.isCardCompleted(2)) return progress;
+    var next = progress;
+    for (final day in const [4, 6]) {
+      if (next.isCardCompleted(day)) continue;
+      final key = DiscoveryProgress.cardKeyForDay(day);
+      try {
+        next = await ApiClient.instance.completeDiscoveryCard(key);
+        final merged = <String>{...next.completedCards, ...progress.completedCards, key};
+        next = DiscoveryProgress(
+          userId: next.userId.isNotEmpty ? next.userId : progress.userId,
+          startedAt: next.startedAt,
+          completedCards: merged.toList(),
+          streakDays: next.streakDays,
+        );
+        await _saveLocal(next);
+      } catch (_) {
+        final merged = <String>{...next.completedCards, key};
+        next = DiscoveryProgress(
+          userId: next.userId,
+          startedAt: next.startedAt,
+          completedCards: merged.toList(),
+          streakDays: next.streakDays,
+        );
+        await _saveLocal(next);
+      }
+    }
+    return next;
   }
 
   Future<DiscoveryProgress> completeCard(String cardKey) async {
@@ -68,8 +126,18 @@ class DiscoveryController {
     if (ApiClient.instance.token != null) {
       try {
         progress = await ApiClient.instance.completeDiscoveryCard(cardKey);
+        // Keep optimistic local keys if API returns a partial set.
+        final merged = <String>{...completed, ...progress.completedCards};
+        progress = DiscoveryProgress(
+          userId: progress.userId.isNotEmpty ? progress.userId : (_userId ?? ''),
+          startedAt: progress.startedAt,
+          completedCards: merged.toList(),
+          streakDays: progress.streakDays,
+        );
         await _saveLocal(progress);
-      } catch (_) {}
+      } catch (_) {
+        // Keep optimistic local progress — next load() will retry sync.
+      }
     }
     return progress;
   }

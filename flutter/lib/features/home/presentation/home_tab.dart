@@ -211,7 +211,9 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         : l10n.myPets;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
-    final discoveryDone = progress.isJourneyComplete;
+    // Hide onboarding once every stage is done (progress keys or card UI state).
+    final discoveryDone =
+        progress.isJourneyComplete || cards.every((c) => c.completed);
     final mission = discoveryDone
         ? null
         : DiscoveryController.instance.nextMissionCard(

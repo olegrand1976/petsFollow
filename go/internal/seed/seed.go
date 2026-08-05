@@ -1485,7 +1485,7 @@ func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID, vetUserID st
 func insertDiscoveryProgress(ctx context.Context, tx pgx.Tx, userID string) error {
 	_, err := tx.Exec(ctx, `
 		INSERT INTO discovery.progress (user_id, started_at, completed_cards, streak_days, updated_at)
-		VALUES ($1, NOW() - INTERVAL '2 days', '["day0","day2"]'::jsonb, 2, NOW())`,
+		VALUES ($1, NOW() - INTERVAL '2 days', '["day0","day2","day4","day6"]'::jsonb, 4, NOW())`,
 		userID)
 	return err
 }

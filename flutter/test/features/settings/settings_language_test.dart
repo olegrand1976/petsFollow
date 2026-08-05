@@ -32,7 +32,7 @@ void main() {
     ApiClient.instance.userId = null;
   });
 
-  testWidgets('settings language sheet lists all 8 locales and can pick uk',
+  testWidgets('settings language screen lists all 8 locales and can pick uk',
       (tester) async {
     final l10n = AppLocalizationsFr();
     await pumpApp(
@@ -51,21 +51,14 @@ void main() {
       expect(
         find.byKey(Key('language_option_$code')),
         findsOneWidget,
-        reason: 'option $code must be reachable (scrollable sheet)',
+        reason: 'option $code must be on the language screen',
       );
     }
     expect(find.text(l10n.languageUk), findsOneWidget);
     expect(find.text(l10n.languageRu), findsOneWidget);
 
     final ukOption = find.byKey(const Key('language_option_uk'));
-    await tester.scrollUntilVisible(
-      ukOption,
-      80,
-      scrollable: find.descendant(
-        of: find.byKey(const Key('language_picker_list')),
-        matching: find.byType(Scrollable),
-      ),
-    );
+    await tester.ensureVisible(ukOption);
     await tester.pumpAndSettle();
     await tester.tap(ukOption);
     await tester.pumpAndSettle();

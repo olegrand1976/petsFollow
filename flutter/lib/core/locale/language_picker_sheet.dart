@@ -4,67 +4,61 @@ import 'package:petsfollow_mobile/core/locale/language_label.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
-/// Opens a scrollable bottom sheet to pick among [LocaleController.supportedCodes].
-/// Prefer this over [DropdownButton] — 8 locales overflow the overlay without scroll.
-Future<void> showLanguagePickerSheet(BuildContext context) async {
-  final l10n = AppLocalizations.of(context)!;
-  final current = LocaleController.instance.languageCode;
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) {
-      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.65;
-      return SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxH),
-          child: SingleChildScrollView(
+/// Full-screen language picker — reliable scroll (modal sheets steal vertical drag on Android).
+class LanguagePickerScreen extends StatelessWidget {
+  const LanguagePickerScreen({super.key});
+
+  Future<void> _select(BuildContext context, String code, String current) async {
+    if (code == current) {
+      Navigator.of(context).pop();
+      return;
+    }
+    try {
+      if (ApiClient.instance.token != null) {
+        await ApiClient.instance.updateLocale(code);
+      } else {
+        await LocaleController.instance.setLocale(code);
+      }
+    } catch (_) {
+      await LocaleController.instance.setLocale(code);
+    }
+    if (context.mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.language)),
+      body: ListenableBuilder(
+        listenable: LocaleController.instance,
+        builder: (context, _) {
+          final current = LocaleController.instance.languageCode;
+          return ListView(
             key: const Key('language_picker_list'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Text(
-                    l10n.language,
-                    style: Theme.of(sheetContext).textTheme.titleMedium,
-                  ),
+            children: [
+              for (final code in LocaleController.supportedCodes)
+                ListTile(
+                  key: Key('language_option_$code'),
+                  title: Text(languageLabel(l10n, code)),
+                  trailing: code == current
+                      ? Icon(
+                          Icons.check,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  selected: code == current,
+                  onTap: () => _select(context, code, current),
                 ),
-                for (final code in LocaleController.supportedCodes)
-                  ListTile(
-                    key: Key('language_option_$code'),
-                    title: Text(languageLabel(l10n, code)),
-                    trailing: code == current
-                        ? Icon(
-                            Icons.check,
-                            color: Theme.of(sheetContext).colorScheme.primary,
-                          )
-                        : null,
-                    selected: code == current,
-                    onTap: () async {
-                      Navigator.of(sheetContext).pop();
-                      if (code == current) return;
-                      try {
-                        if (ApiClient.instance.token != null) {
-                          await ApiClient.instance.updateLocale(code);
-                        } else {
-                          await LocaleController.instance.setLocale(code);
-                        }
-                      } catch (_) {
-                        await LocaleController.instance.setLocale(code);
-                      }
-                    },
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
-/// Settings row: current language label + opens [showLanguagePickerSheet].
+/// Settings row: current language + opens [LanguagePickerScreen].
 class LanguageSettingsTile extends StatelessWidget {
   const LanguageSettingsTile({super.key});
 
@@ -81,7 +75,11 @@ class LanguageSettingsTile extends StatelessWidget {
           title: Text(l10n.language),
           subtitle: Text(languageLabel(l10n, code)),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => showLanguagePickerSheet(context),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const LanguagePickerScreen(),
+            ),
+          ),
         );
       },
     );

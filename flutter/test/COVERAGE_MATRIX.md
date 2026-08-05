@@ -41,6 +41,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
 | Settings language sheet (8 locales uk/ru) | · | ✓ | · | `settings_language_test` |
+| Discovery merge + legacy seed close | ✓ | · | · | `discovery_controller_test` |
 | Home activité récente (discovery done) | · | ✓ | · | `home_recent_activity_test` |
 | Settings pref canal SMS (opt-out) | · | ✓ | · | `notification_prefs_sms_test` (toggle → PATCH sms:false + relecture STOP serveur) |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
