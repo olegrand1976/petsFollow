@@ -1371,7 +1371,10 @@ watch(
 .pro-visit-report--fill .pro-visit-report__scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
+  /* Scroll plutôt que rognage : les blocs optionnels (historique déplié, barre
+     qualité IA, traitements DAF) s'additionnent et écrasaient les panes jusqu'à
+     rendre l'éditeur inatteignable. Le scroll n'apparaît que si ça ne rentre pas. */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding-right: 0.15rem;
@@ -1379,7 +1382,9 @@ watch(
 
 .pro-visit-report--fill .visit-report-split {
   flex: 1 1 auto;
-  min-height: 0;
+  /* Plancher : les panes gardent une hauteur exploitable même avec historique +
+     barre qualité + traitements ouverts (le scroll du conteneur prend le relais). */
+  min-height: 14rem;
   overflow: hidden;
   /* Single row that respects the flex-bounded split height (avoids TipTap overflow paint). */
   grid-template-rows: minmax(0, 1fr);
@@ -1433,6 +1438,15 @@ watch(
 }
 
 .pro-visit-report--fill .visit-report-history[open] {
+  max-height: min(40vh, 16rem);
+  overflow: auto;
+}
+
+/* Le head est hors zone de scroll et flex-shrink:0 : déplié, « Aide » (image ~36rem)
+   prenait toute la hauteur du panneau et rognait les panes — barre d'outils
+   « Améliorer » inatteignable, éditeur à hauteur nulle. Même plafond + scroll interne
+   que l'historique ci-dessus. */
+.pro-visit-report--fill :deep(.visit-report-howto[open]) {
   max-height: min(40vh, 16rem);
   overflow: auto;
 }

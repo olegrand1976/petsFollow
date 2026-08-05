@@ -34,6 +34,18 @@ async function setVisitReportHistoryOpen(page: Page, open: boolean) {
     .toBe(open)
 }
 
+/** Close Aide (<details>) — left open it can zero-height TipTap under fill layout. */
+async function setVisitReportHowtoOpen(page: Page, open: boolean) {
+  const howto = page.getByTestId('visit-report-howto')
+  if ((await howto.count()) === 0) return
+  await howto.evaluate((el, wantOpen) => {
+    ;(el as HTMLDetailsElement).open = wantOpen
+  }, open)
+  await expect
+    .poll(async () => howto.evaluate((el) => (el as HTMLDetailsElement).open), { timeout: 5000 })
+    .toBe(open)
+}
+
 /** History CTAs sit under sticky head/footer — scroll into view then native click (force can miss Vue handlers). */
 async function clickVisitReportRestore(page: Page, testId: 'visit-report-restore-v0' | 'visit-report-restore-v1') {
   await setVisitReportHistoryOpen(page, true)
@@ -53,10 +65,21 @@ async function clickVisitReportRestore(page: Page, testId: 'visit-report-restore
   })
 }
 
-/** Rich editor keeps a hidden markdown mirror (visit-report-body) for fill/toHaveValue. */
+/**
+ * Rich editor keeps a hidden markdown mirror (visit-report-body) for fill/toHaveValue.
+ * Collapse Aide + historique so fill layout does not leave TipTap at height 0 (Playwright « hidden »).
+ */
 async function ensureVisitReportEditMode(page: Page) {
+  await setVisitReportHowtoOpen(page, false)
   await setVisitReportHistoryOpen(page, false)
-  await expect(page.getByTestId('visit-report-editor')).toBeVisible({ timeout: 10000 })
+  const editor = page.getByTestId('visit-report-editor')
+  await editor.scrollIntoViewIfNeeded().catch(() => undefined)
+  await expect
+    .poll(async () => {
+      const box = await editor.boundingBox()
+      return box != null && box.height >= 8 && box.width >= 8
+    }, { timeout: 15000 })
+    .toBe(true)
   await expect(page.getByTestId('visit-report-body')).toBeAttached({ timeout: 10000 })
 }
 
@@ -299,7 +322,8 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
       }
     }
 
-    // Improve switches markdown editor to preview — reopen history only for restore CTAs.
+    // Improve leaves Aide open + quality bar ; collapse before restore (TipTap height 0 sinon).
+    await setVisitReportHowtoOpen(page, false)
     await setVisitReportHistoryOpen(page, true)
     await expect(page.getByTestId('visit-report-restore-v1')).toBeVisible()
     await ensureVisitReportEditMode(page)
