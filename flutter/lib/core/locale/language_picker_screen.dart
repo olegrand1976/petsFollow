@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/locale/language_label.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -13,16 +14,21 @@ class LanguagePickerScreen extends StatelessWidget {
       Navigator.of(context).pop();
       return;
     }
-    try {
-      if (ApiClient.instance.token != null) {
-        await ApiClient.instance.updateLocale(code);
-      } else {
-        await LocaleController.instance.setLocale(code);
-      }
-    } catch (_) {
+    final l10n = AppLocalizations.of(context)!;
+    if (ApiClient.instance.token == null) {
       await LocaleController.instance.setLocale(code);
+      if (context.mounted) Navigator.of(context).pop();
+      return;
     }
-    if (context.mounted) Navigator.of(context).pop();
+    try {
+      await ApiClient.instance.updateLocale(code);
+      if (context.mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
+    }
   }
 
   @override

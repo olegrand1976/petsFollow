@@ -66,4 +66,29 @@ void main() {
     expect(patchedLocale, 'uk');
     expect(LocaleController.instance.languageCode, 'uk');
   });
+
+  testWidgets('settings language screen shows snackbar when locale PATCH fails',
+      (tester) async {
+    mock.uninstall();
+    mock = MockApi()..install();
+    mock.on('PATCH', r'/api/v1/me/locale', (options) {
+      return mock.err(options, status: 500, code: 'server', message: 'server');
+    });
+
+    await pumpApp(
+      tester,
+      home: SettingsMenuScreen(onLogout: () {}),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings_language')));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('language_option_uk')));
+    await tester.tap(find.byKey(const Key('language_option_uk')));
+    await tester.pumpAndSettle();
+
+    expect(LocaleController.instance.languageCode, 'fr');
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.byKey(const Key('language_picker_list')), findsOneWidget);
+  });
 }

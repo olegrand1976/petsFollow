@@ -10,6 +10,7 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/core/ui/timeline_type_style.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/consultation_view_screen.dart';
@@ -159,72 +160,13 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'heartrate':
-        return Icons.favorite_outline;
-      case 'weight':
-        return Icons.monitor_weight_outlined;
-      case 'blood_pressure':
-        return Icons.monitor_heart_outlined;
-      case 'lab_panel':
-        return Icons.science_outlined;
-      case 'message':
-        return Icons.chat_bubble_outline;
-      case 'care':
-        return Icons.medical_services_outlined;
-      case 'visit':
-        return Icons.event_available;
-      case 'event':
-        return Icons.flag_outlined;
-      default:
-        return Icons.circle_outlined;
-    }
-  }
+  IconData _iconForType(String type) => timelineTypeIcon(type);
 
-  Color _colorForType(String type, Color textMuted) {
-    switch (type) {
-      case 'heartrate':
-        return AppColors.alert;
-      case 'weight':
-        return AppColors.brandTeal;
-      case 'blood_pressure':
-        return AppColors.primary;
-      case 'lab_panel':
-        return AppColors.gold;
-      case 'message':
-        return AppColors.primary;
-      case 'care':
-        return AppColors.gold;
-      case 'visit':
-        return AppColors.primary;
-      default:
-        return textMuted;
-    }
-  }
+  Color _colorForType(String type, Color textMuted) =>
+      timelineTypeColor(type, textMuted);
 
-  String _typeLabel(AppLocalizations l10n, String type) {
-    switch (type) {
-      case 'heartrate':
-        return l10n.timelineTypeHeartrate;
-      case 'weight':
-        return l10n.timelineTypeWeight;
-      case 'blood_pressure':
-        return l10n.bloodPressureShort;
-      case 'lab_panel':
-        return l10n.labsTitle;
-      case 'message':
-        return l10n.timelineTypeMessage;
-      case 'care':
-        return l10n.timelineTypeCare;
-      case 'visit':
-        return l10n.timelineTypeVisit;
-      case 'event':
-        return l10n.timelineTypeEvent;
-      default:
-        return type;
-    }
-  }
+  String _typeLabel(AppLocalizations l10n, String type) =>
+      timelineTypeLabel(l10n, type);
 
   /// Visit id from a timeline row (`meta.visitId` or row `id`).
   String? _timelineVisitId(Map<String, dynamic> m) {

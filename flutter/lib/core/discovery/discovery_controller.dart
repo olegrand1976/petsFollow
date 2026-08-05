@@ -76,17 +76,20 @@ class DiscoveryController {
     }
   }
 
-  /// Old staging seed left `day0`+`day2` only with `started_at ≈ now-2d`, so the
-  /// home "Découvrir" block never ended for demo accounts. Close remaining
-  /// stages once the journey is clearly stale (not a user mid-onboarding).
+  /// Old staging seed left **exactly** `day0`+`day2` with `started_at ≈ now-2d`.
+  /// Close remaining stages only for that fingerprint (not a user mid-onboarding
+  /// who already completed day4 or paused after more steps).
   Future<DiscoveryProgress> _closeLegacySeedJourneyIfNeeded(DiscoveryProgress progress) async {
     if (!AppEnv.isStaging || progress.isJourneyComplete) return progress;
     final age = DateTime.now().toUtc().difference(progress.startedAt.toUtc());
     if (age.inHours < 36) return progress;
-    if (!progress.isCardCompleted(0) || !progress.isCardCompleted(2)) return progress;
+    final keys = progress.completedCards.toSet();
+    const legacySeed = {'day0', 'day2'};
+    if (keys.length != legacySeed.length || !keys.containsAll(legacySeed)) {
+      return progress;
+    }
     var next = progress;
     for (final day in const [4, 6]) {
-      if (next.isCardCompleted(day)) continue;
       final key = DiscoveryProgress.cardKeyForDay(day);
       try {
         next = await ApiClient.instance.completeDiscoveryCard(key);

@@ -86,4 +86,28 @@ void main() {
     expect(progress.isJourneyComplete, isTrue);
     expect(completedPosts, containsAll(['day4', 'day6']));
   });
+
+  test('staging does not auto-close when journey already past day2', () async {
+    final started = DateTime.now().toUtc().subtract(const Duration(days: 2));
+    mock.json('GET', '/api/v1/me', data: {'id': 'user-1', 'email': 'a@b.c'});
+    mock.json('GET', '/api/v1/me/discovery', data: {
+      'userId': 'user-1',
+      'startedAt': started.toIso8601String(),
+      'completedCards': ['day0', 'day2', 'day4'],
+      'streakDays': 3,
+    });
+    mock.on('POST', '/api/v1/me/discovery/complete', (options) {
+      completedPosts.add((options.data as Map)['cardKey']?.toString() ?? '');
+      return mock.ok(options, {
+        'userId': 'user-1',
+        'startedAt': started.toIso8601String(),
+        'completedCards': ['day0', 'day2', 'day4', 'day6'],
+        'streakDays': 4,
+      });
+    });
+
+    final progress = await DiscoveryController.instance.load();
+    expect(progress.isJourneyComplete, isFalse);
+    expect(completedPosts, isEmpty);
+  });
 }

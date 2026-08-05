@@ -12,6 +12,7 @@ import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/core/ui/timeline_type_style.dart';
 import 'package:petsfollow_mobile/features/client_ai/presentation/triage_chat_screen.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
@@ -46,6 +47,8 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   int householdEpoch = 0;
   List<_HomeActivityItem> recentActivity = [];
   static const _recentActivityLimit = 15;
+  /// Cap per-pet timeline GETs on home load (N+1); foyer démo stays small.
+  static const _recentActivityPetCap = 8;
 
   @override
   void initState() {
@@ -129,8 +132,11 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   }
 
   Future<List<_HomeActivityItem>> _fetchRecentActivity(List<Pet> petList) async {
+    final petsToFetch = petList.length <= _recentActivityPetCap
+        ? petList
+        : petList.sublist(0, _recentActivityPetCap);
     final results = await Future.wait(
-      petList.map((pet) async {
+      petsToFetch.map((pet) async {
         try {
           final rows = await ApiClient.instance.getTimeline(pet.id);
           return rows
@@ -211,9 +217,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         : l10n.myPets;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
-    // Hide onboarding once every stage is done (progress keys or card UI state).
-    final discoveryDone =
-        progress.isJourneyComplete || cards.every((c) => c.completed);
+    final discoveryDone = progress.isJourneyComplete;
     final mission = discoveryDone
         ? null
         : DiscoveryController.instance.nextMissionCard(
@@ -419,64 +423,18 @@ class _HomeActivityTile extends StatelessWidget {
   final AppLocalizations l10n;
   final VoidCallback onTap;
 
-  String _typeLabel(String type) {
-    switch (type) {
-      case 'heartrate':
-        return l10n.timelineTypeHeartrate;
-      case 'weight':
-        return l10n.timelineTypeWeight;
-      case 'blood_pressure':
-        return l10n.bloodPressureShort;
-      case 'lab_panel':
-        return l10n.labsTitle;
-      case 'message':
-        return l10n.timelineTypeMessage;
-      case 'care':
-        return l10n.timelineTypeCare;
-      case 'visit':
-        return l10n.timelineTypeVisit;
-      case 'event':
-        return l10n.timelineTypeEvent;
-      default:
-        return type;
-    }
-  }
-
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'heartrate':
-        return Icons.favorite_outline;
-      case 'weight':
-        return Icons.monitor_weight_outlined;
-      case 'blood_pressure':
-        return Icons.monitor_heart_outlined;
-      case 'lab_panel':
-        return Icons.science_outlined;
-      case 'message':
-        return Icons.chat_bubble_outline;
-      case 'care':
-        return Icons.medical_services_outlined;
-      case 'visit':
-        return Icons.event_available;
-      case 'event':
-        return Icons.flag_outlined;
-      default:
-        return Icons.circle_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final p = PetsPalette.of(context);
     final dateLabel = DateFormat.yMMMd(l10n.localeName).add_Hm().format(item.createdAt.toLocal());
     final subtitle = item.title.isNotEmpty
         ? item.title
-        : (item.body.isNotEmpty ? item.body : _typeLabel(item.type));
+        : (item.body.isNotEmpty ? item.body : timelineTypeLabel(l10n, item.type));
     return Card(
       key: Key('home_activity_${item.petId}_${item.createdAt.toIso8601String()}'),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(_iconForType(item.type), color: AppColors.primary),
+        leading: Icon(timelineTypeIcon(item.type), color: AppColors.primary),
         title: Text(item.petName),
         subtitle: Text(
           '$subtitle\n$dateLabel',
