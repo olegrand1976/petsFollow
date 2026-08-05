@@ -1282,6 +1282,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get discoveryMarkDone => 'Misión completada';
 
   @override
+  String get discoveryDismiss => 'Ocultar el recorrido';
+
+  @override
+  String get appBuildInfo => 'Versión de la app';
+
+  @override
   String get notificationPreferences => 'Preferencias de notificación';
 
   @override

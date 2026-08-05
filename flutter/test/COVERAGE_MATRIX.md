@@ -40,7 +40,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Messaging video upload basename | ✓ | · | · | `message_media_upload_test` |
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
-| Settings language sheet (8 locales uk/ru) | · | ✓ | · | `settings_language_test` (écran plein + snackbar si PATCH KO) |
+| Settings language screen (8 locales uk/ru) | · | ✓ | · | `settings_language_test` (écran plein ; locale locale même si PATCH KO) |
 | Discovery merge + legacy seed close | ✓ | · | · | `discovery_controller_test` |
 | Home activité récente (discovery done) | · | ✓ | · | `home_recent_activity_test` |
 | Settings pref canal SMS (opt-out) | · | ✓ | · | `notification_prefs_sms_test` (toggle → PATCH sms:false + relecture STOP serveur) |

@@ -87,8 +87,8 @@ void main() {
     await tester.tap(find.byKey(const Key('language_option_uk')));
     await tester.pumpAndSettle();
 
-    expect(LocaleController.instance.languageCode, 'fr');
+    // Local locale applies even if PATCH fails (uk/ru usable offline / DB lag).
+    expect(LocaleController.instance.languageCode, 'uk');
     expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.byKey(const Key('language_picker_list')), findsOneWidget);
   });
 }

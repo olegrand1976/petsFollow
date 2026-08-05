@@ -94,7 +94,9 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text(
-                      'STAGING',
+                      AppEnv.buildVersion.isNotEmpty
+                          ? 'STAGING · ${AppEnv.buildVersion}'
+                          : 'STAGING',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.brandNavy,

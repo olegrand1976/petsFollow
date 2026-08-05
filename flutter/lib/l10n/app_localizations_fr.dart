@@ -1284,6 +1284,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoveryMarkDone => 'Mission accomplie';
 
   @override
+  String get discoveryDismiss => 'Masquer le parcours';
+
+  @override
+  String get appBuildInfo => 'Version de l\'application';
+
+  @override
   String get notificationPreferences => 'Préférences de notifications';
 
   @override

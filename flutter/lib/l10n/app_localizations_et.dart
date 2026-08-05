@@ -1279,6 +1279,12 @@ class AppLocalizationsEt extends AppLocalizations {
   String get discoveryMarkDone => 'Missioon täidetud';
 
   @override
+  String get discoveryDismiss => 'Peida teekond';
+
+  @override
+  String get appBuildInfo => 'Rakenduse versioon';
+
+  @override
   String get notificationPreferences => 'Teavituste eelistused';
 
   @override

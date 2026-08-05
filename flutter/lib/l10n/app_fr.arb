@@ -529,6 +529,8 @@
   "petBirthDate": "Date de naissance",
   "petBirthDateInvalid": "Date de naissance invalide (AAAA-MM-JJ)",
   "discoveryMarkDone": "Mission accomplie",
+  "discoveryDismiss": "Masquer le parcours",
+  "appBuildInfo": "Version de l'application",
   "notificationPreferences": "Préférences de notifications",
   "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",
   "notificationPrefsSaved": "Préférences enregistrées",

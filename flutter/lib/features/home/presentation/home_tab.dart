@@ -193,6 +193,21 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _dismissDiscovery() async {
+    final progress = await DiscoveryController.instance.completeRemainingJourney();
+    if (!mounted) return;
+    var activity = <_HomeActivityItem>[];
+    if (progress.isJourneyComplete && pets.isNotEmpty) {
+      activity = await _fetchRecentActivity(pets);
+    }
+    if (mounted) {
+      setState(() {
+        discoveryProgress = progress;
+        recentActivity = activity;
+      });
+    }
+  }
+
   Future<void> _openPetForm() => openPetFormAndFollowUp(
         context,
         onReload: load,
@@ -314,7 +329,15 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                     Text(l10n.discoveryTitle, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 4),
                     Text(l10n.discoveryMission, style: TextStyle(color: AppColors.gold)),
-                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        key: const Key('discovery_dismiss_btn'),
+                        onPressed: _dismissDiscovery,
+                        child: Text(l10n.discoveryDismiss),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     ...cards.map(
                       (card) => DiscoveryCardWidget(
                         card: card,

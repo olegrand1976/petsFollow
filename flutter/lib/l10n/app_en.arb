@@ -459,6 +459,8 @@
   "petBirthDate": "Date of birth",
   "petBirthDateInvalid": "Invalid date of birth (YYYY-MM-DD)",
   "discoveryMarkDone": "Mission complete",
+  "discoveryDismiss": "Hide this journey",
+  "appBuildInfo": "App version",
   "notificationPreferences": "Notification preferences",
   "notificationPrefsHint": "Choose which notification types you want to receive.",
   "notificationPrefsSaved": "Preferences saved",

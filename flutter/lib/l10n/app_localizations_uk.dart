@@ -1284,6 +1284,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get discoveryMarkDone => 'Завдання виконано';
 
   @override
+  String get discoveryDismiss => 'Приховати шлях';
+
+  @override
+  String get appBuildInfo => 'Версія застосунку';
+
+  @override
   String get notificationPreferences => 'Налаштування повідомлень';
 
   @override

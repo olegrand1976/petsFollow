@@ -1279,6 +1279,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get discoveryMarkDone => 'Missie voltooid';
 
   @override
+  String get discoveryDismiss => 'Parcours verbergen';
+
+  @override
+  String get appBuildInfo => 'App-versie';
+
+  @override
   String get notificationPreferences => 'Meldingsvoorkeuren';
 
   @override

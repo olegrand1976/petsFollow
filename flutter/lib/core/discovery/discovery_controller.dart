@@ -1,5 +1,4 @@
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,14 +75,15 @@ class DiscoveryController {
     }
   }
 
-  /// Old staging seed left **exactly** `day0`+`day2` with `started_at ≈ now-2d`.
-  /// Close remaining stages only for that fingerprint (not a user mid-onboarding
-  /// who already completed day4 or paused after more steps).
+  /// Old seed left **exactly** `day0`+`day2` with `started_at` days ago.
+  /// Close remaining stages for that fingerprint only (not a user mid-onboarding
+  /// who already completed day4). Not gated on AppEnv — staging APK must work
+  /// even if a dart-define were missing.
   Future<DiscoveryProgress> _closeLegacySeedJourneyIfNeeded(DiscoveryProgress progress) async {
-    if (!AppEnv.isStaging || progress.isJourneyComplete) return progress;
+    if (progress.isJourneyComplete) return progress;
     final age = DateTime.now().toUtc().difference(progress.startedAt.toUtc());
     if (age.inHours < 36) return progress;
-    final keys = progress.completedCards.toSet();
+    final keys = progress.completedCards.map((e) => e.trim()).toSet();
     const legacySeed = {'day0', 'day2'};
     if (keys.length != legacySeed.length || !keys.containsAll(legacySeed)) {
       return progress;
@@ -113,6 +113,16 @@ class DiscoveryController {
       }
     }
     return next;
+  }
+
+  /// Mark every remaining journey stage complete (user dismiss / "I've finished").
+  Future<DiscoveryProgress> completeRemainingJourney() async {
+    var progress = await load();
+    for (final day in DiscoveryProgress.journeyDays) {
+      if (progress.isCardCompleted(day)) continue;
+      progress = await completeCard(DiscoveryProgress.cardKeyForDay(day));
+    }
+    return progress;
   }
 
   Future<DiscoveryProgress> completeCard(String cardKey) async {

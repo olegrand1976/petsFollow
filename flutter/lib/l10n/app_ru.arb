@@ -389,6 +389,8 @@
   "petBirthDate": "Дата рождения",
   "petBirthDateInvalid": "Некорректная дата рождения (ГГГГ-ММ-ДД)",
   "discoveryMarkDone": "Задание выполнено",
+  "discoveryDismiss": "Скрыть путь",
+  "appBuildInfo": "Версия приложения",
   "notificationPreferences": "Настройки уведомлений",
   "notificationPrefsHint": "Выберите типы уведомлений, которые хотите получать.",
   "notificationPrefsSaved": "Настройки сохранены",

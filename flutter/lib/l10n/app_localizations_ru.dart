@@ -1285,6 +1285,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get discoveryMarkDone => 'Задание выполнено';
 
   @override
+  String get discoveryDismiss => 'Скрыть путь';
+
+  @override
+  String get appBuildInfo => 'Версия приложения';
+
+  @override
   String get notificationPreferences => 'Настройки уведомлений';
 
   @override

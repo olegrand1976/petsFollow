@@ -917,8 +917,13 @@ class ApiClient {
   }
 
   Future<void> updateLocale(String locale) async {
-    await dio.patch('/api/v1/me/locale', data: {'locale': locale});
     await LocaleController.instance.setLocale(locale);
+    await patchPreferredLocale(locale);
+  }
+
+  /// Server-only preferred locale update (local [LocaleController] already applied).
+  Future<void> patchPreferredLocale(String locale) async {
+    await dio.patch('/api/v1/me/locale', data: {'locale': locale});
   }
 
   Future<void> syncLocaleFromMe() async {

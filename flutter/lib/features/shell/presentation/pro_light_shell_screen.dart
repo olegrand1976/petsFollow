@@ -555,6 +555,7 @@ class _SettingsTab extends StatelessWidget {
           ),
         ),
         const LanguageSettingsTile(),
+        const AppBuildInfoTile(),
         const AppearanceSettingsTile(),
         ListTile(
           key: const Key('pro_light_settings_support'),

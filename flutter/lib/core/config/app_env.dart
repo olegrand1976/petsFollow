@@ -10,12 +10,15 @@ class AppEnv {
   static const String _appEnv = String.fromEnvironment('APP_ENV');
   static const String _flavor = String.fromEnvironment('FLAVOR');
 
-  /// Resolved canal (`staging` | `prod`).
+  /// Build-time canal (`staging` | `prod`).
   static String get value {
     if (_flavor.isNotEmpty) return _flavor;
     if (_appEnv.isNotEmpty) return _appEnv;
     return 'staging';
   }
+
+  /// From `--dart-define=BUILD_VERSION=` (App Distribution / Play scripts).
+  static const String buildVersion = String.fromEnvironment('BUILD_VERSION');
 
   static bool get isStaging => value == 'staging';
   static bool get isProd => value == 'prod';

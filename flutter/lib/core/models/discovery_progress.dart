@@ -15,12 +15,29 @@ class DiscoveryProgress {
   static const journeyDays = [0, 2, 4, 6];
 
   factory DiscoveryProgress.fromJson(Map<String, dynamic> json) {
-    final raw = json['completedCards'];
+    final raw = json['completedCards'] ?? json['completed_cards'];
+    List<String> cards = const [];
+    if (raw is List) {
+      cards = raw.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
+    } else if (raw is String && raw.trim().isNotEmpty) {
+      // Defensive: some gateways double-encode JSONB as a string.
+      final trimmed = raw.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          final decoded = trimmed; // parsed below via simple split if needed
+          final inner = decoded.replaceAll(RegExp(r'[\[\]"]'), '');
+          cards = inner.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        } catch (_) {
+          cards = const [];
+        }
+      }
+    }
     return DiscoveryProgress(
-      userId: json['userId'] as String? ?? '',
-      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '') ?? DateTime.now(),
-      completedCards: raw is List ? raw.map((e) => e.toString()).toList() : const [],
-      streakDays: json['streakDays'] as int? ?? 0,
+      userId: json['userId'] as String? ?? json['user_id'] as String? ?? '',
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? json['started_at'] as String? ?? '') ??
+          DateTime.now(),
+      completedCards: cards,
+      streakDays: json['streakDays'] as int? ?? json['streak_days'] as int? ?? 0,
     );
   }
 

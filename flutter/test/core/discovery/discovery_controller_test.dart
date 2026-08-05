@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,7 +60,7 @@ void main() {
   });
 
   test('staging closes legacy seed journey older than 36h', () async {
-    expect(AppEnv.isStaging, isTrue); // tests default to staging canal
+    // Gate no longer requires AppEnv.isStaging — fingerprint + age only.
     final started = DateTime.now().toUtc().subtract(const Duration(days: 2));
     mock.json('GET', '/api/v1/me', data: {'id': 'user-1', 'email': 'a@b.c'});
     mock.json('GET', '/api/v1/me/discovery', data: {
@@ -85,6 +84,31 @@ void main() {
     final progress = await DiscoveryController.instance.load();
     expect(progress.isJourneyComplete, isTrue);
     expect(completedPosts, containsAll(['day4', 'day6']));
+  });
+
+  test('completeRemainingJourney marks every stage done', () async {
+    mock.json('GET', '/api/v1/me', data: {'id': 'user-1', 'email': 'a@b.c'});
+    mock.json('GET', '/api/v1/me/discovery', data: {
+      'userId': 'user-1',
+      'startedAt': DateTime.now().toUtc().toIso8601String(),
+      'completedCards': ['day0'],
+      'streakDays': 1,
+    });
+    mock.on('POST', '/api/v1/me/discovery/complete', (options) {
+      final key = (options.data as Map)['cardKey']?.toString() ?? '';
+      completedPosts.add(key);
+      final all = {'day0', ...completedPosts};
+      return mock.ok(options, {
+        'userId': 'user-1',
+        'startedAt': DateTime.now().toUtc().toIso8601String(),
+        'completedCards': all.toList(),
+        'streakDays': all.length,
+      });
+    });
+
+    final progress = await DiscoveryController.instance.completeRemainingJourney();
+    expect(progress.isJourneyComplete, isTrue);
+    expect(completedPosts.toSet(), containsAll(['day2', 'day4', 'day6']));
   });
 
   test('staging does not auto-close when journey already past day2', () async {

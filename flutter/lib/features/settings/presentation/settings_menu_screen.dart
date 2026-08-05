@@ -40,6 +40,7 @@ class SettingsMenuScreen extends StatelessWidget {
           ),
         ),
         const LanguageSettingsTile(),
+        const AppBuildInfoTile(),
         const AppearanceSettingsTile(),
         ListTile(
           leading: const Icon(Icons.play_circle_outline),

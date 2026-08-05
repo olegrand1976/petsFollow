@@ -466,6 +466,8 @@
   "petBirthDate": "Geboortedatum",
   "petBirthDateInvalid": "Ongeldige geboortedatum (JJJJ-MM-DD)",
   "discoveryMarkDone": "Missie voltooid",
+  "discoveryDismiss": "Parcours verbergen",
+  "appBuildInfo": "App-versie",
   "notificationPreferences": "Meldingsvoorkeuren",
   "notificationPrefsHint": "Kies welke meldingstypes u wilt ontvangen.",
   "notificationPrefsSaved": "Voorkeuren opgeslagen",

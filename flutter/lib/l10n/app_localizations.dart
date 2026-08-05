@@ -2444,6 +2444,18 @@ abstract class AppLocalizations {
   /// **'Mission accomplie'**
   String get discoveryMarkDone;
 
+  /// No description provided for @discoveryDismiss.
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer le parcours'**
+  String get discoveryDismiss;
+
+  /// No description provided for @appBuildInfo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version de l\'application'**
+  String get appBuildInfo;
+
   /// No description provided for @notificationPreferences.
   ///
   /// In fr, this message translates to:
