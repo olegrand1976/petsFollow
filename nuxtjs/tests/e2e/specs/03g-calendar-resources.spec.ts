@@ -141,9 +141,9 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
       }
     }
 
+    // Far-out weekday + unique afternoon slot to avoid assignee_busy on busy staging.
     const future = new Date()
-    future.setDate(future.getDate() + 14)
-    // Skip weekend to stay in typical schedule
+    future.setDate(future.getDate() + 28 + (Date.now() % 5))
     while (future.getDay() === 0 || future.getDay() === 6) {
       future.setDate(future.getDate() + 1)
     }
@@ -151,9 +151,9 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
     const mm = String(future.getMonth() + 1).padStart(2, '0')
     const dd = String(future.getDate()).padStart(2, '0')
     await page.getByTestId('new-appt-day').fill(`${yyyy}-${mm}-${dd}`)
-    // Unique slot — avoid overlap with other staging e2e at fixed 10:00.
-    const slotMin = String(Date.now() % 50).padStart(2, '0')
-    await page.getByTestId('new-appt-time').fill(`11:${slotMin}`)
+    const hour = 14 + (Date.now() % 3)
+    const slotMin = String((Date.now() % 12) * 5).padStart(2, '0')
+    await page.getByTestId('new-appt-time').fill(`${hour}:${slotMin}`)
 
     const createRes = page.waitForResponse(
       (r) => /\/api\/pets\/[^/]+\/visits\b/.test(r.url()) && r.request().method() === 'POST',

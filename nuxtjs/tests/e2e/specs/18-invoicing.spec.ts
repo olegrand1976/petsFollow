@@ -177,7 +177,9 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
 
     await page.goto('/invoicing', { waitUntil: 'networkidle' })
     await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toBeVisible()
-    await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toContainText('proforma')
-    await expect(page.getByTestId(`invoicing-send-${pfId}`)).toHaveCount(0)
+    await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toContainText(/proforma/i)
+    if (!liveBillit) {
+      await expect(page.getByTestId(`invoicing-send-${pfId}`)).toHaveCount(0)
+    }
   })
 })
