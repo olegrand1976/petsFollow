@@ -1339,6 +1339,15 @@ func TestInvoicingAdminSaasTargetsAndCron(t *testing.T) {
 	if practiceID == "" {
 		t.Fatalf("no saasDraftEnabled target %#v", env)
 	}
+	// Ensure practice VAT passes BE checksum (CreateSaasDraft → ValidateCounterparty).
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE practice.practices
+		SET vat_number = 'BE1000000021', company_number = '1000.000.021'
+		WHERE id = $1`, practiceID); err != nil {
+		t.Fatal(err)
+	}
 
 	secret := "test-saas-invoices-secret"
 	api.api.TestSetSaasInvoicesSecret(secret)

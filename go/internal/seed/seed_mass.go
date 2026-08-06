@@ -196,7 +196,7 @@ func RunMassWithOptions(ctx context.Context, pool *pgxpool.Pool, opts MassOption
 				payout_iban, payout_bic, payout_account_holder
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, NOW(),
-				$9, 'BE0123456789', '0123.456.789', 'srl', TRUE,
+				$9, 'BE1000000021', '1000.000.021', 'srl', TRUE,
 				'BE68539007547034', 'GEBABEBB', $10
 			)`,
 			practiceID, practiceName, phone, vetEmail, addr, city.name, city.postal,

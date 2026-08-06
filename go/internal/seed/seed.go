@@ -534,13 +534,13 @@ func payoutVAT(p practiceDef) string {
 	if p.incompleteProfile {
 		return ""
 	}
-	return "BE0123456789"
+	return "BE1000000021"
 }
 func payoutCompanyNumber(p practiceDef) string {
 	if p.incompleteProfile {
 		return ""
 	}
-	return "0123.456.789"
+	return "1000.000.021"
 }
 func payoutLegalForm(p practiceDef) string {
 	if p.incompleteProfile {
