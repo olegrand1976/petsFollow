@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { loginAsVet, nativeClick } from '../helpers/auth'
+import { ensureMultiSite } from '../helpers/sites'
 
 /**
  * C3.17 — calendar resources (rooms + day view people/rooms).
- * Requires API seeded + NUXT_PUBLIC_SITES_UI_ENABLED on.
+ * Requires API + NUXT_PUBLIC_SITES_UI_ENABLED on. Ensures ≥2 sites on staging.
  */
 test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
   test('vet.demo — rooms CRUD, SITE_ALL gate, day toggle, create with assignee', async ({ page }) => {
     test.setTimeout(120_000)
     await loginAsVet(page)
+    await ensureMultiSite(page)
 
     await page.goto('/settings#calendar')
     await expect(page.getByTestId('settings-tab-calendar')).toBeVisible({ timeout: 15000 })

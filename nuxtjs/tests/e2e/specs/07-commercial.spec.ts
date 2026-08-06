@@ -126,10 +126,13 @@ test('commercial fiche prospect timeline et tache', async ({ page }) => {
     page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/activities'), { timeout: 15000 }),
     nativeClick(page, 'prospect-act-submit'),
   ])
-  await expect(page.getByText('Relance e2e')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByTestId('prospect-timeline-list')).toContainText('Relance e2e', { timeout: 10000 })
   await page.goto('/commercial/agenda', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('commercial-agenda-page')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('commercial-tasks-block')).toBeVisible()
+  await expect(page.getByTestId('commercial-tasks-block').getByText('Relance e2e').first()).toBeVisible({
+    timeout: 10000,
+  })
 })
 
 test('commercial mail templates et envoi prospect', async ({ page }) => {

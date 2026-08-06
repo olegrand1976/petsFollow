@@ -17,6 +17,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
@@ -57,6 +58,16 @@ func (a *API) commercialListEmailTemplates(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
+	}
+	// Staging may run postdeploy sans seed — bootstrap catalog once if empty.
+	if len(items) == 0 {
+		if err := seed.EnsureCommercialEmailTemplates(r.Context(), a.store); err == nil {
+			items, err = a.store.ListEmailTemplates(r.Context(), activeOnly)
+			if err != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, items)
 }

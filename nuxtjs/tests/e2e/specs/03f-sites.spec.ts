@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import { ensureMultiSite } from '../helpers/sites'
 
 /**
  * C3.16 — multi-sites Pro (seed VetPlus: primary + Antenne Liège).
- * Requires API seeded + NUXT_PUBLIC_SITES_UI_ENABLED on (nuxtjs-dev default).
- * Deep CRUD / overlap / booking: Go + Flutter widgets (see 15-PLAN-TESTS C3.16).
+ * Requires API + NUXT_PUBLIC_SITES_UI_ENABLED on. Creates a 2nd site if staging
+ * was deployed sans seed.
  */
 test.describe('multi-sites settings + switcher', { tag: '@p1' }, () => {
   test('vet.demo — switcher, settings rename, consultations site column', async ({ page }) => {
     await loginAsVet(page)
+    await ensureMultiSite(page)
 
     await expect(page.getByTestId('pro-site-switcher')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('pro-site-select')).toBeVisible()
