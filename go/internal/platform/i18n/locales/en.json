@@ -91,6 +91,7 @@
     "conflict": "Conflict",
     "pacs_study_other_pet": "This DICOM study is already linked to another pet in the practice",
     "slot_taken": "This time slot is already taken",
+    "site_required": "Please choose a practice site",
     "on_vacation": "The practice is closed on this date",
     "invalid_proposed": "Invalid proposed date or time",
     "proposed_required": "Please choose a new time slot",

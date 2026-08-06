@@ -321,6 +321,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
           petName: widget.petName ?? '',
           practiceId: practiceId,
           rescheduleVisitId: visit.id,
+          lockedSiteId: visit.siteId,
         ),
       ),
     );
@@ -384,6 +385,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                     subtitle: Text(
                                       [
                                         dateFmt.format(v.displayDate),
+                                        if ((v.siteName ?? '').isNotEmpty) v.siteName,
                                         if (v.notes != null && v.notes!.isNotEmpty) v.notes,
                                       ].join(' · '),
                                     ),
@@ -464,7 +466,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 available: v.consultationAvailable,
                               ),
                               title: Text(l10n.consultationTitle),
-                              subtitle: Text(dateFmt.format(v.displayDate)),
+                              subtitle: Text(
+                                [
+                                  dateFmt.format(v.displayDate),
+                                  if ((v.siteName ?? '').isNotEmpty) v.siteName,
+                                ].join(' · '),
+                              ),
                               trailing: _consultationCta(
                                 l10n: l10n,
                                 visitId: v.id,

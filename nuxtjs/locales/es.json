@@ -4479,6 +4479,9 @@
     "deactivated": "Sede desactivada.",
     "reactivated": "Sede reactivada.",
     "primaryUpdated": "Sede principal actualizada.",
+    "rename": "Renombrar",
+    "renameSave": "Guardar",
+    "renamed": "Sitio renombrado.",
     "devBadge": "dev",
     "editingSite": "Editando agenda / franjas de: {name} (vista Todas las sedes)."
   }

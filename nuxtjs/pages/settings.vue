@@ -170,42 +170,86 @@
             :data-testid="`settings-site-row-${site.id}`"
           >
             <div class="settings-sites-row__meta">
-              <strong>{{ site.name }}</strong>
-              <span v-if="site.city" class="text-muted">{{ site.city }}</span>
-              <ProBadge v-if="site.isPrimary" variant="success">{{ $t('sites.primary') }}</ProBadge>
-              <ProBadge v-if="!site.active" variant="warning">{{ $t('sites.inactive') }}</ProBadge>
+              <template v-if="renamingSiteId === site.id">
+                <input
+                  v-model="renamingSiteName"
+                  type="text"
+                  class="pro-input"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-rename-input-${site.id}`"
+                  @keydown.enter.prevent="saveSiteRename(site.id)"
+                >
+              </template>
+              <template v-else>
+                <strong>{{ site.name }}</strong>
+                <span v-if="site.city" class="text-muted">{{ site.city }}</span>
+                <ProBadge v-if="site.isPrimary" variant="success">{{ $t('sites.primary') }}</ProBadge>
+                <ProBadge v-if="!site.active" variant="warning">{{ $t('sites.inactive') }}</ProBadge>
+              </template>
             </div>
             <div class="settings-sites-row__actions">
-              <ProButton
-                v-if="!site.isPrimary && site.active"
-                variant="secondary"
-                type="button"
-                :disabled="sitesBusy"
-                :data-testid="`settings-site-primary-${site.id}`"
-                @click="makeSitePrimary(site.id)"
-              >
-                {{ $t('sites.makePrimary') }}
-              </ProButton>
-              <ProButton
-                v-if="!site.isPrimary && site.active"
-                variant="ghost"
-                type="button"
-                :disabled="sitesBusy"
-                :data-testid="`settings-site-deactivate-${site.id}`"
-                @click="deactivateSite(site.id)"
-              >
-                {{ $t('sites.deactivate') }}
-              </ProButton>
-              <ProButton
-                v-if="!site.active"
-                variant="secondary"
-                type="button"
-                :disabled="sitesBusy"
-                :data-testid="`settings-site-reactivate-${site.id}`"
-                @click="reactivateSite(site.id)"
-              >
-                {{ $t('sites.reactivate') }}
-              </ProButton>
+              <template v-if="renamingSiteId === site.id">
+                <ProButton
+                  variant="secondary"
+                  type="button"
+                  :disabled="sitesBusy || !renamingSiteName.trim()"
+                  :data-testid="`settings-site-rename-save-${site.id}`"
+                  @click="saveSiteRename(site.id)"
+                >
+                  {{ $t('sites.renameSave') }}
+                </ProButton>
+                <ProButton
+                  variant="ghost"
+                  type="button"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-rename-cancel-${site.id}`"
+                  @click="cancelSiteRename"
+                >
+                  {{ $t('common.cancel') }}
+                </ProButton>
+              </template>
+              <template v-else>
+                <ProButton
+                  v-if="site.active"
+                  variant="ghost"
+                  type="button"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-rename-${site.id}`"
+                  @click="startSiteRename(site)"
+                >
+                  {{ $t('sites.rename') }}
+                </ProButton>
+                <ProButton
+                  v-if="!site.isPrimary && site.active"
+                  variant="secondary"
+                  type="button"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-primary-${site.id}`"
+                  @click="makeSitePrimary(site.id)"
+                >
+                  {{ $t('sites.makePrimary') }}
+                </ProButton>
+                <ProButton
+                  v-if="!site.isPrimary && site.active"
+                  variant="ghost"
+                  type="button"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-deactivate-${site.id}`"
+                  @click="deactivateSite(site.id)"
+                >
+                  {{ $t('sites.deactivate') }}
+                </ProButton>
+                <ProButton
+                  v-if="!site.active"
+                  variant="secondary"
+                  type="button"
+                  :disabled="sitesBusy"
+                  :data-testid="`settings-site-reactivate-${site.id}`"
+                  @click="reactivateSite(site.id)"
+                >
+                  {{ $t('sites.reactivate') }}
+                </ProButton>
+              </template>
             </div>
           </li>
         </ul>
@@ -637,6 +681,41 @@ const sitesError = ref('')
 const sitesSaved = ref('')
 const newSiteName = ref('')
 const newSiteCity = ref('')
+const renamingSiteId = ref('')
+const renamingSiteName = ref('')
+
+function startSiteRename(site: ManagedSite) {
+  renamingSiteId.value = site.id
+  renamingSiteName.value = site.name
+}
+
+function cancelSiteRename() {
+  renamingSiteId.value = ''
+  renamingSiteName.value = ''
+}
+
+async function saveSiteRename(siteId: string) {
+  const name = renamingSiteName.value.trim()
+  if (!name) return
+  sitesBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
+      method: 'PATCH',
+      body: { name },
+    })
+    sitesSaved.value = t('sites.renamed')
+    cancelSiteRename()
+    await refreshMeAndSites()
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.actionFailed')
+  }
+  finally {
+    sitesBusy.value = false
+  }
+}
 
 const weekdayOptions = computed(() => [
   { value: 1, label: t('settings.calendar.weekday.1') },

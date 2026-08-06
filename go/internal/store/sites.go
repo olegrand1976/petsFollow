@@ -127,8 +127,9 @@ func (s *Store) ResolveSiteID(ctx context.Context, practiceID, siteID string, al
 }
 
 // ResolveBookingSiteID picks the site for a new visit.
-// Explicit siteId wins; empty siteId mirrors availability fall-through (sole bookable site),
-// otherwise the active primary.
+// Explicit siteId wins; empty siteId mirrors availability fall-through (sole bookable site).
+// When several sites are bookable, empty siteId is rejected (site_required) — same as availability.
+// Zero bookable sites → active primary (caller still checks client_booking_enabled).
 func (s *Store) ResolveBookingSiteID(ctx context.Context, practiceID, siteID string) (string, error) {
 	siteID = strings.TrimSpace(siteID)
 	if siteID != "" {
@@ -138,10 +139,14 @@ func (s *Store) ResolveBookingSiteID(ctx context.Context, practiceID, siteID str
 	if err != nil {
 		return "", err
 	}
-	if len(ids) == 1 {
+	switch len(ids) {
+	case 1:
 		return ids[0], nil
+	case 0:
+		return s.ResolveSiteID(ctx, practiceID, "", false)
+	default:
+		return "", fmt.Errorf("%w: site_required", ErrValidation)
 	}
-	return s.ResolveSiteID(ctx, practiceID, "", false)
 }
 
 func (s *Store) listBookableSiteIDs(ctx context.Context, practiceID string) ([]string, error) {
@@ -555,8 +560,10 @@ func (s *Store) DeactivateSite(ctx context.Context, practiceID, siteID string) (
 		SELECT COUNT(*)::int FROM visits.visits
 		WHERE site_id = $1 AND deleted_at IS NULL
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
-		  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
-		  AND COALESCE(proposed_scheduled_at, scheduled_at) > NOW()`, siteID,
+		  AND (
+		    (status = 'requested' AND COALESCE(proposed_scheduled_at, scheduled_at) IS NULL)
+		    OR COALESCE(proposed_scheduled_at, scheduled_at) > NOW()
+		  )`, siteID,
 	).Scan(&n)
 	if err != nil {
 		return Site{}, err

@@ -3,6 +3,8 @@ class Visit {
     required this.id,
     required this.petId,
     this.practiceId,
+    this.siteId,
+    this.siteName,
     this.scheduledAt,
     this.status = 'requested',
     this.notes,
@@ -20,6 +22,9 @@ class Visit {
   final String id;
   final String petId;
   final String? practiceId;
+  /// Practice site for this visit (multi-sites); empty on legacy payloads.
+  final String? siteId;
+  final String? siteName;
   final DateTime? scheduledAt;
   final String status;
   final String? notes;
@@ -59,10 +64,14 @@ class Visit {
       proposedScheduledAt ?? scheduledAt ?? createdAt ?? DateTime.now();
 
   factory Visit.fromJson(Map<String, dynamic> json) {
+    final siteIdRaw = (json['siteId'] as String?)?.trim();
+    final siteNameRaw = (json['siteName'] as String?)?.trim();
     return Visit(
       id: json['id'] as String? ?? '',
       petId: json['petId'] as String? ?? '',
       practiceId: json['practiceId'] as String?,
+      siteId: (siteIdRaw == null || siteIdRaw.isEmpty) ? null : siteIdRaw,
+      siteName: (siteNameRaw == null || siteNameRaw.isEmpty) ? null : siteNameRaw,
       scheduledAt: json['scheduledAt'] != null
           ? DateTime.tryParse(json['scheduledAt'] as String)
           : null,

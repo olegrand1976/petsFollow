@@ -4479,6 +4479,9 @@
     "deactivated": "Site gedeactiveerd.",
     "reactivated": "Site heractiveerd.",
     "primaryUpdated": "Primaire site bijgewerkt.",
+    "rename": "Hernoemen",
+    "renameSave": "Opslaan",
+    "renamed": "Site hernoemd.",
     "devBadge": "dev",
     "editingSite": "Agenda / slots bewerken voor: {name} (weergave Alle sites)."
   }

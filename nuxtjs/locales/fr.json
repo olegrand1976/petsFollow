@@ -4479,6 +4479,9 @@
     "deactivated": "Site désactivé.",
     "reactivated": "Site réactivé.",
     "primaryUpdated": "Site principal mis à jour.",
+    "rename": "Renommer",
+    "renameSave": "Enregistrer",
+    "renamed": "Site renommé.",
     "devBadge": "dev",
     "editingSite": "Édition agenda / créneaux : {name} (vue « Tous les sites »)."
   }

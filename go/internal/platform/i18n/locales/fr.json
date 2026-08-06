@@ -91,6 +91,7 @@
     "conflict": "Conflit",
     "pacs_study_other_pet": "Cette étude DICOM est déjà liée à un autre animal du cabinet",
     "slot_taken": "Ce créneau est déjà pris",
+    "site_required": "Indiquez le lieu du rendez-vous",
     "on_vacation": "Le cabinet est fermé à cette date",
     "invalid_proposed": "Date ou heure proposée invalide",
     "proposed_required": "Indiquez un nouveau créneau",

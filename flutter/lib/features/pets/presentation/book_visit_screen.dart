@@ -18,6 +18,8 @@ class BookVisitScreen extends StatefulWidget {
     this.rescheduleVisitId,
     /// When set (e.g. reschedule), skip vet picker and load this practice.
     this.practiceId,
+    /// Reschedule: lock availability + overlap checks to this site (no cross-site picker).
+    this.lockedSiteId,
     /// Test-only: skip network and use this availability payload.
     @visibleForTesting this.availabilityOverride,
   });
@@ -31,6 +33,8 @@ class BookVisitScreen extends StatefulWidget {
   final String? rescheduleVisitId;
   /// Pre-selected practice (reschedule / single-vet shortcut).
   final String? practiceId;
+  /// Site of the existing visit when proposing a reschedule.
+  final String? lockedSiteId;
   final PracticeAvailability? availabilityOverride;
 
   bool get isReschedule => rescheduleVisitId != null && rescheduleVisitId!.isNotEmpty;
@@ -73,7 +77,35 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
     _bootstrap();
   }
 
+  /// Lock availability to the visit's site (param or re-fetch from list).
+  Future<void> _ensureRescheduleSiteLocked() async {
+    if (!widget.isReschedule) return;
+    final fromParam = widget.lockedSiteId?.trim();
+    if (fromParam != null && fromParam.isNotEmpty) {
+      _selectedSiteId = fromParam;
+      return;
+    }
+    if ((_selectedSiteId ?? '').isNotEmpty) return;
+    final visitId = widget.rescheduleVisitId;
+    if (visitId == null || visitId.isEmpty) return;
+    if (widget.availabilityOverride != null) return;
+    try {
+      final visits = await ApiClient.instance.getVisits(widget.petId);
+      for (final v in visits) {
+        final sid = v.siteId?.trim() ?? '';
+        if (v.id == visitId && sid.isNotEmpty) {
+          _selectedSiteId = sid;
+          return;
+        }
+      }
+    } catch (_) {
+      // Fall through: manual slot / empty slots still safe (Go uses visit.SiteID).
+    }
+  }
+
   Future<void> _bootstrap() async {
+    await _ensureRescheduleSiteLocked();
+
     if (widget.isReschedule && (widget.practiceId ?? '').isNotEmpty) {
       setState(() {
         _loadingVets = false;
@@ -177,6 +209,32 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
       }
       if (!mounted) return;
       final bookableSites = data.sites.where((s) => s.enabled).toList();
+      // Reschedule: stay on locked site — never offer cross-site picker.
+      if (widget.isReschedule) {
+        if (_selectedSiteId == null && data.siteId.isNotEmpty) {
+          _selectedSiteId = data.siteId;
+        }
+        // Missing lock + multi-site empty payload: resolve visit site then re-fetch once.
+        if (_selectedSiteId == null &&
+            bookableSites.length > 1 &&
+            data.slots.isEmpty &&
+            widget.availabilityOverride == null) {
+          await _ensureRescheduleSiteLocked();
+          if (_selectedSiteId != null) {
+            await _loadAvailability();
+            return;
+          }
+        }
+        setState(() {
+          _sites = bookableSites;
+          _enabled = data.enabled;
+          _slots = data.slots.map((s) => s.start).toList();
+          _practicePhone = data.practicePhone.isEmpty ? null : data.practicePhone;
+          _practiceName = data.practiceName.isEmpty ? null : data.practiceName;
+          _loadingSlots = false;
+        });
+        return;
+      }
       // Multi-site: pick a site before loading slots.
       if (_selectedSiteId == null && bookableSites.length > 1 && data.slots.isEmpty) {
         setState(() {
@@ -297,7 +355,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
   }
 
   void _clearSiteSelection() {
-    if (_sites.length <= 1) return;
+    if (widget.isReschedule || _sites.length <= 1) return;
     setState(() {
       _selectedSiteId = null;
       _slots = [];
@@ -407,7 +465,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
               );
             }),
           ],
-        ] else if (_selectedSiteId == null && _sites.length > 1) ...[
+        ] else if (!widget.isReschedule && _selectedSiteId == null && _sites.length > 1) ...[
           Text(l10n.calendarSelectSite),
           const SizedBox(height: 12),
           ..._sites.map((site) {

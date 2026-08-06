@@ -91,6 +91,7 @@
     "conflict": "Conflict",
     "pacs_study_other_pet": "Deze DICOM-studie is al gekoppeld aan een ander dier in de praktijk",
     "slot_taken": "Dit tijdslot is al bezet",
+    "site_required": "Kies een locatie voor de afspraak",
     "on_vacation": "De praktijk is gesloten op deze datum",
     "invalid_proposed": "Ongeldige voorgestelde datum of tijd",
     "proposed_required": "Kies een nieuw tijdslot",

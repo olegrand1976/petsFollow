@@ -4479,6 +4479,9 @@
     "deactivated": "Site deactivated.",
     "reactivated": "Site reactivated.",
     "primaryUpdated": "Primary site updated.",
+    "rename": "Rename",
+    "renameSave": "Save",
+    "renamed": "Site renamed.",
     "devBadge": "dev",
     "editingSite": "Editing schedule / slots for: {name} (All sites view)."
   }

@@ -4479,6 +4479,9 @@
     "deactivated": "Asukoht desaktiveeritud.",
     "reactivated": "Asukoht taastatud.",
     "primaryUpdated": "Peamine asukoht uuendatud.",
+    "rename": "Nimeta ümber",
+    "renameSave": "Salvesta",
+    "renamed": "Asukoht ümber nimetatud.",
     "devBadge": "dev",
     "editingSite": "Muudad ajakava / slotte asukohale: {name} (kõik asukohad)."
   }

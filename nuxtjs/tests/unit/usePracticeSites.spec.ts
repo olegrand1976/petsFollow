@@ -50,4 +50,33 @@ describe('usePracticeSites', () => {
     expect(withSiteQuery('/api/vet/consultations?q=x')).toContain('&siteId=site-b')
     expect(withSiteQuery('/api/vet/calendar', SITE_ALL)).toContain('siteId=all')
   })
+
+  it('flag off: no siteId query even when multiSite + stored selection', async () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ public: { sitesUiEnabled: false } }))
+    const { usePracticeSites } = await import('../../composables/usePracticeSites')
+    const {
+      withSiteQuery,
+      setSiteId,
+      SITE_ALL,
+      sitesUiEnabled,
+      multiSite,
+      calendarSiteQuery,
+      isAggregatedView,
+      initFromStorage,
+      effectiveSiteId,
+      defaultSiteId,
+    } = usePracticeSites()
+
+    expect(sitesUiEnabled.value).toBe(false)
+    expect(multiSite.value).toBe(true)
+
+    setSiteId(SITE_ALL)
+    initFromStorage()
+    expect(effectiveSiteId.value).toBe(defaultSiteId.value)
+    expect(calendarSiteQuery.value).toBe('')
+    expect(isAggregatedView.value).toBe(false)
+    expect(withSiteQuery('/api/vet/consultations')).not.toContain('siteId=')
+    // Explicit override still allowed (schedule / create on concrete site).
+    expect(withSiteQuery('/api/vet/schedule', 'site-b')).toContain('siteId=site-b')
+  })
 })

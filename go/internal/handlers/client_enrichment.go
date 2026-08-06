@@ -602,7 +602,11 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	resolvedSite, err := a.store.ResolveBookingSiteID(r.Context(), pet.PracticeID, req.SiteID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
+			code := "invalid_site"
+			if strings.Contains(err.Error(), "site_required") {
+				code = "site_required"
+			}
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -706,6 +710,8 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 				switch {
 				case strings.Contains(msg, "slot_taken"):
 					writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+				case strings.Contains(msg, "site_required"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "site_required")
 				case strings.Contains(msg, "site_inactive"), strings.Contains(msg, "invalid_site"):
 					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
 				case strings.Contains(msg, "scheduled_required"):
@@ -728,7 +734,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			if errors.Is(err, store.ErrValidation) {
 				msg := err.Error()
 				code := "invalid_visit"
-				if strings.Contains(msg, "site_inactive") {
+				if strings.Contains(msg, "site_required") {
+					code = "site_required"
+				} else if strings.Contains(msg, "site_inactive") {
 					code = "invalid_site"
 				}
 				writeErr(w, r, http.StatusBadRequest, "bad_request", code)

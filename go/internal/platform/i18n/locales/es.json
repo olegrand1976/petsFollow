@@ -91,6 +91,7 @@
     "conflict": "Conflicto",
     "pacs_study_other_pet": "Este estudio DICOM ya está vinculado a otro animal del centro",
     "slot_taken": "Este horario ya está ocupado",
+    "site_required": "Indique el lugar de la cita",
     "on_vacation": "La clínica está cerrada en esta fecha",
     "invalid_proposed": "Fecha u hora propuesta no válida",
     "proposed_required": "Indique un nuevo horario",

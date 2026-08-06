@@ -76,6 +76,7 @@
             <th>{{ $t('consultations.columnDate') }}</th>
             <th>{{ $t('consultations.columnClient') }}</th>
             <th>{{ $t('consultations.columnPet') }}</th>
+            <th v-if="showSiteColumn" data-testid="consultations-column-site">{{ $t('calendar.columnSite') }}</th>
             <th>{{ $t('consultations.columnStatus') }}</th>
             <th>{{ $t('consultations.columnReport') }}</th>
             <th>{{ $t('common.actions') }}</th>
@@ -105,6 +106,14 @@
                 {{ row.petName || $t('common.dash') }}
               </NuxtLink>
               <template v-else>{{ row.petName || $t('common.dash') }}</template>
+            </td>
+            <td v-if="showSiteColumn">
+              <span
+                v-if="row.siteName"
+                class="consultations-site-badge"
+                :data-testid="`consultation-site-${row.id}`"
+              >{{ row.siteName }}</span>
+              <template v-else>{{ $t('common.dash') }}</template>
             </td>
             <td>
               <ProBadge :variant="statusVariant(row.status)">
@@ -237,6 +246,8 @@ type ConsultationRow = {
   clientId?: string
   petName?: string
   clientName?: string
+  siteId?: string
+  siteName?: string
   status: string
   scheduledAt?: string
   createdAt: string
@@ -252,7 +263,8 @@ const route = useRoute()
 const { t, locale } = useI18n()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
-const { withSiteQuery, initFromStorage } = usePracticeSites()
+const { withSiteQuery, initFromStorage, sitesUiEnabled, multiSite } = usePracticeSites()
+const showSiteColumn = computed(() => sitesUiEnabled.value && multiSite.value)
 const activeConsult = useActiveConsultation()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
@@ -570,5 +582,10 @@ function onSiteChanged() {
   color: var(--pf-vet-muted, #64748b);
   font-variant-numeric: tabular-nums;
   align-self: center;
+}
+.consultations-site-badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--pf-vet-muted, #64748b);
 }
 </style>

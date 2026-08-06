@@ -302,7 +302,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteI
 }
 
 func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID, siteID string) (bool, int, error) {
-	resolved, err := s.ResolveBookingSiteID(ctx, practiceID, siteID)
+	// ResolveSiteID (not ResolveBookingSiteID): empty → primary; never site_required.
+	resolved, err := s.ResolveSiteID(ctx, practiceID, siteID, false)
 	if err != nil {
 		return false, 30, err
 	}

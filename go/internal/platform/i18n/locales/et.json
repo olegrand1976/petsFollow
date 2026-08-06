@@ -91,6 +91,7 @@
     "conflict": "Konflikt",
     "pacs_study_other_pet": "See DICOM-uuring on juba seotud teise loomaga kabinetis",
     "slot_taken": "See ajavahemik on juba võetud",
+    "site_required": "Valige vastuvõtu asukoht",
     "on_vacation": "Kabinet on sel kuupäeval suletud",
     "invalid_proposed": "Vigane pakutud kuupäev või kellaaeg",
     "proposed_required": "Palun valige uus ajavahemik",

@@ -40,6 +40,8 @@ export function usePracticeSites() {
   const multiSite = computed(() => sites.value.length > 1)
 
   const effectiveSiteId = computed(() => {
+    // Soft-GA off: always primary / team default (ignore switcher + storage multi).
+    if (!sitesUiEnabled.value) return defaultSiteId.value
     if (!selectedSiteId.value) return defaultSiteId.value
     if (selectedSiteId.value === SITE_ALL) return SITE_ALL
     if (sites.value.some((s) => s.id === selectedSiteId.value)) return selectedSiteId.value
@@ -48,13 +50,14 @@ export function usePracticeSites() {
 
   /** Query value for calendar list (all | concrete id | empty for primary). */
   const calendarSiteQuery = computed(() => {
+    if (!sitesUiEnabled.value) return ''
     const id = effectiveSiteId.value
     if (!id || id === defaultSiteId.value && !multiSite.value) return ''
     return id
   })
 
   /** True when switcher is on aggregated "all sites" view. */
-  const isAggregatedView = computed(() => effectiveSiteId.value === SITE_ALL)
+  const isAggregatedView = computed(() => sitesUiEnabled.value && effectiveSiteId.value === SITE_ALL)
 
   /** Concrete site for create/edit (never "all"). */
   const concreteSiteId = computed(() => {
@@ -70,6 +73,10 @@ export function usePracticeSites() {
 
   function initFromStorage() {
     if (!import.meta.client) return
+    if (!sitesUiEnabled.value) {
+      selectedSiteId.value = defaultSiteId.value
+      return
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY) || ''
       if (stored === SITE_ALL || sites.value.some((s) => s.id === stored)) {
@@ -92,6 +99,8 @@ export function usePracticeSites() {
   }
 
   function withSiteQuery(url: string, siteId?: string): string {
+    // Soft-GA off: no siteId unless caller passes an explicit override (e.g. schedule edit).
+    if (!sitesUiEnabled.value && siteId === undefined) return url
     const sid = siteId === undefined ? calendarSiteQuery.value : siteId
     if (!sid) return url
     const sep = url.includes('?') ? '&' : '?'

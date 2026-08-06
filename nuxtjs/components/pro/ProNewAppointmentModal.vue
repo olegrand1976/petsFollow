@@ -20,7 +20,7 @@
         {{ $t('calendar.creatingOnSite', { name: createSiteName }) }}
       </p>
       <div
-        v-if="multiSite"
+        v-if="showSitePicker"
         class="pro-field"
         data-testid="new-appt-site-field"
       >
@@ -224,11 +224,14 @@ const { dayKey, visitDisplayAt, visitsByDay, startOfDay } = useCalendarGrid()
 const {
   sites,
   multiSite,
+  sitesUiEnabled,
   concreteSiteId,
   concreteSiteName,
   isAggregatedView,
   withSiteQuery,
 } = usePracticeSites()
+
+const showSitePicker = computed(() => sitesUiEnabled.value && multiSite.value)
 
 const createSiteId = ref('')
 const createSiteName = computed(() => {
@@ -254,13 +257,14 @@ const notes = ref('')
 const requestPreconsult = ref(false)
 const defaultDuration = ref(30)
 
-const canSubmit = computed(() => !!clientId.value && !!petId.value && !!day.value && !!time.value && (!multiSite.value || !!targetSiteId.value))
+const canSubmit = computed(() => !!clientId.value && !!petId.value && !!day.value && !!time.value && (!showSitePicker.value || !!targetSiteId.value))
 
 const dayVisits = computed(() => {
   if (!day.value) return [] as CalendarVisit[]
   const map = visitsByDay(props.visits)
   const list = map.get(day.value) || []
   const sid = targetSiteId.value
+  // Always scope agenda to target site when practice is multi-site (even if UI flag off).
   if (!sid || !multiSite.value) return list
   return list.filter((v) => !v.siteId || v.siteId === sid)
 })
