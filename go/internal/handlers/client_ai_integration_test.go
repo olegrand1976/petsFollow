@@ -115,6 +115,29 @@ func TestClientAITriageGeminiFailureLeavesNoOrphan(t *testing.T) {
 	}
 }
 
+func TestClientAITriageSessionWithoutPet(t *testing.T) {
+	t.Setenv("CLIENT_AI_ENABLED", "true")
+	api := newTestAPI(t)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/client-ai/triage/sessions", clientTok, map[string]any{})
+	if code != http.StatusCreated {
+		t.Fatalf("create session without pet %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	sess, _ := data["session"].(map[string]any)
+	if sess["id"] == nil || sess["id"] == "" {
+		t.Fatalf("no session id %#v", data)
+	}
+	esc, _ := data["escalation"].(map[string]any)
+	if esc["canBookVisit"] != false {
+		t.Fatalf("without pet canBookVisit should be false %#v", esc)
+	}
+	if esc["canMessage"] != true {
+		t.Fatalf("escalation %#v", esc)
+	}
+}
+
 func TestClientAITriageSessionFlow(t *testing.T) {
 	t.Setenv("CLIENT_AI_ENABLED", "true")
 	api := newTestAPI(t)

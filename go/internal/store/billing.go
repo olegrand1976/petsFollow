@@ -178,6 +178,9 @@ func (s *Store) RecordStripeEvent(ctx context.Context, eventID, eventType string
 func (s *Store) HasActiveEntitlement(ctx context.Context, petID string) (bool, error) {
 	ent, err := s.GetEntitlementByPetID(ctx, petID)
 	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
 	if !ent.AllowsAccess() {
