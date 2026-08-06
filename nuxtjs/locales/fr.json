@@ -40,6 +40,7 @@
     "managerProspects": "Prospects équipe",
     "managerPortfolio": "Mon portefeuille",
     "team": "Équipe",
+    "sites": "Sites",
     "commercialCompetition": "Concurrence",
     "adminBrandAssets": "QR stores",
     "adminAiModules": "Module CR IA",
@@ -1022,7 +1023,7 @@
   },
   "settings": {
     "title": "Paramètres",
-    "subtitle": "Fiche d'information, disponibilité et messages automatiques.",
+    "subtitle": "Regroupez vos réglages par thème — ouvrez un bloc pour le modifier.",
     "tabsLabel": "Sections des paramètres",
     "tabs": {
       "profile": "Profil",
@@ -1167,6 +1168,50 @@
       "button": "Supprimer mon compte",
       "confirmText": "Confirmez la suppression définitive de votre compte.",
       "confirm": "Supprimer définitivement"
+    },
+    "sections": {
+      "avatar": {
+        "description": "Photo affichée dans la messagerie et sur votre profil cabinet."
+      },
+      "profile": {
+        "description": "Coordonnées du cabinet, relevés respiratoires proposés aux clients, et veille du poste partagé."
+      },
+      "research": {
+        "description": "Participez à l’observatoire épidémiologique anonymisé (module en développement)."
+      },
+      "availability": {
+        "description": "Indiquez si vous êtes joignable ; un message auto-réponse est envoyé aux clients si vous êtes indisponible."
+      },
+      "sites": {
+        "description": "Gérez les sites et salles du cabinet (multi-sites) depuis la page dédiée."
+      },
+      "schedule": {
+        "description": "Plages horaires proposées à la réservation client et durée des créneaux."
+      },
+      "vacations": {
+        "description": "Périodes où le cabinet n’accepte pas de rendez-vous en ligne."
+      },
+      "visitTypes": {
+        "description": "Types proposés à la création d’un RDV (durée et couleur sur le calendrier)."
+      },
+      "notifications": {
+        "description": "Choisissez les événements pour lesquels vous recevez un e-mail."
+      },
+      "password": {
+        "description": "Modifiez votre mot de passe de connexion."
+      },
+      "language": {
+        "description": "Langue de l’interface Pro et des messages."
+      },
+      "twoFa": {
+        "description": "Optionnel — couche de sécurité via une application authenticator (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "Export RGPD de vos données et suppression définitive du compte."
+      },
+      "legal": {
+        "description": "Conditions d’utilisation et politique de confidentialité."
+      }
     },
     "aclDenied": "Vous n’avez pas le droit de modifier la fiche cabinet. Contactez le vétérinaire de référence."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Enregistrer",
     "renamed": "Site renommé.",
     "devBadge": "dev",
-    "editingSite": "Édition agenda / créneaux : {name} (vue « Tous les sites »)."
+    "editingSite": "Édition agenda / créneaux : {name} (vue « Tous les sites »).",
+    "pageTitle": "Lieux (sites)",
+    "pageSubtitle": "Gérez les antennes et salles du cabinet.",
+    "manageLink": "Gérer les sites"
   },
   "rooms": {
     "title": "Salles",

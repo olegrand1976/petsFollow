@@ -38,6 +38,7 @@ const {
   stopPolling,
 } = useProNotifications()
 const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
+const { sitesUiEnabled } = usePracticeSites()
 
 const bareShellPaths = new Set([
   '/login',
@@ -123,6 +124,9 @@ const navItems = computed<ProNavItem[]>(() => {
   }
 
   items.push({ to: '/team', label: t('nav.team'), icon: 'groups', section: practice })
+  if (sitesUiEnabled.value && canPractice('calendar.manage')) {
+    items.push({ to: '/sites', label: t('nav.sites'), icon: 'apartment', section: practice })
+  }
   items.push({ to: '/settings', label: t('nav.settings'), icon: 'settings', section: practice })
 
   return items

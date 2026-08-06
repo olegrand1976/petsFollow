@@ -1,5 +1,9 @@
 <template>
-  <ProCard :title="$t('settings.privacy.title')" class="pro-settings-card" data-testid="privacy-account-card">
+  <ProAccordionSection
+    :title="$t('settings.privacy.title')"
+    :description="$t('settings.sections.privacy.description')"
+    data-testid="privacy-account-card"
+  >
     <p class="pro-settings-hint">{{ $t('settings.privacy.exportHint') }}</p>
     <ProButton variant="secondary" :loading="exporting" test-id="settings-export-data" @click="exportData">
       {{ $t('settings.privacy.exportButton') }}
@@ -34,7 +38,7 @@
       </div>
       <p v-if="deleteError" class="pro-field-error" role="alert">{{ deleteError }}</p>
     </template>
-  </ProCard>
+  </ProAccordionSection>
 </template>
 
 <script setup lang="ts">
@@ -83,9 +87,6 @@ async function deleteAccount() {
 </script>
 
 <style scoped>
-.pro-settings-card {
-  margin-bottom: 1.5rem;
-}
 .pro-settings-hint {
   color: var(--pf-vet-text-muted);
   font-size: 0.9rem;

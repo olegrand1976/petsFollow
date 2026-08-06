@@ -17,7 +17,12 @@
       aria-labelledby="tab-profile"
       data-testid="settings-tab-profile"
     >
-      <ProCard :title="$t('settings.avatar.title')" class="pro-settings-card">
+      <ProAccordionSection
+        :title="$t('settings.avatar.title')"
+        :description="$t('settings.sections.avatar.description')"
+        :open="true"
+        data-testid="settings-avatar"
+      >
         <ProAvatarUpload
           v-model="avatarUrl"
           :name="user?.fullName || ''"
@@ -27,12 +32,12 @@
           @uploaded="onAvatarUploaded"
         />
         <p v-if="avatarSaved" class="text-muted" role="status">{{ $t('settings.avatar.saved') }}</p>
-      </ProCard>
+      </ProAccordionSection>
 
-      <ProCard
+      <ProAccordionSection
         v-if="canManagePractice"
         :title="$t('settings.profileCard')"
-        class="pro-settings-card"
+        :description="$t('settings.sections.profile.description')"
         data-testid="settings-practice-profile"
       >
         <ProPracticeProfileForm
@@ -51,7 +56,7 @@
             </ProButton>
           </template>
         </ProPracticeProfileForm>
-      </ProCard>
+      </ProAccordionSection>
       <p
         v-else
         class="pro-hint pro-mb-md"
@@ -60,16 +65,15 @@
         {{ $t('settings.aclDenied') }}
       </p>
 
-      <ProCard
+      <ProAccordionSection
         v-if="canManagePractice && researchFlagOn"
         :title="$t('research.settings.title')"
-        class="pro-settings-card"
+        :description="$t('settings.sections.research.description')"
         data-testid="settings-research-opt-in"
       >
         <div class="pro-flex-row pro-mb-sm">
           <ProBadge variant="warning">{{ $t('research.settings.devBadge') }}</ProBadge>
         </div>
-        <p class="pro-hint">{{ $t('research.settings.hint') }}</p>
         <p class="pro-mb-sm" data-testid="settings-research-status">
           <template v-if="researchStatusKnown">
             {{ researchOptedIn ? $t('research.settings.optedIn') : $t('research.settings.optedOut') }}
@@ -97,7 +101,7 @@
             {{ $t('research.settings.optOut') }}
           </ProButton>
         </div>
-      </ProCard>
+      </ProAccordionSection>
     </div>
 
     <div
@@ -106,10 +110,11 @@
       aria-labelledby="tab-calendar"
       data-testid="settings-tab-calendar"
     >
-      <ProCard
+      <ProAccordionSection
         v-if="canMessage"
         :title="$t('settings.availability')"
-        class="pro-settings-card"
+        :description="$t('settings.sections.availability.description')"
+        :open="calendarFirstOpen === 'availability'"
         data-testid="settings-availability"
       >
         <div class="pro-toggle" role="group" :aria-label="$t('settings.availability')">
@@ -145,265 +150,33 @@
         <ProButton class="pro-save-btn" :loading="saving" @click="save">
           {{ $t('settings.saveAvailability') }}
         </ProButton>
-      </ProCard>
+      </ProAccordionSection>
 
-      <ProCard
+      <ProAccordionSection
         v-if="canManageCalendar && sitesUiEnabled"
         :title="$t('sites.settingsTitle')"
-        class="pro-settings-card"
-        data-testid="settings-sites"
+        :description="$t('settings.sections.sites.description')"
+        :open="calendarFirstOpen === 'sites'"
+        data-testid="settings-sites-link"
       >
-        <p class="pro-settings-hint">{{ $t('sites.settingsHint') }}</p>
-        <p
-          v-if="isAggregatedView && concreteSiteName"
-          class="pro-inline-feedback"
-          role="status"
-          data-testid="settings-sites-edit-hint"
+        <ProButton
+          variant="secondary"
+          type="button"
+          test-id="settings-manage-sites-link"
+          @click="navigateTo('/sites')"
         >
-          {{ $t('sites.editingSite', { name: concreteSiteName }) }}
-        </p>
-        <ul class="settings-sites-list" data-testid="settings-sites-list">
-          <li
-            v-for="site in managedSites"
-            :key="site.id"
-            class="settings-sites-row"
-            :data-testid="`settings-site-row-${site.id}`"
-          >
-            <div class="settings-sites-row__meta">
-              <template v-if="renamingSiteId === site.id">
-                <input
-                  v-model="renamingSiteName"
-                  type="text"
-                  class="pro-input"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-rename-input-${site.id}`"
-                  @keydown.enter.prevent="saveSiteRename(site.id)"
-                >
-              </template>
-              <template v-else>
-                <strong>{{ site.name }}</strong>
-                <span v-if="site.city" class="text-muted">{{ site.city }}</span>
-                <ProBadge v-if="site.isPrimary" variant="success">{{ $t('sites.primary') }}</ProBadge>
-                <ProBadge v-if="!site.active" variant="warning">{{ $t('sites.inactive') }}</ProBadge>
-              </template>
-            </div>
-            <div class="settings-sites-row__actions">
-              <template v-if="renamingSiteId === site.id">
-                <ProButton
-                  variant="secondary"
-                  type="button"
-                  :disabled="sitesBusy || !renamingSiteName.trim()"
-                  :data-testid="`settings-site-rename-save-${site.id}`"
-                  @click="saveSiteRename(site.id)"
-                >
-                  {{ $t('sites.renameSave') }}
-                </ProButton>
-                <ProButton
-                  variant="ghost"
-                  type="button"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-rename-cancel-${site.id}`"
-                  @click="cancelSiteRename"
-                >
-                  {{ $t('common.cancel') }}
-                </ProButton>
-              </template>
-              <template v-else>
-                <ProButton
-                  v-if="site.active"
-                  variant="ghost"
-                  type="button"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-rename-${site.id}`"
-                  @click="startSiteRename(site)"
-                >
-                  {{ $t('sites.rename') }}
-                </ProButton>
-                <ProButton
-                  v-if="!site.isPrimary && site.active"
-                  variant="secondary"
-                  type="button"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-primary-${site.id}`"
-                  @click="makeSitePrimary(site.id)"
-                >
-                  {{ $t('sites.makePrimary') }}
-                </ProButton>
-                <ProButton
-                  v-if="!site.isPrimary && site.active"
-                  variant="ghost"
-                  type="button"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-deactivate-${site.id}`"
-                  @click="deactivateSite(site.id)"
-                >
-                  {{ $t('sites.deactivate') }}
-                </ProButton>
-                <ProButton
-                  v-if="!site.active"
-                  variant="secondary"
-                  type="button"
-                  :disabled="sitesBusy"
-                  :data-testid="`settings-site-reactivate-${site.id}`"
-                  @click="reactivateSite(site.id)"
-                >
-                  {{ $t('sites.reactivate') }}
-                </ProButton>
-              </template>
-            </div>
-            <div
-              v-if="site.active"
-              class="settings-rooms"
-              :data-testid="`settings-rooms-${site.id}`"
-            >
-              <h4 class="pro-settings-subtitle">{{ $t('rooms.title') }}</h4>
-              <ul class="settings-rooms-list" :data-testid="`settings-rooms-list-${site.id}`">
-                <li
-                  v-for="room in roomsBySite[site.id] || []"
-                  :key="room.id"
-                  class="settings-rooms-row"
-                  :data-testid="`settings-room-row-${room.id}`"
-                >
-                  <template v-if="renamingRoomId === room.id">
-                    <input
-                      v-model="renamingRoomName"
-                      type="text"
-                      class="pro-input"
-                      :disabled="roomsBusy"
-                      :data-testid="`settings-room-rename-input-${room.id}`"
-                      @keydown.enter.prevent="saveRoomRename(site.id, room.id)"
-                    >
-                    <ProButton
-                      variant="secondary"
-                      type="button"
-                      :disabled="roomsBusy || !renamingRoomName.trim()"
-                      :data-testid="`settings-room-rename-save-${room.id}`"
-                      @click="saveRoomRename(site.id, room.id)"
-                    >
-                      {{ $t('rooms.renameSave') }}
-                    </ProButton>
-                    <ProButton
-                      variant="ghost"
-                      type="button"
-                      :disabled="roomsBusy"
-                      :data-testid="`settings-room-rename-cancel-${room.id}`"
-                      @click="cancelRoomRename"
-                    >
-                      {{ $t('common.cancel') }}
-                    </ProButton>
-                  </template>
-                  <template v-else>
-                    <span>
-                      {{ room.name }}
-                      <ProBadge
-                        v-if="!room.active"
-                        variant="warning"
-                        :data-testid="`settings-room-inactive-${room.id}`"
-                      >
-                        {{ $t('rooms.inactive') }}
-                      </ProBadge>
-                    </span>
-                    <div class="settings-rooms-row__actions">
-                      <ProButton
-                        v-if="room.active"
-                        variant="ghost"
-                        type="button"
-                        :disabled="roomsBusy"
-                        :data-testid="`settings-room-rename-${room.id}`"
-                        @click="startRoomRename(room)"
-                      >
-                        {{ $t('rooms.rename') }}
-                      </ProButton>
-                      <ProButton
-                        v-if="room.active"
-                        variant="ghost"
-                        type="button"
-                        :disabled="roomsBusy"
-                        :data-testid="`settings-room-deactivate-${room.id}`"
-                        @click="deactivateRoom(site.id, room.id)"
-                      >
-                        {{ $t('rooms.deactivate') }}
-                      </ProButton>
-                      <ProButton
-                        v-else
-                        variant="secondary"
-                        type="button"
-                        :disabled="roomsBusy"
-                        :data-testid="`settings-room-reactivate-${room.id}`"
-                        @click="reactivateRoom(site.id, room.id)"
-                      >
-                        {{ $t('rooms.reactivate') }}
-                      </ProButton>
-                    </div>
-                  </template>
-                </li>
-              </ul>
-              <p
-                v-if="!(roomsBySite[site.id] || []).length"
-                class="text-muted"
-                :data-testid="`settings-rooms-empty-${site.id}`"
-              >
-                {{ $t('rooms.empty') }}
-              </p>
-              <div class="calendar-slot-row settings-rooms-create">
-                <input
-                  v-model="newRoomName[site.id]"
-                  type="text"
-                  class="pro-input"
-                  :placeholder="$t('rooms.name')"
-                  :data-testid="`settings-room-name-${site.id}`"
-                >
-                <ProButton
-                  variant="secondary"
-                  type="button"
-                  :loading="roomsBusy"
-                  :disabled="!(newRoomName[site.id] || '').trim()"
-                  :data-testid="`settings-room-create-${site.id}`"
-                  @click="createRoom(site.id)"
-                >
-                  {{ $t('rooms.create') }}
-                </ProButton>
-              </div>
-            </div>
-          </li>
-        </ul>
-        <p v-if="!managedSites.length && !sitesLoading" class="text-muted">{{ $t('sites.empty') }}</p>
-        <div class="calendar-slot-row settings-sites-create">
-          <input
-            v-model="newSiteName"
-            type="text"
-            class="pro-input"
-            :placeholder="$t('sites.name')"
-            data-testid="settings-site-name"
-          >
-          <input
-            v-model="newSiteCity"
-            type="text"
-            class="pro-input"
-            :placeholder="$t('sites.city')"
-            data-testid="settings-site-city"
-          >
-          <ProButton
-            variant="secondary"
-            type="button"
-            :loading="sitesBusy"
-            :disabled="!newSiteName.trim()"
-            data-testid="settings-site-create"
-            @click="createSite"
-          >
-            {{ $t('sites.create') }}
-          </ProButton>
-        </div>
-        <p v-if="sitesError" class="pro-field-error" role="alert">{{ sitesError }}</p>
-        <p v-if="sitesSaved" class="text-muted" role="status">{{ sitesSaved }}</p>
-      </ProCard>
+          {{ $t('sites.manageLink') }}
+        </ProButton>
+      </ProAccordionSection>
 
-      <ProCard
+      <ProAccordionSection
         v-if="canManageCalendar"
         :title="$t('settings.calendar.title')"
-        class="pro-settings-card"
+        :description="$t('settings.sections.schedule.description')"
+        :open="true"
         data-testid="settings-calendar"
-      >        <p
+      >
+        <p
           v-if="isAggregatedView && concreteSiteName"
           class="pro-inline-feedback"
           role="status"
@@ -413,7 +186,6 @@
         <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
           {{ $t('settings.calendar.vacationsReminder') }}
         </p>
-        <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
         <div class="pro-field pro-field-spaced">
           <label class="pro-label" for="slot-duration">{{ $t('settings.calendar.duration') }}</label>
           <select id="slot-duration" v-model.number="slotDuration" class="pro-select">
@@ -443,9 +215,14 @@
         <ProButton class="pro-save-btn" :loading="scheduleSaving" data-testid="calendar-schedule-save" @click="saveSchedule">
           {{ $t('settings.calendar.save') }}
         </ProButton>
+      </ProAccordionSection>
 
-        <hr class="pro-settings-hr">
-        <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.vacationsTitle') }}</h3>
+      <ProAccordionSection
+        v-if="canManageCalendar"
+        :title="$t('settings.calendar.vacationsTitle')"
+        :description="$t('settings.sections.vacations.description')"
+        data-testid="settings-vacations"
+      >
         <label class="pro-checkbox-row">
           <input v-model="noVacationsThisYear" type="checkbox">
           <span>{{ $t('settings.calendar.noVacations') }}</span>
@@ -463,10 +240,14 @@
             <ProButton variant="ghost" type="button" @click="removeVacation(v.id)">×</ProButton>
           </li>
         </ul>
+      </ProAccordionSection>
 
-        <hr class="pro-settings-hr">
-        <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.visitTypesTitle') }}</h3>
-        <p class="pro-settings-hint">{{ $t('settings.calendar.visitTypesHint') }}</p>
+      <ProAccordionSection
+        v-if="canManageCalendar"
+        :title="$t('settings.calendar.visitTypesTitle')"
+        :description="$t('settings.sections.visitTypes.description')"
+        data-testid="settings-visit-types"
+      >
         <div
           v-for="(vt, idx) in visitTypes"
           :key="vt.id || `new-${idx}`"
@@ -515,7 +296,7 @@
         >
           {{ $t('settings.calendar.saveVisitTypes') }}
         </ProButton>
-      </ProCard>
+      </ProAccordionSection>
     </div>
 
     <div
@@ -524,11 +305,13 @@
       aria-labelledby="tab-notifications"
       data-testid="settings-tab-notifications"
     >
-      <ProCard
+      <ProAccordionSection
         v-if="canMessage"
         :title="$t('settings.notifications.title')"
-        class="pro-settings-card"
-      >        <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
+        :description="$t('settings.sections.notifications.description')"
+        :open="true"
+        data-testid="settings-notifications"
+      >
         <label class="pro-checkbox-row">
           <input v-model="emailOnMessage" type="checkbox">
           <span>{{ $t('settings.notifications.onMessage') }}</span>
@@ -546,7 +329,7 @@
         <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
           {{ $t('common.save') }}
         </ProButton>
-      </ProCard>
+      </ProAccordionSection>
     </div>
 
     <div
@@ -555,8 +338,12 @@
       aria-labelledby="tab-account"
       data-testid="settings-tab-account"
     >
-      <ProCard :title="$t('settings.password.title')" class="pro-settings-card">
-        <p class="pro-settings-hint">{{ $t('settings.password.subtitle') }}</p>
+      <ProAccordionSection
+        :title="$t('settings.password.title')"
+        :description="$t('settings.sections.password.description')"
+        :open="true"
+        data-testid="settings-password"
+      >
         <ProInput
           v-model="currentPassword"
           :label="$t('settings.password.current')"
@@ -583,10 +370,14 @@
         <ProButton class="pro-save-btn" :loading="passwordSaving" test-id="settings-password-save" @click="savePassword">
           {{ $t('settings.password.save') }}
         </ProButton>
-      </ProCard>
+      </ProAccordionSection>
 
-      <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
-        <p class="pro-settings-hint">{{ $t('settings.language.subtitle') }}</p>
+      <ProAccordionSection
+        :title="$t('settings.language.title')"
+        :description="$t('settings.sections.language.description')"
+        :open="true"
+        data-testid="settings-language"
+      >
         <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">
           <button
             v-for="loc in supportedLocales"
@@ -605,11 +396,13 @@
         <ProButton class="pro-save-btn" :loading="localeSaving" test-id="settings-locale-save" @click="saveLocale">
           {{ $t('common.save') }}
         </ProButton>
-      </ProCard>
+      </ProAccordionSection>
 
-      <ProCard :title="$t('settings.twoFa.title')" class="pro-settings-card">
-        <p class="pro-settings-hint">{{ $t('settings.twoFa.hint') }}</p>
-
+      <ProAccordionSection
+        :title="$t('settings.twoFa.title')"
+        :description="$t('settings.sections.twoFa.description')"
+        data-testid="settings-2fa"
+      >
         <p v-if="twoFactorEnabled" class="pro-2fa-status pro-2fa-status--on" role="status">
           {{ $t('settings.twoFa.enabled') }}
         </p>
@@ -660,13 +453,17 @@
             {{ $t('settings.twoFa.disable') }}
           </ProButton>
         </div>
-      </ProCard>
+      </ProAccordionSection>
 
       <ProPrivacyAccountCard />
 
-      <ProCard :title="$t('settings.legalLinks')" class="pro-settings-card">
+      <ProAccordionSection
+        :title="$t('settings.legalLinks')"
+        :description="$t('settings.sections.legal.description')"
+        data-testid="settings-legal"
+      >
         <ProLegalFooter />
-      </ProCard>
+      </ProAccordionSection>
     </div>
   </div>
 </template>
@@ -780,63 +577,15 @@ const visitTypesSaving = ref(false)
 const visitTypesSaved = ref(false)
 const visitTypesError = ref('')
 
-type ManagedSite = {
-  id: string
-  name: string
-  city: string
-  isPrimary: boolean
-  active: boolean
-}
 const { sitesUiEnabled, concreteSiteId, concreteSiteName, isAggregatedView, withSiteQuery, initFromStorage } = usePracticeSites()
-const managedSites = ref<ManagedSite[]>([])
-const sitesLoading = ref(false)
-const sitesBusy = ref(false)
-const sitesError = ref('')
-const sitesSaved = ref('')
-const newSiteName = ref('')
-const newSiteCity = ref('')
-const renamingSiteId = ref('')
-const renamingSiteName = ref('')
 
-type ManagedRoom = { id: string; name: string; active: boolean }
-const roomsBySite = ref<Record<string, ManagedRoom[]>>({})
-const roomsBusy = ref(false)
-const newRoomName = reactive<Record<string, string>>({})
-const renamingRoomId = ref('')
-const renamingRoomName = ref('')
-
-function startSiteRename(site: ManagedSite) {
-  renamingSiteId.value = site.id
-  renamingSiteName.value = site.name
-}
-
-function cancelSiteRename() {
-  renamingSiteId.value = ''
-  renamingSiteName.value = ''
-}
-
-async function saveSiteRename(siteId: string) {
-  const name = renamingSiteName.value.trim()
-  if (!name) return
-  sitesBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
-      method: 'PATCH',
-      body: { name },
-    })
-    sitesSaved.value = t('sites.renamed')
-    cancelSiteRename()
-    await refreshMeAndSites()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.actionFailed')
-  }
-  finally {
-    sitesBusy.value = false
-  }
-}
+/** Premier bloc Agenda ouvert selon les droits visibles. */
+const calendarFirstOpen = computed<'availability' | 'sites' | 'schedule' | ''>(() => {
+  if (canMessage.value) return 'availability'
+  if (canManageCalendar.value && sitesUiEnabled.value) return 'sites'
+  if (canManageCalendar.value) return 'schedule'
+  return ''
+})
 
 const weekdayOptions = computed(() => [
   { value: 1, label: t('settings.calendar.weekday.1') },
@@ -861,231 +610,6 @@ function addVisitType() {
     isActive: true,
     sortOrder: visitTypes.value.length,
   })
-}
-
-async function loadManagedSites() {
-  if (!canManageCalendar.value || !sitesUiEnabled.value) return
-  sitesLoading.value = true
-  sitesError.value = ''
-  try {
-    const res: any = await $fetch('/api/vet/sites', { query: { includeInactive: '1' } })
-    const list = res?.data ?? res
-    managedSites.value = (Array.isArray(list) ? list : []).map((s: any) => ({
-      id: String(s.id || ''),
-      name: String(s.name || ''),
-      city: String(s.city || ''),
-      isPrimary: !!s.isPrimary,
-      active: s.active !== false,
-    })).filter((s: ManagedSite) => !!s.id)
-    await loadAllRooms()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.loadFailed')
-    managedSites.value = []
-  }
-  finally {
-    sitesLoading.value = false
-  }
-}
-
-async function loadAllRooms() {
-  const active = managedSites.value.filter((s) => s.active)
-  const next: Record<string, ManagedRoom[]> = { ...roomsBySite.value }
-  await Promise.all(active.map(async (site) => {
-    try {
-      const res: any = await $fetch(`/api/vet/sites/${encodeURIComponent(site.id)}/rooms`, {
-        query: { includeInactive: '1' },
-      })
-      const list = res?.data ?? res
-      next[site.id] = (Array.isArray(list) ? list : [])
-        .filter((r: any) => r?.id)
-        .map((r: any) => ({
-          id: String(r.id),
-          name: String(r.name || ''),
-          active: r.active !== false,
-        }))
-    } catch {
-      next[site.id] = next[site.id] || []
-    }
-  }))
-  roomsBySite.value = next
-}
-
-function startRoomRename(room: ManagedRoom) {
-  renamingRoomId.value = room.id
-  renamingRoomName.value = room.name
-}
-
-function cancelRoomRename() {
-  renamingRoomId.value = ''
-  renamingRoomName.value = ''
-}
-
-async function createRoom(siteId: string) {
-  const name = (newRoomName[siteId] || '').trim()
-  if (!name) return
-  roomsBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`, {
-      method: 'POST',
-      body: { name },
-    })
-    newRoomName[siteId] = ''
-    sitesSaved.value = t('rooms.created')
-    await loadAllRooms()
-  } catch (e: any) {
-    sitesError.value = mapError(e) || t('rooms.actionFailed')
-  } finally {
-    roomsBusy.value = false
-  }
-}
-
-async function saveRoomRename(siteId: string, roomId: string) {
-  const name = renamingRoomName.value.trim()
-  if (!name) return
-  roomsBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}`, {
-      method: 'PATCH',
-      body: { name },
-    })
-    cancelRoomRename()
-    sitesSaved.value = t('rooms.renamed')
-    await loadAllRooms()
-  } catch (e: any) {
-    sitesError.value = mapError(e) || t('rooms.actionFailed')
-  } finally {
-    roomsBusy.value = false
-  }
-}
-
-async function deactivateRoom(siteId: string, roomId: string) {
-  roomsBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}/deactivate`, {
-      method: 'POST',
-    })
-    sitesSaved.value = t('rooms.deactivated')
-    await loadAllRooms()
-  } catch (e: any) {
-    sitesError.value = mapError(e) || t('rooms.actionFailed')
-  } finally {
-    roomsBusy.value = false
-  }
-}
-
-async function reactivateRoom(siteId: string, roomId: string) {
-  roomsBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}`, {
-      method: 'PATCH',
-      body: { active: true },
-    })
-    sitesSaved.value = t('rooms.reactivated')
-    await loadAllRooms()
-  } catch (e: any) {
-    sitesError.value = mapError(e) || t('rooms.actionFailed')
-  } finally {
-    roomsBusy.value = false
-  }
-}
-
-async function refreshMeAndSites() {
-  await fetchUser(true)
-  await loadManagedSites()
-}
-
-async function createSite() {
-  const name = newSiteName.value.trim()
-  if (!name) return
-  sitesBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch('/api/vet/sites', {
-      method: 'POST',
-      body: {
-        name,
-        city: newSiteCity.value.trim() || undefined,
-        copyScheduleFromSiteId: concreteSiteId.value || undefined,
-      },
-    })
-    newSiteName.value = ''
-    newSiteCity.value = ''
-    sitesSaved.value = t('sites.created')
-    await refreshMeAndSites()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.actionFailed')
-  }
-  finally {
-    sitesBusy.value = false
-  }
-}
-
-async function deactivateSite(siteId: string) {
-  sitesBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/deactivate`, { method: 'POST' })
-    sitesSaved.value = t('sites.deactivated')
-    await refreshMeAndSites()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.actionFailed')
-  }
-  finally {
-    sitesBusy.value = false
-  }
-}
-
-async function reactivateSite(siteId: string) {
-  sitesBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
-      method: 'PATCH',
-      body: { active: true },
-    })
-    sitesSaved.value = t('sites.reactivated')
-    await refreshMeAndSites()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.actionFailed')
-  }
-  finally {
-    sitesBusy.value = false
-  }
-}
-
-async function makeSitePrimary(siteId: string) {
-  sitesBusy.value = true
-  sitesError.value = ''
-  sitesSaved.value = ''
-  try {
-    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
-      method: 'PATCH',
-      body: { isPrimary: true },
-    })
-    sitesSaved.value = t('sites.primaryUpdated')
-    await refreshMeAndSites()
-  }
-  catch (e: any) {
-    sitesError.value = mapError(e) || t('sites.actionFailed')
-  }
-  finally {
-    sitesBusy.value = false
-  }
 }
 
 async function loadCalendarSettings() {
@@ -1298,7 +822,6 @@ onMounted(async () => {
   }
 
   if (canManageCalendar.value) {
-    await loadManagedSites()
     await loadCalendarSettings()
   }
   if (import.meta.client) {
@@ -1600,71 +1123,6 @@ async function disable2FA() {
 .pro-settings-subtitle {
   margin: 0 0 0.75rem;
   font-size: 1rem;
-}
-.pro-settings-card {
-  margin-bottom: 1.5rem;
-}
-
-.settings-sites-list {
-  list-style: none;
-  margin: 0 0 1rem;
-  padding: 0;
-}
-.settings-sites-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--pf-vet-border);
-}
-.settings-sites-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-.settings-sites-row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.settings-rooms {
-  flex: 1 1 100%;
-  margin-top: 0.35rem;
-  padding: 0.75rem;
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius);
-  background: var(--pf-vet-bg);
-}
-.settings-rooms-list {
-  list-style: none;
-  margin: 0 0 0.5rem;
-  padding: 0;
-}
-.settings-rooms-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--pf-vet-border);
-}
-.settings-rooms-row:last-child {
-  border-bottom: 0;
-}
-.settings-rooms-row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.settings-rooms-create {
-  margin-top: 0.5rem;
-}
-.settings-sites-create {
-  margin-top: 0.75rem;
 }
 
 .pro-field-spaced {

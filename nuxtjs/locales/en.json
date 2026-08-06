@@ -37,6 +37,7 @@
     "managerProspects": "Team prospects",
     "managerPortfolio": "My portfolio",
     "team": "Team",
+    "sites": "Sites",
     "commercialCompetition": "Competition",
     "adminBrandAssets": "Store QRs",
     "adminAiModules": "AI CR module",
@@ -313,7 +314,7 @@
   },
   "settings": {
     "title": "Settings",
-    "subtitle": "Practice profile, availability and automatic messages.",
+    "subtitle": "Group settings by topic — open a block to edit it.",
     "tabsLabel": "Settings sections",
     "tabs": {
       "profile": "Profile",
@@ -458,6 +459,50 @@
       "visitTypesSaveFailed": "Could not save appointment types.",
       "visitTypeNameRequired": "Each type must have a name.",
       "visitTypeDurationInvalid": "Invalid duration (5 to 480 minutes)."
+    },
+    "sections": {
+      "avatar": {
+        "description": "Photo shown in messaging and on your practice profile."
+      },
+      "profile": {
+        "description": "Practice contact details, respiratory reading durations offered to clients, and shared desk idle lock."
+      },
+      "research": {
+        "description": "Join the anonymised epidemiological observatory (module in development)."
+      },
+      "availability": {
+        "description": "Show whether you are reachable; an auto-reply is sent to clients when you are unavailable."
+      },
+      "sites": {
+        "description": "Manage practice sites and rooms (multi-site) from the dedicated page."
+      },
+      "schedule": {
+        "description": "Weekly hours offered for client booking and slot duration."
+      },
+      "vacations": {
+        "description": "Periods when the practice does not accept online appointments."
+      },
+      "visitTypes": {
+        "description": "Types offered when creating an appointment (duration and calendar colour)."
+      },
+      "notifications": {
+        "description": "Choose which events trigger an email notification."
+      },
+      "password": {
+        "description": "Change your login password."
+      },
+      "language": {
+        "description": "Language for the Pro interface and messages."
+      },
+      "twoFa": {
+        "description": "Optional — extra security via an authenticator app (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "GDPR data export and permanent account deletion."
+      },
+      "legal": {
+        "description": "Terms of use and privacy policy."
+      }
     },
     "aclDenied": "You cannot edit the practice profile. Contact the reference veterinarian."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Save",
     "renamed": "Site renamed.",
     "devBadge": "dev",
-    "editingSite": "Editing schedule / slots for: {name} (All sites view)."
+    "editingSite": "Editing schedule / slots for: {name} (All sites view).",
+    "pageTitle": "Sites",
+    "pageSubtitle": "Manage practice locations and rooms.",
+    "manageLink": "Manage sites"
   },
   "rooms": {
     "title": "Rooms",

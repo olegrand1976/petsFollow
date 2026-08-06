@@ -7,16 +7,16 @@ import { ensureMultiSite } from '../helpers/sites'
  * Requires API + NUXT_PUBLIC_SITES_UI_ENABLED on. Creates a 2nd site if staging
  * was deployed sans seed.
  */
-test.describe('multi-sites settings + switcher', { tag: '@p1' }, () => {
-  test('vet.demo — switcher, settings rename, consultations site column', async ({ page }) => {
+test.describe('multi-sites page + switcher', { tag: '@p1' }, () => {
+  test('vet.demo — /sites rename, switcher, consultations site column', async ({ page }) => {
     await loginAsVet(page)
     await ensureMultiSite(page)
 
     await expect(page.getByTestId('pro-site-switcher')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('pro-site-select')).toBeVisible()
 
-    await page.goto('/settings#calendar')
-    await expect(page.getByTestId('settings-tab-calendar')).toBeVisible({ timeout: 15000 })
+    await page.goto('/sites')
+    await expect(page.getByTestId('sites-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('settings-sites')).toBeVisible()
     const rows = page.getByTestId('settings-sites-list').locator('.settings-sites-row')
     await expect.poll(async () => rows.count()).toBeGreaterThanOrEqual(2)

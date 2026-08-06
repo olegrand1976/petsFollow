@@ -37,6 +37,7 @@
     "managerProspects": "Prospectos del equipo",
     "managerPortfolio": "Mi cartera",
     "team": "Equipo",
+    "sites": "Sedes",
     "commercialCompetition": "Competencia",
     "adminBrandAssets": "QR de tiendas",
     "adminAiModules": "Módulo CR IA",
@@ -313,7 +314,7 @@
   },
   "settings": {
     "title": "Ajustes",
-    "subtitle": "Perfil de clínica, disponibilidad y mensajes automáticos.",
+    "subtitle": "Agrupa ajustes por tema — abre un bloque para editarlo.",
     "tabsLabel": "Secciones de ajustes",
     "tabs": {
       "profile": "Perfil",
@@ -458,6 +459,50 @@
       "visitTypesSaveFailed": "No se pudieron guardar los tipos.",
       "visitTypeNameRequired": "Cada tipo debe tener un nombre.",
       "visitTypeDurationInvalid": "Duración no válida (5 a 480 minutos)."
+    },
+    "sections": {
+      "avatar": {
+        "description": "Foto mostrada en la mensajería y en su perfil del centro."
+      },
+      "profile": {
+        "description": "Datos de contacto del centro, duraciones de medición respiratoria para clientes y bloqueo del puesto compartido."
+      },
+      "research": {
+        "description": "Participe en el observatorio epidemiológico anonimizado (módulo en desarrollo)."
+      },
+      "availability": {
+        "description": "Indique si está disponible; se envía un mensaje automático a los clientes si no lo está."
+      },
+      "sites": {
+        "description": "Gestione sedes y salas del centro (multi-sede) desde la página dedicada."
+      },
+      "schedule": {
+        "description": "Franjas horarias ofrecidas para la reserva del cliente y duración de los huecos."
+      },
+      "vacations": {
+        "description": "Periodos en los que el centro no acepta citas en línea."
+      },
+      "visitTypes": {
+        "description": "Tipos al crear una cita (duración y color en el calendario)."
+      },
+      "notifications": {
+        "description": "Elija los eventos por los que recibe un correo."
+      },
+      "password": {
+        "description": "Cambie su contraseña de acceso."
+      },
+      "language": {
+        "description": "Idioma de la interfaz Pro y de los mensajes."
+      },
+      "twoFa": {
+        "description": "Opcional — capa de seguridad con una app autenticadora (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "Exportación RGPD de sus datos y eliminación definitiva de la cuenta."
+      },
+      "legal": {
+        "description": "Condiciones de uso y política de privacidad."
+      }
     },
     "aclDenied": "No puede editar la ficha del centro. Contacte al veterinario de referencia."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Guardar",
     "renamed": "Sitio renombrado.",
     "devBadge": "dev",
-    "editingSite": "Editando agenda / franjas de: {name} (vista Todas las sedes)."
+    "editingSite": "Editando agenda / franjas de: {name} (vista Todas las sedes).",
+    "pageTitle": "Sedes",
+    "pageSubtitle": "Gestione las sedes y salas de la clínica.",
+    "manageLink": "Gestionar sedes"
   },
   "rooms": {
     "title": "Salas",

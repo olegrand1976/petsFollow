@@ -81,6 +81,8 @@ Ordre pour un commercial sur staging :
 | UC-VP-02 | [Onboarding](01-vetpro/UC-VP-02-onboarding.md) | Important — **Destructif** |
 | UC-VP-03 | [Agenda & messagerie solo](01-vetpro/UC-VP-03-agenda-messagerie.md) | Démo — skip si X-01 |
 | UC-VP-04 | [Nouvelle consultation](01-vetpro/UC-VP-04-nouvelle-consultation.md) | Démo |
+| UC-VP-05 | [Pharmacie / stock / DAF](01-vetpro/UC-VP-05-pharmacie-stock-daf.md) | Démo — tag `dev` |
+| UC-VP-06 | [Lieux (sites)](01-vetpro/UC-VP-06-lieux-sites.md) | Démo — soft-GA |
 
 ### Client — [`02-client/`](02-client/)
 

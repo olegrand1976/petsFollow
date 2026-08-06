@@ -37,6 +37,7 @@
     "managerProspects": "Meeskonna potentsiaalsed kliendid",
     "managerPortfolio": "Minu portfell",
     "team": "Meeskond",
+    "sites": "Asukohad",
     "commercialCompetition": "Konkurents",
     "adminBrandAssets": "Poe QR-id",
     "adminAiModules": "CR IA moodul",
@@ -313,7 +314,7 @@
   },
   "settings": {
     "title": "Seaded",
-    "subtitle": "Praktikaprofiil, saadavus ja automaatsõnumid.",
+    "subtitle": "Rühmitage seaded teemade kaupa — avage plokk muutmiseks.",
     "tabsLabel": "Seadete jaotised",
     "tabs": {
       "profile": "Profiil",
@@ -458,6 +459,50 @@
       "visitTypesSaveFailed": "Tüüpide salvestamine ebaõnnestus.",
       "visitTypeNameRequired": "Igal tüübil peab olema nimi.",
       "visitTypeDurationInvalid": "Vigane kestus (5–480 minutit)."
+    },
+    "sections": {
+      "avatar": {
+        "description": "Foto, mis kuvatakse sõnumites ja teie kabineti profiilil."
+      },
+      "profile": {
+        "description": "Kabineti kontaktandmed, klientidele pakutavad hingamissageduse mõõtmised ja jagatud töökoha lukustus."
+      },
+      "research": {
+        "description": "Osalege anonüümses epidemioloogilises observatooriumis (arenduses olev moodul)."
+      },
+      "availability": {
+        "description": "Märkige, kas olete kättesaadav; kui ei, saadetakse klientidele automaatvastus."
+      },
+      "sites": {
+        "description": "Hallake kabineti asukohti ja ruume (mitme asukoha) eraldi lehel."
+      },
+      "schedule": {
+        "description": "Kliendi broneeringuks pakutavad ajavahemikud ja aja pikkus."
+      },
+      "vacations": {
+        "description": "Perioodid, mil kabinet ei võta vastu veebiaegu."
+      },
+      "visitTypes": {
+        "description": "Tüübid visiidi loomisel (kestus ja värv kalendris)."
+      },
+      "notifications": {
+        "description": "Valige sündmused, mille kohta saate e-kirja."
+      },
+      "password": {
+        "description": "Muutke oma sisselogimise parooli."
+      },
+      "language": {
+        "description": "Pro liidese ja sõnumite keel."
+      },
+      "twoFa": {
+        "description": "Valikuline — lisaturvalisus autentimisrakendusega (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "GDPR andmete eksport ja konto lõplik kustutamine."
+      },
+      "legal": {
+        "description": "Kasutustingimused ja privaatsuspoliitika."
+      }
     },
     "aclDenied": "Teil pole õigust kabineti profiili muuta. Võtke ühendust peaveterinaariga."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Salvesta",
     "renamed": "Asukoht ümber nimetatud.",
     "devBadge": "dev",
-    "editingSite": "Muudad ajakava / slotte asukohale: {name} (kõik asukohad)."
+    "editingSite": "Muudad ajakava / slotte asukohale: {name} (kõik asukohad).",
+    "pageTitle": "Asukohad",
+    "pageSubtitle": "Halda praktika asukohti ja ruume.",
+    "manageLink": "Halda asukohti"
   },
   "rooms": {
     "title": "Ruumid",

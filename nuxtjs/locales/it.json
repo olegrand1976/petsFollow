@@ -37,6 +37,7 @@
     "managerProspects": "Lead team",
     "managerPortfolio": "- Il mio portafogli.",
     "team": "Staff",
+    "sites": "Sedi",
     "commercialCompetition": "Concorrenza",
     "adminBrandAssets": "QR store",
     "adminAiModules": "Modulo CR IA",
@@ -978,7 +979,7 @@
   },
   "settings": {
     "title": "Parametri",
-    "subtitle": "Foglio informativo, disponibilità e messaggi automatici.",
+    "subtitle": "Raggruppa le impostazioni per tema — apri un blocco per modificarlo.",
     "tabsLabel": "Sezioni dei parametri",
     "tabs": {
       "profile": "Profilo",
@@ -1123,6 +1124,50 @@
       "button": "Elimina il mio account",
       "confirmText": "Conferma la cancellazione permanente del tuo account.",
       "confirm": "Elimina definitivamente"
+    },
+    "sections": {
+      "avatar": {
+        "description": "Foto mostrata in messaggistica e sul profilo dello studio."
+      },
+      "profile": {
+        "description": "Contatti dello studio, durate dei rilievi respiratori per i clienti e blocco della postazione condivisa."
+      },
+      "research": {
+        "description": "Partecipa all’osservatorio epidemiologico anonimizzato (modulo in sviluppo)."
+      },
+      "availability": {
+        "description": "Indica se sei raggiungibile; un messaggio automatico viene inviato ai clienti se non sei disponibile."
+      },
+      "sites": {
+        "description": "Gestisci sedi e sale dello studio (multi-sede) dalla pagina dedicata."
+      },
+      "schedule": {
+        "description": "Fasce orarie proposte per la prenotazione client e durata degli slot."
+      },
+      "vacations": {
+        "description": "Periodi in cui lo studio non accetta appuntamenti online."
+      },
+      "visitTypes": {
+        "description": "Tipi proposti alla creazione di un appuntamento (durata e colore sul calendario)."
+      },
+      "notifications": {
+        "description": "Scegli gli eventi per cui ricevi un’e-mail."
+      },
+      "password": {
+        "description": "Modifica la password di accesso."
+      },
+      "language": {
+        "description": "Lingua dell’interfaccia Pro e dei messaggi."
+      },
+      "twoFa": {
+        "description": "Opzionale — livello di sicurezza con un’app authenticator (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "Esportazione GDPR dei tuoi dati e cancellazione definitiva dell’account."
+      },
+      "legal": {
+        "description": "Condizioni d’uso e informativa sulla privacy."
+      }
     },
     "aclDenied": "Non puoi modificare la scheda dello studio. Contatta il veterinario di riferimento."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Salva",
     "renamed": "Sede rinominata.",
     "devBadge": "dev",
-    "editingSite": "Modifica agenda / slot per: {name} (vista Tutte le sedi)."
+    "editingSite": "Modifica agenda / slot per: {name} (vista Tutte le sedi).",
+    "pageTitle": "Sedi",
+    "pageSubtitle": "Gestisci le sedi e le sale dello studio.",
+    "manageLink": "Gestisci sedi"
   },
   "rooms": {
     "title": "Sale",

@@ -20,7 +20,8 @@
         "UC-VP-02",
         "UC-VP-03",
         "UC-VP-04",
-        "UC-VP-05"
+        "UC-VP-05",
+        "UC-VP-06"
       ]
     },
     {
@@ -311,6 +312,41 @@
         "Finalize + stock",
         "Dispenses fiche animal"
       ]
+    },
+    "UC-VP-06": {
+      "id": "UC-VP-06",
+      "folderId": "vetpro",
+      "slug": "UC-VP-06-lieux-sites",
+      "title": "Lieux (sites) du cabinet",
+      "duration": "~5 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Montrer qu’un cabinet multi-sites peut lister, créer et gérer ses lieux (antenne + salles) depuis une entrée dédiée Sites, et basculer l’agenda via le switcher topbar.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web avec soft-GA sites (NUXT_PUBLIC_SITES_UI_ENABLED).",
+        "Seed VetPlus : primary + Antenne Liège (ou créer un 2ᵉ site pendant la démo)."
+      ],
+      "steps": [
+        "Se connecter en vet.demo.",
+        "Ouvrir Sites dans la nav (section Cabinet), ou Paramètres → Calendrier → Gérer les sites.",
+        "Vérifier la liste des lieux (au moins le site principal) ; créer une antenne si besoin (nom + ville optionnelle).",
+        "Sur un site actif : ajouter une salle, la renommer, la désactiver puis la réactiver.",
+        "Revenir au Calendrier : le switcher topbar apparaît dès qu’il y a ≥2 sites ; filtrer un site puis « Tous les sites »."
+      ],
+      "expected": [
+        "Page /sites accessible et opérationnelle.",
+        "Création / rename / désactivation de sites et salles sans erreur.",
+        "Switcher topbar visible en multi-sites ; agenda filtré correctement."
+      ],
+      "checklist": []
     },
     "UC-CL-01": {
       "id": "UC-CL-01",

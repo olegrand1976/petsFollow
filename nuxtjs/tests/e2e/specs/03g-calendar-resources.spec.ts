@@ -12,8 +12,8 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
     await loginAsVet(page)
     await ensureMultiSite(page)
 
-    await page.goto('/settings#calendar')
-    await expect(page.getByTestId('settings-tab-calendar')).toBeVisible({ timeout: 15000 })
+    await page.goto('/sites')
+    await expect(page.getByTestId('sites-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('settings-sites')).toBeVisible()
 
     const siteRows = page.getByTestId('settings-sites-list').locator('[data-testid^="settings-site-row-"]')

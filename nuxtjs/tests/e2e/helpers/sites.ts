@@ -7,8 +7,8 @@ import { fillField } from './auth'
  * topbar switcher / SITE_ALL calendar path exist (soft-GA multi-site UI).
  */
 export async function ensureMultiSite(page: Page) {
-  await page.goto('/settings#calendar', { waitUntil: 'networkidle' })
-  await expect(page.getByTestId('settings-tab-calendar')).toBeVisible({ timeout: 15000 })
+  await page.goto('/sites', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('sites-page')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('settings-sites')).toBeVisible({ timeout: 15000 })
 
   const rows = page.getByTestId('settings-sites-list').locator('[data-testid^="settings-site-row-"]')
@@ -28,6 +28,6 @@ export async function ensureMultiSite(page: Page) {
   }
 
   // Reload shell so ProTopbar picks up multiSite from /me.
-  await page.goto('/', { waitUntil: 'networkidle' })
+  await page.goto('/dashboard', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('pro-site-switcher')).toBeVisible({ timeout: 15000 })
 }

@@ -37,6 +37,7 @@
     "managerProspects": "Teamprospects",
     "managerPortfolio": "Mijn portefeuille",
     "team": "Team",
+    "sites": "Locaties",
     "commercialCompetition": "Concurrentie",
     "adminBrandAssets": "Store-QR’s",
     "adminAiModules": "CR IA-module",
@@ -313,7 +314,7 @@
   },
   "settings": {
     "title": "Instellingen",
-    "subtitle": "Praktijkprofiel, beschikbaarheid en automatische berichten.",
+    "subtitle": "Groepeer instellingen per thema — open een blok om te bewerken.",
     "tabsLabel": "Instellingensecties",
     "tabs": {
       "profile": "Profiel",
@@ -458,6 +459,50 @@
       "visitTypesSaveFailed": "Types opslaan mislukt.",
       "visitTypeNameRequired": "Elk type moet een naam hebben.",
       "visitTypeDurationInvalid": "Ongeldige duur (5 tot 480 minuten)."
+    },
+    "sections": {
+      "avatar": {
+        "description": "Foto getoond in berichten en op uw praktijkprofiel."
+      },
+      "profile": {
+        "description": "Contactgegevens van de praktijk, ademhalingsmetingen voor cliënten en idle-lock van gedeelde posten."
+      },
+      "research": {
+        "description": "Neem deel aan het geanonimiseerde epidemiologische observatorium (module in ontwikkeling)."
+      },
+      "availability": {
+        "description": "Geef aan of u bereikbaar bent; een auto-antwoord gaat naar cliënten als u onbeschikbaar bent."
+      },
+      "sites": {
+        "description": "Beheer sites en zalen van de praktijk (multi-site) via de speciale pagina."
+      },
+      "schedule": {
+        "description": "Tijdslots voor online reservering door cliënten en duur van een slot."
+      },
+      "vacations": {
+        "description": "Periodes waarin de praktijk geen online afspraken aanvaardt."
+      },
+      "visitTypes": {
+        "description": "Types bij het aanmaken van een afspraak (duur en kleur in de agenda)."
+      },
+      "notifications": {
+        "description": "Kies voor welke gebeurtenissen u een e-mail ontvangt."
+      },
+      "password": {
+        "description": "Wijzig uw inlogwachtwoord."
+      },
+      "language": {
+        "description": "Taal van de Pro-interface en berichten."
+      },
+      "twoFa": {
+        "description": "Optioneel — extra beveiliging via een authenticator-app (Google Authenticator, Authy…)."
+      },
+      "privacy": {
+        "description": "AVG-export van uw gegevens en definitieve accountverwijdering."
+      },
+      "legal": {
+        "description": "Gebruiksvoorwaarden en privacybeleid."
+      }
     },
     "aclDenied": "U mag het praktijkprofiel niet wijzigen. Neem contact op met de referentieveterinair."
   },
@@ -4620,7 +4665,10 @@
     "renameSave": "Opslaan",
     "renamed": "Site hernoemd.",
     "devBadge": "dev",
-    "editingSite": "Agenda / slots bewerken voor: {name} (weergave Alle sites)."
+    "editingSite": "Agenda / slots bewerken voor: {name} (weergave Alle sites).",
+    "pageTitle": "Locaties",
+    "pageSubtitle": "Beheer vestigingen en zalen van de praktijk.",
+    "manageLink": "Locaties beheren"
   },
   "rooms": {
     "title": "Zalen",
