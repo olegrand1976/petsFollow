@@ -845,7 +845,7 @@ func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string, prospect
 				INSERT INTO sales.prospect_events (id, prospect_id, actor_user_id, kind, body, meta, created_at)
 				VALUES ($1, $2, $3, 'note', $4, '{}'::jsonb, NOW() - INTERVAL '2 days'),
 				       ($5, $2, $3, 'call', $6, '{}'::jsonb, NOW() - INTERVAL '1 day'),
-				       ($7, $2, $3, 'status_change', $8, jsonb_build_object('from','new','to',$9), NOW() - INTERVAL '12 hours')`,
+				       ($7, $2, $3, 'status_change', $8, jsonb_build_object('from','new','to',$9::text), NOW() - INTERVAL '12 hours')`,
 				uuid.NewString(), pid, commercialID, "Premier contact — "+p.notes,
 				uuid.NewString(), "Appel de découverte avec "+p.contactName,
 				uuid.NewString(), "Statut : new → "+p.status, p.status); err != nil {
