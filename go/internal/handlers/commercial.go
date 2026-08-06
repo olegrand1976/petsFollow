@@ -529,6 +529,7 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.recordProspectMutationEvents(r, id.UserID, existing, prospect)
 	httpx.WriteData(w, http.StatusOK, prospect)
 }
 

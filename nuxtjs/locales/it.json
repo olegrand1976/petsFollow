@@ -92,7 +92,9 @@
     "aiFlows": "Flussi IA",
     "adminInvoicing": "Fatturazione Billit",
     "commercialEmailTemplates": "Email / Template",
-    "commercialEmails": "Email inviate"
+    "commercialEmails": "Email inviate",
+    "commercialAgenda": "Agenda",
+    "managerAgenda": "Agenda team"
   },
   "training": {
     "title": "Allenamento AI",
@@ -926,6 +928,52 @@
       },
       "openedCount": "{n} apertura/e",
       "clicksCount": "{n} clic"
+    },
+    "crm": {
+      "ficheTitle": "Scheda prospect",
+      "ficheSubtitle": "Timeline, attività e storico.",
+      "backList": "Torna all'elenco",
+      "loadError": "Caricamento non riuscito",
+      "timelineTitle": "Timeline",
+      "timelineEmpty": "Nessun evento",
+      "noteBody": "Nota / verbale",
+      "eventKind": "Type",
+      "addNote": "Aggiungi",
+      "activitiesTitle": "Attività",
+      "activitiesEmpty": "Nessuna attività aperta",
+      "activityTitle": "Titolo",
+      "activityKind": "Tipo attività",
+      "dueAt": "Scadenza",
+      "addActivity": "Crea attività",
+      "markDone": "Completa",
+      "myTasks": "Le mie attività",
+      "tasksEmpty": "Nessuna attività aperta",
+      "agendaTitle": "Agenda",
+      "agendaSubtitle": "Appuntamenti e meeting della settimana.",
+      "agendaEmpty": "Niente in programma questa settimana",
+      "today": "Oggi",
+      "when": "Quando",
+      "itemType": "Tipo",
+      "kind": {
+        "call": "Chiamata",
+        "email": "Email",
+        "follow_up": "Follow-up",
+        "meeting": "Meeting",
+        "other": "Altro"
+      },
+      "event": {
+        "note": "Nota",
+        "call": "Chiamata",
+        "meeting": "Appuntamento",
+        "email_sent": "Email",
+        "status_change": "Stato",
+        "task_done": "Attività fatta",
+        "system": "Sistema"
+      },
+      "agendaType": {
+        "appointment": "Appuntamento prospect",
+        "activity": "Meeting attività"
+      }
     }
   },
   "settings": {
@@ -3646,6 +3694,18 @@
       "email": "Email",
       "daysSince": "G+{n}",
       "daysRemaining": "{n} g"
+    },
+    "crm": {
+      "agendaTitle": "Agenda team",
+      "agendaSubtitle": "Appuntamenti e meeting del team.",
+      "overdueTitle": "Attività in ritardo",
+      "overdueEmpty": "Nessuna attività in ritardo",
+      "assignAction": "Assegna follow-up",
+      "assignTitle": "Assegna attività",
+      "assignOk": "Attività assegnata",
+      "prospectId": "ID prospect",
+      "assigneeDefault": "Commerciale del prospect",
+      "assignDefaultTitle": "Rilanciare {practice}"
     }
   },
   "invite": {

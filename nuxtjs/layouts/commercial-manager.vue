@@ -35,6 +35,7 @@ const shellReady = computed(() => !!user.value?.role)
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial-manager', label: t('nav.managerDashboard'), exact: true, icon: 'dashboard', section: t('nav.section.team') },
   { to: '/commercial-manager/suivi', label: t('nav.managerFollowups'), icon: 'event', section: t('nav.section.team') },
+  { to: '/commercial-manager/agenda', label: t('nav.managerAgenda'), icon: 'calendar_month', section: t('nav.section.team') },
   { to: '/commercial-manager/prospects', label: t('nav.managerProspects'), icon: 'requests', section: t('nav.section.team') },
   { to: '/commercial/email-templates', label: t('nav.commercialEmailTemplates'), icon: 'mail', section: t('nav.section.team') },
   { to: '/commercial/emails', label: t('nav.commercialEmails'), icon: 'outbox', section: t('nav.section.team') },

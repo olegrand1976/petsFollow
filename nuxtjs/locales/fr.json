@@ -92,7 +92,9 @@
     "productFlows": "Flux produit",
     "aiFlows": "Flux IA",
     "commercialEmailTemplates": "Emails / Templates",
-    "commercialEmails": "Emails envoyés"
+    "commercialEmails": "Emails envoyés",
+    "commercialAgenda": "Agenda",
+    "managerAgenda": "Agenda équipe"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -970,6 +972,52 @@
       },
       "openedCount": "{n} ouverture(s)",
       "clicksCount": "{n} clic(s)"
+    },
+    "crm": {
+      "ficheTitle": "Fiche prospect",
+      "ficheSubtitle": "Timeline, tâches et historique.",
+      "backList": "Retour à la liste",
+      "loadError": "Impossible de charger",
+      "timelineTitle": "Timeline",
+      "timelineEmpty": "Aucun événement",
+      "noteBody": "Note / compte-rendu",
+      "eventKind": "Type",
+      "addNote": "Ajouter",
+      "activitiesTitle": "Tâches",
+      "activitiesEmpty": "Aucune tâche ouverte",
+      "activityTitle": "Titre",
+      "activityKind": "Type de tâche",
+      "dueAt": "Échéance",
+      "addActivity": "Créer la tâche",
+      "markDone": "Terminer",
+      "myTasks": "Mes tâches",
+      "tasksEmpty": "Aucune tâche ouverte",
+      "agendaTitle": "Agenda",
+      "agendaSubtitle": "RDV et meetings de la semaine.",
+      "agendaEmpty": "Rien planifié cette semaine",
+      "today": "Aujourd'hui",
+      "when": "Quand",
+      "itemType": "Type",
+      "kind": {
+        "call": "Appel",
+        "email": "E-mail",
+        "follow_up": "Relance",
+        "meeting": "Meeting",
+        "other": "Autre"
+      },
+      "event": {
+        "note": "Note",
+        "call": "Appel",
+        "meeting": "RDV",
+        "email_sent": "E-mail",
+        "status_change": "Statut",
+        "task_done": "Tâche terminée",
+        "system": "Système"
+      },
+      "agendaType": {
+        "appointment": "RDV prospect",
+        "activity": "Meeting tâche"
+      }
     }
   },
   "settings": {
@@ -3690,6 +3738,18 @@
       "email": "E-mail",
       "daysSince": "J+{n}",
       "daysRemaining": "{n} j"
+    },
+    "crm": {
+      "agendaTitle": "Agenda équipe",
+      "agendaSubtitle": "RDV et meetings de l'équipe.",
+      "overdueTitle": "Tâches en retard",
+      "overdueEmpty": "Aucune tâche en retard",
+      "assignAction": "Assigner une relance",
+      "assignTitle": "Assigner une tâche",
+      "assignOk": "Tâche assignée",
+      "prospectId": "ID prospect",
+      "assigneeDefault": "Commercial du prospect",
+      "assignDefaultTitle": "Relancer {practice}"
     }
   },
   "invite": {

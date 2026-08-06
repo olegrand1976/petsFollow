@@ -223,6 +223,14 @@ func (a *API) managerFollowups(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	overdue, err := a.store.ListTeamActivities(r.Context(), id.UserID, "", "open", true, 50)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	n, _ := a.store.CountOverdueActivitiesForManager(r.Context(), id.UserID)
+	data["overdueActivities"] = overdue
+	data["overdueActivitiesCount"] = n
 	httpx.WriteData(w, http.StatusOK, data)
 }
 
@@ -265,6 +273,7 @@ func (a *API) managerUpdateProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.recordProspectMutationEvents(r, id.UserID, existing, prospect)
 	httpx.WriteData(w, http.StatusOK, prospect)
 }
 

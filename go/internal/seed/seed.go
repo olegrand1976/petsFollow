@@ -602,7 +602,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.commercial_bonus_awards,
-		billing.addon_entitlements, sales.email_clicks, sales.email_sends, sales.email_templates, sales.prospects,
+		billing.addon_entitlements, sales.email_clicks, sales.email_sends, sales.email_templates,
+		sales.activities, sales.prospect_events, sales.prospects,
 		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.commission_settings,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
@@ -830,12 +831,38 @@ var demo2Prospects = []seedProspect{
 }
 
 func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string, prospects []seedProspect) error {
-	for _, p := range prospects {
+	for i, p := range prospects {
+		pid := uuid.NewString()
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO sales.prospects (id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone, city, notes, status, status_changed_at, created_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW() - make_interval(days => $10), NOW() - make_interval(days => $10))`,
-			uuid.NewString(), commercialID, p.practiceName, p.contactName, p.contactEmail, p.contactPhone, p.city, p.notes, p.status, p.ageDays); err != nil {
+			pid, commercialID, p.practiceName, p.contactName, p.contactEmail, p.contactPhone, p.city, p.notes, p.status, p.ageDays); err != nil {
 			return err
+		}
+		// Demo CRM timeline + tasks on first contacted/qualified prospects.
+		if i == 0 || p.status == "contacted" || p.status == "qualified" {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO sales.prospect_events (id, prospect_id, actor_user_id, kind, body, meta, created_at)
+				VALUES ($1, $2, $3, 'note', $4, '{}'::jsonb, NOW() - INTERVAL '2 days'),
+				       ($5, $2, $3, 'call', $6, '{}'::jsonb, NOW() - INTERVAL '1 day'),
+				       ($7, $2, $3, 'status_change', $8, jsonb_build_object('from','new','to',$9), NOW() - INTERVAL '12 hours')`,
+				uuid.NewString(), pid, commercialID, "Premier contact — "+p.notes,
+				uuid.NewString(), "Appel de découverte avec "+p.contactName,
+				uuid.NewString(), "Statut : new → "+p.status, p.status); err != nil {
+				return err
+			}
+			dueOffset := "1 day"
+			if i == 0 {
+				dueOffset = "-1 day" // overdue for manager suivi demo
+			}
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO sales.activities (id, prospect_id, assignee_user_id, created_by, kind, title, due_at, status)
+				VALUES ($1, $2, $3, $3, 'follow_up', $4, NOW() + ($5)::interval, 'open'),
+				       ($6, $2, $3, $3, 'meeting', $7, NOW() + INTERVAL '2 days', 'open')`,
+				uuid.NewString(), pid, commercialID, "Relancer "+p.practiceName, dueOffset,
+				uuid.NewString(), "Meeting démo "+p.practiceName); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

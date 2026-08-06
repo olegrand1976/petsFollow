@@ -116,7 +116,11 @@
         </thead>
         <tbody>
           <tr v-for="p in prospects" :key="p.id" :data-testid="`prospect-row-${p.id}`">
-            <td>{{ p.practiceName }}</td>
+            <td>
+              <NuxtLink :to="`/commercial/prospects/${p.id}`" class="pro-link" :data-testid="`prospect-open-${p.id}`">
+                {{ p.practiceName }}
+              </NuxtLink>
+            </td>
             <td>{{ p.city }}</td>
             <td>{{ p.contactName || '—' }}</td>
             <td>{{ p.contactEmail }}</td>
@@ -214,7 +218,9 @@
             class="pro-kanban-card"
             :data-testid="`prospect-kanban-${p.id}`"
           >
-            <strong>{{ p.practiceName }}</strong>
+            <NuxtLink :to="`/commercial/prospects/${p.id}`" class="pro-link" :data-testid="`prospect-kanban-open-${p.id}`">
+              <strong>{{ p.practiceName }}</strong>
+            </NuxtLink>
             <p class="pro-kanban-card__meta">{{ p.city || '—' }} · {{ p.contactName || p.contactEmail || '—' }}</p>
             <ProBadge variant="neutral">{{ $t(`commercial.prospects.source.${p.source || 'commercial'}`) }}</ProBadge>
             <p v-if="p.daysInStatus != null" class="pro-kanban-card__meta">

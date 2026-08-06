@@ -571,7 +571,9 @@
         "Se connecter avec commercial.demo.",
         "Arriver sur l’espace Commercial (overview / portfolio).",
         "Ouvrir la liste des prospects.",
-        "Ouvrir un prospect → noter les champs (contact, RDV, statut).",
+        "Ouvrir un prospect (lien fiche /commercial/prospects/[id]) → timeline, tâches, statut/RDV.",
+        "Ajouter une note / appel et créer une tâche due J+1, puis la cocher.",
+        "Ouvrir Agenda (/commercial/agenda) → RDV + tâches de la semaine.",
         "Faire une transition simple si possible (ex. contact → RDV) sans écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.",
         "Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed).",
         "Ouvrir Emails / Templates → parcourir le catalogue (intro, RDV, nurture J+1/J+3/J+7…).",
@@ -579,13 +581,15 @@
       ],
       "expected": [
         "Overview et liste prospects chargent.",
-        "Fiche prospect lisible ; transitions cohérentes si testées.",
+        "Fiche unifiée : timeline chronologique (notes, appels, mails, statuts) + tâches.",
+        "Agenda semaine + mes tâches visibles.",
         "Templates éditables ; envoi SMTP traqué (opens/clics) visible dans l’historique."
       ],
       "checklist": [
         "Overview",
         "Liste prospects",
-        "Fiche / transition",
+        "Fiche / timeline / tâches",
+        "Agenda",
         "Templates / envoi mail"
       ]
     },
@@ -654,18 +658,24 @@
         "Se connecter avec commercial.manager.",
         "Ouvrir le tableau de bord équipe.",
         "Vérifier les indicateurs d’équipe.",
-        "Ouvrir le suivi (RDV / relances) si disponible.",
+        "Ouvrir le suivi : RDV à venir, prospects stale, tâches en retard de l’équipe.",
+        "Assigner une relance (CTA) sur un prospect claimé de l’équipe.",
+        "Ouvrir l’agenda équipe (/commercial-manager/agenda) et filtrer par commercial.",
         "Consulter les prospects équipe.",
         "Vérifier l’accès à la production personnelle (CRM / encode du manager)."
       ],
       "expected": [
         "Dashboard équipe charge.",
+        "Suivi actionnable (overdue + assign).",
+        "Agenda équipe lisible.",
         "Distinction claire équipe vs portefeuille perso.",
         "Reps Camille / Alex visibles dans le pilotage."
       ],
       "checklist": [
         "indicateurs équipe",
-        "Suivi / prospects équipe",
+        "Suivi overdue / assign",
+        "Agenda équipe",
+        "Prospects équipe",
         "Production perso"
       ]
     },

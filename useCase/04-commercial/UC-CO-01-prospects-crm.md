@@ -27,16 +27,19 @@ Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transit
 1. Se connecter avec `commercial.demo`.
 2. Arriver sur l’espace **Commercial** (overview / portfolio).
 3. Ouvrir la liste des **prospects**.
-4. Ouvrir un prospect → noter les champs (contact, RDV, statut).
-5. Faire une transition simple si possible (ex. contact → RDV) **sans** écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.
-6. Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed).
-7. Ouvrir **Emails / Templates** → parcourir le catalogue (intro, RDV, nurture J+1/J+3/J+7…).
-8. Depuis une fiche prospect avec e-mail : **Envoyer un e-mail** → choisir un template → envoyer → voir l’historique (statut / ouvertures / clics) sur `/commercial/emails`.
+4. Ouvrir un prospect (lien fiche `/commercial/prospects/[id]`) → timeline, tâches, statut/RDV.
+5. Ajouter une note / appel et créer une tâche due J+1, puis la cocher.
+6. Ouvrir **Agenda** (`/commercial/agenda`) → RDV + tâches de la semaine.
+7. Faire une transition simple si possible (ex. contact → RDV) **sans** écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.
+8. Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed).
+9. Ouvrir **Emails / Templates** → parcourir le catalogue (intro, RDV, nurture J+1/J+3/J+7…).
+10. Depuis une fiche prospect avec e-mail : **Envoyer un e-mail** → choisir un template → envoyer → voir l’historique (statut / ouvertures / clics) sur `/commercial/emails`.
 
 ## Résultat attendu
 
 - Overview et liste prospects chargent.
-- Fiche prospect lisible ; transitions cohérentes si testées.
+- Fiche unifiée : timeline chronologique (notes, appels, mails, statuts) + tâches.
+- Agenda semaine + mes tâches visibles.
 - Templates éditables ; envoi SMTP traqué (opens/clics) visible dans l’historique.
 
 ## Checklist
@@ -45,7 +48,8 @@ Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transit
 |--|----------|
 | Overview | OK / KO / N/A |
 | Liste prospects | OK / KO / N/A |
-| Fiche / transition | OK / KO / N/A |
+| Fiche / timeline / tâches | OK / KO / N/A |
+| Agenda | OK / KO / N/A |
 | Templates / envoi mail | OK / KO / N/A |
 
 ## Zone retour

@@ -703,6 +703,9 @@ func (s *Store) ReleaseProspect(ctx context.Context, prospectID, managerUserID s
 	if ct.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+	_, _ = s.pool.Exec(ctx, `
+		UPDATE sales.activities SET status='cancelled', updated_at=NOW()
+		WHERE prospect_id=$1 AND status='open'`, prospectID)
 	return nil
 }
 

@@ -92,7 +92,9 @@
     "aiFlows": "AI vood",
     "adminInvoicing": "Billiti arveldus",
     "commercialEmailTemplates": "E-kirjad / Mallid",
-    "commercialEmails": "Saadetud e-kirjad"
+    "commercialEmails": "Saadetud e-kirjad",
+    "commercialAgenda": "Kalender",
+    "managerAgenda": "Meeskonna kalender"
   },
   "auth": {
     "login": {
@@ -3142,6 +3144,52 @@
       },
       "openedCount": "{n} avamist",
       "clicksCount": "{n} klikki"
+    },
+    "crm": {
+      "ficheTitle": "Prospekti kaart",
+      "ficheSubtitle": "Ajajoon, ülesanded ja ajalugu.",
+      "backList": "Tagasi nimekirja",
+      "loadError": "Laadimine ebaõnnestus",
+      "timelineTitle": "Ajajoon",
+      "timelineEmpty": "Sündmusi pole",
+      "noteBody": "Märkus / kõne",
+      "eventKind": "Type",
+      "addNote": "Lisa",
+      "activitiesTitle": "Ülesanded",
+      "activitiesEmpty": "Avatud ülesandeid pole",
+      "activityTitle": "Pealkiri",
+      "activityKind": "Ülesande tüüp",
+      "dueAt": "Tähtaeg",
+      "addActivity": "Loo ülesanne",
+      "markDone": "Valmis",
+      "myTasks": "Minu ülesanded",
+      "tasksEmpty": "Avatud ülesandeid pole",
+      "agendaTitle": "Kalender",
+      "agendaSubtitle": "Kohtumised sellel nädalal.",
+      "agendaEmpty": "Sel nädalal midagi pole",
+      "today": "Täna",
+      "when": "Millal",
+      "itemType": "Tüüp",
+      "kind": {
+        "call": "Kõne",
+        "email": "E-post",
+        "follow_up": "Järeltegevus",
+        "meeting": "Kohtumine",
+        "other": "Muu"
+      },
+      "event": {
+        "note": "Märkus",
+        "call": "Kõne",
+        "meeting": "Kohtumine",
+        "email_sent": "E-post",
+        "status_change": "Staatus",
+        "task_done": "Ülesanne tehtud",
+        "system": "Süsteem"
+      },
+      "agendaType": {
+        "appointment": "Prospekti kohtumine",
+        "activity": "Kohtumise ülesanne"
+      }
     }
   },
   "commissionSheet": {
@@ -3532,6 +3580,18 @@
       "email": "E-post",
       "daysSince": "P+{n}",
       "daysRemaining": "{n} p"
+    },
+    "crm": {
+      "agendaTitle": "Meeskonna kalender",
+      "agendaSubtitle": "Meeskonna kohtumised.",
+      "overdueTitle": "Tähtaja ületanud ülesanded",
+      "overdueEmpty": "Tähtaja ületanud ülesandeid pole",
+      "assignAction": "Määra järeltegevus",
+      "assignTitle": "Määra ülesanne",
+      "assignOk": "Ülesanne määratud",
+      "prospectId": "Prospekti ID",
+      "assigneeDefault": "Prospekti omanik",
+      "assignDefaultTitle": "Järeltegevus {practice}"
     }
   },
   "training": {

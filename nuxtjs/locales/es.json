@@ -92,7 +92,9 @@
     "aiFlows": "Flujos IA",
     "adminInvoicing": "Facturación Billit",
     "commercialEmailTemplates": "Emails / Plantillas",
-    "commercialEmails": "Emails enviados"
+    "commercialEmails": "Emails enviados",
+    "commercialAgenda": "Agenda",
+    "managerAgenda": "Agenda del equipo"
   },
   "auth": {
     "login": {
@@ -3142,6 +3144,52 @@
       },
       "openedCount": "{n} apertura(s)",
       "clicksCount": "{n} clic(s)"
+    },
+    "crm": {
+      "ficheTitle": "Ficha prospecto",
+      "ficheSubtitle": "Timeline, tareas e historial.",
+      "backList": "Volver a la lista",
+      "loadError": "No se pudo cargar",
+      "timelineTitle": "Timeline",
+      "timelineEmpty": "Sin eventos",
+      "noteBody": "Nota / acta",
+      "eventKind": "Type",
+      "addNote": "Añadir",
+      "activitiesTitle": "Tareas",
+      "activitiesEmpty": "Sin tareas abiertas",
+      "activityTitle": "Título",
+      "activityKind": "Tipo de tarea",
+      "dueAt": "Vencimiento",
+      "addActivity": "Crear tarea",
+      "markDone": "Hecho",
+      "myTasks": "Mis tareas",
+      "tasksEmpty": "Sin tareas abiertas",
+      "agendaTitle": "Agenda",
+      "agendaSubtitle": "Citas y meetings de la semana.",
+      "agendaEmpty": "Nada planificado esta semana",
+      "today": "Hoy",
+      "when": "Cuándo",
+      "itemType": "Tipo",
+      "kind": {
+        "call": "Llamada",
+        "email": "Email",
+        "follow_up": "Seguimiento",
+        "meeting": "Reunión",
+        "other": "Otro"
+      },
+      "event": {
+        "note": "Nota",
+        "call": "Llamada",
+        "meeting": "Cita",
+        "email_sent": "Email",
+        "status_change": "Estado",
+        "task_done": "Tarea hecha",
+        "system": "Sistema"
+      },
+      "agendaType": {
+        "appointment": "Cita prospecto",
+        "activity": "Meeting tarea"
+      }
     }
   },
   "commissionSheet": {
@@ -3532,6 +3580,18 @@
       "email": "Email",
       "daysSince": "D+{n}",
       "daysRemaining": "{n} d"
+    },
+    "crm": {
+      "agendaTitle": "Agenda del equipo",
+      "agendaSubtitle": "Citas y meetings del equipo.",
+      "overdueTitle": "Tareas atrasadas",
+      "overdueEmpty": "Sin tareas atrasadas",
+      "assignAction": "Asignar seguimiento",
+      "assignTitle": "Asignar tarea",
+      "assignOk": "Tarea asignada",
+      "prospectId": "ID prospecto",
+      "assigneeDefault": "Comercial del prospecto",
+      "assignDefaultTitle": "Relanzar {practice}"
     }
   },
   "training": {

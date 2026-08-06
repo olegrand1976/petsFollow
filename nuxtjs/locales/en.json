@@ -92,7 +92,9 @@
     "aiFlows": "AI flows",
     "adminInvoicing": "Billit invoicing",
     "commercialEmailTemplates": "Emails / Templates",
-    "commercialEmails": "Sent emails"
+    "commercialEmails": "Sent emails",
+    "commercialAgenda": "Agenda",
+    "managerAgenda": "Team agenda"
   },
   "auth": {
     "login": {
@@ -3142,6 +3144,52 @@
       },
       "openedCount": "{n} open(s)",
       "clicksCount": "{n} click(s)"
+    },
+    "crm": {
+      "ficheTitle": "Prospect file",
+      "ficheSubtitle": "Timeline, tasks and history.",
+      "backList": "Back to list",
+      "loadError": "Unable to load",
+      "timelineTitle": "Timeline",
+      "timelineEmpty": "No events yet",
+      "noteBody": "Note / call log",
+      "eventKind": "Type",
+      "addNote": "Add",
+      "activitiesTitle": "Tasks",
+      "activitiesEmpty": "No open tasks",
+      "activityTitle": "Title",
+      "activityKind": "Task type",
+      "dueAt": "Due",
+      "addActivity": "Create task",
+      "markDone": "Done",
+      "myTasks": "My tasks",
+      "tasksEmpty": "No open tasks",
+      "agendaTitle": "Agenda",
+      "agendaSubtitle": "Appointments and meetings this week.",
+      "agendaEmpty": "Nothing scheduled this week",
+      "today": "Today",
+      "when": "When",
+      "itemType": "Type",
+      "kind": {
+        "call": "Call",
+        "email": "Email",
+        "follow_up": "Follow-up",
+        "meeting": "Meeting",
+        "other": "Other"
+      },
+      "event": {
+        "note": "Note",
+        "call": "Call",
+        "meeting": "Meeting",
+        "email_sent": "Email",
+        "status_change": "Status",
+        "task_done": "Task done",
+        "system": "System"
+      },
+      "agendaType": {
+        "appointment": "Prospect appointment",
+        "activity": "Meeting task"
+      }
     }
   },
   "commissionSheet": {
@@ -3532,6 +3580,18 @@
       "email": "Email",
       "daysSince": "D+{n}",
       "daysRemaining": "{n} d"
+    },
+    "crm": {
+      "agendaTitle": "Team agenda",
+      "agendaSubtitle": "Team appointments and meetings.",
+      "overdueTitle": "Overdue tasks",
+      "overdueEmpty": "No overdue tasks",
+      "assignAction": "Assign a follow-up",
+      "assignTitle": "Assign a task",
+      "assignOk": "Task assigned",
+      "prospectId": "Prospect ID",
+      "assigneeDefault": "Prospect owner",
+      "assignDefaultTitle": "Follow up {practice}"
     }
   },
   "training": {

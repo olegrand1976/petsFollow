@@ -316,6 +316,7 @@ Compte : `commercial.demo@petsfollow.test`
 | E1.1 | P0 | Overview | `/commercial` | Portfolio |
 | E1.2 | P0 | Prospects CRM | Contact → RDV → résultat + lookup/claim premier encodé | Transitions ; owned → message collègue |
 | E1.2c | P1 | Mail commercial | Templates partagés + envoi depuis fiche prospect + historique opens/clics | `/commercial/email-templates`, `/commercial/emails` ; Go `TestCommercialMailTemplatesSendTrackAndOptOut` · Playwright `07-commercial` |
+| E1.2d | P1 | Fiche + agenda CRM | Timeline / tâches / agenda semaine | `/commercial/prospects/[id]`, `/commercial/agenda` ; Go `TestCommercialCRMFicheActivitiesAgenda` · Playwright `07-commercial` |
 | E1.2b | P1 | Pastille inactif | Pastille rouge ≥ 30 j | Visible sur lignes stale |
 | E1.3 | P1 | Encode véto | `/commercial/vets` inscription véto | Compte créé / assigné ; 409 si déjà assigné ailleurs |
 | E1.4 | P1 | Client lié | Encode client lié cabinet | Pets / commission possibles |
@@ -338,7 +339,8 @@ Compte : `commercial.manager@petsfollow.test`
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
 | E2.1 | P0 | Dashboard équipe | `/commercial-manager` | KPI équipe |
-| E2.2 | P1 | Suivi | `/commercial-manager/suivi` | RDV / relances |
+| E2.2 | P1 | Suivi | `/commercial-manager/suivi` | RDV / relances + tâches overdue + assign |
+| E2.2b | P1 | Agenda équipe | `/commercial-manager/agenda` | Filtre commercial |
 | E2.3 | P1 | Prospects équipe | `/commercial-manager/prospects` | Scope équipe + libérer / bulk inactifs 30 j |
 | E2.4 | P1 | Production perso | Accès `/commercial/*` | Hors tableaux équipe |
 | E2.5 | P2 | Training | `/commercial-manager/training` | UI OK |
@@ -819,10 +821,10 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
-| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation / mail templates+envoi · redirect pitch-deck → `/presentation` | `@p1` (filiation) |
+| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation / mail templates+envoi / fiche+agenda CRM · redirect pitch-deck → `/presentation` | `@p1` (filiation) |
 | `24-product-flows` | `/flux` nav + deep-link `?profile=` + redirect alias + admin/manager + refus véto | P2 |
 | `25-presentation-ai-flows` | `/presentation` + `/flux-ia` nav, steps, Mermaid, admin/manager, refus véto | P2 |
-| `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |
+| `08-commercial-manager` | Dashboard manager / suivi (overdue+assign) / agenda équipe / prospects / mémo ASV / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
 | `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR, données médicales + statut animal | `@p0` (parcours chart/HR) + `@p1` CTA / lifecycle |
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |

@@ -512,8 +512,16 @@ func (s *Store) SetProspectEmailOptOutByOpenToken(ctx context.Context, openToken
 	return prospectID, err
 }
 
-func (s *Store) TouchProspectContacted(ctx context.Context, prospectID string) error {
-	_, err := s.pool.Exec(ctx, `
+func (s *Store) TouchProspectContacted(ctx context.Context, prospectID, actorUserID string) error {
+	var prevStatus string
+	err := s.pool.QueryRow(ctx, `SELECT status FROM sales.prospects WHERE id=$1`, prospectID).Scan(&prevStatus)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		return err
+	}
+	_, err = s.pool.Exec(ctx, `
 		UPDATE sales.prospects SET
 			last_contacted_at = NOW(),
 			first_contacted_at = COALESCE(first_contacted_at, NOW()),
@@ -521,7 +529,14 @@ func (s *Store) TouchProspectContacted(ctx context.Context, prospectID string) e
 			status_changed_at = CASE WHEN status = 'new' THEN NOW() ELSE status_changed_at END,
 			updated_at = NOW()
 		WHERE id=$1`, prospectID)
-	return err
+	if err != nil {
+		return err
+	}
+	if prevStatus == "new" {
+		_, _ = s.CreateProspectEvent(ctx, prospectID, actorUserID, string(EventStatusChange),
+			"Statut : new → contacted", map[string]any{"from": "new", "to": "contacted", "auto": true})
+	}
+	return nil
 }
 
 func (s *Store) IsManagerOfCommercial(ctx context.Context, managerUserID, commercialUserID string) (bool, error) {

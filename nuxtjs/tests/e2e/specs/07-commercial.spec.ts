@@ -92,6 +92,46 @@ test('commercial CRM prospects', async ({ page }) => {
   await expect(page.getByText(practice)).toBeVisible({ timeout: 15000 })
 })
 
+test('commercial fiche prospect timeline et tache', async ({ page }) => {
+  test.setTimeout(90000)
+  await loginAsCommercial(page)
+  await page.goto('/commercial/prospects', { waitUntil: 'networkidle' })
+  await nativeClick(page, 'prospect-create-toggle')
+  const practice = `Prospect CRM ${Date.now()}`
+  await fillField(page, 'prospect-practice', practice)
+  await fillField(page, 'prospect-contact', 'Dr CRM')
+  await fillField(page, 'prospect-email', `crm.${Date.now()}@petsfollow.test`)
+  await Promise.all([
+    page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().includes('/commercial/prospects'),
+      { timeout: 20000 },
+    ),
+    nativeClick(page, 'prospect-submit'),
+  ])
+  await expect(page.getByText(practice)).toBeVisible({ timeout: 15000 })
+  await page.locator('tr').filter({ hasText: practice }).first().locator('[data-testid^="prospect-open-"]').click()
+  await expect(page.getByTestId('commercial-prospect-detail-page')).toBeVisible({ timeout: 15000 })
+  await fillField(page, 'prospect-note-body', 'Note e2e CRM')
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/events'), { timeout: 15000 }),
+    nativeClick(page, 'prospect-note-submit'),
+  ])
+  await expect(page.getByTestId('prospect-timeline-list')).toContainText('Note e2e CRM')
+  await fillField(page, 'prospect-act-title', 'Relance e2e')
+  const due = new Date(Date.now() + 86400000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const dueLocal = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T10:00`
+  await page.getByTestId('prospect-act-due').fill(dueLocal)
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/activities'), { timeout: 15000 }),
+    nativeClick(page, 'prospect-act-submit'),
+  ])
+  await expect(page.getByText('Relance e2e')).toBeVisible({ timeout: 10000 })
+  await page.goto('/commercial/agenda', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('commercial-agenda-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('commercial-tasks-block')).toBeVisible()
+})
+
 test('commercial mail templates et envoi prospect', async ({ page }) => {
   test.setTimeout(90000)
   await loginAsCommercial(page)

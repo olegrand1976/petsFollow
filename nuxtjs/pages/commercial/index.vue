@@ -90,6 +90,35 @@
             </tbody>
           </ProTable>
         </ProCard>
+        <ProCard class="pro-mb-lg" data-testid="commercial-dash-tasks">
+          <div class="pf-card-head">
+            <h3>{{ $t('commercial.crm.myTasks') }}</h3>
+            <NuxtLink to="/commercial/agenda" class="pro-link">{{ $t('commercial.crm.agendaTitle') }}</NuxtLink>
+          </div>
+          <ProTable
+            :empty="!tasks.length"
+            :empty-title="$t('commercial.crm.tasksEmpty')"
+          >
+            <thead>
+              <tr>
+                <th>{{ $t('commercial.crm.activityTitle') }}</th>
+                <th>{{ $t('commercial.prospects.practiceName') }}</th>
+                <th>{{ $t('commercial.crm.dueAt') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="a in tasks" :key="a.id">
+                <td>{{ a.title }}</td>
+                <td>
+                  <NuxtLink v-if="a.prospectId" :to="`/commercial/prospects/${a.prospectId}`" class="pro-link">
+                    {{ a.practiceName || '—' }}
+                  </NuxtLink>
+                </td>
+                <td>{{ formatDt(a.dueAt) }}</td>
+              </tr>
+            </tbody>
+          </ProTable>
+        </ProCard>
       </div>
     </template>
   </div>
@@ -100,6 +129,7 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { formatCurrency, formatDate } = useFormatters()
 const overview = ref<any>(null)
+const tasks = ref<any[]>([])
 const loading = ref(true)
 const loadError = ref(false)
 const appInviteOpen = ref(false)
@@ -125,8 +155,12 @@ onMounted(async () => {
   loading.value = true
   loadError.value = false
   try {
-    const res: any = await $fetch('/api/commercial/overview')
-    overview.value = res.data ?? res
+    const [ovRes, tasksRes]: any[] = await Promise.all([
+      $fetch('/api/commercial/overview'),
+      $fetch('/api/commercial/activities', { query: { status: 'open', limit: 10 } }),
+    ])
+    overview.value = ovRes.data ?? ovRes
+    tasks.value = tasksRes.data ?? tasksRes ?? []
   } catch {
     loadError.value = true
   } finally {

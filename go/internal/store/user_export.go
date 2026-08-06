@@ -105,6 +105,29 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			'createdAt', s.created_at
 		) ORDER BY s.created_at), '[]'::jsonb)
 			FROM sales.email_sends s WHERE s.commercial_user_id = $1`,
+		"commercialProspectEvents": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'id', e.id,
+			'prospectId', e.prospect_id,
+			'kind', e.kind,
+			'body', e.body,
+			'meta', e.meta,
+			'createdAt', e.created_at
+		) ORDER BY e.created_at), '[]'::jsonb)
+			FROM sales.prospect_events e WHERE e.actor_user_id = $1`,
+		"commercialActivities": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'id', a.id,
+			'prospectId', a.prospect_id,
+			'assigneeUserId', a.assignee_user_id,
+			'createdBy', a.created_by,
+			'kind', a.kind,
+			'title', a.title,
+			'dueAt', a.due_at,
+			'doneAt', a.done_at,
+			'status', a.status,
+			'createdAt', a.created_at
+		) ORDER BY a.created_at), '[]'::jsonb)
+			FROM sales.activities a
+			WHERE a.assignee_user_id = $1 OR a.created_by = $1`,
 		"dossierShares": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(t) - 'object_key' - 'token') ORDER BY t.created_at), '[]'::jsonb)
 			FROM pets.dossier_share_tokens t WHERE t.owner_user_id = $1`,

@@ -45,31 +45,31 @@ type DownlineNode struct {
 }
 
 type CommercialAdminRow struct {
-	UserID        string  `json:"userId"`
-	FullName      string  `json:"fullName"`
-	Email         string  `json:"email"`
-	ClientCount   int     `json:"clientCount"`
-	ManagerUserID string  `json:"managerUserId,omitempty"`
-	ManagerName   string  `json:"managerName,omitempty"`
-	SponsorUserID string  `json:"sponsorUserId,omitempty"`
-	SponsorName   string  `json:"sponsorName,omitempty"`
-	SponsorRole   string  `json:"sponsorRole,omitempty"`
-	BranchID      string  `json:"branchId,omitempty"`
-	BranchName    string  `json:"branchName,omitempty"`
-	BranchCode    string  `json:"branchCode,omitempty"`
-	SalesRank     int     `json:"salesRank"`
-	BaseCity      string  `json:"baseCity,omitempty"`
+	UserID         string `json:"userId"`
+	FullName       string `json:"fullName"`
+	Email          string `json:"email"`
+	ClientCount    int    `json:"clientCount"`
+	ManagerUserID  string `json:"managerUserId,omitempty"`
+	ManagerName    string `json:"managerName,omitempty"`
+	SponsorUserID  string `json:"sponsorUserId,omitempty"`
+	SponsorName    string `json:"sponsorName,omitempty"`
+	SponsorRole    string `json:"sponsorRole,omitempty"`
+	BranchID       string `json:"branchId,omitempty"`
+	BranchName     string `json:"branchName,omitempty"`
+	BranchCode     string `json:"branchCode,omitempty"`
+	SalesRank      int    `json:"salesRank"`
+	BaseCity       string `json:"baseCity,omitempty"`
 	BasePostalCode string `json:"basePostalCode,omitempty"`
 }
 
 type CommercialQuota struct {
-	UserID             string `json:"userId"`
-	PeriodYM           string `json:"periodYm"`
-	TargetActivations  int    `json:"targetActivations"`
-	TargetEarnedCents  int    `json:"targetEarnedCents"`
-	ActualActivations  int    `json:"actualActivations"`
-	ActualEarnedCents  int    `json:"actualEarnedCents"`
-	FullName           string `json:"fullName,omitempty"`
+	UserID            string `json:"userId"`
+	PeriodYM          string `json:"periodYm"`
+	TargetActivations int    `json:"targetActivations"`
+	TargetEarnedCents int    `json:"targetEarnedCents"`
+	ActualActivations int    `json:"actualActivations"`
+	ActualEarnedCents int    `json:"actualEarnedCents"`
+	FullName          string `json:"fullName,omitempty"`
 }
 
 func (s *Store) ListSalesBranches(ctx context.Context) ([]SalesBranch, error) {
@@ -320,6 +320,9 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 		if ct.RowsAffected() == 0 {
 			return ErrNotFound
 		}
+		_, _ = s.pool.Exec(ctx, `
+			UPDATE sales.activities SET status='cancelled', updated_at=NOW()
+			WHERE prospect_id=$1 AND status='open'`, prospectID)
 		return nil
 	}
 	// A converted prospect is already accrued: moving it would rewrite attribution.
@@ -352,6 +355,9 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 	if ct.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+	_, _ = s.pool.Exec(ctx, `
+		UPDATE sales.activities SET assignee_user_id=$2::uuid, updated_at=NOW()
+		WHERE prospect_id=$1 AND status='open'`, prospectID, commercialUserID)
 	return nil
 }
 

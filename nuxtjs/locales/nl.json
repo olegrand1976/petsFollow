@@ -92,7 +92,9 @@
     "aiFlows": "AI-stromen",
     "adminInvoicing": "Billit-facturatie",
     "commercialEmailTemplates": "E-mails / Templates",
-    "commercialEmails": "Verzonden e-mails"
+    "commercialEmails": "Verzonden e-mails",
+    "commercialAgenda": "Agenda",
+    "managerAgenda": "Teamagenda"
   },
   "auth": {
     "login": {
@@ -3142,6 +3144,52 @@
       },
       "openedCount": "{n} opening(en)",
       "clicksCount": "{n} klik(ken)"
+    },
+    "crm": {
+      "ficheTitle": "Prospectfiche",
+      "ficheSubtitle": "Tijdlijn, taken en geschiedenis.",
+      "backList": "Terug naar lijst",
+      "loadError": "Laden mislukt",
+      "timelineTitle": "Tijdlijn",
+      "timelineEmpty": "Geen gebeurtenissen",
+      "noteBody": "Notitie / gespreksverslag",
+      "eventKind": "Type",
+      "addNote": "Toevoegen",
+      "activitiesTitle": "Taken",
+      "activitiesEmpty": "Geen open taken",
+      "activityTitle": "Titel",
+      "activityKind": "Type taak",
+      "dueAt": "Deadline",
+      "addActivity": "Taak aanmaken",
+      "markDone": "Afronden",
+      "myTasks": "Mijn taken",
+      "tasksEmpty": "Geen open taken",
+      "agendaTitle": "Agenda",
+      "agendaSubtitle": "Afspraken en meetings deze week.",
+      "agendaEmpty": "Niets gepland deze week",
+      "today": "Vandaag",
+      "when": "Wanneer",
+      "itemType": "Type",
+      "kind": {
+        "call": "Oproep",
+        "email": "E-mail",
+        "follow_up": "Opvolging",
+        "meeting": "Meeting",
+        "other": "Andere"
+      },
+      "event": {
+        "note": "Notitie",
+        "call": "Oproep",
+        "meeting": "Afspraak",
+        "email_sent": "E-mail",
+        "status_change": "Status",
+        "task_done": "Taak gedaan",
+        "system": "Systeem"
+      },
+      "agendaType": {
+        "appointment": "Prospectafspraak",
+        "activity": "Meetingtaak"
+      }
     }
   },
   "commissionSheet": {
@@ -3532,6 +3580,18 @@
       "email": "E-mail",
       "daysSince": "D+{n}",
       "daysRemaining": "{n} d"
+    },
+    "crm": {
+      "agendaTitle": "Teamagenda",
+      "agendaSubtitle": "Afspraken en meetings van het team.",
+      "overdueTitle": "Achterstallige taken",
+      "overdueEmpty": "Geen achterstallige taken",
+      "assignAction": "Opvolging toewijzen",
+      "assignTitle": "Taak toewijzen",
+      "assignOk": "Taak toegewezen",
+      "prospectId": "Prospect-ID",
+      "assigneeDefault": "Eigenaar van de prospect",
+      "assignDefaultTitle": "Opvolgen {practice}"
     }
   },
   "training": {

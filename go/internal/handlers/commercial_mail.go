@@ -420,7 +420,9 @@ func (a *API) commercialSendProspectEmail(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if status == "sent" {
-		_ = a.store.TouchProspectContacted(r.Context(), prospectID)
+		_ = a.store.TouchProspectContacted(r.Context(), prospectID, id.UserID)
+		_, _ = a.store.CreateProspectEvent(r.Context(), prospectID, id.UserID, string(store.EventEmailSent),
+			"E-mail envoyé : "+subject, map[string]any{"sendId": send.ID, "templateId": tpl.ID})
 	}
 	// Never return capability tokens to the client.
 	for i := range send.Clicks {
