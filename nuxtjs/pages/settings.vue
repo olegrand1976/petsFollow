@@ -251,6 +251,120 @@
                 </ProButton>
               </template>
             </div>
+            <div
+              v-if="site.active"
+              class="settings-rooms"
+              :data-testid="`settings-rooms-${site.id}`"
+            >
+              <h4 class="pro-settings-subtitle">{{ $t('rooms.title') }}</h4>
+              <ul class="settings-rooms-list" :data-testid="`settings-rooms-list-${site.id}`">
+                <li
+                  v-for="room in roomsBySite[site.id] || []"
+                  :key="room.id"
+                  class="settings-rooms-row"
+                  :data-testid="`settings-room-row-${room.id}`"
+                >
+                  <template v-if="renamingRoomId === room.id">
+                    <input
+                      v-model="renamingRoomName"
+                      type="text"
+                      class="pro-input"
+                      :disabled="roomsBusy"
+                      :data-testid="`settings-room-rename-input-${room.id}`"
+                      @keydown.enter.prevent="saveRoomRename(site.id, room.id)"
+                    >
+                    <ProButton
+                      variant="secondary"
+                      type="button"
+                      :disabled="roomsBusy || !renamingRoomName.trim()"
+                      :data-testid="`settings-room-rename-save-${room.id}`"
+                      @click="saveRoomRename(site.id, room.id)"
+                    >
+                      {{ $t('rooms.renameSave') }}
+                    </ProButton>
+                    <ProButton
+                      variant="ghost"
+                      type="button"
+                      :disabled="roomsBusy"
+                      :data-testid="`settings-room-rename-cancel-${room.id}`"
+                      @click="cancelRoomRename"
+                    >
+                      {{ $t('common.cancel') }}
+                    </ProButton>
+                  </template>
+                  <template v-else>
+                    <span>
+                      {{ room.name }}
+                      <ProBadge
+                        v-if="!room.active"
+                        variant="warning"
+                        :data-testid="`settings-room-inactive-${room.id}`"
+                      >
+                        {{ $t('rooms.inactive') }}
+                      </ProBadge>
+                    </span>
+                    <div class="settings-rooms-row__actions">
+                      <ProButton
+                        v-if="room.active"
+                        variant="ghost"
+                        type="button"
+                        :disabled="roomsBusy"
+                        :data-testid="`settings-room-rename-${room.id}`"
+                        @click="startRoomRename(room)"
+                      >
+                        {{ $t('rooms.rename') }}
+                      </ProButton>
+                      <ProButton
+                        v-if="room.active"
+                        variant="ghost"
+                        type="button"
+                        :disabled="roomsBusy"
+                        :data-testid="`settings-room-deactivate-${room.id}`"
+                        @click="deactivateRoom(site.id, room.id)"
+                      >
+                        {{ $t('rooms.deactivate') }}
+                      </ProButton>
+                      <ProButton
+                        v-else
+                        variant="secondary"
+                        type="button"
+                        :disabled="roomsBusy"
+                        :data-testid="`settings-room-reactivate-${room.id}`"
+                        @click="reactivateRoom(site.id, room.id)"
+                      >
+                        {{ $t('rooms.reactivate') }}
+                      </ProButton>
+                    </div>
+                  </template>
+                </li>
+              </ul>
+              <p
+                v-if="!(roomsBySite[site.id] || []).length"
+                class="text-muted"
+                :data-testid="`settings-rooms-empty-${site.id}`"
+              >
+                {{ $t('rooms.empty') }}
+              </p>
+              <div class="calendar-slot-row settings-rooms-create">
+                <input
+                  v-model="newRoomName[site.id]"
+                  type="text"
+                  class="pro-input"
+                  :placeholder="$t('rooms.name')"
+                  :data-testid="`settings-room-name-${site.id}`"
+                >
+                <ProButton
+                  variant="secondary"
+                  type="button"
+                  :loading="roomsBusy"
+                  :disabled="!(newRoomName[site.id] || '').trim()"
+                  :data-testid="`settings-room-create-${site.id}`"
+                  @click="createRoom(site.id)"
+                >
+                  {{ $t('rooms.create') }}
+                </ProButton>
+              </div>
+            </div>
           </li>
         </ul>
         <p v-if="!managedSites.length && !sitesLoading" class="text-muted">{{ $t('sites.empty') }}</p>
@@ -684,6 +798,13 @@ const newSiteCity = ref('')
 const renamingSiteId = ref('')
 const renamingSiteName = ref('')
 
+type ManagedRoom = { id: string; name: string; active: boolean }
+const roomsBySite = ref<Record<string, ManagedRoom[]>>({})
+const roomsBusy = ref(false)
+const newRoomName = reactive<Record<string, string>>({})
+const renamingRoomId = ref('')
+const renamingRoomName = ref('')
+
 function startSiteRename(site: ManagedSite) {
   renamingSiteId.value = site.id
   renamingSiteName.value = site.name
@@ -756,6 +877,7 @@ async function loadManagedSites() {
       isPrimary: !!s.isPrimary,
       active: s.active !== false,
     })).filter((s: ManagedSite) => !!s.id)
+    await loadAllRooms()
   }
   catch (e: any) {
     sitesError.value = mapError(e) || t('sites.loadFailed')
@@ -763,6 +885,116 @@ async function loadManagedSites() {
   }
   finally {
     sitesLoading.value = false
+  }
+}
+
+async function loadAllRooms() {
+  const active = managedSites.value.filter((s) => s.active)
+  const next: Record<string, ManagedRoom[]> = { ...roomsBySite.value }
+  await Promise.all(active.map(async (site) => {
+    try {
+      const res: any = await $fetch(`/api/vet/sites/${encodeURIComponent(site.id)}/rooms`, {
+        query: { includeInactive: '1' },
+      })
+      const list = res?.data ?? res
+      next[site.id] = (Array.isArray(list) ? list : [])
+        .filter((r: any) => r?.id)
+        .map((r: any) => ({
+          id: String(r.id),
+          name: String(r.name || ''),
+          active: r.active !== false,
+        }))
+    } catch {
+      next[site.id] = next[site.id] || []
+    }
+  }))
+  roomsBySite.value = next
+}
+
+function startRoomRename(room: ManagedRoom) {
+  renamingRoomId.value = room.id
+  renamingRoomName.value = room.name
+}
+
+function cancelRoomRename() {
+  renamingRoomId.value = ''
+  renamingRoomName.value = ''
+}
+
+async function createRoom(siteId: string) {
+  const name = (newRoomName[siteId] || '').trim()
+  if (!name) return
+  roomsBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`, {
+      method: 'POST',
+      body: { name },
+    })
+    newRoomName[siteId] = ''
+    sitesSaved.value = t('rooms.created')
+    await loadAllRooms()
+  } catch (e: any) {
+    sitesError.value = mapError(e) || t('rooms.actionFailed')
+  } finally {
+    roomsBusy.value = false
+  }
+}
+
+async function saveRoomRename(siteId: string, roomId: string) {
+  const name = renamingRoomName.value.trim()
+  if (!name) return
+  roomsBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}`, {
+      method: 'PATCH',
+      body: { name },
+    })
+    cancelRoomRename()
+    sitesSaved.value = t('rooms.renamed')
+    await loadAllRooms()
+  } catch (e: any) {
+    sitesError.value = mapError(e) || t('rooms.actionFailed')
+  } finally {
+    roomsBusy.value = false
+  }
+}
+
+async function deactivateRoom(siteId: string, roomId: string) {
+  roomsBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}/deactivate`, {
+      method: 'POST',
+    })
+    sitesSaved.value = t('rooms.deactivated')
+    await loadAllRooms()
+  } catch (e: any) {
+    sitesError.value = mapError(e) || t('rooms.actionFailed')
+  } finally {
+    roomsBusy.value = false
+  }
+}
+
+async function reactivateRoom(siteId: string, roomId: string) {
+  roomsBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms/${encodeURIComponent(roomId)}`, {
+      method: 'PATCH',
+      body: { active: true },
+    })
+    sitesSaved.value = t('rooms.reactivated')
+    await loadAllRooms()
+  } catch (e: any) {
+    sitesError.value = mapError(e) || t('rooms.actionFailed')
+  } finally {
+    roomsBusy.value = false
   }
 }
 
@@ -1383,7 +1615,7 @@ async function disable2FA() {
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--pf-vet-border);
 }
@@ -1397,6 +1629,39 @@ async function disable2FA() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+.settings-rooms {
+  flex: 1 1 100%;
+  margin-top: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius);
+  background: var(--pf-vet-bg);
+}
+.settings-rooms-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+.settings-rooms-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--pf-vet-border);
+}
+.settings-rooms-row:last-child {
+  border-bottom: 0;
+}
+.settings-rooms-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.settings-rooms-create {
+  margin-top: 0.5rem;
 }
 .settings-sites-create {
   margin-top: 0.75rem;

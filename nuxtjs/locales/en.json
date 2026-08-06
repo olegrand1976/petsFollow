@@ -90,7 +90,9 @@
     "researchDataroom": "Data room",
     "productFlows": "Product flows",
     "aiFlows": "AI flows",
-    "adminInvoicing": "Billit invoicing"
+    "adminInvoicing": "Billit invoicing",
+    "commercialEmailTemplates": "Emails / Templates",
+    "commercialEmails": "Sent emails"
   },
   "auth": {
     "login": {
@@ -2618,6 +2620,11 @@
     "invalid_confirm_link": "Invalid confirmation link.",
     "conflict": "Conflict",
     "slot_taken": "This time slot is already taken",
+    "assignee_busy": "This practitioner already has an appointment in this slot",
+    "room_busy": "This room is already booked in this slot",
+    "invalid_assignee": "Invalid practitioner",
+    "invalid_room": "Invalid room",
+    "room_name_taken": "A room with this name already exists at this site",
     "on_vacation": "The practice is closed on this date",
     "invalid_proposed": "Invalid proposed date or time",
     "proposed_required": "Please choose a new time slot",
@@ -2770,7 +2777,8 @@
       "lookupMissing": "No prospect found — you can add it.",
       "ownedBy": "Managed by {name}",
       "claim": "Claim it",
-      "inactiveSince": "Inactive for {n} d"
+      "inactiveSince": "Inactive for {n} d",
+      "sendEmail": "Send email"
     },
     "commissions": {
       "title": "My commissions",
@@ -3083,6 +3091,51 @@
       "disclaimer": "petsFollow complements your PMS — it does not replace it.",
       "cta": "Ask for a practice demo (vet + front desk).",
       "footerBrand": "petsFollow — prescribed care continuity · digital passport."
+    },
+    "mail": {
+      "templatesTitle": "Email templates",
+      "templatesSubtitle": "Shared commercial follow-up catalog — editable.",
+      "emailsTitle": "Sent emails",
+      "emailsSubtitle": "History, opens and clicks.",
+      "send": "Send email",
+      "sendTitle": "Send to {practice}",
+      "template": "Template",
+      "subject": "Subject",
+      "body": "HTML body",
+      "preview": "Preview",
+      "sendAction": "Send",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saved": "Template saved",
+      "sent": "Email sent",
+      "sendError": "Send failed",
+      "noEmail": "No email on this prospect",
+      "optOut": "Prospect opted out of emails",
+      "emptyTemplates": "No templates",
+      "emptySends": "No sends",
+      "category": "Category",
+      "active": "Active",
+      "inactive": "Inactive",
+      "edit": "Edit",
+      "status": "Status",
+      "opened": "Opened",
+      "clicks": "Clicks",
+      "to": "To",
+      "practice": "Practice",
+      "date": "Date",
+      "detail": "Detail",
+      "neverOpened": "Not opened yet",
+      "clickList": "Tracked clicks",
+      "varsHint": "Variables: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "history": "Email history",
+      "loadError": "Unable to load",
+      "categories": {
+        "intro": "Intro",
+        "rdv": "Meeting",
+        "nurture": "Nurture",
+        "post": "Post-demo",
+        "reactivation": "Reactivation"
+      }
     }
   },
   "commissionSheet": {
@@ -3367,7 +3420,21 @@
     "reportTargetLangUk": "Ukrainian",
     "reportTargetLangRu": "Russian",
     "columnSite": "Site",
-    "creatingOnSite": "Creating on site: {name} (All sites view)."
+    "creatingOnSite": "Creating on site: {name} (All sites view).",
+    "dayTitle": "Day",
+    "viewDay": "Day",
+    "resourcePeople": "People",
+    "resourceRooms": "Rooms",
+    "resourceToggleAria": "Resource columns",
+    "unassigned": "Unassigned",
+    "noRoom": "No room",
+    "dayNeedsSite": "Select a concrete site (not “All sites”) for the day resource view.",
+    "assignee": "Assignee",
+    "room": "Room",
+    "saveResources": "Save resources",
+    "resourcesSaved": "Resources updated.",
+    "prevDay": "Previous day",
+    "nextDay": "Next day"
   },
   "manager": {
     "dashboard": {
@@ -3716,7 +3783,11 @@
           "tip": "Write access to Clinic section: stock receipts, quarantine, create and finalize DAF."
         }
       }
-    }
+    },
+    "columnDefaultSite": "Default site",
+    "defaultSite": "Default site",
+    "defaultSiteNone": "None",
+    "defaultSiteUpdated": "Default site updated."
   },
   "desk": {
     "switchTitle": "Switch profile",
@@ -4484,5 +4555,22 @@
     "renamed": "Site renamed.",
     "devBadge": "dev",
     "editingSite": "Editing schedule / slots for: {name} (All sites view)."
+  },
+  "rooms": {
+    "title": "Rooms",
+    "create": "Add",
+    "name": "Room name",
+    "deactivate": "Deactivate",
+    "empty": "No rooms.",
+    "created": "Room created.",
+    "renamed": "Room renamed.",
+    "deactivated": "Room deactivated.",
+    "rename": "Rename",
+    "renameSave": "Save",
+    "loadFailed": "Could not load rooms.",
+    "actionFailed": "Could not update this room.",
+    "inactive": "Inactive",
+    "reactivate": "Reactivate",
+    "reactivated": "Room reactivated."
   }
 }

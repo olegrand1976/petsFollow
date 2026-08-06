@@ -170,6 +170,14 @@
               <span class="pf-notes" :title="p.notes || ''">{{ truncate(p.notes) }}</span>
             </td>
             <td class="pf-actions">
+              <ProButton
+                v-if="p.contactEmail && !p.emailOptOut"
+                variant="ghost"
+                :test-id="`prospect-email-${p.id}`"
+                @click="openMailModal(p)"
+              >
+                {{ $t('commercial.prospects.sendEmail') }}
+              </ProButton>
               <NuxtLink
                 v-if="p.status !== 'converted'"
                 :to="`/commercial/vets?prospectId=${p.id}`"
@@ -224,6 +232,15 @@
             >
               {{ $t('commercial.prospects.encode') }}
             </NuxtLink>
+            <ProButton
+              v-if="p.contactEmail && !p.emailOptOut"
+              variant="ghost"
+              class="pro-mt-sm"
+              :test-id="`prospect-kanban-email-${p.id}`"
+              @click="openMailModal(p)"
+            >
+              {{ $t('commercial.prospects.sendEmail') }}
+            </ProButton>
           </div>
         </ProKanbanColumn>
       </ProKanban>
@@ -247,6 +264,55 @@
         </ProButton>
       </div>
     </ProCard>
+
+    <div
+      v-if="mailModal"
+      class="pf-mail-modal-backdrop"
+      data-testid="prospect-mail-modal"
+      @click.self="mailModal = null"
+    >
+      <ProCard class="pf-mail-modal">
+        <strong>{{ $t('commercial.mail.sendTitle', { practice: mailModal.practiceName }) }}</strong>
+        <p class="pro-hint">{{ mailModal.contactEmail }}</p>
+        <p v-if="mailError" class="pro-field-error" role="alert">{{ mailError }}</p>
+        <form class="pro-form pro-mt-md" @submit.prevent="sendMail">
+          <label class="pro-label">{{ $t('commercial.mail.template') }}</label>
+          <select
+            v-model="mailForm.templateId"
+            class="pro-select"
+            data-testid="prospect-mail-template"
+            required
+            @change="onMailTemplateChange"
+          >
+            <option value="" disabled>—</option>
+            <option v-for="tpl in mailTemplates" :key="tpl.id" :value="tpl.id">
+              {{ tpl.name }}
+            </option>
+          </select>
+          <ProInput v-model="mailForm.subject" test-id="prospect-mail-subject" :label="$t('commercial.mail.subject')" />
+          <label class="pro-label">{{ $t('commercial.mail.body') }}</label>
+          <textarea v-model="mailForm.bodyHtml" class="pro-input" rows="10" data-testid="prospect-mail-body" />
+          <div class="pf-mail-modal-actions">
+            <ProButton type="submit" test-id="prospect-mail-send" :loading="mailSending">
+              {{ $t('commercial.mail.sendAction') }}
+            </ProButton>
+            <ProButton variant="secondary" test-id="prospect-mail-cancel" @click="mailModal = null">
+              {{ $t('commercial.mail.cancel') }}
+            </ProButton>
+          </div>
+        </form>
+        <div v-if="mailHistory.length" class="pro-mt-lg" data-testid="prospect-mail-history">
+          <strong>{{ $t('commercial.mail.history') }}</strong>
+          <ul class="pf-mail-history">
+            <li v-for="s in mailHistory" :key="s.id">
+              {{ s.subject }} —
+              <ProBadge :variant="s.status === 'sent' ? 'success' : 'danger'">{{ s.status }}</ProBadge>
+              · {{ s.openCount || 0 }} open · {{ s.clickTotal || 0 }} clic
+            </li>
+          </ul>
+        </div>
+      </ProCard>
+    </div>
   </div>
 </template>
 
@@ -271,6 +337,12 @@ const lookupQ = ref('')
 const lookupLoading = ref(false)
 const lookupResult = ref<{ status: string, ownerName?: string, prospect?: any } | null>(null)
 const { viewMode } = useListView('commercial-prospects', 'table')
+const mailModal = ref<any | null>(null)
+const mailTemplates = ref<any[]>([])
+const mailHistory = ref<any[]>([])
+const mailForm = reactive({ templateId: '', subject: '', bodyHtml: '' })
+const mailSending = ref(false)
+const mailError = ref('')
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
 
@@ -459,6 +531,55 @@ function nextPage() {
   load()
 }
 
+async function openMailModal(p: any) {
+  mailError.value = ''
+  mailModal.value = p
+  mailForm.templateId = ''
+  mailForm.subject = ''
+  mailForm.bodyHtml = ''
+  mailHistory.value = []
+  try {
+    const [tplRes, histRes]: any[] = await Promise.all([
+      $fetch('/api/commercial/email-templates', { query: { active: '1' } }),
+      $fetch(`/api/commercial/prospects/${p.id}/emails`),
+    ])
+    mailTemplates.value = tplRes.data ?? tplRes ?? []
+    mailHistory.value = histRes.data ?? histRes ?? []
+  } catch (e: any) {
+    mailError.value = mapError(e)
+  }
+}
+
+function onMailTemplateChange() {
+  const tpl = mailTemplates.value.find((t) => t.id === mailForm.templateId)
+  if (!tpl) return
+  mailForm.subject = tpl.subject
+  mailForm.bodyHtml = tpl.bodyHtml
+}
+
+async function sendMail() {
+  if (!mailModal.value || !mailForm.templateId) return
+  mailSending.value = true
+  mailError.value = ''
+  try {
+    await $fetch(`/api/commercial/prospects/${mailModal.value.id}/emails`, {
+      method: 'POST',
+      body: {
+        templateId: mailForm.templateId,
+        subject: mailForm.subject || undefined,
+        bodyHtml: mailForm.bodyHtml || undefined,
+      },
+    })
+    const histRes: any = await $fetch(`/api/commercial/prospects/${mailModal.value.id}/emails`)
+    mailHistory.value = histRes.data ?? histRes ?? []
+    await load()
+  } catch (e: any) {
+    mailError.value = mapError(e)
+  } finally {
+    mailSending.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -521,5 +642,31 @@ onMounted(load)
   background: var(--pf-vet-alert);
   margin-right: 0.35rem;
   vertical-align: middle;
+}
+.pf-mail-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(27, 58, 75, 0.45);
+}
+.pf-mail-modal {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+}
+.pf-mail-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+.pf-mail-history {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
 }
 </style>

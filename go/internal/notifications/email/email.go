@@ -79,10 +79,19 @@ func (n *Notifier) isDevSMTP() bool {
 }
 
 func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
+	return n.sendHTMLOpts(to, subject, body, "", softFail)
+}
+
+func (n *Notifier) sendHTMLOpts(to, subject, body, replyTo string, softFail bool) error {
 	encodedSubject := mime.QEncoding.Encode("UTF-8", subject)
-	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
-		n.from, to, encodedSubject, body)
-	return n.deliverSMTP(to, []byte(msg), softFail)
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n", n.from, to, encodedSubject))
+	if rt := strings.TrimSpace(replyTo); rt != "" {
+		b.WriteString("Reply-To: " + rt + "\r\n")
+	}
+	b.WriteString("MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n")
+	b.WriteString(body)
+	return n.deliverSMTP(to, []byte(b.String()), softFail)
 }
 
 // deliverSMTP dials SMTP with shared auth / soft-fail / logging policy.
@@ -324,6 +333,59 @@ func (n *Notifier) brandURLs() brandAssets {
 		LLITWebsiteURL: n.llitWebsiteURL,
 		SiteURL:        site,
 	}
+}
+
+// BrandedHTMLOpts configures a custom-body commercial / outbound branded email.
+type BrandedHTMLOpts struct {
+	Locale           string
+	ProductLabel     string
+	Tagline          string
+	Preheader        string
+	Disclaimer       string
+	UnsubscribeLabel string
+	UnsubscribeURL   string
+	ReplyTo          string
+	SoftFail         bool
+}
+
+// RenderBrandedHTML wraps an HTML fragment in the petsFollow branded shell (no send).
+func (n *Notifier) RenderBrandedHTML(bodyHTML string, opts BrandedHTMLOpts) string {
+	locale := i18n.NormalizeLocale(opts.Locale)
+	if locale == "" {
+		locale = "fr"
+	}
+	tagline := strings.TrimSpace(opts.Tagline)
+	if tagline == "" {
+		tagline = "Continuité de soins prescrite"
+	}
+	disclaimer := strings.TrimSpace(opts.Disclaimer)
+	if disclaimer == "" {
+		disclaimer = "Message envoyé via petsFollow — communication B2B destinée aux professionnels."
+	}
+	return renderBrandedCustomHTML(brandedCustomContent{
+		Lang:             locale,
+		ProductLabel:     opts.ProductLabel,
+		Tagline:          tagline,
+		BodyHTML:         bodyHTML,
+		Preheader:        opts.Preheader,
+		Disclaimer:       disclaimer,
+		FooterPoweredBy:  "petsFollow — LL-IT Software & Computer",
+		FooterVisit:      "Visit LL-IT Software & Computer",
+		UnsubscribeLabel: opts.UnsubscribeLabel,
+		UnsubscribeURL:   opts.UnsubscribeURL,
+		Brand:            n.brandURLs(),
+	})
+}
+
+// SendBrandedHTML wraps an HTML fragment in the petsFollow branded shell and sends it.
+func (n *Notifier) SendBrandedHTML(to, subject, bodyHTML string, opts BrandedHTMLOpts) error {
+	full := n.RenderBrandedHTML(bodyHTML, opts)
+	return n.sendHTMLOpts(to, subject, full, opts.ReplyTo, opts.SoftFail)
+}
+
+// SendHTMLWithReplyTo sends a pre-rendered HTML email (soft-fail policy via SoftFail).
+func (n *Notifier) SendHTMLWithReplyTo(to, subject, fullHTML, replyTo string, softFail bool) error {
+	return n.sendHTMLOpts(to, subject, fullHTML, replyTo, softFail)
 }
 
 func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL string) error {

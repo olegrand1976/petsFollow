@@ -35,6 +35,8 @@ const shellReady = computed(() => !!user.value?.role)
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial', label: t('nav.commercialDashboard'), exact: true, icon: 'dashboard', section: t('nav.section.day') },
   { to: '/commercial/prospects', label: t('nav.commercialProspects'), icon: 'requests', section: t('nav.section.pipeline') },
+  { to: '/commercial/email-templates', label: t('nav.commercialEmailTemplates'), icon: 'mail', section: t('nav.section.pipeline') },
+  { to: '/commercial/emails', label: t('nav.commercialEmails'), icon: 'outbox', section: t('nav.section.pipeline') },
   { to: '/commercial/vets', label: t('nav.commercialVets'), icon: 'users', section: t('nav.section.pipeline') },
   { to: '/commercial/filiation', label: t('nav.commercialFiliation'), icon: 'account_tree', section: t('nav.section.network') },
   { to: '/commercial/network', label: t('nav.commercialNetwork'), icon: 'account_tree', section: t('nav.section.network') },

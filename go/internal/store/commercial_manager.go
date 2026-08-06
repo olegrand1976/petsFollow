@@ -328,7 +328,7 @@ func (s *Store) ListManagerProspects(ctx context.Context, managerUserID, statusF
 		SELECT p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
 			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 			p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
-			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''),
+			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''), COALESCE(p.email_opt_out, false),
 			COALESCE(u.full_name,''), COALESCE(u.email,'')
 		FROM sales.prospects p
 		LEFT JOIN identity.users u ON u.id = p.commercial_user_id
@@ -355,7 +355,7 @@ func (s *Store) ListManagerProspects(ctx context.Context, managerUserID, statusF
 		var first, last, appt *time.Time
 		if err := rows.Scan(&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 			&p.CommercialName, &p.CommercialEmail); err != nil {
 			return nil, err
 		}
@@ -378,7 +378,7 @@ func (s *Store) ListManagerFollowups(ctx context.Context, managerUserID string) 
 		SELECT p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
 			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 			p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
-			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''),
+			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''), COALESCE(p.email_opt_out, false),
 			COALESCE(u.full_name,''), COALESCE(u.email,'')
 		FROM sales.prospects p
 		LEFT JOIN identity.users u ON u.id = p.commercial_user_id
@@ -403,7 +403,7 @@ func (s *Store) ListManagerFollowups(ctx context.Context, managerUserID string) 
 		var first, last, appt *time.Time
 		if err := rows.Scan(&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 			&p.CommercialName, &p.CommercialEmail); err != nil {
 			return nil, err
 		}

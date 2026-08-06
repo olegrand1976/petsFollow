@@ -573,16 +573,20 @@
         "Ouvrir la liste des prospects.",
         "Ouvrir un prospect → noter les champs (contact, RDV, statut).",
         "Faire une transition simple si possible (ex. contact → RDV) sans écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.",
-        "Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed)."
+        "Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed).",
+        "Ouvrir Emails / Templates → parcourir le catalogue (intro, RDV, nurture J+1/J+3/J+7…).",
+        "Depuis une fiche prospect avec e-mail : Envoyer un e-mail → choisir un template → envoyer → voir l’historique (statut / ouvertures / clics) sur /commercial/emails."
       ],
       "expected": [
         "Overview et liste prospects chargent.",
-        "Fiche prospect lisible ; transitions cohérentes si testées."
+        "Fiche prospect lisible ; transitions cohérentes si testées.",
+        "Templates éditables ; envoi SMTP traqué (opens/clics) visible dans l’historique."
       ],
       "checklist": [
         "Overview",
         "Liste prospects",
-        "Fiche / transition"
+        "Fiche / transition",
+        "Templates / envoi mail"
       ]
     },
     "UC-CO-02": {

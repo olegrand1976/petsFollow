@@ -90,7 +90,9 @@
     "researchDataroom": "Data room",
     "productFlows": "Flujos producto",
     "aiFlows": "Flujos IA",
-    "adminInvoicing": "Facturación Billit"
+    "adminInvoicing": "Facturación Billit",
+    "commercialEmailTemplates": "Emails / Plantillas",
+    "commercialEmails": "Emails enviados"
   },
   "auth": {
     "login": {
@@ -2630,7 +2632,12 @@
     "internal": "Error interno del servidor",
     "not_ready": "Servicio no disponible",
     "generic": "Se ha producido un error",
-    "pet_not_in_practice": "El animal no está vinculado a esta clínica"
+    "pet_not_in_practice": "El animal no está vinculado a esta clínica",
+    "assignee_busy": "Este profesional ya tiene una cita en este horario",
+    "room_busy": "Esta sala ya está ocupada en este horario",
+    "invalid_assignee": "Profesional no válido",
+    "invalid_room": "Sala no válida",
+    "room_name_taken": "Ya existe una sala con este nombre en este centro"
   },
   "commercial": {
     "dashboard": {
@@ -2770,7 +2777,8 @@
       "lookupMissing": "Ningún prospecto — puedes añadirlo.",
       "ownedBy": "Gestionado por {name}",
       "claim": "Reclamar",
-      "inactiveSince": "Inactivo desde hace {n} d"
+      "inactiveSince": "Inactivo desde hace {n} d",
+      "sendEmail": "Enviar correo"
     },
     "commissions": {
       "title": "Mis comisiones",
@@ -3083,6 +3091,51 @@
       "disclaimer": "petsFollow complementa su PMS — no lo sustituye.",
       "cta": "Pida una demo en clínica (vet + recepción).",
       "footerBrand": "petsFollow — continuidad de cuidados prescrita · pasaporte digital."
+    },
+    "mail": {
+      "templatesTitle": "Plantillas de correo",
+      "templatesSubtitle": "Catálogo compartido de seguimiento comercial — editable.",
+      "emailsTitle": "Correos enviados",
+      "emailsSubtitle": "Historial, aperturas y clics.",
+      "send": "Enviar correo",
+      "sendTitle": "Enviar a {practice}",
+      "template": "Plantilla",
+      "subject": "Asunto",
+      "body": "Cuerpo HTML",
+      "preview": "Vista previa",
+      "sendAction": "Enviar",
+      "cancel": "Cancelar",
+      "saving": "Guardando…",
+      "saved": "Plantilla guardada",
+      "sent": "Correo enviado",
+      "sendError": "Error de envío",
+      "noEmail": "Sin correo en esta ficha",
+      "optOut": "Prospecto dado de baja",
+      "emptyTemplates": "Sin plantillas",
+      "emptySends": "Sin envíos",
+      "category": "Categoría",
+      "categories": {
+        "intro": "Intro",
+        "rdv": "Cita",
+        "nurture": "Nurture",
+        "post": "Post-demo",
+        "reactivation": "Reactivación"
+      },
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "edit": "Editar",
+      "status": "Estado",
+      "opened": "Abierto",
+      "clicks": "Clics",
+      "to": "Para",
+      "practice": "Clínica",
+      "date": "Fecha",
+      "detail": "Detalle",
+      "neverOpened": "Aún no abierto",
+      "clickList": "Clics rastreados",
+      "varsHint": "Variables: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "history": "Historial de correos",
+      "loadError": "No se puede cargar"
     }
   },
   "commissionSheet": {
@@ -3367,7 +3420,21 @@
     "reportTargetLangUk": "Ucraniano",
     "reportTargetLangRu": "Ruso",
     "columnSite": "Sede",
-    "creatingOnSite": "Creando en la sede: {name} (vista Todas las sedes)."
+    "creatingOnSite": "Creando en la sede: {name} (vista Todas las sedes).",
+    "dayTitle": "Día",
+    "viewDay": "Día",
+    "resourcePeople": "Personas",
+    "resourceRooms": "Salas",
+    "resourceToggleAria": "Columnas de recursos",
+    "unassigned": "Sin asignar",
+    "noRoom": "Sin sala",
+    "dayNeedsSite": "Seleccione un sitio concreto (no “Todas las sedes”) para la vista día por recursos.",
+    "assignee": "Asignado a",
+    "room": "Sala",
+    "saveResources": "Guardar recursos",
+    "resourcesSaved": "Recursos actualizados.",
+    "prevDay": "Día anterior",
+    "nextDay": "Día siguiente"
   },
   "manager": {
     "dashboard": {
@@ -3716,7 +3783,11 @@
           "tip": "Escritura sección Clínica: recepciones, cuarentena, crear y finalizar DAF."
         }
       }
-    }
+    },
+    "columnDefaultSite": "Sede predeterminada",
+    "defaultSite": "Sede predeterminada",
+    "defaultSiteNone": "Ninguna",
+    "defaultSiteUpdated": "Sede predeterminada actualizada."
   },
   "desk": {
     "switchTitle": "Cambiar de perfil",
@@ -4484,5 +4555,22 @@
     "renamed": "Sitio renombrado.",
     "devBadge": "dev",
     "editingSite": "Editando agenda / franjas de: {name} (vista Todas las sedes)."
+  },
+  "rooms": {
+    "title": "Salas",
+    "create": "Añadir",
+    "name": "Nombre de la sala",
+    "deactivate": "Desactivar",
+    "empty": "Ninguna sala.",
+    "created": "Sala creada.",
+    "renamed": "Sala renombrada.",
+    "deactivated": "Sala desactivada.",
+    "rename": "Renombrar",
+    "renameSave": "Guardar",
+    "loadFailed": "No se pudieron cargar las salas.",
+    "actionFailed": "Acción imposible en esta sala.",
+    "inactive": "Inactiva",
+    "reactivate": "Reactivar",
+    "reactivated": "Sala reactivada."
   }
 }

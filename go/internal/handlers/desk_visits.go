@@ -58,6 +58,48 @@ func (a *API) updateVisitNotes(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, updated)
 }
 
+// visitInUnassignedQueue is true when the visit competes for the legacy single site file
+// (no assignee and no room). Assigned/roomed visits may run in parallel with that file.
+func visitInUnassignedQueue(v store.Visit) bool {
+	return strings.TrimSpace(v.AssigneeUserID) == "" && strings.TrimSpace(v.RoomID) == ""
+}
+
+// writeVisitSlotConflicts enforces unassigned-queue and/or hard assignee/room overlaps.
+// Returns false when a response was already written.
+func (a *API) writeVisitSlotConflicts(
+	w http.ResponseWriter, r *http.Request,
+	practiceID, siteID string, v store.Visit, at time.Time, dur int, excludeID string,
+) bool {
+	if visitInUnassignedQueue(v) {
+		overlap, oerr := a.store.HasVisitOverlap(r.Context(), practiceID, siteID, at, dur, excludeID)
+		if oerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
+		if overlap {
+			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+			return false
+		}
+	}
+	if rerr := a.store.CheckVisitResourceConflicts(r.Context(), practiceID, v.AssigneeUserID, v.RoomID, at, dur, excludeID); rerr != nil {
+		if errors.Is(rerr, store.ErrValidation) {
+			msg := rerr.Error()
+			switch {
+			case strings.Contains(msg, "assignee_busy"):
+				writeErr(w, r, http.StatusConflict, "assignee_busy", "assignee_busy")
+			case strings.Contains(msg, "room_busy"):
+				writeErr(w, r, http.StatusConflict, "room_busy", "room_busy")
+			default:
+				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+			}
+			return false
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return false
+	}
+	return true
+}
+
 // parseAndValidateVisitSlot shared by propose_reschedule and reschedule_direct.
 func (a *API) parseAndValidateVisitSlot(
 	w http.ResponseWriter, r *http.Request, pet store.Pet, visit store.Visit, proposedRaw *string,
@@ -85,13 +127,7 @@ func (a *API) parseAndValidateVisitSlot(
 	} else if _, slotDur, e := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID, visit.SiteID); e == nil {
 		dur = slotDur
 	}
-	overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, visit.SiteID, proposed, dur, visit.ID)
-	if oerr != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return time.Time{}, false
-	}
-	if overlap {
-		writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+	if !a.writeVisitSlotConflicts(w, r, pet.PracticeID, visit.SiteID, visit, proposed, dur, visit.ID) {
 		return time.Time{}, false
 	}
 	onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, visit.SiteID, proposed)

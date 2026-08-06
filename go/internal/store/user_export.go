@@ -93,6 +93,18 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			FROM practice.filiation_events e
 			WHERE e.client_user_id = $1 OR e.actor_user_id = $1
 			   OR e.commercial_user_id = $1 OR e.vet_user_id = $1`,
+		"commercialEmailSends": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'id', s.id,
+			'prospectId', s.prospect_id,
+			'toEmail', s.to_email,
+			'subject', s.subject,
+			'status', s.status,
+			'openedAt', s.opened_at,
+			'openCount', s.open_count,
+			'sentAt', s.sent_at,
+			'createdAt', s.created_at
+		) ORDER BY s.created_at), '[]'::jsonb)
+			FROM sales.email_sends s WHERE s.commercial_user_id = $1`,
 		"dossierShares": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(t) - 'object_key' - 'token') ORDER BY t.created_at), '[]'::jsonb)
 			FROM pets.dossier_share_tokens t WHERE t.owner_user_id = $1`,

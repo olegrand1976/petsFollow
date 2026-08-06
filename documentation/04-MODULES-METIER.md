@@ -36,7 +36,7 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; a
 
 ## Commercial / sales
 
-Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (**premier encodage gagne** : lookup + claim atomique ; pastille inactif **30 j** ; libération manager), commissions, payout profile (+ zone de base GPS/CP pour découvrir le **code** d’un commercial), page pitch. Pool libre = `commercial_user_id` NULL.
+Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (**premier encodage gagne** : lookup + claim atomique ; pastille inactif **30 j** ; libération manager), **mail CRM** (templates partagés éditables, envoi SMTP depuis fiche prospect, tracking ouvertures/clics, opt-out), commissions, payout profile (+ zone de base GPS/CP pour découvrir le **code** d’un commercial), page pitch. Pool libre = `commercial_user_id` NULL.
 
 **Code Parrain (juge cabinet)** : inscription véto `/register` avec `inviteCode` (`practice.app_invite_codes` commercial/manager) → `assigned_commercial_id` définitif. **Sans code** → pool admin `/admin/vet-pool` (suggestions zone+activité + notes Gemini). Pas de sélection « près de chez vous » à l’inscription. Encode commercial : 409 si déjà assigné à un autre.
 

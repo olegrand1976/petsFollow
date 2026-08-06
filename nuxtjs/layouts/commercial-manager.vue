@@ -36,6 +36,8 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial-manager', label: t('nav.managerDashboard'), exact: true, icon: 'dashboard', section: t('nav.section.team') },
   { to: '/commercial-manager/suivi', label: t('nav.managerFollowups'), icon: 'event', section: t('nav.section.team') },
   { to: '/commercial-manager/prospects', label: t('nav.managerProspects'), icon: 'requests', section: t('nav.section.team') },
+  { to: '/commercial/email-templates', label: t('nav.commercialEmailTemplates'), icon: 'mail', section: t('nav.section.team') },
+  { to: '/commercial/emails', label: t('nav.commercialEmails'), icon: 'outbox', section: t('nav.section.team') },
   { to: '/commercial-manager/filiation', label: t('nav.managerFiliation'), icon: 'account_tree', section: t('nav.section.team') },
   { to: '/commercial-manager/leaderboard', label: t('nav.managerLeaderboard'), icon: 'analytics', section: t('nav.section.team') },
   { to: '/produits', label: t('nav.products'), icon: 'description', section: t('nav.section.offer') },

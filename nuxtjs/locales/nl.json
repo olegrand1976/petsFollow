@@ -90,7 +90,9 @@
     "researchDataroom": "Data room",
     "productFlows": "Productstromen",
     "aiFlows": "AI-stromen",
-    "adminInvoicing": "Billit-facturatie"
+    "adminInvoicing": "Billit-facturatie",
+    "commercialEmailTemplates": "E-mails / Templates",
+    "commercialEmails": "Verzonden e-mails"
   },
   "auth": {
     "login": {
@@ -2630,7 +2632,12 @@
     "internal": "Interne serverfout",
     "not_ready": "Service niet gereed",
     "generic": "Er is een fout opgetreden",
-    "pet_not_in_practice": "Dier hoort niet bij deze praktijk"
+    "pet_not_in_practice": "Dier hoort niet bij deze praktijk",
+    "assignee_busy": "Deze dierenarts heeft al een afspraak in dit tijdslot",
+    "room_busy": "Deze ruimte is al bezet in dit tijdslot",
+    "invalid_assignee": "Ongeldige medewerker",
+    "invalid_room": "Ongeldige ruimte",
+    "room_name_taken": "Er bestaat al een ruimte met deze naam op deze locatie"
   },
   "commercial": {
     "dashboard": {
@@ -2770,7 +2777,8 @@
       "lookupMissing": "Geen prospect gevonden — je kunt hem toevoegen.",
       "ownedBy": "Beheerd door {name}",
       "claim": "Claimen",
-      "inactiveSince": "Inactief sinds {n} d"
+      "inactiveSince": "Inactief sinds {n} d",
+      "sendEmail": "E-mail versturen"
     },
     "commissions": {
       "title": "Mijn commissies",
@@ -3083,6 +3091,51 @@
       "disclaimer": "petsFollow vult uw PMS aan — het vervangt het niet.",
       "cta": "Vraag een praktijkdemo (dierenarts + balie).",
       "footerBrand": "petsFollow — voorgeschreven zorgcontinuïteit · digitaal paspoort."
+    },
+    "mail": {
+      "templatesTitle": "E-mailtemplates",
+      "templatesSubtitle": "Gedeelde catalogus voor commerciële opvolging — bewerkbaar.",
+      "emailsTitle": "Verzonden e-mails",
+      "emailsSubtitle": "Geschiedenis, opens en klikken.",
+      "send": "E-mail versturen",
+      "sendTitle": "Versturen naar {practice}",
+      "template": "Template",
+      "subject": "Onderwerp",
+      "body": "HTML-inhoud",
+      "preview": "Voorbeeld",
+      "sendAction": "Versturen",
+      "cancel": "Annuleren",
+      "saving": "Opslaan…",
+      "saved": "Template opgeslagen",
+      "sent": "E-mail verzonden",
+      "sendError": "Verzenden mislukt",
+      "noEmail": "Geen e-mail op deze fiche",
+      "optOut": "Prospect heeft zich afgemeld",
+      "emptyTemplates": "Geen templates",
+      "emptySends": "Geen verzendingen",
+      "category": "Categorie",
+      "categories": {
+        "intro": "Intro",
+        "rdv": "Afspraak",
+        "nurture": "Nurture",
+        "post": "Na demo",
+        "reactivation": "Heractivatie"
+      },
+      "active": "Actief",
+      "inactive": "Inactief",
+      "edit": "Bewerken",
+      "status": "Status",
+      "opened": "Geopend",
+      "clicks": "Klikken",
+      "to": "Aan",
+      "practice": "Praktijk",
+      "date": "Datum",
+      "detail": "Detail",
+      "neverOpened": "Nog niet geopend",
+      "clickList": "Getrackte klikken",
+      "varsHint": "Variabelen: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "history": "E-mailgeschiedenis",
+      "loadError": "Kan niet laden"
     }
   },
   "commissionSheet": {
@@ -3367,7 +3420,21 @@
     "reportTargetLangUk": "Oekraïens",
     "reportTargetLangRu": "Russisch",
     "columnSite": "Site",
-    "creatingOnSite": "Aanmaken op site: {name} (weergave Alle sites)."
+    "creatingOnSite": "Aanmaken op site: {name} (weergave Alle sites).",
+    "dayTitle": "Dag",
+    "viewDay": "Dag",
+    "resourcePeople": "Personen",
+    "resourceRooms": "Zalen",
+    "resourceToggleAria": "Resourcekolommen",
+    "unassigned": "Niet toegewezen",
+    "noRoom": "Zonder zaal",
+    "dayNeedsSite": "Selecteer een concrete site (niet “Alle sites”) voor de dagweergave per resource.",
+    "assignee": "Toegewezen aan",
+    "room": "Zaal",
+    "saveResources": "Resources opslaan",
+    "resourcesSaved": "Resources bijgewerkt.",
+    "prevDay": "Vorige dag",
+    "nextDay": "Volgende dag"
   },
   "manager": {
     "dashboard": {
@@ -3716,7 +3783,11 @@
           "tip": "Schrijfrecht sectie Kliniek: ontvangsten, quarantaine, DAF aanmaken/finaliseren."
         }
       }
-    }
+    },
+    "columnDefaultSite": "Standaardsite",
+    "defaultSite": "Standaardsite",
+    "defaultSiteNone": "Geen",
+    "defaultSiteUpdated": "Standaardsite bijgewerkt."
   },
   "desk": {
     "switchTitle": "Profiel wisselen",
@@ -4484,5 +4555,22 @@
     "renamed": "Site hernoemd.",
     "devBadge": "dev",
     "editingSite": "Agenda / slots bewerken voor: {name} (weergave Alle sites)."
+  },
+  "rooms": {
+    "title": "Zalen",
+    "create": "Toevoegen",
+    "name": "Naam van de zaal",
+    "deactivate": "Deactiveren",
+    "empty": "Geen zalen.",
+    "created": "Zaal aangemaakt.",
+    "renamed": "Zaal hernoemd.",
+    "deactivated": "Zaal gedeactiveerd.",
+    "rename": "Hernoemen",
+    "renameSave": "Opslaan",
+    "loadFailed": "Zalen laden mislukt.",
+    "actionFailed": "Actie op deze zaal mislukt.",
+    "inactive": "Inactief",
+    "reactivate": "Heractiveren",
+    "reactivated": "Zaal heractiveerd."
   }
 }

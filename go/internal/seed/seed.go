@@ -89,6 +89,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedVetPlusAntenne(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedVetPlusCalendarResources(ctx, pool, st); err != nil {
+		return err
+	}
 	if err := seedCarePros(ctx, pool); err != nil {
 		return err
 	}
@@ -108,6 +111,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
+		return err
+	}
+	if err := seedCommercialEmailTemplates(ctx, st); err != nil {
 		return err
 	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
@@ -384,6 +390,127 @@ func seedVetPlusAntenne(ctx context.Context, pool *pgxpool.Pool, st *store.Store
 	return nil
 }
 
+// seedVetPlusCalendarResources creates demo rooms + assigns staff/visits (idempotent).
+func seedVetPlusCalendarResources(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	var practiceID, primaryID, antenneID, vetUserID, colleagueUserID string
+	err := pool.QueryRow(ctx, `
+		SELECT p.id::text, s.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test' AND u.role = 'vet'
+		JOIN practice.sites s ON s.practice_id = p.id AND s.is_primary
+		LIMIT 1`).Scan(&practiceID, &primaryID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("vetplus rooms lookup: %w", err)
+	}
+	_ = pool.QueryRow(ctx, `
+		SELECT id::text FROM practice.sites
+		WHERE practice_id = $1 AND name = $2 LIMIT 1`, practiceID, vetPlusAntenneName).Scan(&antenneID)
+	_ = pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1`).Scan(&vetUserID)
+	_ = pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users WHERE email = 'vet.colleague@petsfollow.test' LIMIT 1`).Scan(&colleagueUserID)
+
+	ensureRoom := func(siteID, name string, sort int) (string, error) {
+		if siteID == "" {
+			return "", nil
+		}
+		var id string
+		err := pool.QueryRow(ctx, `
+			SELECT id::text FROM practice.rooms
+			WHERE site_id = $1 AND lower(trim(name)) = lower(trim($2)) LIMIT 1`, siteID, name).Scan(&id)
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return "", err
+		}
+		room, cerr := st.CreateRoom(ctx, practiceID, siteID, store.CreateRoomInput{Name: name, SortOrder: &sort})
+		if cerr != nil {
+			if strings.Contains(cerr.Error(), "room_name_taken") {
+				_ = pool.QueryRow(ctx, `
+					SELECT id::text FROM practice.rooms
+					WHERE site_id = $1 AND lower(trim(name)) = lower(trim($2)) LIMIT 1`, siteID, name).Scan(&id)
+				return id, nil
+			}
+			return "", cerr
+		}
+		return room.ID, nil
+	}
+
+	roomConsult, err := ensureRoom(primaryID, "Salle consult 1", 0)
+	if err != nil {
+		return fmt.Errorf("room consult1: %w", err)
+	}
+	roomChir, err := ensureRoom(primaryID, "Salle chir", 1)
+	if err != nil {
+		return fmt.Errorf("room chir: %w", err)
+	}
+	if _, err := ensureRoom(primaryID, "Salle urgences", 2); err != nil {
+		return fmt.Errorf("room urgences: %w", err)
+	}
+	if antenneID != "" {
+		if _, err := ensureRoom(antenneID, "Box 1", 0); err != nil {
+			return fmt.Errorf("antenne box1: %w", err)
+		}
+		if _, err := ensureRoom(antenneID, "Box 2", 1); err != nil {
+			return fmt.Errorf("antenne box2: %w", err)
+		}
+	}
+
+	// Staff default sites (demo): reference vet + colleague on primary.
+	if vetUserID != "" {
+		_, _ = pool.Exec(ctx, `
+			UPDATE practice.team_members SET default_site_id = $2::uuid
+			WHERE practice_id = $1 AND user_id = $3 AND status = 'active'`, practiceID, primaryID, vetUserID)
+	}
+	if colleagueUserID != "" {
+		_, _ = pool.Exec(ctx, `
+			UPDATE practice.team_members SET default_site_id = $2::uuid
+			WHERE practice_id = $1 AND user_id = $3 AND status = 'active'`, practiceID, primaryID, colleagueUserID)
+	}
+
+	// Assign a couple of upcoming confirmed visits on primary (best-effort).
+	if roomConsult != "" && vetUserID != "" {
+		_, _ = pool.Exec(ctx, `
+			UPDATE visits.visits v
+			SET assignee_user_id = $2::uuid, room_id = $3::uuid
+			WHERE v.id IN (
+				SELECT id FROM visits.visits
+				WHERE practice_id = $1 AND site_id = $4
+				  AND deleted_at IS NULL
+				  AND status = 'confirmed'
+				  AND COALESCE(consultation_session, false) = false
+				  AND scheduled_at > NOW()
+				  AND assignee_user_id IS NULL
+				ORDER BY scheduled_at
+				LIMIT 2
+			)`, practiceID, vetUserID, roomConsult, primaryID)
+	}
+	if roomChir != "" && colleagueUserID != "" {
+		_, _ = pool.Exec(ctx, `
+			UPDATE visits.visits v
+			SET assignee_user_id = $2::uuid, room_id = $3::uuid
+			WHERE v.id IN (
+				SELECT id FROM visits.visits
+				WHERE practice_id = $1 AND site_id = $4
+				  AND deleted_at IS NULL
+				  AND status = 'confirmed'
+				  AND COALESCE(consultation_session, false) = false
+				  AND scheduled_at > NOW()
+				  AND (assignee_user_id IS NULL OR assignee_user_id = $2::uuid)
+				  AND room_id IS DISTINCT FROM $3::uuid
+				ORDER BY scheduled_at
+				LIMIT 1
+			)`, practiceID, colleagueUserID, roomChir, primaryID)
+	}
+
+	log.Printf("VetPlus calendar resources: rooms on primary (+ antenne if present)")
+	return nil
+}
+
 func demoScheduleSlots() []store.ScheduleSlot {
 	return []store.ScheduleSlot{
 		{Weekday: 1, StartTime: "09:00", EndTime: "12:00"},
@@ -475,7 +602,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.commercial_bonus_awards,
-		billing.addon_entitlements, sales.prospects,
+		billing.addon_entitlements, sales.email_clicks, sales.email_sends, sales.email_templates, sales.prospects,
 		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.commission_settings,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,

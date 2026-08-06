@@ -92,6 +92,47 @@ test('commercial CRM prospects', async ({ page }) => {
   await expect(page.getByText(practice)).toBeVisible({ timeout: 15000 })
 })
 
+test('commercial mail templates et envoi prospect', async ({ page }) => {
+  test.setTimeout(90000)
+  await loginAsCommercial(page)
+  await page.goto('/commercial/email-templates', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('commercial-email-templates-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('email-tpl-row-intro_after_request')).toBeVisible({ timeout: 15000 })
+  await nativeClick(page, 'email-tpl-edit-intro_after_request')
+  await expect(page.getByTestId('email-tpl-editor')).toBeVisible()
+  await expect(page.getByTestId('email-tpl-subject')).not.toHaveValue('')
+
+  await page.goto('/commercial/prospects', { waitUntil: 'networkidle' })
+  await nativeClick(page, 'prospect-create-toggle')
+  const practice = `Prospect Mail ${Date.now()}`
+  await fillField(page, 'prospect-practice', practice)
+  await fillField(page, 'prospect-contact', 'Dr Mail')
+  await fillField(page, 'prospect-email', `mail.${Date.now()}@petsfollow.test`)
+  await Promise.all([
+    page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().includes('/commercial/prospects'),
+      { timeout: 20000 },
+    ),
+    nativeClick(page, 'prospect-submit'),
+  ])
+  await expect(page.getByText(practice)).toBeVisible({ timeout: 15000 })
+  const row = page.locator('tr').filter({ hasText: practice }).first()
+  await row.locator('[data-testid^="prospect-email-"]').click()
+  await expect(page.getByTestId('prospect-mail-modal')).toBeVisible({ timeout: 10000 })
+  await page.getByTestId('prospect-mail-template').selectOption({ index: 1 })
+  await Promise.all([
+    page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().includes('/emails'),
+      { timeout: 20000 },
+    ),
+    nativeClick(page, 'prospect-mail-send'),
+  ])
+  await expect(page.getByTestId('prospect-mail-history')).toBeVisible({ timeout: 15000 })
+  await page.goto('/commercial/emails', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('commercial-emails-page')).toBeVisible()
+  await expect(page.locator('[data-testid^="email-send-row-"]').first()).toBeVisible({ timeout: 15000 })
+})
+
 test.describe('commercial filiation', { tag: '@p1' }, () => {
   test('commercial ouvre la page filiation', async ({ page }) => {
     await loginAsCommercial(page)

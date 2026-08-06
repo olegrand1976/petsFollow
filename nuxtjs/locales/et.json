@@ -90,7 +90,9 @@
     "researchDataroom": "Data room",
     "productFlows": "Tootevoogud",
     "aiFlows": "AI vood",
-    "adminInvoicing": "Billiti arveldus"
+    "adminInvoicing": "Billiti arveldus",
+    "commercialEmailTemplates": "E-kirjad / Mallid",
+    "commercialEmails": "Saadetud e-kirjad"
   },
   "auth": {
     "login": {
@@ -2630,7 +2632,12 @@
     "internal": "Sisemine serveri viga",
     "not_ready": "Teenus ei ole valmis",
     "generic": "Ilmnes viga",
-    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga"
+    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga",
+    "assignee_busy": "Sellel praktikul on selles ajavahemikus juba vastuvõtt",
+    "room_busy": "See ruum on selles ajavahemikus juba hõivatud",
+    "invalid_assignee": "Sobimatu praktik",
+    "invalid_room": "Sobimatu ruum",
+    "room_name_taken": "Selle nimega ruum on selles asukohas juba olemas"
   },
   "commercial": {
     "dashboard": {
@@ -2770,7 +2777,8 @@
       "lookupMissing": "Prospecti ei leitud — saad lisada.",
       "ownedBy": "Haldab {name}",
       "claim": "Võta endale",
-      "inactiveSince": "Mitteaktiivne {n} p"
+      "inactiveSince": "Mitteaktiivne {n} p",
+      "sendEmail": "Saada e-kiri"
     },
     "commissions": {
       "title": "Minu komisjonid",
@@ -3083,6 +3091,51 @@
       "disclaimer": "petsFollow täiendab teie PMS-i — ei asenda seda.",
       "cta": "Paluge kliiniku demot (loomaarst + vastuvõtt).",
       "footerBrand": "petsFollow — ettekirjutatud hoolduse järjepidevus · digitaalne pass."
+    },
+    "mail": {
+      "templatesTitle": "E-posti mallid",
+      "templatesSubtitle": "Jagatud müügijälgimise kataloog — muudetav.",
+      "emailsTitle": "Saadetud e-kirjad",
+      "emailsSubtitle": "Ajalugu, avamised ja klikid.",
+      "send": "Saada e-kiri",
+      "sendTitle": "Saada: {practice}",
+      "template": "Mall",
+      "subject": "Teema",
+      "body": "HTML sisu",
+      "preview": "Eelvaade",
+      "sendAction": "Saada",
+      "cancel": "Tühista",
+      "saving": "Salvestamine…",
+      "saved": "Mall salvestatud",
+      "sent": "E-kiri saadetud",
+      "sendError": "Saatmine ebaõnnestus",
+      "noEmail": "Sellel kaardil pole e-posti",
+      "optOut": "Prospect loobus e-kirjadest",
+      "emptyTemplates": "Malle pole",
+      "emptySends": "Saatmisi pole",
+      "category": "Kategooria",
+      "categories": {
+        "intro": "Intro",
+        "rdv": "Kohtumine",
+        "nurture": "Nurture",
+        "post": "Pärast demot",
+        "reactivation": "Taasaktiveerimine"
+      },
+      "active": "Aktiivne",
+      "inactive": "Mitteaktiivne",
+      "edit": "Muuda",
+      "status": "Olek",
+      "opened": "Avatud",
+      "clicks": "Klikid",
+      "to": "Saaja",
+      "practice": "Kliinik",
+      "date": "Kuupäev",
+      "detail": "Detail",
+      "neverOpened": "Pole veel avatud",
+      "clickList": "Jälgitud klikid",
+      "varsHint": "Muutujad: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "history": "E-posti ajalugu",
+      "loadError": "Laadimine ebaõnnestus"
     }
   },
   "commissionSheet": {
@@ -3367,7 +3420,21 @@
     "reportTargetLangUk": "Ukraina",
     "reportTargetLangRu": "Vene",
     "columnSite": "Asukoht",
-    "creatingOnSite": "Loomine asukohale: {name} (kõik asukohad)."
+    "creatingOnSite": "Loomine asukohale: {name} (kõik asukohad).",
+    "dayTitle": "Päev",
+    "viewDay": "Päev",
+    "resourcePeople": "Inimesed",
+    "resourceRooms": "Ruumid",
+    "resourceToggleAria": "Ressursiveerud",
+    "unassigned": "Määramata",
+    "noRoom": "Ilma ruumita",
+    "dayNeedsSite": "Valige konkreetne asukoht (mitte „Kõik asukohad“) päevavaate ressursside jaoks.",
+    "assignee": "Määratud",
+    "room": "Ruum",
+    "saveResources": "Salvesta ressursid",
+    "resourcesSaved": "Ressursid uuendatud.",
+    "prevDay": "Eelmine päev",
+    "nextDay": "Järgmine päev"
   },
   "manager": {
     "dashboard": {
@@ -3716,7 +3783,11 @@
           "tip": "Kliinika sektsiooni kirjutamine: vastuvõtud, karantiin, DAF loomine/lõpetamine."
         }
       }
-    }
+    },
+    "columnDefaultSite": "Vaikimisi asukoht",
+    "defaultSite": "Vaikimisi asukoht",
+    "defaultSiteNone": "Puudub",
+    "defaultSiteUpdated": "Vaikimisi asukoht uuendatud."
   },
   "desk": {
     "switchTitle": "Vaheta profiili",
@@ -4484,5 +4555,22 @@
     "renamed": "Asukoht ümber nimetatud.",
     "devBadge": "dev",
     "editingSite": "Muudad ajakava / slotte asukohale: {name} (kõik asukohad)."
+  },
+  "rooms": {
+    "title": "Ruumid",
+    "create": "Lisa",
+    "name": "Ruumi nimi",
+    "deactivate": "Inaktiveeri",
+    "empty": "Ruumid puuduvad.",
+    "created": "Ruum loodud.",
+    "renamed": "Ruum ümber nimetatud.",
+    "deactivated": "Ruum inaktiveeritud.",
+    "rename": "Nimeta ümber",
+    "renameSave": "Salvesta",
+    "loadFailed": "Ruumide laadimine ebaõnnestus.",
+    "actionFailed": "Selle ruumi toiming ebaõnnestus.",
+    "inactive": "Mitteaktiivne",
+    "reactivate": "Aktiveeri uuesti",
+    "reactivated": "Ruum taasaktiveeritud."
   }
 }

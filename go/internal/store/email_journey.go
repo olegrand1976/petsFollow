@@ -20,7 +20,7 @@ type EmailJourney struct {
 	Status     string
 }
 
-type EmailSend struct {
+type JourneyEmailSend struct {
 	UserID  string
 	StepKey string
 	SentAt  time.Time

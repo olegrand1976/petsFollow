@@ -21,6 +21,8 @@ Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon lo
 
 **Digest produit quotidien** (interne) : synthèse fonctionnelle des évolutions du jour → emails aux rôles `admin` / `commercial` / `commercial_manager` à 18:00 Europe/Brussels. Détail [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md).
 
+**Mail CRM commercial** (B2B prospects) : catalogue `sales.email_templates` (seed séquence intro / RDV / nurture / post / réactivation), envoi depuis fiche prospect (`POST /commercial/prospects/{id}/emails`), historique + tracking pixel / clics (`/public/commercial-mail/o|c/{token}`), désinscription soft (`email_opt_out`). UI : `/commercial/email-templates`, `/commercial/emails`. Envoi manuel V1 (pas de séquence auto planifiée).
+
 Préférences :
 
 - Véto : `GET/PUT /vet/notification-preferences` (`emailOnMessage`, `emailOnHeartrate`, `emailOnVisitRequest`)

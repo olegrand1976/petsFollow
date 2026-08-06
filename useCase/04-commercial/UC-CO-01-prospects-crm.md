@@ -30,11 +30,14 @@ Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transit
 4. Ouvrir un prospect → noter les champs (contact, RDV, statut).
 5. Faire une transition simple si possible (ex. contact → RDV) **sans** écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.
 6. Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed).
+7. Ouvrir **Emails / Templates** → parcourir le catalogue (intro, RDV, nurture J+1/J+3/J+7…).
+8. Depuis une fiche prospect avec e-mail : **Envoyer un e-mail** → choisir un template → envoyer → voir l’historique (statut / ouvertures / clics) sur `/commercial/emails`.
 
 ## Résultat attendu
 
 - Overview et liste prospects chargent.
 - Fiche prospect lisible ; transitions cohérentes si testées.
+- Templates éditables ; envoi SMTP traqué (opens/clics) visible dans l’historique.
 
 ## Checklist
 
@@ -43,6 +46,7 @@ Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transit
 | Overview | OK / KO / N/A |
 | Liste prospects | OK / KO / N/A |
 | Fiche / transition | OK / KO / N/A |
+| Templates / envoi mail | OK / KO / N/A |
 
 ## Zone retour
 
@@ -54,4 +58,4 @@ Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transit
 
 ---
 
-*Réf. QA : E1.1–E1.2*
+*Réf. QA : E1.1–E1.2 / E1.2c*

@@ -52,6 +52,11 @@ type Visit struct {
 	ReportStatus string `json:"reportStatus,omitempty"`
 	// Permission is set for care_pro list responses (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
+	// Calendar resources (optional).
+	AssigneeUserID string `json:"assigneeUserId,omitempty"`
+	AssigneeName   string `json:"assigneeName,omitempty"`
+	RoomID         string `json:"roomId,omitempty"`
+	RoomName       string `json:"roomName,omitempty"`
 }
 
 type CreateVisitInput struct {
@@ -63,6 +68,8 @@ type CreateVisitInput struct {
 	ScheduledAt       *time.Time
 	DurationMinutes   *int
 	VisitTypeID       *string
+	AssigneeUserID    string // optional staff user id
+	RoomID            string // optional room under site
 	// ConfirmDirect: vet/care_pro creates already confirmed (skip client approval).
 	ConfirmDirect bool
 	// RequestPreconsult: when confirmed, send public preconsult questionnaire.
@@ -345,8 +352,126 @@ func (s *Store) resolveCreateVisitSiteID(ctx context.Context, in *CreateVisitInp
 	return nil
 }
 
+func (s *Store) validateCreateVisitResources(ctx context.Context, in *CreateVisitInput) error {
+	if err := s.ValidateVisitAssignee(ctx, in.PracticeID, in.AssigneeUserID); err != nil {
+		return err
+	}
+	return s.ValidateVisitRoom(ctx, in.PracticeID, in.SiteID, in.RoomID)
+}
+
+// nullUUIDArg returns nil for empty string so Postgres stores NULL.
+func nullUUIDArg(id string) any {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return nil
+	}
+	return id
+}
+
+// checkResourceOverlapsTx rejects hard conflicts on assignee and room (when set).
+func (s *Store) checkResourceOverlapsTx(ctx context.Context, tx pgx.Tx, practiceID, siteID, assigneeUserID, roomID string, start time.Time, durMin int, excludeVisitID string) error {
+	end := start.Add(time.Duration(durMin) * time.Minute)
+	if aid := strings.TrimSpace(assigneeUserID); aid != "" {
+		var n int
+		if err := tx.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE practice_id = $1
+			  AND assignee_user_id = $2::uuid
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND ($5 = '' OR id::text <> $5)
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $4
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $6) || ' minutes')::interval > $3`,
+			practiceID, aid, start, end, excludeVisitID, durMin,
+		).Scan(&n); err != nil {
+			return err
+		}
+		if n > 0 {
+			return fmt.Errorf("%w: assignee_busy", ErrValidation)
+		}
+	}
+	if rid := strings.TrimSpace(roomID); rid != "" {
+		var n int
+		if err := tx.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE room_id = $1::uuid
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND ($4 = '' OR id::text <> $4)
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
+			rid, start, end, excludeVisitID, durMin,
+		).Scan(&n); err != nil {
+			return err
+		}
+		if n > 0 {
+			return fmt.Errorf("%w: room_busy", ErrValidation)
+		}
+	}
+	_ = siteID // site already locked by caller; resources are global to assignee/room
+	return nil
+}
+
+// CheckVisitResourceConflicts reports assignee_busy / room_busy for a proposed slot (no lock).
+func (s *Store) CheckVisitResourceConflicts(ctx context.Context, practiceID, assigneeUserID, roomID string, start time.Time, durMin int, excludeVisitID string) error {
+	end := start.Add(time.Duration(durMin) * time.Minute)
+	if aid := strings.TrimSpace(assigneeUserID); aid != "" {
+		var n int
+		if err := s.pool.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE practice_id = $1
+			  AND assignee_user_id = $2::uuid
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND ($5 = '' OR id::text <> $5)
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $4
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $6) || ' minutes')::interval > $3`,
+			practiceID, aid, start, end, excludeVisitID, durMin,
+		).Scan(&n); err != nil {
+			return err
+		}
+		if n > 0 {
+			return fmt.Errorf("%w: assignee_busy", ErrValidation)
+		}
+	}
+	if rid := strings.TrimSpace(roomID); rid != "" {
+		var n int
+		if err := s.pool.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE room_id = $1::uuid
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND ($4 = '' OR id::text <> $4)
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
+			rid, start, end, excludeVisitID, durMin,
+		).Scan(&n); err != nil {
+			return err
+		}
+		if n > 0 {
+			return fmt.Errorf("%w: room_busy", ErrValidation)
+		}
+	}
+	return nil
+}
+
 func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, error) {
 	if err := s.resolveCreateVisitSiteID(ctx, &in); err != nil {
+		return Visit{}, err
+	}
+	if err := s.validateCreateVisitResources(ctx, &in); err != nil {
 		return Visit{}, err
 	}
 	tx, err := s.pool.Begin(ctx)
@@ -387,14 +512,16 @@ func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, er
 	}
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
-			COALESCE(visit_type_id::text,'')`,
+			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,'')`,
 		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
+		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID),
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID,
+		&v.AssigneeUserID, &v.RoomID)
 	if err != nil {
 		return Visit{}, err
 	}
@@ -410,6 +537,9 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 		return Visit{}, fmt.Errorf("%w: scheduled_required", ErrValidation)
 	}
 	if err := s.resolveCreateVisitSiteID(ctx, &in); err != nil {
+		return Visit{}, err
+	}
+	if err := s.validateCreateVisitResources(ctx, &in); err != nil {
 		return Visit{}, err
 	}
 	tx, err := s.pool.Begin(ctx)
@@ -451,23 +581,33 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	// Walk-in consultation sessions do not block (or get blocked by) agenda slots.
 	if !in.ConsultationSession {
 		end := in.ScheduledAt.Add(time.Duration(dur) * time.Minute)
-		var n int
-		if err := tx.QueryRow(ctx, `
-			SELECT COUNT(*)::int FROM visits.visits
-			WHERE site_id = $1
-			  AND deleted_at IS NULL
-			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
-			  AND COALESCE(consultation_session, false) = false
-			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
-			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
-			  AND COALESCE(proposed_scheduled_at, scheduled_at)
-			      + (COALESCE(duration_minutes, $4) || ' minutes')::interval > $2`,
-			in.SiteID, *in.ScheduledAt, end, dur,
-		).Scan(&n); err != nil {
-			return Visit{}, err
+		// Legacy single-queue: only visits with neither assignee nor room compete for the site slot.
+		// Assigned/roomed visits may run in parallel on the same site (model 2).
+		unassignedOnly := strings.TrimSpace(in.AssigneeUserID) == "" && strings.TrimSpace(in.RoomID) == ""
+		if unassignedOnly {
+			var n int
+			if err := tx.QueryRow(ctx, `
+				SELECT COUNT(*)::int FROM visits.visits
+				WHERE site_id = $1
+				  AND deleted_at IS NULL
+				  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+				  AND COALESCE(consultation_session, false) = false
+				  AND assignee_user_id IS NULL
+				  AND room_id IS NULL
+				  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+				  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+				  AND COALESCE(proposed_scheduled_at, scheduled_at)
+				      + (COALESCE(duration_minutes, $4) || ' minutes')::interval > $2`,
+				in.SiteID, *in.ScheduledAt, end, dur,
+			).Scan(&n); err != nil {
+				return Visit{}, err
+			}
+			if n > 0 {
+				return Visit{}, fmt.Errorf("%w: slot_taken", ErrValidation)
+			}
 		}
-		if n > 0 {
-			return Visit{}, fmt.Errorf("%w: slot_taken", ErrValidation)
+		if err := s.checkResourceOverlapsTx(ctx, tx, in.PracticeID, in.SiteID, in.AssigneeUserID, in.RoomID, *in.ScheduledAt, dur, ""); err != nil {
+			return Visit{}, err
 		}
 	}
 
@@ -489,14 +629,16 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	id := uuid.NewString()
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
-			COALESCE(visit_type_id::text,'')`,
+			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,'')`,
 		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
+		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID),
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID,
+		&v.AssigneeUserID, &v.RoomID)
 	if err != nil {
 		return Visit{}, err
 	}
@@ -513,13 +655,18 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 			v.scheduled_at, v.status, COALESCE(v.notes,''), v.source, v.created_at,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.request_preconsult,false), COALESCE(v.consultation_session,false),
-			v.waiting_room_at
+			v.waiting_room_at,
+			COALESCE(v.assignee_user_id::text,''), COALESCE(au.full_name,''),
+			COALESCE(v.room_id::text,''), COALESCE(rm.name,'')
 		FROM visits.visits v
 		LEFT JOIN practice.sites si ON si.id = v.site_id
+		LEFT JOIN identity.users au ON au.id = v.assignee_user_id
+		LEFT JOIN practice.rooms rm ON rm.id = v.room_id
 		WHERE v.id = $1 AND v.deleted_at IS NULL`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt)
+		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt,
+		&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}
@@ -574,7 +721,66 @@ func (s *Store) UpdateVisitNotes(ctx context.Context, id, notes string) (Visit, 
 // RescheduleVisitDirect sets scheduled_at immediately (staff unilateral move).
 // Status stays confirmed (or becomes confirmed from reschedule_pending only).
 func (s *Store) RescheduleVisitDirect(ctx context.Context, id string, at time.Time) (Visit, error) {
-	tag, err := s.pool.Exec(ctx, `
+	cur, err := s.GetVisit(ctx, id)
+	if err != nil {
+		return Visit{}, err
+	}
+	if cur.ConsultationSession {
+		return Visit{}, ErrNotFound
+	}
+	if cur.Status != "confirmed" && cur.Status != "reschedule_pending" {
+		return Visit{}, ErrNotFound
+	}
+	dur := 30
+	if cur.DurationMinutes != nil {
+		dur = *cur.DurationMinutes
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Visit{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO practice.vet_schedule (site_id, practice_id)
+		VALUES ($1, $2) ON CONFLICT (site_id) DO NOTHING`, cur.SiteID, cur.PracticeID); err != nil {
+		return Visit{}, err
+	}
+	var locked string
+	if err := tx.QueryRow(ctx, `
+		SELECT site_id::text FROM practice.vet_schedule WHERE site_id = $1 FOR UPDATE`, cur.SiteID,
+	).Scan(&locked); err != nil {
+		return Visit{}, err
+	}
+	end := at.Add(time.Duration(dur) * time.Minute)
+	unassignedOnly := strings.TrimSpace(cur.AssigneeUserID) == "" && strings.TrimSpace(cur.RoomID) == ""
+	if unassignedOnly {
+		var n int
+		if err := tx.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE site_id = $1
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND assignee_user_id IS NULL
+			  AND room_id IS NULL
+			  AND id::text <> $4
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
+			cur.SiteID, at, end, id, dur,
+		).Scan(&n); err != nil {
+			return Visit{}, err
+		}
+		if n > 0 {
+			return Visit{}, fmt.Errorf("%w: slot_taken", ErrValidation)
+		}
+	}
+	if err := s.checkResourceOverlapsTx(ctx, tx, cur.PracticeID, cur.SiteID, cur.AssigneeUserID, cur.RoomID, at, dur, id); err != nil {
+		return Visit{}, err
+	}
+	tag, err := tx.Exec(ctx, `
 		UPDATE visits.visits
 		SET scheduled_at = $2,
 			proposed_scheduled_at = NULL,
@@ -587,6 +793,108 @@ func (s *Store) RescheduleVisitDirect(ctx context.Context, id string, at time.Ti
 		  AND status IN ('confirmed', 'reschedule_pending')`,
 		id, at,
 	)
+	if err != nil {
+		return Visit{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return Visit{}, ErrNotFound
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Visit{}, err
+	}
+	return s.GetVisit(ctx, id)
+}
+
+// SetVisitResources updates assignee and/or room (nil pointer = leave unchanged, empty string = clear).
+func (s *Store) SetVisitResources(ctx context.Context, id string, assigneeUserID, roomID *string) (Visit, error) {
+	cur, err := s.GetVisit(ctx, id)
+	if err != nil {
+		return Visit{}, err
+	}
+	nextAssignee := cur.AssigneeUserID
+	if assigneeUserID != nil {
+		nextAssignee = strings.TrimSpace(*assigneeUserID)
+	}
+	nextRoom := cur.RoomID
+	if roomID != nil {
+		nextRoom = strings.TrimSpace(*roomID)
+	}
+	if err := s.ValidateVisitAssignee(ctx, cur.PracticeID, nextAssignee); err != nil {
+		return Visit{}, err
+	}
+	if err := s.ValidateVisitRoom(ctx, cur.PracticeID, cur.SiteID, nextRoom); err != nil {
+		return Visit{}, err
+	}
+	if cur.ScheduledAt != nil && !cur.ConsultationSession {
+		dur := 30
+		if cur.DurationMinutes != nil {
+			dur = *cur.DurationMinutes
+		}
+		tx, err := s.pool.Begin(ctx)
+		if err != nil {
+			return Visit{}, err
+		}
+		defer tx.Rollback(ctx)
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO practice.vet_schedule (site_id, practice_id)
+			VALUES ($1, $2) ON CONFLICT (site_id) DO NOTHING`, cur.SiteID, cur.PracticeID); err != nil {
+			return Visit{}, err
+		}
+		var locked string
+		if err := tx.QueryRow(ctx, `
+			SELECT site_id::text FROM practice.vet_schedule WHERE site_id = $1 FOR UPDATE`, cur.SiteID,
+		).Scan(&locked); err != nil {
+			return Visit{}, err
+		}
+		if err := s.checkResourceOverlapsTx(ctx, tx, cur.PracticeID, cur.SiteID, nextAssignee, nextRoom, *cur.ScheduledAt, dur, id); err != nil {
+			return Visit{}, err
+		}
+		// Clearing both resources lands in the legacy unassigned queue.
+		if strings.TrimSpace(nextAssignee) == "" && strings.TrimSpace(nextRoom) == "" {
+			end := cur.ScheduledAt.Add(time.Duration(dur) * time.Minute)
+			var n int
+			if err := tx.QueryRow(ctx, `
+				SELECT COUNT(*)::int FROM visits.visits
+				WHERE site_id = $1
+				  AND deleted_at IS NULL
+				  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+				  AND COALESCE(consultation_session, false) = false
+				  AND assignee_user_id IS NULL
+				  AND room_id IS NULL
+				  AND id::text <> $4
+				  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+				  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+				  AND COALESCE(proposed_scheduled_at, scheduled_at)
+				      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
+				cur.SiteID, *cur.ScheduledAt, end, id, dur,
+			).Scan(&n); err != nil {
+				return Visit{}, err
+			}
+			if n > 0 {
+				return Visit{}, fmt.Errorf("%w: slot_taken", ErrValidation)
+			}
+		}
+		tag, err := tx.Exec(ctx, `
+			UPDATE visits.visits
+			SET assignee_user_id = $2, room_id = $3
+			WHERE id = $1 AND deleted_at IS NULL`,
+			id, nullUUIDArg(nextAssignee), nullUUIDArg(nextRoom))
+		if err != nil {
+			return Visit{}, err
+		}
+		if tag.RowsAffected() == 0 {
+			return Visit{}, ErrNotFound
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return Visit{}, err
+		}
+		return s.GetVisit(ctx, id)
+	}
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits
+		SET assignee_user_id = $2, room_id = $3
+		WHERE id = $1 AND deleted_at IS NULL`,
+		id, nullUUIDArg(nextAssignee), nullUUIDArg(nextRoom))
 	if err != nil {
 		return Visit{}, err
 	}
@@ -797,7 +1105,63 @@ func (s *Store) ProposeReschedule(ctx context.Context, id string, proposed time.
 }
 
 func (s *Store) AcceptReschedule(ctx context.Context, id string) (Visit, error) {
-	tag, err := s.pool.Exec(ctx, `
+	cur, err := s.GetVisit(ctx, id)
+	if err != nil {
+		return Visit{}, err
+	}
+	if cur.Status != "reschedule_pending" || cur.ProposedScheduledAt == nil || cur.ConsultationSession {
+		return Visit{}, ErrNotFound
+	}
+	at := *cur.ProposedScheduledAt
+	dur := 30
+	if cur.DurationMinutes != nil {
+		dur = *cur.DurationMinutes
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Visit{}, err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO practice.vet_schedule (site_id, practice_id)
+		VALUES ($1, $2) ON CONFLICT (site_id) DO NOTHING`, cur.SiteID, cur.PracticeID); err != nil {
+		return Visit{}, err
+	}
+	var locked string
+	if err := tx.QueryRow(ctx, `
+		SELECT site_id::text FROM practice.vet_schedule WHERE site_id = $1 FOR UPDATE`, cur.SiteID,
+	).Scan(&locked); err != nil {
+		return Visit{}, err
+	}
+	end := at.Add(time.Duration(dur) * time.Minute)
+	unassignedOnly := strings.TrimSpace(cur.AssigneeUserID) == "" && strings.TrimSpace(cur.RoomID) == ""
+	if unassignedOnly {
+		var n int
+		if err := tx.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM visits.visits
+			WHERE site_id = $1
+			  AND deleted_at IS NULL
+			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+			  AND COALESCE(consultation_session, false) = false
+			  AND assignee_user_id IS NULL
+			  AND room_id IS NULL
+			  AND id::text <> $4
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
+			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
+			  AND COALESCE(proposed_scheduled_at, scheduled_at)
+			      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
+			cur.SiteID, at, end, id, dur,
+		).Scan(&n); err != nil {
+			return Visit{}, err
+		}
+		if n > 0 {
+			return Visit{}, fmt.Errorf("%w: slot_taken", ErrValidation)
+		}
+	}
+	if err := s.checkResourceOverlapsTx(ctx, tx, cur.PracticeID, cur.SiteID, cur.AssigneeUserID, cur.RoomID, at, dur, id); err != nil {
+		return Visit{}, err
+	}
+	tag, err := tx.Exec(ctx, `
 		UPDATE visits.visits
 		SET scheduled_at = proposed_scheduled_at,
 			proposed_scheduled_at = NULL,
@@ -810,6 +1174,9 @@ func (s *Store) AcceptReschedule(ctx context.Context, id string) (Visit, error) 
 	}
 	if tag.RowsAffected() == 0 {
 		return Visit{}, ErrNotFound
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Visit{}, err
 	}
 	return s.GetVisit(ctx, id)
 }

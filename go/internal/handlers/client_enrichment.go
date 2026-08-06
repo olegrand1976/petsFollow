@@ -516,6 +516,8 @@ type createVisitReq struct {
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
 	VisitTypeID       *string `json:"visitTypeId"`
+	AssigneeUserID    string  `json:"assigneeUserId"`
+	RoomID            string  `json:"roomId"`
 	RequestPreconsult bool    `json:"requestPreconsult"`
 	// SilentConfirm skips client push/email when confirming immediately (walk-in consultation).
 	SilentConfirm bool `json:"silentConfirm"`
@@ -701,6 +703,13 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		ConfirmDirect:       confirmDirect,
 		ConsultationSession: consultationSession,
 	}
+	if actsAsPro {
+		// Assignee/room are calendar.manage only (not care_pro terrain).
+		if a.allowPracticePerm(r, id, "calendar.manage") {
+			in.AssigneeUserID = strings.TrimSpace(req.AssigneeUserID)
+			in.RoomID = strings.TrimSpace(req.RoomID)
+		}
+	}
 	if req.RequestPreconsult && source == "vet" && a.allowPracticePerm(r, id, "calendar.manage") {
 		in.RequestPreconsult = true
 	}
@@ -717,6 +726,14 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 				switch {
 				case strings.Contains(msg, "slot_taken"):
 					writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+				case strings.Contains(msg, "assignee_busy"):
+					writeErr(w, r, http.StatusConflict, "assignee_busy", "assignee_busy")
+				case strings.Contains(msg, "room_busy"):
+					writeErr(w, r, http.StatusConflict, "room_busy", "room_busy")
+				case strings.Contains(msg, "invalid_assignee"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_assignee")
+				case strings.Contains(msg, "invalid_room"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_room")
 				case strings.Contains(msg, "site_required"):
 					writeErr(w, r, http.StatusBadRequest, "bad_request", "site_required")
 				case strings.Contains(msg, "site_inactive"), strings.Contains(msg, "invalid_site"):
@@ -933,6 +950,8 @@ type updateVisitReq struct {
 	Action              string  `json:"action"`
 	ProposedScheduledAt *string `json:"proposedScheduledAt"`
 	RequestPreconsult   *bool   `json:"requestPreconsult"`
+	AssigneeUserID      *string `json:"assigneeUserId"`
+	RoomID              *string `json:"roomId"`
 }
 
 func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
@@ -1008,8 +1027,12 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		case "requested":
 			action = "reopen"
 		default:
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_action")
-			return
+			if req.AssigneeUserID != nil || req.RoomID != nil {
+				action = "set_resources"
+			} else {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_action")
+				return
+			}
 		}
 	}
 
@@ -1022,7 +1045,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 				writeErr(w, r, http.StatusForbidden, "forbidden", "care_pro_visit_only")
 				return
 			}
-		case "reschedule_direct", "send_preconsult", "mark_waiting_room", "clear_waiting_room":
+		case "reschedule_direct", "send_preconsult", "mark_waiting_room", "clear_waiting_room", "set_resources":
 			writeErr(w, r, http.StatusForbidden, "forbidden", "practice_staff_only")
 			return
 		}
@@ -1181,6 +1204,32 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		if newly {
 			a.notifyClinicalStaffWaitingRoom(id.UserID, pet, updated)
 		}
+	case "set_resources":
+		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
+			return
+		}
+		updated, err = a.store.SetVisitResources(r.Context(), visit.ID, req.AssigneeUserID, req.RoomID)
+		if err != nil {
+			if errors.Is(err, store.ErrValidation) {
+				msg := err.Error()
+				switch {
+				case strings.Contains(msg, "assignee_busy"):
+					writeErr(w, r, http.StatusConflict, "assignee_busy", "assignee_busy")
+				case strings.Contains(msg, "room_busy"):
+					writeErr(w, r, http.StatusConflict, "room_busy", "room_busy")
+				case strings.Contains(msg, "slot_taken"):
+					writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+				case strings.Contains(msg, "invalid_assignee"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_assignee")
+				case strings.Contains(msg, "invalid_room"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_room")
+				default:
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_visit")
+				}
+				return
+			}
+		}
 	case "clear_waiting_room":
 		if !kernel.IsPracticeStaff(id.Role) || !a.allowPracticePerm(r, id, "calendar.manage") {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_manage_required")
@@ -1209,13 +1258,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			if visit.DurationMinutes != nil {
 				dur = *visit.DurationMinutes
 			}
-			overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, visit.SiteID, *visit.ProposedScheduledAt, dur, visit.ID)
-			if oerr != nil {
-				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-				return
-			}
-			if overlap {
-				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+			if !a.writeVisitSlotConflicts(w, r, pet.PracticeID, visit.SiteID, visit, *visit.ProposedScheduledAt, dur, visit.ID) {
 				return
 			}
 		}
@@ -1254,7 +1297,17 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, store.ErrValidation) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			msg := err.Error()
+			switch {
+			case strings.Contains(msg, "slot_taken"):
+				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+			case strings.Contains(msg, "assignee_busy"):
+				writeErr(w, r, http.StatusConflict, "assignee_busy", "assignee_busy")
+			case strings.Contains(msg, "room_busy"):
+				writeErr(w, r, http.StatusConflict, "room_busy", "room_busy")
+			default:
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			}
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

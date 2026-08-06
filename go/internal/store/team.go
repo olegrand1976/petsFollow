@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -73,16 +74,17 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 }
 
 type TeamMember struct {
-	ID          string          `json:"id"`
-	PracticeID  string          `json:"practiceId"`
-	UserID      string          `json:"userId"`
-	ProfileID   string          `json:"profileId,omitempty"`
-	TeamRole    TeamRole        `json:"teamRole"`
-	Permissions map[string]bool `json:"permissions"`
-	Status      string          `json:"status"`
-	Email       string          `json:"email"`
-	FullName    string          `json:"fullName"`
-	CreatedAt   time.Time       `json:"createdAt"`
+	ID            string          `json:"id"`
+	PracticeID    string          `json:"practiceId"`
+	UserID        string          `json:"userId"`
+	ProfileID     string          `json:"profileId,omitempty"`
+	TeamRole      TeamRole        `json:"teamRole"`
+	Permissions   map[string]bool `json:"permissions"`
+	Status        string          `json:"status"`
+	Email         string          `json:"email"`
+	FullName      string          `json:"fullName"`
+	DefaultSiteID string          `json:"defaultSiteId,omitempty"`
+	CreatedAt     time.Time       `json:"createdAt"`
 }
 
 // hardDeniedCapabilities cannot be elevated via override for non-reference roles.
@@ -176,7 +178,8 @@ func (s *Store) ListTeamMembers(ctx context.Context, practiceID string) ([]TeamM
 	// (admin/commercial attached to VetPlus for switch demos only).
 	rows, err := s.pool.Query(ctx, `
 		SELECT tm.id::text, tm.practice_id::text, tm.user_id::text, COALESCE(tm.profile_id::text,''),
-			tm.team_role, tm.permissions, tm.status, u.email, u.full_name, tm.created_at
+			tm.team_role, tm.permissions, tm.status, u.email, u.full_name, tm.created_at,
+			COALESCE(tm.default_site_id::text,'')
 		FROM practice.team_members tm
 		JOIN identity.users u ON u.id = tm.user_id
 		WHERE tm.practice_id = $1 AND tm.status <> 'revoked'
@@ -207,7 +210,7 @@ func (s *Store) ListTeamMembers(ctx context.Context, practiceID string) ([]TeamM
 func scanTeamMember(row pgx.Row) (TeamMember, error) {
 	var m TeamMember
 	var raw []byte
-	err := row.Scan(&m.ID, &m.PracticeID, &m.UserID, &m.ProfileID, &m.TeamRole, &raw, &m.Status, &m.Email, &m.FullName, &m.CreatedAt)
+	err := row.Scan(&m.ID, &m.PracticeID, &m.UserID, &m.ProfileID, &m.TeamRole, &raw, &m.Status, &m.Email, &m.FullName, &m.CreatedAt, &m.DefaultSiteID)
 	if err != nil {
 		return TeamMember{}, err
 	}
@@ -445,7 +448,7 @@ func mustProfileID(ctx context.Context, s *Store, userID string, role kernel.Rol
 	return id
 }
 
-func (s *Store) UpdateTeamMember(ctx context.Context, practiceID, actorUserID, memberID string, teamRole *TeamRole, permissions map[string]bool) (TeamMember, error) {
+func (s *Store) UpdateTeamMember(ctx context.Context, practiceID, actorUserID, memberID string, teamRole *TeamRole, permissions map[string]bool, defaultSiteID *string) (TeamMember, error) {
 	ok, err := s.IsReferenceVet(ctx, practiceID, actorUserID)
 	if err != nil {
 		return TeamMember{}, err
@@ -457,11 +460,12 @@ func (s *Store) UpdateTeamMember(ctx context.Context, practiceID, actorUserID, m
 	var raw []byte
 	err = s.pool.QueryRow(ctx, `
 		SELECT tm.id::text, tm.practice_id::text, tm.user_id::text, COALESCE(tm.profile_id::text,''),
-			tm.team_role, tm.permissions, tm.status, u.email, u.full_name, tm.created_at
+			tm.team_role, tm.permissions, tm.status, u.email, u.full_name, tm.created_at,
+			COALESCE(tm.default_site_id::text,'')
 		FROM practice.team_members tm
 		JOIN identity.users u ON u.id = tm.user_id
 		WHERE tm.id=$1 AND tm.practice_id=$2`, memberID, practiceID,
-	).Scan(&cur.ID, &cur.PracticeID, &cur.UserID, &cur.ProfileID, &cur.TeamRole, &raw, &cur.Status, &cur.Email, &cur.FullName, &cur.CreatedAt)
+	).Scan(&cur.ID, &cur.PracticeID, &cur.UserID, &cur.ProfileID, &cur.TeamRole, &raw, &cur.Status, &cur.Email, &cur.FullName, &cur.CreatedAt, &cur.DefaultSiteID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TeamMember{}, ErrNotFound
 	}
@@ -469,7 +473,13 @@ func (s *Store) UpdateTeamMember(ctx context.Context, practiceID, actorUserID, m
 		return TeamMember{}, err
 	}
 	if cur.TeamRole == TeamRoleReferenceVet {
-		return TeamMember{}, ErrForbidden
+		// Reference vet role/permissions are immutable; default site may still be set.
+		if teamRole != nil || permissions != nil {
+			return TeamMember{}, ErrForbidden
+		}
+		if defaultSiteID == nil {
+			return TeamMember{}, ErrForbidden
+		}
 	}
 	newRole := cur.TeamRole
 	if teamRole != nil && *teamRole != "" && *teamRole != TeamRoleReferenceVet {
@@ -502,10 +512,23 @@ func (s *Store) UpdateTeamMember(ctx context.Context, practiceID, actorUserID, m
 				cur.UserID, string(kr), profileID, practiceID)
 		}
 	}
+	nextDefaultSite := cur.DefaultSiteID
+	if defaultSiteID != nil {
+		sid := strings.TrimSpace(*defaultSiteID)
+		if sid == "" {
+			nextDefaultSite = ""
+		} else {
+			resolved, rerr := s.ResolveSiteID(ctx, practiceID, sid, false)
+			if rerr != nil {
+				return TeamMember{}, fmt.Errorf("%w: invalid_site", ErrValidation)
+			}
+			nextDefaultSite = resolved
+		}
+	}
 	_, err = s.pool.Exec(ctx, `
-		UPDATE practice.team_members SET team_role=$3, permissions=$4, profile_id=$5
+		UPDATE practice.team_members SET team_role=$3, permissions=$4, profile_id=$5, default_site_id=$6
 		WHERE id=$1 AND practice_id=$2`,
-		memberID, practiceID, string(newRole), permJSON, nullIfEmpty(profileID))
+		memberID, practiceID, string(newRole), permJSON, nullIfEmpty(profileID), nullUUIDArg(nextDefaultSite))
 	if err != nil {
 		return TeamMember{}, err
 	}

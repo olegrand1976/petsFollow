@@ -35,6 +35,7 @@ type Prospect struct {
 	AppointmentOutcome string     `json:"appointmentOutcome,omitempty"`
 	LostReason         string     `json:"lostReason,omitempty"`
 	ConvertedVetUserID string     `json:"convertedVetUserId,omitempty"`
+	EmailOptOut        bool       `json:"emailOptOut"`
 	CommercialName     string     `json:"commercialName,omitempty"`
 	CommercialEmail    string     `json:"commercialEmail,omitempty"`
 	InactiveDays       int        `json:"inactiveDays"`
@@ -99,13 +100,13 @@ const prospectSelectCols = `
 	id::text, COALESCE(commercial_user_id::text,''), practice_name, contact_name, contact_email, contact_phone,
 	city, notes, source, COALESCE(referring_vet_user_id::text,''), status, status_changed_at, created_at, updated_at,
 	first_contacted_at, last_contacted_at, appointment_at, COALESCE(appointment_outcome,''),
-	COALESCE(lost_reason,''), COALESCE(converted_vet_user_id::text,'')`
+	COALESCE(lost_reason,''), COALESCE(converted_vet_user_id::text,''), COALESCE(email_opt_out, false)`
 
 const prospectSelectColsP = `
 	p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
 	p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 	p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
-	COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,'')`
+	COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''), COALESCE(p.email_opt_out, false)`
 
 func scanProspectRow(scan func(dest ...any) error) (Prospect, error) {
 	var p Prospect
@@ -113,7 +114,7 @@ func scanProspectRow(scan func(dest ...any) error) (Prospect, error) {
 	err := scan(
 		&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 		&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 	)
 	if err != nil {
 		return Prospect{}, err
@@ -230,7 +231,7 @@ func (s *Store) findOwnedDuplicateProspect(ctx context.Context, practiceName, ph
 	err := row.Scan(
 		&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 		&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 		&ownerName, &ownerID,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -360,7 +361,7 @@ func (s *Store) LookupProspect(ctx context.Context, q string) (ProspectLookupRes
 	err := row.Scan(
 		&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 		&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+		&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 		&ownerName, &ownerID,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -621,7 +622,7 @@ func (s *Store) ListAllProspects(ctx context.Context, statusFilter string) ([]Pr
 		SELECT p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
 			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 			p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
-			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''),
+			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''), COALESCE(p.email_opt_out, false),
 			COALESCE(u.full_name,''), COALESCE(u.email,'')
 		FROM sales.prospects p
 		LEFT JOIN identity.users u ON u.id = p.commercial_user_id
@@ -637,7 +638,7 @@ func (s *Store) ListAllProspects(ctx context.Context, statusFilter string) ([]Pr
 		var first, last, appt *time.Time
 		if err := rows.Scan(&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
 			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
-			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
+			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID, &p.EmailOptOut,
 			&p.CommercialName, &p.CommercialEmail); err != nil {
 			return nil, err
 		}

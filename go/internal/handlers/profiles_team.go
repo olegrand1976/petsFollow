@@ -291,19 +291,22 @@ func (a *API) patchVetTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	memberID := chi.URLParam(r, "id")
 	var req struct {
-		TeamRole    *store.TeamRole `json:"teamRole"`
-		Permissions map[string]bool `json:"permissions"`
+		TeamRole      *store.TeamRole `json:"teamRole"`
+		Permissions   map[string]bool `json:"permissions"`
+		DefaultSiteID *string         `json:"defaultSiteId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "validation", "validation")
 		return
 	}
-	m, err := a.store.UpdateTeamMember(r.Context(), id.PracticeID, id.UserID, memberID, req.TeamRole, req.Permissions)
+	m, err := a.store.UpdateTeamMember(r.Context(), id.PracticeID, id.UserID, memberID, req.TeamRole, req.Permissions, req.DefaultSiteID)
 	switch {
 	case errors.Is(err, store.ErrForbidden):
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 	case errors.Is(err, store.ErrNotFound):
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+	case errors.Is(err, store.ErrValidation):
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
 	case err != nil:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	default:

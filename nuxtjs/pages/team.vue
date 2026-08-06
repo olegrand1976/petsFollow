@@ -29,6 +29,7 @@
             <th>{{ $t('team.columnEmail') }}</th>
             <th>{{ $t('team.columnRole') }}</th>
             <th>{{ $t('team.columnRights') }}</th>
+            <th v-if="sitesUiEnabled">{{ $t('team.columnDefaultSite') }}</th>
             <th v-if="canManageTeam" />
           </tr>
         </thead>
@@ -58,6 +59,21 @@
                 </label>
               </div>
               <span v-else class="pro-hint">{{ $t('team.defaults') }}</span>
+            </td>
+            <td v-if="sitesUiEnabled">
+              <select
+                v-if="canManageTeam"
+                class="pro-select"
+                :value="m.defaultSiteId || ''"
+                :data-testid="`team-default-site-${m.id}`"
+                @change="setDefaultSite(m, ($event.target as HTMLSelectElement).value)"
+              >
+                <option value="">{{ $t('team.defaultSiteNone') }}</option>
+                <option v-for="s in practiceSites" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+              <span v-else data-testid="team-default-site-label">
+                {{ siteLabel(m.defaultSiteId) }}
+              </span>
             </td>
             <td v-if="canManageTeam">
               <ProIconAction
@@ -126,13 +142,18 @@ type TeamMember = {
   email: string
   teamRole: string
   permissions: Record<string, boolean>
+  defaultSiteId?: string
 }
+
+type PracticeSite = { id: string; name: string }
 
 const { t, te } = useI18n()
 const { fetchUser } = useProUser()
 const { canPractice } = usePracticePerms()
+const { sitesUiEnabled } = usePracticeSites()
 const canManageTeam = computed(() => canPractice('team.manage'))
 const members = ref<TeamMember[]>([])
+const practiceSites = ref<PracticeSite[]>([])
 const saving = ref(false)
 const inviteMsg = ref('')
 const form = reactive({
@@ -150,6 +171,11 @@ function roleLabel(role: string) {
     secretary: t('team.roleSecretary'),
   }
   return map[role] ?? role
+}
+
+function siteLabel(siteId?: string) {
+  if (!siteId) return t('team.defaultSiteNone')
+  return practiceSites.value.find((s) => s.id === siteId)?.name || siteId
 }
 
 function permI18nPath(key: TeamPermKey, field: 'label' | 'tip') {
@@ -173,11 +199,23 @@ function isHardDenied(role: string, key: string) {
 
 async function load() {
   await fetchUser(true)
-  const res = await $fetch<{ data?: { members?: TeamMember[]; deskIdleMinutes?: number } | TeamMember[] } | TeamMember[]>('/api/vet/team')
+  const fetches: Promise<any>[] = [
+    $fetch<{ data?: { members?: TeamMember[]; deskIdleMinutes?: number } | TeamMember[] } | TeamMember[]>('/api/vet/team'),
+  ]
+  if (sitesUiEnabled.value) {
+    fetches.push($fetch('/api/vet/sites'))
+  }
+  const [res, sitesRes] = await Promise.all(fetches)
   const payload = Array.isArray(res) ? res : (res.data ?? [])
   members.value = Array.isArray(payload)
     ? payload
     : (Array.isArray(payload.members) ? payload.members : [])
+  if (sitesRes) {
+    const list = sitesRes?.data ?? sitesRes ?? []
+    practiceSites.value = (Array.isArray(list) ? list : [])
+      .filter((s: any) => s?.id && s.active !== false)
+      .map((s: any) => ({ id: String(s.id), name: String(s.name || s.id) }))
+  }
 }
 
 async function invite() {
@@ -201,6 +239,14 @@ async function togglePerm(m: TeamMember, key: string, checked: boolean) {
   if (isHardDenied(m.teamRole, key)) return
   const permissions = { ...m.permissions, [key]: checked }
   await $fetch(`/api/vet/team/${m.id}`, { method: 'PATCH', body: { permissions } })
+  await load()
+}
+
+async function setDefaultSite(m: TeamMember, siteId: string) {
+  await $fetch(`/api/vet/team/${m.id}`, {
+    method: 'PATCH',
+    body: { defaultSiteId: siteId || '' },
+  })
   await load()
 }
 

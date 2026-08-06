@@ -4,7 +4,7 @@ import { loginAsVet, nativeClick } from '../helpers/auth'
 test('page calendrier accessible', async ({ page }) => {
   await loginAsVet(page)
   await page.goto('/calendar')
-  await expect(page.getByTestId('calendar-page')).toBeVisible()
+  await expect(page.getByTestId('calendar-page')).toHaveAttribute('data-calendar-ready', '1', { timeout: 15000 })
   await expect(page.getByRole('heading', { name: /calendrier|calendar|agenda/i })).toBeVisible()
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 })
@@ -14,16 +14,17 @@ test('bascule semaine / mois et aujourd’hui', async ({ page }) => {
   await page.goto('/calendar')
   await page.evaluate(() => localStorage.removeItem('pf-calendar-view'))
   await page.reload({ waitUntil: 'networkidle' })
+  await expect(page.getByTestId('calendar-page')).toHaveAttribute('data-calendar-ready', '1', { timeout: 15000 })
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 
-  await page.getByTestId('calendar-view-week').dispatchEvent('click')
+  await nativeClick(page, 'calendar-view-week')
   await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true')
 
-  await page.getByTestId('calendar-view-month').dispatchEvent('click')
+  await nativeClick(page, 'calendar-view-month')
   await expect(page.getByTestId('calendar-view-month')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 
-  await page.getByTestId('calendar-view-week').dispatchEvent('click')
+  await nativeClick(page, 'calendar-view-week')
   await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true')
 
   await page.getByTestId('calendar-today').click({ force: true })

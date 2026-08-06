@@ -216,6 +216,7 @@ Compte : `vet.demo@petsfollow.test`
 | C3.15 | P2 | Rappel J-1 sans secret | Même appel sans header | 401 `unauthorized` |
 | C3.11 | P1 | Détail RDV véto/ASV | `/calendar` en `vet.demo` (ou `vet.assist`) → détail RDV | Mêmes options desk que secrétaire (note, modifier heure, supprimer, pré-consult, salle d’attente) ; **pas** de CR inline — CTA **Nouvelle consultation** **et** **Voir la consultation** ouvrent le **même** workspace `/consultations/{id}` (stade édition vs lecture) ; fermer sans save n’annule pas un RDV agenda ; secrétaire : aucun CTA ; Vitest `visitConsultationCta` + `useConsultationFlow` (preserveVisit) ; e2e `13-team-staff-smoke` B2d (véto) + B2e (ASV) + `03b-consultation` (RDV → CTA → visite conservée) |
 | C3.16 | P1 | Multi-sites | Seed VetPlus (≥2 sites) ; settings create/rename/primary/deactivate ; filtre topbar ; badge site agenda + colonne consultations ; soft-GA flag off = filtre `defaultSiteId` (pas agrégat API) ; overlap cross-site OK ; booking client `site_required` si N>1 sans `siteId` ; reschedule Flutter verrouille `visit.siteId` | Go `TestPracticeSites*` / `TestBookingRequiresSite*` / `TestDeactivateBlocked*` / `TestVisitOverlap*` ; e2e `03f-sites` (switcher + rename non-primary + restore + colonne consult) ; widget Flutter `book_visit_site_*` + reschedule locked ; Vitest `usePracticeSites` flag off ; mono-site transparent |
+| C3.17 | P1 | Calendrier ressources | Salles par site (CRUD + réactivation settings) ; assignee + room sur RDV ; vue jour colonnes Personnes/Salles (bascule + colonnes orphelines) ; SITE_ALL exige site concret ; overlap file unassigned + `assignee_busy` / `room_busy` / clear→`slot_taken` ; seed VetPlus rooms | Go `TestRoomsCRUDAndVisitResources` ; e2e `03g-calendar-resources` ; soft-GA `NUXT_PUBLIC_SITES_UI_ENABLED` |
 
 ### C4 — Messagerie Pro
 
@@ -314,6 +315,7 @@ Compte : `commercial.demo@petsfollow.test`
 |----|-----|-----|--------|---------|
 | E1.1 | P0 | Overview | `/commercial` | Portfolio |
 | E1.2 | P0 | Prospects CRM | Contact → RDV → résultat + lookup/claim premier encodé | Transitions ; owned → message collègue |
+| E1.2c | P1 | Mail commercial | Templates partagés + envoi depuis fiche prospect + historique opens/clics | `/commercial/email-templates`, `/commercial/emails` ; Go `TestCommercialMailTemplatesSendTrackAndOptOut` · Playwright `07-commercial` |
 | E1.2b | P1 | Pastille inactif | Pastille rouge ≥ 30 j | Visible sur lignes stale |
 | E1.3 | P1 | Encode véto | `/commercial/vets` inscription véto | Compte créé / assigné ; 409 si déjà assigné ailleurs |
 | E1.4 | P1 | Client lié | Encode client lié cabinet | Pets / commission possibles |
@@ -817,7 +819,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
-| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation · redirect pitch-deck → `/presentation` | `@p1` (filiation) |
+| `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation / mail templates+envoi · redirect pitch-deck → `/presentation` | `@p1` (filiation) |
 | `24-product-flows` | `/flux` nav + deep-link `?profile=` + redirect alias + admin/manager + refus véto | P2 |
 | `25-presentation-ai-flows` | `/presentation` + `/flux-ia` nav, steps, Mermaid, admin/manager, refus véto | P2 |
 | `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |

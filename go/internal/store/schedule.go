@@ -262,12 +262,16 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteI
 			COALESCE(v.visit_type_id::text, ''),
 			COALESCE(vt.name, ''),
 			COALESCE(vt.color, ''),
-			v.waiting_room_at
+			v.waiting_room_at,
+			COALESCE(v.assignee_user_id::text,''), COALESCE(au.full_name,''),
+			COALESCE(v.room_id::text,''), COALESCE(rm.name,'')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
 		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
 		LEFT JOIN practice.sites si ON si.id = v.site_id
+		LEFT JOIN identity.users au ON au.id = v.assignee_user_id
+		LEFT JOIN practice.rooms rm ON rm.id = v.room_id
 		WHERE v.practice_id = $1
 		  AND v.deleted_at IS NULL
 		  AND v.status IN ('requested', 'confirmed', 'reschedule_pending')
@@ -290,6 +294,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteI
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
 			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor, &v.WaitingRoomAt,
+			&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName,
 		); err != nil {
 			return nil, err
 		}
@@ -356,6 +361,7 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID, siteID string, 
 		return false, err
 	}
 	end := start.Add(time.Duration(durationMin) * time.Minute)
+	// Legacy unassigned queue only (parallel allowed when visits carry assignee/room).
 	var n int
 	err = s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM visits.visits
@@ -363,6 +369,8 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID, siteID string, 
 		  AND deleted_at IS NULL
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND COALESCE(consultation_session, false) = false
+		  AND assignee_user_id IS NULL
+		  AND room_id IS NULL
 		  AND ($4 = '' OR id::text <> $4)
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
@@ -441,6 +449,10 @@ func parseHM(s string) (h, m int) {
 func overlapsBusy(visits []Visit, start, end time.Time, defaultDur int) bool {
 	for _, v := range visits {
 		if v.ConsultationSession {
+			continue
+		}
+		// Assigned/roomed visits do not consume the legacy client booking queue.
+		if strings.TrimSpace(v.AssigneeUserID) != "" || strings.TrimSpace(v.RoomID) != "" {
 			continue
 		}
 		busyAt := v.ScheduledAt

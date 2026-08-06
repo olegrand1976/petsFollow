@@ -24,6 +24,10 @@ export type CalendarVisit = {
   visitTypeColor?: string
   siteId?: string
   siteName?: string
+  assigneeUserId?: string
+  assigneeName?: string
+  roomId?: string
+  roomName?: string
 }
 
 /**

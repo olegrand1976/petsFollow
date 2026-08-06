@@ -101,6 +101,33 @@
             <span>{{ $t('clients.pet.visitRequestPreconsult') }}</span>
           </label>
           <p class="pro-settings-hint">{{ $t('calendar.newAppt.preconsultHint') }}</p>
+
+          <template v-if="sitesUiEnabled">
+            <div class="pro-field">
+              <label class="pro-label" for="new-appt-assignee">{{ $t('calendar.assignee') }}</label>
+              <select
+                id="new-appt-assignee"
+                v-model="assigneeUserId"
+                class="pro-select"
+                data-testid="new-appt-assignee"
+              >
+                <option value="">{{ $t('calendar.unassigned') }}</option>
+                <option v-for="m in teamMembers" :key="m.id" :value="m.id">{{ m.fullName }}</option>
+              </select>
+            </div>
+            <div class="pro-field">
+              <label class="pro-label" for="new-appt-room">{{ $t('calendar.room') }}</label>
+              <select
+                id="new-appt-room"
+                v-model="roomId"
+                class="pro-select"
+                data-testid="new-appt-room"
+              >
+                <option value="">{{ $t('calendar.noRoom') }}</option>
+                <option v-for="r in rooms" :key="r.id" :value="r.id">{{ r.name }}</option>
+              </select>
+            </div>
+          </template>
         </section>
 
         <section class="new-appt__section" aria-labelledby="new-appt-when">
@@ -206,6 +233,8 @@ import type { CalendarVisit } from '~/composables/useCalendarGrid'
 type ClientRow = { userId: string; displayName?: string; email?: string }
 type PetRow = { id: string; name: string }
 type VisitTypeRow = { id: string; name: string; durationMinutes: number; color: string }
+type TeamMemberRow = { id: string; fullName: string }
+type RoomRow = { id: string; name: string }
 
 const props = defineProps<{
   open: boolean
@@ -243,6 +272,8 @@ const targetSiteId = computed(() => createSiteId.value || concreteSiteId.value)
 const clients = ref<ClientRow[]>([])
 const pets = ref<PetRow[]>([])
 const visitTypes = ref<VisitTypeRow[]>([])
+const teamMembers = ref<TeamMemberRow[]>([])
+const rooms = ref<RoomRow[]>([])
 const petsLoading = ref(false)
 const busy = ref(false)
 const error = ref('')
@@ -250,6 +281,8 @@ const error = ref('')
 const clientId = ref('')
 const petId = ref('')
 const visitTypeId = ref('')
+const assigneeUserId = ref('')
+const roomId = ref('')
 const day = ref('')
 const time = ref('09:00')
 const durationMinutes = ref(30)
@@ -345,6 +378,8 @@ watch(
     visitTypeId.value = ''
     clientId.value = ''
     petId.value = ''
+    assigneeUserId.value = ''
+    roomId.value = ''
     createSiteId.value = concreteSiteId.value || sites.value[0]?.id || ''
     day.value = props.defaultDay || dayKey(startOfDay(new Date()))
     time.value = '09:00'
@@ -362,16 +397,40 @@ watch(createSiteId, async (id, prev) => {
     if (!visitTypeId.value) durationMinutes.value = defaultDuration.value
   }
   catch { /* keep current duration */ }
+  if (sitesUiEnabled.value) {
+    roomId.value = ''
+    await loadRooms(id)
+  }
 })
+
+async function loadRooms(siteId: string) {
+  if (!siteId) {
+    rooms.value = []
+    return
+  }
+  try {
+    const roomsRes: any = await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`)
+    const list = roomsRes?.data ?? roomsRes ?? []
+    rooms.value = (Array.isArray(list) ? list : [])
+      .filter((r: any) => r?.id && r.active !== false)
+      .map((r: any) => ({ id: String(r.id), name: String(r.name || r.id) }))
+  } catch {
+    rooms.value = []
+  }
+}
 
 async function loadMeta() {
   try {
     const siteQ = targetSiteId.value
-    const [clientsRes, typesRes, schedRes]: any[] = await Promise.all([
+    const fetches: Promise<any>[] = [
       $fetch('/api/clients'),
       $fetch('/api/vet/visit-types?active=1'),
       $fetch(withSiteQuery('/api/vet/schedule', siteQ)),
-    ])
+    ]
+    if (sitesUiEnabled.value) {
+      fetches.push($fetch('/api/vet/team'))
+    }
+    const [clientsRes, typesRes, schedRes, teamRes] = await Promise.all(fetches)
     const cl = clientsRes.data ?? clientsRes ?? []
     clients.value = (Array.isArray(cl) ? cl : [])
       .filter((c: any) => c?.userId)
@@ -391,6 +450,26 @@ async function loadMeta() {
       }))
     const sched = schedRes.data ?? schedRes
     defaultDuration.value = sched?.slotDurationMinutes || 30
+    if (teamRes) {
+      const teamPayload = Array.isArray(teamRes) ? teamRes : (teamRes?.data ?? [])
+      const members = Array.isArray(teamPayload)
+        ? teamPayload
+        : (Array.isArray(teamPayload?.members) ? teamPayload.members : [])
+      teamMembers.value = members
+        .filter((m: any) => m?.userId)
+        .map((m: any) => ({
+          id: String(m.userId),
+          fullName: String(m.fullName || m.email || m.userId),
+          defaultSiteId: m.defaultSiteId ? String(m.defaultSiteId) : '',
+        }))
+        .filter((m: { id: string; defaultSiteId: string }) => {
+          const sid = targetSiteId.value
+          return !sid || !m.defaultSiteId || m.defaultSiteId === sid
+        })
+    }
+    if (sitesUiEnabled.value) {
+      await loadRooms(siteQ)
+    }
   } catch (e: any) {
     error.value = mapError(e) || t('calendar.newAppointmentLoadFailed')
   }
@@ -417,6 +496,10 @@ async function submit(confirmDirect: boolean) {
       body.visitTypeId = visitTypeId.value
     } else {
       body.durationMinutes = Number(durationMinutes.value) || defaultDuration.value
+    }
+    if (sitesUiEnabled.value) {
+      if (assigneeUserId.value) body.assigneeUserId = assigneeUserId.value
+      if (roomId.value) body.roomId = roomId.value
     }
     await $fetch(`/api/pets/${petId.value}/visits`, { method: 'POST', body })
     emit('created')
