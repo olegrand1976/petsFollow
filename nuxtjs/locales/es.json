@@ -2581,17 +2581,17 @@
     "terms": {
       "title": "Condiciones de uso",
       "link": "Condiciones",
-      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas respiratorias) y la comunicación con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}petsfollow.app."
+      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas respiratorias) y la comunicación con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: barbara{'@'}petsfollow.app · 0478.02.33.77."
     },
     "privacy": {
       "title": "Política de privacidad",
       "link": "Privacidad",
-      "body": "petsFollow trata datos personales para la continuidad de cuidados animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia respiratoria (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o support{'@'}petsfollow.app."
+      "body": "petsFollow trata datos personales para la continuidad de cuidados animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia respiratoria (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o barbara{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Aviso legal",
       "link": "Aviso legal",
-      "body": "Editor: LL-IT-SC / petsFollow. Contacto: support{'@'}petsfollow.app. Alojamiento: Google Cloud Platform (conforme al RGPD)."
+      "body": "Editor: LL-IT-SC / petsFollow. Contacto: barbara{'@'}petsfollow.app · 0478.02.33.77. Alojamiento: Google Cloud Platform (conforme al RGPD)."
     },
     "navAria": "Legal"
   },

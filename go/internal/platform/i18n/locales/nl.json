@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "Het supportteam heeft geantwoord op uw verzoek “{subject}”.",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "petsFollow openen",
-    "support_ticket_reply_disclaimer": "Voor meer details: mail support@petsfollow.app met vermelding van uw ticket.",
+    "support_ticket_reply_disclaimer": "Voor meer details: mail barbara@petsfollow.app met vermelding van uw ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Drempelwaarschuwing ademhalingsfrequentie",
     "heartrate_alert_tagline": "BPM-drempelwaarschuwing",
     "heartrate_alert_preheader": "Significante BPM-stijging — {bpm}.",

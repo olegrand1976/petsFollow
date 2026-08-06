@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "Il team di supporto ha risposto alla tua richiesta «{subject}».",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Apri petsFollow",
-    "support_ticket_reply_disclaimer": "Per aggiungere dettagli, scrivi a support@petsfollow.app citando il ticket.",
+    "support_ticket_reply_disclaimer": "Per aggiungere dettagli, scrivi a barbara@petsfollow.app citando il ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Allerta soglia respiratoria",
     "heartrate_alert_tagline": "Allerta soglia BPM",
     "heartrate_alert_preheader": "Aumento significativo del BPM — {bpm}.",

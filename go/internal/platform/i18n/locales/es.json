@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "El equipo de soporte respondió a su solicitud «{subject}».",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Abrir petsFollow",
-    "support_ticket_reply_disclaimer": "Para añadir información, escriba a support@petsfollow.app mencionando su ticket.",
+    "support_ticket_reply_disclaimer": "Para añadir información, escriba a barbara@petsfollow.app mencionando su ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Alerta de umbral cardíaco",
     "heartrate_alert_tagline": "Alerta de umbral BPM",
     "heartrate_alert_preheader": "Aumento significativo del BPM — {bpm}.",

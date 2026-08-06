@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "Tugimeeskond vastas teie päringule „{subject}”.",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Ava petsFollow",
-    "support_ticket_reply_disclaimer": "Lisainfo saamiseks kirjutage support@petsfollow.app ja mainige piletit.",
+    "support_ticket_reply_disclaimer": "Lisainfo saamiseks kirjutage barbara@petsfollow.app ja mainige piletit.",
     "heartrate_alert_subject": "petsFollow Pro — Hingamissageduse lävealarm",
     "heartrate_alert_tagline": "BPM lävealarm",
     "heartrate_alert_preheader": "Oluline BPM tõus — {bpm}.",

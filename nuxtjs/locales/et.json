@@ -2581,17 +2581,17 @@
     "terms": {
       "title": "Kasutustingimused",
       "link": "Tingimused",
-      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, hingamissageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}petsfollow.app."
+      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, hingamissageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: barbara{'@'}petsfollow.app · 0478.02.33.77."
     },
     "privacy": {
       "title": "Privaatsuspoliitika",
       "link": "Privaatsus",
-      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), hingamissageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}petsfollow.app."
+      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), hingamissageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või barbara{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Õigusteave",
       "link": "Õigusteave",
-      "body": "Väljaandja: LL-IT-SC / petsFollow. Kontakt: support{'@'}petsfollow.app. Majutus: Google Cloud Platform (GDPR-nõuetele vastav)."
+      "body": "Väljaandja: LL-IT-SC / petsFollow. Kontakt: barbara{'@'}petsfollow.app · 0478.02.33.77. Majutus: Google Cloud Platform (GDPR-nõuetele vastav)."
     },
     "navAria": "Õiguslik"
   },

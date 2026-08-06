@@ -76,7 +76,7 @@ type Config struct {
 	OpsNotifyEmail string
 	// CommercialContactPhone — fallback téléphone commercial (mail/PDF dossier) si profil vide.
 	CommercialContactPhone string
-	// SupportInboxEmail reçoit les nouveaux tickets bug-report (défaut support@petsfollow.app).
+	// SupportInboxEmail reçoit les nouveaux tickets bug-report (défaut barbara@petsfollow.app).
 	SupportInboxEmail string
 	// AuthHealthSecret protège POST /internal/auth-health/run.
 	AuthHealthSecret string
@@ -218,7 +218,7 @@ func Load() Config {
 		AiModuleFrictionSecret:  envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:          envOr("OPS_NOTIFY_EMAIL", ""),
 		CommercialContactPhone:  envOr("COMMERCIAL_CONTACT_PHONE", ""),
-		SupportInboxEmail:       envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
+		SupportInboxEmail:       envOr("SUPPORT_INBOX_EMAIL", "barbara@petsfollow.app"),
 		AuthHealthSecret:        envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:           envBool("MLM_ORG_ENABLED"),
 		PharmacyEnabled:         envBool("PHARMACY_ENABLED"),

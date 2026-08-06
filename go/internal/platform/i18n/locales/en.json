@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "The support team replied to your request “{subject}”.",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Open petsFollow",
-    "support_ticket_reply_disclaimer": "To add more details, email support@petsfollow.app and mention your ticket.",
+    "support_ticket_reply_disclaimer": "To add more details, email barbara@petsfollow.app and mention your ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Respiratory rate threshold alert",
     "heartrate_alert_tagline": "BPM threshold alert",
     "heartrate_alert_preheader": "Significant BPM rise — {bpm}.",

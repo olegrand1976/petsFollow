@@ -2581,17 +2581,17 @@
     "terms": {
       "title": "Terms of use",
       "link": "Terms",
-      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, respiratory rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}petsfollow.app."
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, respiratory rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: barbara{'@'}petsfollow.app · 0478.02.33.77."
     },
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), respiratory rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}petsfollow.app."
+      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), respiratory rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or barbara{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Legal notice",
       "link": "Legal notice",
-      "body": "Publisher: LL-IT-SC / petsFollow. Contact: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (GDPR-compliant)."
+      "body": "Publisher: LL-IT-SC / petsFollow. Contact: barbara{'@'}petsfollow.app · 0478.02.33.77. Hosting: Google Cloud Platform (GDPR-compliant)."
     },
     "navAria": "Legal"
   },

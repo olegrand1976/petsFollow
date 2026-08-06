@@ -2581,17 +2581,17 @@
     "terms": {
       "title": "Gebruiksvoorwaarden",
       "link": "Voorwaarden",
-      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, ademhalingsmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}petsfollow.app."
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, ademhalingsmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: barbara{'@'}petsfollow.app · 0478.02.33.77."
     },
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), ademhalingsmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}petsfollow.app."
+      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), ademhalingsmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of barbara{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
       "link": "Juridische vermeldingen",
-      "body": "Uitgever: LL-IT-SC / petsFollow. Contact: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (AVG-conform)."
+      "body": "Uitgever: LL-IT-SC / petsFollow. Contact: barbara{'@'}petsfollow.app · 0478.02.33.77. Hosting: Google Cloud Platform (AVG-conform)."
     },
     "navAria": "Juridisch"
   },

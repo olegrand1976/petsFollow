@@ -598,7 +598,7 @@
     "support_ticket_reply_intro": "Команда поддержки ответила на ваше обращение «{subject}».",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Открыть petsFollow",
-    "support_ticket_reply_disclaimer": "Если нужно добавить информацию, отвечайте на support@petsfollow.app, указав номер обращения.",
+    "support_ticket_reply_disclaimer": "Если нужно добавить информацию, отвечайте на barbara@petsfollow.app, указав номер обращения.",
     "heartrate_alert_subject": "petsFollow Pro — оповещение о пороговой частоте дыхания",
     "heartrate_alert_tagline": "Оповещение о пороговой частоте",
     "heartrate_alert_preheader": "Значительный рост частоты дыхания — {bpm}.",

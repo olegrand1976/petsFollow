@@ -3544,17 +3544,17 @@
     "terms": {
       "title": "Condizioni generali d'uso",
       "link": "CGU",
-      "body": "I presenti termini regolano l'uso di petsFollow Pro da parte dei veterinari e l'applicazione mobile da parte dei proprietari. L'app consente il monitoraggio prescritto (messaggistica, promemoria per la cura/il cavallo, letture respiratorie) e la comunicazione con lo studio. I pagamenti per abbonamenti e componenti aggiuntivi vengono elaborati da Stripe. L'utente si impegna a utilizzare il servizio in conformità con lo scopo previsto. Contatto: support{'@'}petsfollow.app."
+      "body": "I presenti termini regolano l'uso di petsFollow Pro da parte dei veterinari e l'applicazione mobile da parte dei proprietari. L'app consente il monitoraggio prescritto (messaggistica, promemoria per la cura/il cavallo, letture respiratorie) e la comunicazione con lo studio. I pagamenti per abbonamenti e componenti aggiuntivi vengono elaborati da Stripe. L'utente si impegna a utilizzare il servizio in conformità con lo scopo previsto. Contatto: barbara{'@'}petsfollow.app · 0478.02.33.77."
     },
     "privacy": {
       "title": "Informativa sulla privacy",
       "link": "Riservatezza",
-      "body": "petsFollow tratta i dati personali per garantire la continuità della cura degli animali: identità (nome, e-mail), dati degli animali (nome, specie, razza, foto), letture della frequenza respiratoria (dati sulla salute degli animali), messaggi e media con lo studio, rapporti sulle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (Firebase Cloud Messaging), dati di pagamento elaborati da Stripe. Finalità: account, monitoraggio, messaggistica, notifiche, report, fatturazione. Elaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite, importare file dei clienti e corsi di formazione commerciale (audio elaborato in tempo reale, non archiviato da Google). Partner: Google (Sign-In, FCM, Gemini), Stripe, hosting Google Cloud Platform. Conservazione: durata dell'account poi cancellazione; account inattivi eliminati dopo 3 anni; registrazioni audio delle relazioni conservate per tutta la durata del fascicolo. Diritti GDPR (accesso, rettifica, cancellazione, portabilità): impostazioni (esportazione dei tuoi dati, cancellazione dell'account) o support{'@'}petsfollow.app."
+      "body": "petsFollow tratta i dati personali per garantire la continuità della cura degli animali: identità (nome, e-mail), dati degli animali (nome, specie, razza, foto), letture della frequenza respiratoria (dati sulla salute degli animali), messaggi e media con lo studio, rapporti sulle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (Firebase Cloud Messaging), dati di pagamento elaborati da Stripe. Finalità: account, monitoraggio, messaggistica, notifiche, report, fatturazione. Elaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite, importare file dei clienti e corsi di formazione commerciale (audio elaborato in tempo reale, non archiviato da Google). Partner: Google (Sign-In, FCM, Gemini), Stripe, hosting Google Cloud Platform. Conservazione: durata dell'account poi cancellazione; account inattivi eliminati dopo 3 anni; registrazioni audio delle relazioni conservate per tutta la durata del fascicolo. Diritti GDPR (accesso, rettifica, cancellazione, portabilità): impostazioni (esportazione dei tuoi dati, cancellazione dell'account) o barbara{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Avvisi legali",
       "link": "Avvisi legali",
-      "body": "Editore: LL-IT-SC / petsFollow. Contatto: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (conformità GDPR). Direttore della pubblicazione: petsFollow."
+      "body": "Editore: LL-IT-SC / petsFollow. Contatto: barbara{'@'}petsfollow.app · 0478.02.33.77. Hosting: Google Cloud Platform (conformità GDPR). Direttore della pubblicazione: petsFollow."
     },
     "navAria": "Avvisi legali"
   },
