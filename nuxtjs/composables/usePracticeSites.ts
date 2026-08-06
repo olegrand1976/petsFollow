@@ -48,9 +48,12 @@ export function usePracticeSites() {
     return defaultSiteId.value
   })
 
-  /** Query value for calendar list (all | concrete id | empty for primary). */
+  /** Query value for calendar/consult list (all | concrete id | empty for primary mono). */
   const calendarSiteQuery = computed(() => {
-    if (!sitesUiEnabled.value) return ''
+    // Soft-GA off: pin to primary/default — API empty siteId means ALL sites.
+    if (!sitesUiEnabled.value) {
+      return defaultSiteId.value || ''
+    }
     const id = effectiveSiteId.value
     if (!id || id === defaultSiteId.value && !multiSite.value) return ''
     return id
@@ -99,8 +102,6 @@ export function usePracticeSites() {
   }
 
   function withSiteQuery(url: string, siteId?: string): string {
-    // Soft-GA off: no siteId unless caller passes an explicit override (e.g. schedule edit).
-    if (!sitesUiEnabled.value && siteId === undefined) return url
     const sid = siteId === undefined ? calendarSiteQuery.value : siteId
     if (!sid) return url
     const sep = url.includes('?') ? '&' : '?'
