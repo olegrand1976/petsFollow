@@ -265,15 +265,17 @@
       </div>
     </ProCard>
 
-    <div
-      v-if="mailModal"
-      class="pf-mail-modal-backdrop"
-      data-testid="prospect-mail-modal"
-      @click.self="mailModal = null"
+    <ProModal
+      :open="!!mailModal"
+      :title="mailModal ? $t('commercial.mail.sendTitle', { practice: mailModal.practiceName }) : ''"
+      :prevent-close="mailSending"
+      size="lg"
+      test-id="prospect-mail-modal"
+      @update:open="(v) => { if (!v) mailModal = null }"
     >
-      <ProCard class="pf-mail-modal">
-        <strong>{{ $t('commercial.mail.sendTitle', { practice: mailModal.practiceName }) }}</strong>
+      <template v-if="mailModal">
         <p class="pro-hint">{{ mailModal.contactEmail }}</p>
+        <p v-if="mailOk" class="pro-hint" role="status" data-testid="prospect-mail-sent">{{ $t('commercial.mail.sent') }}</p>
         <p v-if="mailError" class="pro-field-error" role="alert">{{ mailError }}</p>
         <form class="pro-form pro-mt-md" @submit.prevent="sendMail">
           <label class="pro-label">{{ $t('commercial.mail.template') }}</label>
@@ -292,27 +294,30 @@
           <ProInput v-model="mailForm.subject" test-id="prospect-mail-subject" :label="$t('commercial.mail.subject')" />
           <label class="pro-label">{{ $t('commercial.mail.body') }}</label>
           <textarea v-model="mailForm.bodyHtml" class="pro-input" rows="10" data-testid="prospect-mail-body" />
-          <div class="pf-mail-modal-actions">
-            <ProButton type="submit" test-id="prospect-mail-send" :loading="mailSending">
-              {{ $t('commercial.mail.sendAction') }}
-            </ProButton>
-            <ProButton variant="secondary" test-id="prospect-mail-cancel" @click="mailModal = null">
-              {{ $t('commercial.mail.cancel') }}
-            </ProButton>
-          </div>
         </form>
         <div v-if="mailHistory.length" class="pro-mt-lg" data-testid="prospect-mail-history">
           <strong>{{ $t('commercial.mail.history') }}</strong>
           <ul class="pf-mail-history">
             <li v-for="s in mailHistory" :key="s.id">
               {{ s.subject }} —
-              <ProBadge :variant="s.status === 'sent' ? 'success' : 'danger'">{{ s.status }}</ProBadge>
-              · {{ s.openCount || 0 }} open · {{ s.clickTotal || 0 }} clic
+              <ProBadge :variant="s.status === 'sent' ? 'success' : 'danger'">
+                {{ $t(`commercial.mail.sendStatus.${s.status}`) }}
+              </ProBadge>
+              · {{ $t('commercial.mail.openedCount', { n: s.openCount || 0 }) }}
+              · {{ $t('commercial.mail.clicksCount', { n: s.clickTotal || 0 }) }}
             </li>
           </ul>
         </div>
-      </ProCard>
-    </div>
+      </template>
+      <template #footer>
+        <ProButton test-id="prospect-mail-send" :loading="mailSending" @click="sendMail">
+          {{ $t('commercial.mail.sendAction') }}
+        </ProButton>
+        <ProButton variant="secondary" test-id="prospect-mail-cancel" :disabled="mailSending" @click="mailModal = null">
+          {{ $t('commercial.mail.cancel') }}
+        </ProButton>
+      </template>
+    </ProModal>
   </div>
 </template>
 
@@ -343,6 +348,7 @@ const mailHistory = ref<any[]>([])
 const mailForm = reactive({ templateId: '', subject: '', bodyHtml: '' })
 const mailSending = ref(false)
 const mailError = ref('')
+const mailOk = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
 
@@ -533,6 +539,7 @@ function nextPage() {
 
 async function openMailModal(p: any) {
   mailError.value = ''
+  mailOk.value = false
   mailModal.value = p
   mailForm.templateId = ''
   mailForm.subject = ''
@@ -557,10 +564,21 @@ function onMailTemplateChange() {
   mailForm.bodyHtml = tpl.bodyHtml
 }
 
+async function refreshMailHistory() {
+  if (!mailModal.value) return
+  try {
+    const histRes: any = await $fetch(`/api/commercial/prospects/${mailModal.value.id}/emails`)
+    mailHistory.value = histRes.data ?? histRes ?? []
+  } catch {
+    /* keep previous history */
+  }
+}
+
 async function sendMail() {
   if (!mailModal.value || !mailForm.templateId) return
   mailSending.value = true
   mailError.value = ''
+  mailOk.value = false
   try {
     await $fetch(`/api/commercial/prospects/${mailModal.value.id}/emails`, {
       method: 'POST',
@@ -570,11 +588,13 @@ async function sendMail() {
         bodyHtml: mailForm.bodyHtml || undefined,
       },
     })
-    const histRes: any = await $fetch(`/api/commercial/prospects/${mailModal.value.id}/emails`)
-    mailHistory.value = histRes.data ?? histRes ?? []
+    mailOk.value = true
+    await refreshMailHistory()
     await load()
   } catch (e: any) {
     mailError.value = mapError(e)
+    // 502 still persists a failed send — refresh history so the user sees it.
+    await refreshMailHistory()
   } finally {
     mailSending.value = false
   }
@@ -642,27 +662,6 @@ onMounted(load)
   background: var(--pf-vet-alert);
   margin-right: 0.35rem;
   vertical-align: middle;
-}
-.pf-mail-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(27, 58, 75, 0.45);
-}
-.pf-mail-modal {
-  width: min(640px, 100%);
-  max-height: 90vh;
-  overflow: auto;
-}
-.pf-mail-modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
 }
 .pf-mail-history {
   margin: 0.5rem 0 0;

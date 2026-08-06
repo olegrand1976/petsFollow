@@ -94,6 +94,10 @@ func (a *API) commercialCreateEmailTemplate(w http.ResponseWriter, r *http.Reque
 		Subject: req.Subject, BodyHTML: req.BodyHTML, IsActive: req.IsActive,
 	}, id.UserID)
 	if err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "slug_taken")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
@@ -176,9 +180,15 @@ func (a *API) commercialPreviewEmailTemplate(w http.ResponseWriter, r *http.Requ
 	if strings.TrimSpace(req.BodyHTML) != "" {
 		body = req.BodyHTML
 	}
-	vars := a.commercialMailVars(r, id, req.ProspectID, req.Vars)
+	vars := a.commercialMailVars(r, id, "", req.Vars)
+	if pid := strings.TrimSpace(req.ProspectID); pid != "" {
+		if _, ok := a.loadProspectForMail(w, r, id, pid); !ok {
+			return
+		}
+		vars = a.commercialMailVars(r, id, pid, req.Vars)
+	}
 	subject = substituteMailVars(subject, vars)
-	body = substituteMailVars(body, vars)
+	body = substituteMailVarsHTML(body, vars)
 	full := ""
 	if a.notifier != nil {
 		full = a.notifier.RenderBrandedHTML(body, email.BrandedHTMLOpts{
@@ -244,6 +254,7 @@ func (a *API) commercialGetEmail(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
+	send.BodyHTMLRendered = scrubTrackingFromHTML(send.BodyHTMLRendered)
 	httpx.WriteData(w, http.StatusOK, send)
 }
 
@@ -287,6 +298,21 @@ func (a *API) commercialSendProspectEmail(w http.ResponseWriter, r *http.Request
 	if strings.TrimSpace(prospect.ContactEmail) == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_email_required")
 		return
+	}
+	if prospect.CommercialUserID == "" {
+		writeErr(w, r, http.StatusConflict, "conflict", "prospect_unclaimed")
+		return
+	}
+	if prospect.CommercialUserID != id.UserID && id.Role != kernel.RoleCommercialManager {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	if id.Role == kernel.RoleCommercialManager && prospect.CommercialUserID != id.UserID {
+		okTeam, err := a.store.IsManagerOfCommercial(r.Context(), id.UserID, prospect.CommercialUserID)
+		if err != nil || !okTeam {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+			return
+		}
 	}
 	if prospect.EmailOptOut {
 		writeErr(w, r, http.StatusConflict, "conflict", "email_opt_out")
@@ -344,7 +370,7 @@ func (a *API) commercialSendProspectEmail(w http.ResponseWriter, r *http.Request
 		body = req.BodyHTML
 	}
 	subject = substituteMailVars(subject, vars)
-	body = substituteMailVars(body, vars)
+	body = substituteMailVarsHTML(body, vars)
 
 	body, clicks := rewriteTrackedLinks(body, apiBase)
 	pixel := fmt.Sprintf(`<img src="%s/api/v1/public/commercial-mail/o/%s" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`,
@@ -396,6 +422,11 @@ func (a *API) commercialSendProspectEmail(w http.ResponseWriter, r *http.Request
 	if status == "sent" {
 		_ = a.store.TouchProspectContacted(r.Context(), prospectID)
 	}
+	// Never return capability tokens to the client.
+	for i := range send.Clicks {
+		send.Clicks[i].ClickToken = ""
+	}
+	send.BodyHTMLRendered = scrubTrackingFromHTML(send.BodyHTMLRendered)
 	if status == "failed" {
 		httpx.WriteData(w, http.StatusBadGateway, send)
 		return
@@ -547,6 +578,16 @@ func substituteMailVars(s string, vars map[string]string) string {
 	out := s
 	for k, v := range vars {
 		placeholder := "{{" + k + "}" + "}"
+		out = strings.ReplaceAll(out, placeholder, v)
+	}
+	return out
+}
+
+// substituteMailVarsHTML escapes non-URL vars for safe injection into HTML fragments.
+func substituteMailVarsHTML(s string, vars map[string]string) string {
+	out := s
+	for k, v := range vars {
+		placeholder := "{{" + k + "}" + "}"
 		if strings.HasSuffix(k, "_url") {
 			out = strings.ReplaceAll(out, placeholder, v)
 			continue
@@ -554,6 +595,13 @@ func substituteMailVars(s string, vars map[string]string) string {
 		out = strings.ReplaceAll(out, placeholder, html.EscapeString(v))
 	}
 	return out
+}
+
+// scrubTrackingFromHTML removes capability tracking / unsubscribe URLs from stored HTML
+// before returning it to authenticated clients (tokens remain in DB for public endpoints).
+func scrubTrackingFromHTML(body string) string {
+	re := regexp.MustCompile(`(?i)https?://[^"'>\s]*/api/v1/public/commercial-mail/(?:o|c|unsubscribe)/[a-f0-9]+`)
+	return re.ReplaceAllString(body, "#")
 }
 
 type trackedLink struct {

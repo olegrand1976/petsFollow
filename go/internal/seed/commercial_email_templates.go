@@ -7,6 +7,8 @@ import (
 )
 
 func seedCommercialEmailTemplates(ctx context.Context, st *store.Store) error {
+	// Full seed truncates sales.email_templates first — Upsert refreshes catalog copy.
+	// Custom edits in non-truncate environments are overwritten by slug upsert.
 	for _, t := range commercialEmailTemplateCatalog() {
 		if _, err := st.UpsertEmailTemplateBySlug(ctx, t); err != nil {
 			return err

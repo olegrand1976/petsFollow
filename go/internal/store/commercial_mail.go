@@ -178,7 +178,11 @@ func (s *Store) CreateEmailTemplate(ctx context.Context, in EmailTemplateInput, 
 			COALESCE(updated_by::text,''), created_at, updated_at`,
 		id, strings.TrimSpace(in.Slug), strings.TrimSpace(in.Name), cat, locale,
 		strings.TrimSpace(in.Subject), in.BodyHTML, active, updBy)
-	return scanEmailTemplate(row.Scan)
+	t, err := scanEmailTemplate(row.Scan)
+	if isUniqueViolation(err) {
+		return EmailTemplate{}, ErrConflict
+	}
+	return t, err
 }
 
 func (s *Store) UpdateEmailTemplate(ctx context.Context, id string, in EmailTemplateInput, updatedBy string) (EmailTemplate, error) {

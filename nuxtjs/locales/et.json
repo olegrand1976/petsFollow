@@ -3133,9 +3133,15 @@
       "detail": "Detail",
       "neverOpened": "Pole veel avatud",
       "clickList": "Jälgitud klikid",
-      "varsHint": "Muutujad: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "varsHint": "Muutujad: {'{'}{'{'}contact_name{'}'}{'}'}, {'{'}{'{'}practice_name{'}'}{'}'}, {'{'}{'{'}commercial_name{'}'}{'}'}, {'{'}{'{'}appointment_at{'}'}{'}'}, {'{'}{'{'}cta_demo_url{'}'}{'}'}…",
       "history": "E-posti ajalugu",
-      "loadError": "Laadimine ebaõnnestus"
+      "loadError": "Laadimine ebaõnnestus",
+      "sendStatus": {
+        "sent": "Saadetud",
+        "failed": "Ebaõnnestus"
+      },
+      "openedCount": "{n} avamist",
+      "clicksCount": "{n} klikki"
     }
   },
   "commissionSheet": {

@@ -27,7 +27,9 @@
             <td>{{ s.subject }}</td>
             <td>{{ s.toEmail }}</td>
             <td>
-              <ProBadge :variant="s.status === 'sent' ? 'success' : 'danger'">{{ s.status }}</ProBadge>
+              <ProBadge :variant="s.status === 'sent' ? 'success' : 'danger'">
+                {{ $t(`commercial.mail.sendStatus.${s.status}`) }}
+              </ProBadge>
             </td>
             <td>
               <template v-if="s.openCount > 0">{{ s.openCount }} · {{ formatDate(s.openedAt) }}</template>

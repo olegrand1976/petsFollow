@@ -5,6 +5,7 @@
       :subtitle="$t('commercial.mail.templatesSubtitle')"
     />
     <p v-if="error" class="pro-field-error pro-mb-md" role="alert">{{ error }}</p>
+    <p v-if="savedOk" class="pro-hint pro-mb-md" role="status" data-testid="email-tpl-saved">{{ $t('commercial.mail.saved') }}</p>
     <p class="pro-hint pro-mb-md">{{ $t('commercial.mail.varsHint') }}</p>
 
     <div class="pf-mail-layout">
@@ -77,8 +78,9 @@
         <iframe
           v-if="previewHtml"
           class="pf-mail-preview"
-          title="preview"
+          :title="$t('commercial.mail.preview')"
           data-testid="email-tpl-preview-frame"
+          sandbox=""
           :srcdoc="previewHtml"
         />
       </ProCard>
@@ -97,6 +99,7 @@ const error = ref('')
 const saving = ref(false)
 const previewing = ref(false)
 const previewHtml = ref('')
+const savedOk = ref(false)
 
 async function load() {
   error.value = ''
@@ -119,6 +122,7 @@ function select(tpl: any) {
     isActive: tpl.isActive,
   }
   previewHtml.value = ''
+  savedOk.value = false
 }
 
 async function save() {
@@ -137,6 +141,7 @@ async function save() {
       },
     })
     await load()
+    savedOk.value = true
   } catch (e: any) {
     error.value = mapError(e)
   } finally {

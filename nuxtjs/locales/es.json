@@ -3133,9 +3133,15 @@
       "detail": "Detalle",
       "neverOpened": "Aún no abierto",
       "clickList": "Clics rastreados",
-      "varsHint": "Variables: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "varsHint": "Variables: {'{'}{'{'}contact_name{'}'}{'}'}, {'{'}{'{'}practice_name{'}'}{'}'}, {'{'}{'{'}commercial_name{'}'}{'}'}, {'{'}{'{'}appointment_at{'}'}{'}'}, {'{'}{'{'}cta_demo_url{'}'}{'}'}…",
       "history": "Historial de correos",
-      "loadError": "No se puede cargar"
+      "loadError": "No se puede cargar",
+      "sendStatus": {
+        "sent": "Enviado",
+        "failed": "Fallido"
+      },
+      "openedCount": "{n} apertura(s)",
+      "clicksCount": "{n} clic(s)"
     }
   },
   "commissionSheet": {

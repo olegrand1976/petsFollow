@@ -3126,7 +3126,7 @@
       "detail": "Detail",
       "neverOpened": "Not opened yet",
       "clickList": "Tracked clicks",
-      "varsHint": "Variables: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "varsHint": "Variables: {'{'}{'{'}contact_name{'}'}{'}'}, {'{'}{'{'}practice_name{'}'}{'}'}, {'{'}{'{'}commercial_name{'}'}{'}'}, {'{'}{'{'}appointment_at{'}'}{'}'}, {'{'}{'{'}cta_demo_url{'}'}{'}'}…",
       "history": "Email history",
       "loadError": "Unable to load",
       "categories": {
@@ -3135,7 +3135,13 @@
         "nurture": "Nurture",
         "post": "Post-demo",
         "reactivation": "Reactivation"
-      }
+      },
+      "sendStatus": {
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "openedCount": "{n} open(s)",
+      "clicksCount": "{n} click(s)"
     }
   },
   "commissionSheet": {

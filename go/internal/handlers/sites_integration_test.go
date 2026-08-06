@@ -128,35 +128,53 @@ func TestVisitOverlapIsPerSite(t *testing.T) {
 	pet, _ := pets[0].(map[string]any)
 	petID, _ := pet["id"].(string)
 
-	// Far-future unique slot avoids collisions with leftover seed/shared-DB visits.
-	slot := time.Now().UTC().Add(90 * 24 * time.Hour).Truncate(time.Minute).Add(time.Duration(time.Now().UnixNano()%50) * time.Minute)
-	body := map[string]any{
-		"confirmDirect":   true,
-		"scheduledAt":     slot.Format(time.RFC3339),
-		"siteId":          primaryID,
-		"durationMinutes": 30,
-	}
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
-	if code != http.StatusCreated {
-		t.Fatalf("create visit site A: %d %#v", code, env)
-	}
-	visitA, _ := env["data"].(map[string]any)
-	visitAID, _ := visitA["id"].(string)
+	// Far-future slots with retry — unassigned queue conflicts with seed/other tests.
+	base := time.Now().UTC().Add(90 * 24 * time.Hour).Truncate(time.Hour)
+	var visitAID, visitBID string
+	for i := 0; i < 24; i++ {
+		slot := base.Add(time.Duration(i) * time.Hour)
+		body := map[string]any{
+			"confirmDirect":   true,
+			"silentConfirm":   true,
+			"scheduledAt":     slot.Format(time.RFC3339),
+			"siteId":          primaryID,
+			"durationMinutes": 30,
+		}
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
+		if code == http.StatusConflict || code == http.StatusBadRequest {
+			continue
+		}
+		if code != http.StatusCreated {
+			t.Fatalf("create visit site A: %d %#v", code, env)
+		}
+		visitA, _ := env["data"].(map[string]any)
+		visitAID, _ = visitA["id"].(string)
 
-	// Same slot on other site must succeed (overlap is per-site).
-	body["siteId"] = siteBID
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
-	if code != http.StatusCreated {
-		t.Fatalf("create visit site B same slot expected 201, got %d %#v", code, env)
-	}
-	visitB, _ := env["data"].(map[string]any)
-	visitBID, _ := visitB["id"].(string)
+		// Same slot on other site must succeed (overlap is per-site).
+		body["siteId"] = siteBID
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
+		if code == http.StatusConflict || code == http.StatusBadRequest {
+			// Site B collided independently — cancel A and try next hour.
+			_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitAID, vetTok, map[string]any{"status": "cancelled"})
+			visitAID = ""
+			continue
+		}
+		if code != http.StatusCreated {
+			t.Fatalf("create visit site B same slot expected 201, got %d %#v", code, env)
+		}
+		visitB, _ := env["data"].(map[string]any)
+		visitBID, _ = visitB["id"].(string)
 
-	// Same slot on same site must fail.
-	body["siteId"] = primaryID
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
-	if code != http.StatusBadRequest && code != http.StatusConflict {
-		t.Fatalf("same-site overlap expected 400/409, got %d %#v", code, env)
+		// Same slot on same site must fail.
+		body["siteId"] = primaryID
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
+		if code != http.StatusBadRequest && code != http.StatusConflict {
+			t.Fatalf("same-site overlap expected 400/409, got %d %#v", code, env)
+		}
+		break
+	}
+	if visitAID == "" || visitBID == "" {
+		t.Fatal("create visit site A/B: all slot retries failed (409 slot_taken)")
 	}
 
 	// Cleanup: cancel visits then deactivate site B (shared DB).

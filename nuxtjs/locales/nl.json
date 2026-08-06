@@ -3133,9 +3133,15 @@
       "detail": "Detail",
       "neverOpened": "Nog niet geopend",
       "clickList": "Getrackte klikken",
-      "varsHint": "Variabelen: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "varsHint": "Variabelen: {'{'}{'{'}contact_name{'}'}{'}'}, {'{'}{'{'}practice_name{'}'}{'}'}, {'{'}{'{'}commercial_name{'}'}{'}'}, {'{'}{'{'}appointment_at{'}'}{'}'}, {'{'}{'{'}cta_demo_url{'}'}{'}'}…",
       "history": "E-mailgeschiedenis",
-      "loadError": "Kan niet laden"
+      "loadError": "Kan niet laden",
+      "sendStatus": {
+        "sent": "Verzonden",
+        "failed": "Mislukt"
+      },
+      "openedCount": "{n} opening(en)",
+      "clicksCount": "{n} klik(ken)"
     }
   },
   "commissionSheet": {

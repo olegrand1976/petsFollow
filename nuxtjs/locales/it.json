@@ -917,9 +917,15 @@
       "detail": "Dettaglio",
       "neverOpened": "Non ancora aperto",
       "clickList": "Clic tracciati",
-      "varsHint": "Variabili: {{contact_name}}, {{practice_name}}, {{commercial_name}}, {{appointment_at}}, {{cta_demo_url}}…",
+      "varsHint": "Variabili: {'{'}{'{'}contact_name{'}'}{'}'}, {'{'}{'{'}practice_name{'}'}{'}'}, {'{'}{'{'}commercial_name{'}'}{'}'}, {'{'}{'{'}appointment_at{'}'}{'}'}, {'{'}{'{'}cta_demo_url{'}'}{'}'}…",
       "history": "Cronologia e-mail",
-      "loadError": "Impossibile caricare"
+      "loadError": "Impossibile caricare",
+      "sendStatus": {
+        "sent": "Inviato",
+        "failed": "Fallito"
+      },
+      "openedCount": "{n} apertura/e",
+      "clicksCount": "{n} clic"
     }
   },
   "settings": {
