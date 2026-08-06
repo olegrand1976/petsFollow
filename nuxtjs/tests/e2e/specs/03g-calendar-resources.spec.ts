@@ -151,9 +151,17 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
     const mm = String(future.getMonth() + 1).padStart(2, '0')
     const dd = String(future.getDate()).padStart(2, '0')
     await page.getByTestId('new-appt-day').fill(`${yyyy}-${mm}-${dd}`)
-    await page.getByTestId('new-appt-time').fill('10:00')
+    // Unique slot — avoid overlap with other staging e2e at fixed 10:00.
+    const slotMin = String(Date.now() % 50).padStart(2, '0')
+    await page.getByTestId('new-appt-time').fill(`11:${slotMin}`)
 
+    const createRes = page.waitForResponse(
+      (r) => /\/api\/pets\/[^/]+\/visits\b/.test(r.url()) && r.request().method() === 'POST',
+      { timeout: 20000 },
+    )
     await page.getByTestId('new-appt-confirm').click()
+    const created = await createRes
+    expect(created.status(), await created.text()).toBeLessThan(400)
     await expect(page.getByTestId('new-appointment-modal')).toHaveCount(0, { timeout: 20000 })
   })
 })

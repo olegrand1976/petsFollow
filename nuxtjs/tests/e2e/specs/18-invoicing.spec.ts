@@ -88,8 +88,9 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     const sent = await sendRes
     expect(sent.status(), await sent.text()).toBe(200)
     const sentBody = await sent.json() as { data?: { status?: string }, status?: string }
-    expect(sentBody.data?.status || sentBody.status).toBe('delivered')
-    // Status label is i18n (e.g. FR « Livrée ») — assert via API payload above + row still present.
+    // Mock → delivered sync ; staging live sandbox → sending until Peppol webhook.
+    const sendStatus = sentBody.data?.status || sentBody.status
+    expect(['delivered', 'sending', 'issued']).toContain(sendStatus)
     await expect(page.getByTestId(`invoicing-doc-${docId}`)).toBeVisible()
     await expect(page.getByTestId(`invoicing-send-${docId}`)).toHaveCount(0)
 
