@@ -463,6 +463,7 @@ function formatApiError(e: any): string {
   if (msgKey === 'invoicing_secrets_mismatch') {
     secretsMismatch.value = true
   }
+  // API Go already localizes msgKey (be_address_required, be_vat_invalid, …).
   if (msgKey && t(`errors.${msgKey}`) !== `errors.${msgKey}`) {
     const base = t(`errors.${msgKey}`)
     return gateway ? `${base} (${gateway})` : base
@@ -509,7 +510,7 @@ const invoiceOptions = computed(() =>
   documents.value
     .filter((d) =>
       d.type === 'invoice'
-      && ['issued', 'delivered', 'rejected'].includes(d.status)
+      && ['issued', 'delivered', 'rejected', 'sending'].includes(d.status)
       && !!(d.billitOrderId || d.number),
     )
     .map((d) => ({

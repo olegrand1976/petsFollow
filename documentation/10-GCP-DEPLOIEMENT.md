@@ -102,37 +102,71 @@ Les certificats managés restent en `PROVISIONING` tant que les enregistrements 
 
 ## Production (branche `main`)
 
-Objectif : API/site **non seedables** pour la piste Play Production et le futur site `petsfollow.app`.
+Objectif : API/site **non seedables** pour la piste Play Production et le site `petsfollow.app` (Flutter-first : API prioritaire).
 
 | Face | Service Cloud Run | Domaine cible |
 |------|-------------------|---------------|
 | Pro (Nuxt) | `petsfollow-nuxtjs-prod` | https://petsfollow.app |
 | API (Go) | `petsfollow-api-prod` | https://api.petsfollow.app |
 
-Fichiers déjà en repo (ne pas oublier au go-live) :
+| Ressource | Valeur |
+|-----------|--------|
+| Cloud SQL | instance `petsfollow-db-prod` (≠ staging) · DB `petsfollow` |
+| Redis | même VM `shared-redis` · URL SM `petsfollow-prod-redis-url` (`/15`) · préfixe `petsfollow-prod:` |
+| Bucket médias | `petsfollow-media-prod` |
+| Secrets SM | `petsfollow-prod-database-url`, `petsfollow-prod-migrate-database-url`, `petsfollow-prod-jwt-signing-key`, … |
+| Cert LB | `petsfollow-prod-domains-cert` (apex + api) — quota SSL global = 10 |
+
+### Commandes
+
+```bash
+make gcp-setup-prod    # SQL + users + secrets *-prod + bucket
+make gcp-deploy-prod   # Cloud Build → migrate + petsfollow-api-prod + nuxtjs-prod
+make gcp-domain-prod   # NEG / backends / host rules / cert (après DNS OVH)
+```
+
+Fichiers :
 
 | Fichier | Rôle |
 |---------|------|
 | [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer |
-| [`infra/gcp/cloudbuild-prod.yaml`](../infra/gcp/cloudbuild-prod.yaml) | Build + deploy `APP_ENV=production`, seed off, modules tag-dev off ; garde-fou SQL `FIXME` / refuse staging SQL |
-| [`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh) | Overrides domaines / services `*-prod` / Redis DB 15 |
+| [`infra/gcp/cloudbuild-prod.yaml`](../infra/gcp/cloudbuild-prod.yaml) | Build + deploy `APP_ENV=production`, seed off, modules tag-dev off ; refuse SQL staging |
+| [`infra/gcp/setup-gcp-prod.sh`](../infra/gcp/setup-gcp-prod.sh) | Bootstrap SQL / secrets / bucket |
+| [`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh) | Overrides domaines / services `*-prod` / Redis |
 | [`infra/play/api-bases.sh`](../infra/play/api-bases.sh) | URLs Play : staging vs `api.petsfollow.app` |
 | `make play-android-bundle-prod` | AAB Play pointant l’API prod |
-| `make gcp-deploy-prod` | Cloud Build prod manuel (même config) |
+| `make gcp-deploy-prod` | Cloud Build prod manuel |
 
-### Checklist avant d’activer le push `main`
+### DNS OVH (zone `petsfollow.app`) — manuel
 
-1. **Cloud SQL** prod (instance ≠ `premedica-db-staging`) + **secrets SM dédiés** (ne pas réutiliser `petsfollow-database-url` staging sans review) — remplacer `_CLOUDSQL_INSTANCE` / `FIXME` dans `cloudbuild-prod.yaml` et `gcp-env-prod.sh` ; adapter `pf_api_secrets` / noms SM si secrets séparés.
-2. **Bucket GCS** médias prod (`petsfollow-media-prod` ou équivalent) + IAM SA Run.
-3. **DNS** `petsfollow.app` + `api.petsfollow.app` → LB + cert managé (NEG/backends `*-prod`).
-4. Smoke `https://api.petsfollow.app/health` + login démo **non-seed** (comptes réels / bootstrap one-shot).
-5. Décommenter dans `deploy-gcp-prod.yml` :
-   ```yaml
-   push:
-     branches: [main]
-   ```
-6. Rebuild Play : `make play-android-bundle-prod` → upload piste Production (ou Internal smoke d’abord).
-7. Privacy / listing : garder `petsfollow.ll-it-sc.be/legal/*` tant que le site prod n’expose pas `/legal` ; ensuite aligner `LegalUrls` Flutter + Play Console.
+Même LB que le staging : **`34.54.99.89`**.
+
+| Hôte (OVH) | Type | Cible | Résultat |
+|------------|------|-------|----------|
+| `@` (ou champ vide / apex) | **A** | `34.54.99.89` | `petsfollow.app` → Nuxt prod |
+| `api` | **A** | `34.54.99.89` | `api.petsfollow.app` → API prod |
+| `www` (optionnel) | **CNAME** | `petsfollow.app.` | redirection / alias |
+
+Pas d’enregistrement `media.*` : médias = GCS.
+
+Après création DNS :
+
+```bash
+make gcp-domain-prod
+# Attendre ACTIVE (souvent 15–60 min après propagation DNS) :
+gcloud compute ssl-certificates describe petsfollow-prod-domains-cert --global --format='yaml(managed)'
+curl -fsS https://api.petsfollow.app/health
+```
+
+### Checklist go-live
+
+1. `make gcp-setup-prod` (une fois) — vérifier instance `petsfollow-db-prod` RUNNABLE.
+2. DNS OVH ci-dessus.
+3. `make gcp-deploy-prod` puis `make gcp-domain-prod`.
+4. Smoke `https://api.petsfollow.app/health` + register/login **réels** (pas de seed).
+5. Flutter : `make play-android-bundle-prod` → Internal puis Production.
+6. (Plus tard) décommenter `push: main` dans `deploy-gcp-prod.yml`.
+7. Privacy / listing : garder `petsfollow.ll-it-sc.be/legal/*` tant que `/legal` n’est pas servi sur `petsfollow.app` ; ensuite aligner `LegalUrls` Flutter + Play Console.
 
 **VAMReg / AFMPS (prod)** — même politique que staging ([39](39-VAMREG-AFMPS-READONLY.md)) :
 

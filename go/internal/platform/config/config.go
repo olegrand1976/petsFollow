@@ -252,6 +252,11 @@ func Load() Config {
 		VisitReminderLookaheadHours: envInt("VISIT_REMINDER_LOOKAHEAD_HOURS", 30),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
+		// Environnements isolés (doc Access Point) :
+		//   sandbox  → https://api.sandbox.billit.be  (+ my.sandbox.billit.be)
+		//   production → https://api.billit.be         (+ my.billit.be)
+		// Staging GCP pose la sandbox via deploy-run-args ; prod / défaut code = API live.
+		// Clés sandbox ≠ prod — ne jamais réutiliser une ApiKey entre les deux.
 		BillitEnabled:              envBool("BILLIT_ENABLED"),
 		BillitMockEnabled:          envBool("BILLIT_MOCK_ENABLED"),
 		BillitBaseURL:              envOr("BILLIT_BASE_URL", "https://api.billit.be"),

@@ -174,7 +174,7 @@
     "invalid_webhook": "Ongeldige webhook-payload",
     "document_not_ready": "Document nog niet klaar — opnieuw proberen",
     "invoicing_gateway_error": "Fout in de elektronische facturatiedienst",
-    "related_document_invalid": "Ongeldig gerelateerd document (uitgegeven, geleverde of afgewezen factuur vereist)",
+    "related_document_invalid": "Ongeldig gerelateerd document (verzending, uitgegeven, geleverd of afgewezen factuur vereist)",
     "order_persist_failed": "Opslaan Billit-order mislukt — document afgewezen, opnieuw verzenden mogelijk",
     "consultation_has_report": "Annuleren niet mogelijk: er is al een verslag opgeslagen",
     "consultation_session_not_reschedulable": "Een walk-in consultatie kan niet worden verplaatst",
@@ -194,7 +194,12 @@
     "research_disabled": "Research-module uitgeschakeld",
     "research_anon_salt_required": "Research verkeerd geconfigureerd (anonimisatiesalt ontbreekt)",
     "not_consultation_history": "Deze visit hoort niet bij de consultatiegeschiedenis (of de agenda-afspraak is nog open)",
-    "not_consultation_session": "Alleen walk-in consultaties kunnen zo worden verwijderd"
+    "not_consultation_session": "Alleen walk-in consultaties kunnen zo worden verwijderd",
+    "invoicing_secrets_mismatch": "Billit-sleutel onleesbaar — verbind facturatie opnieuw (Instellingen → Facturatie)",
+    "related_invoice_not_on_billit": "Gerelateerde factuur bestaat nog niet bij Billit — stuur die eerst",
+    "be_vat_required": "Belgisch btw-nummer vereist",
+    "be_vat_invalid": "Ongeldig Belgisch btw-nummer (formaat of controlecijfers)",
+    "be_address_required": "Volledig adres vereist voor België (straat, postcode, stad)"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

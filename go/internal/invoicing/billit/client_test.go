@@ -15,6 +15,19 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
 )
 
+func TestBaseURLConstants(t *testing.T) {
+	if billit.SandboxBaseURL != "https://api.sandbox.billit.be" {
+		t.Fatalf("sandbox=%s", billit.SandboxBaseURL)
+	}
+	if billit.DefaultBaseURL != "https://api.billit.be" {
+		t.Fatalf("default=%s", billit.DefaultBaseURL)
+	}
+	c := billit.NewClient("")
+	if c == nil {
+		t.Fatal("nil client")
+	}
+}
+
 func TestVerifyAndParseWebhook(t *testing.T) {
 	body := []byte(`{"OrderID":12345,"EventType":"OrderDelivered","Status":"delivered"}`)
 	secret := "test-secret"
@@ -76,9 +89,9 @@ func TestClientCreateAndSend(t *testing.T) {
 		gotParty = r.Header.Get("PartyID")
 		gotKey = r.Header.Get("ApiKey")
 		switch {
-		case r.Method == http.MethodGet && r.URL.Path == "/v1/party":
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/parties/party1":
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`{"Complete":true}`))
+			_, _ = w.Write([]byte(`{"PartyID":1,"Name":"Vet","VATNumber":"BE1000000021"}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/orders":
 			created = true
 			var ord billit.OrderDTO
@@ -107,7 +120,8 @@ func TestClientCreateAndSend(t *testing.T) {
 	doc := invoicing.Document{
 		Type: invoicing.DocInvoice,
 		Counterparty: invoicing.Counterparty{
-			Name: "Vet", Country: "BE", VATNumber: "BE0123456789",
+			Name: "Vet", Country: "BE", VATNumber: "BE1000000021",
+			Street: "Rue Test 1", City: "Bruxelles", Postal: "1000",
 		},
 		Lines: []invoicing.Line{{Description: "A", Quantity: 1, UnitPriceExclCents: 1000, VATPercent: 21}},
 	}
@@ -147,6 +161,8 @@ func TestParsePartyStatus(t *testing.T) {
 		{name: "status_pending", body: `{"Status":"pending_kyc"}`, complete: false},
 		{name: "status_active", body: `{"Status":"active"}`, complete: true},
 		{name: "completeness", body: `{"Completeness":80}`, complete: false},
+		{name: "party_dto", body: `{"PartyID":1133539,"Name":"LL-IT","VATNumber":"BE1007132489"}`, complete: true},
+		{name: "party_incomplete", body: `{"PartyID":1,"Name":"NoVAT"}`, complete: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -173,6 +189,136 @@ func TestParseWebhookUnknownStatusStaysSending(t *testing.T) {
 	}
 	if orderID != "7" || status != invoicing.StatusSending || peppol != "unknown" {
 		t.Fatalf("%s %s %s", orderID, status, peppol)
+	}
+}
+
+func TestParseWebhookMessageDelivered(t *testing.T) {
+	body := []byte(`{
+		"UpdatedEntityID": 690998,
+		"UpdatedEntityType": "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": {
+			"OrderMessage": {
+				"OrderID": 2615999,
+				"Success": true,
+				"TransportType": "Peppol",
+				"MessageDirection": "Outgoing"
+			},
+			"AdditionalMessageInformation": {
+				"EInvoiceFlowState": "Delivered"
+			}
+		}
+	}`)
+	orderID, eventType, status, peppol, err := billit.ParseWebhook(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if orderID != "2615999" {
+		t.Fatalf("orderID=%s", orderID)
+	}
+	if eventType != "Message" && eventType != "Delivered" {
+		t.Fatalf("eventType=%s", eventType)
+	}
+	if status != invoicing.StatusDelivered || peppol != "delivered" {
+		t.Fatalf("status=%s peppol=%s", status, peppol)
+	}
+}
+
+func TestParseWebhookMessageSentStaysSending(t *testing.T) {
+	body := []byte(`{
+		"UpdatedEntityID": 1,
+		"UpdatedEntityType": "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": {
+			"OrderMessage": {"OrderID": 42, "Success": true},
+			"AdditionalMessageInformation": {"EInvoiceFlowState": "Sent"}
+		}
+	}`)
+	orderID, _, status, peppol, err := billit.ParseWebhook(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if orderID != "42" || status != invoicing.StatusSending || peppol != "sending" {
+		t.Fatalf("%s %s %s", orderID, status, peppol)
+	}
+}
+
+func TestParseWebhookMessageAcceptedNotDelivered(t *testing.T) {
+	body := []byte(`{
+		"UpdatedEntityType": "Message",
+		"EntityDetail": {
+			"OrderMessage": {"OrderID": 99},
+			"AdditionalMessageInformation": {"EInvoiceFlowState": "Accepted"}
+		}
+	}`)
+	_, _, status, peppol, err := billit.ParseWebhook(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status == invoicing.StatusDelivered || peppol == "delivered" {
+		t.Fatalf("Accepted must not be delivered: %s %s", status, peppol)
+	}
+}
+
+func TestParseWebhookMessageRefused(t *testing.T) {
+	body := []byte(`{
+		"UpdatedEntityID": 690988,
+		"UpdatedEntityType": "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": {
+			"OrderID": 455654,
+			"MessageAdditionalInformation": {
+				"EInvoiceFlowState": "Refused",
+				"AdditionalFlowStateInformation": "No Valid VAT"
+			}
+		}
+	}`)
+	orderID, _, status, peppol, err := billit.ParseWebhook(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if orderID != "455654" || status != invoicing.StatusRejected || peppol != "rejected" {
+		t.Fatalf("%s %s %s", orderID, status, peppol)
+	}
+}
+
+func TestParseWebhookMessageMissingOrderID(t *testing.T) {
+	body := []byte(`{
+		"UpdatedEntityType": "Message",
+		"EntityDetail": {
+			"AdditionalMessageInformation": {"EInvoiceFlowState": "Delivered"}
+		}
+	}`)
+	_, _, _, _, err := billit.ParseWebhook(body)
+	if err == nil {
+		t.Fatal("expected missing order id")
+	}
+}
+
+func TestWebhookDedupeKeyMessageProgression(t *testing.T) {
+	sent := []byte(`{
+		"UpdatedEntityID": 690998,
+		"UpdatedEntityType": "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": {
+			"OrderMessage": {"OrderID": 2615999},
+			"AdditionalMessageInformation": {"EInvoiceFlowState": "Sent"}
+		}
+	}`)
+	delivered := []byte(`{
+		"UpdatedEntityID": 690998,
+		"UpdatedEntityType": "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": {
+			"OrderMessage": {"OrderID": 2615999},
+			"AdditionalMessageInformation": {"EInvoiceFlowState": "Delivered"}
+		}
+	}`)
+	if billit.WebhookDedupeKey(sent) == billit.WebhookDedupeKey(delivered) {
+		t.Fatal("Sent→Delivered must not share dedupe key")
+	}
+	if !strings.HasPrefix(billit.WebhookDedupeKey(sent), "msg:") {
+		t.Fatalf("want msg: prefix got %s", billit.WebhookDedupeKey(sent))
 	}
 }
 
@@ -212,7 +358,8 @@ func TestCreateDocumentNoRetryOn500(t *testing.T) {
 	_, err := c.CreateDocument(context.Background(), "p", "k", invoicing.Document{
 		Type: invoicing.DocInvoice,
 		Counterparty: invoicing.Counterparty{
-			Name: "Vet", Country: "BE", VATNumber: "BE0123456789",
+			Name: "Vet", Country: "BE", VATNumber: "BE1000000021",
+			Street: "Rue Test 1", City: "Bruxelles", Postal: "1000",
 		},
 		Lines: []invoicing.Line{{Description: "A", Quantity: 1, UnitPriceExclCents: 1000, VATPercent: 21}},
 	})

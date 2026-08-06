@@ -174,7 +174,7 @@
     "invalid_webhook": "Payload de webhook no válido",
     "document_not_ready": "Documento aún no listo — reintente",
     "invoicing_gateway_error": "Error del servicio de facturación electrónica",
-    "related_document_invalid": "Documento relacionado no válido (se requiere factura emitida, entregada o rechazada)",
+    "related_document_invalid": "Documento relacionado no válido (se requiere factura en envío, emitida, entregada o rechazada)",
     "order_persist_failed": "Error al guardar el pedido Billit — documento rechazado, puede reenviar",
     "consultation_has_report": "No se puede cancelar: ya hay un informe guardado",
     "consultation_session_not_reschedulable": "Una consulta sin cita no se puede reprogramar",
@@ -194,7 +194,12 @@
     "research_disabled": "Módulo Research desactivado",
     "research_anon_salt_required": "Research mal configurado (falta la sal de anonimización)",
     "not_consultation_history": "Esta visita no forma parte del historial de consultas (o la cita del agenda sigue abierta)",
-    "not_consultation_session": "Solo las consultas walk-in se pueden eliminar así"
+    "not_consultation_session": "Solo las consultas walk-in se pueden eliminar así",
+    "invoicing_secrets_mismatch": "Clave Billit ilegible — vuelva a conectar la facturación (Ajustes → Facturación)",
+    "related_invoice_not_on_billit": "La factura relacionada aún no existe en Billit — envíela primero",
+    "be_vat_required": "NIF/IVA belga obligatorio",
+    "be_vat_invalid": "NIF/IVA belga no válido (formato o dígitos de control)",
+    "be_address_required": "Dirección completa obligatoria para Bélgica (calle, CP, ciudad)"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

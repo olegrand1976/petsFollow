@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -29,8 +29,12 @@ help:
 	@echo "  make test-e2e       Playwright suite complète"
 	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
+	@echo "  make gcp-setup      Bootstrap staging (SQL/secrets/bucket)"
+	@echo "  make gcp-setup-prod Bootstrap prod (SQL petsfollow-db-prod + secrets *-prod)"
 	@echo "  make gcp-deploy     Cloud Build staging"
-	@echo "  make gcp-deploy-prod  Cloud Build production (cloudbuild-prod.yaml — SQL FIXME garde-fou)"
+	@echo "  make gcp-deploy-prod  Cloud Build production (cloudbuild-prod.yaml)"
+	@echo "  make gcp-domain     Domaines staging (LB + cert)"
+	@echo "  make gcp-domain-prod Domaines petsfollow.app + api.petsfollow.app"
 	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS (staging + prod)"
 	@echo "  make firebase-google-signin-android  SHA → Firebase (FLAVOR=staging|prod)"
 	@echo "  make firebase-android-dist   APK staging → App Distribution (petsfollow-testers)"
@@ -106,8 +110,9 @@ api-dev: env
 pacs-demo-seed: env
 	@bash scripts/pacs-demo-seed.sh
 
-# API Billit live (sandbox). Exige BILLIT_WEBHOOK_SECRET + BILLIT_SECRETS_BACKEND=local_enc + BILLIT_SECRETS_KEY.
+# API Billit live (sandbox Access Point). Exige BILLIT_WEBHOOK_SECRET + BILLIT_SECRETS_BACKEND=local_enc + BILLIT_SECRETS_KEY.
 # Ne pas confondre avec api-dev (mock on par défaut). Smoke : make billit-sandbox-smoke
+# Prod live (api.billit.be) : BILLIT_BASE_URL=https://api.billit.be make api-billit-live — whitelist Billit requise.
 api-billit-live: env
 	@set -a && source $(ENV_FILE) && set +a; \
 	  test -n "$${BILLIT_WEBHOOK_SECRET:-}" || (echo "BILLIT_WEBHOOK_SECRET required" >&2; exit 1); \
@@ -118,8 +123,8 @@ api-billit-live: env
 	  BILLIT_ENABLED=true BILLIT_MOCK_ENABLED=false \
 	  BILLIT_WEBHOOK_SECRET=$${BILLIT_WEBHOOK_SECRET} \
 	  BILLIT_SECRETS_BACKEND=local_enc BILLIT_SECRETS_KEY=$${BILLIT_SECRETS_KEY} \
-	  BILLIT_BASE_URL=$${BILLIT_BASE_URL:-https://api.billit.be} \
-	  BILLIT_RESELLER_REGISTER_URL=$${BILLIT_RESELLER_REGISTER_URL} \
+	  BILLIT_BASE_URL=$${BILLIT_BASE_URL:-https://api.sandbox.billit.be} \
+	  BILLIT_RESELLER_REGISTER_URL=$${BILLIT_RESELLER_REGISTER_URL:-https://my.sandbox.billit.be/Account/Register} \
 	  AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} \
 	  go run ./cmd/petsfollow-api
 
@@ -175,6 +180,13 @@ smoke:
 billit-sandbox-smoke:
 	@bash scripts/smoke-billit-sandbox.sh
 
+# Purge docs practice draft/rejected/sending des cabinets *@petsfollow.test.
+# DATABASE_URL=… make invoicing-staging-cleanup
+# Options : CLEANUP_ARGS='--connections' ou CLEANUP_ARGS='--dry-run'
+invoicing-staging-cleanup:
+	@test -n "$${DATABASE_URL:-}" || (echo "DATABASE_URL required" >&2; exit 1)
+	@bash scripts/cleanup-staging-invoicing.sh $${CLEANUP_ARGS:-}
+
 # Flux A live : 1 cabinet draft master (+ send si BILLIT_SMOKE_SAAS_SEND=1).
 billit-saas-master-smoke:
 	@bash scripts/smoke-billit-saas-master.sh
@@ -194,6 +206,9 @@ gcp-github:
 
 gcp-setup:
 	bash infra/gcp/setup-gcp.sh
+
+gcp-setup-prod:
+	bash infra/gcp/setup-gcp-prod.sh
 
 gcp-setup-media:
 	bash infra/gcp/setup-gcs-media.sh
@@ -236,6 +251,9 @@ gcp-deploy-prod:
 
 gcp-domain:
 	bash infra/gcp/setup-custom-domain.sh
+
+gcp-domain-prod:
+	PETSFOLLOW_GCP_ENV=prod bash infra/gcp/setup-custom-domain.sh
 
 firebase-flutter-setup:
 	bash infra/firebase/setup-flutter-firebase.sh

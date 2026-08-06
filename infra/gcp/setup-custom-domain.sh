@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Domaines custom petsFollow via Load Balancer global + Serverless NEG :
-#   petsfollow.ll-it-sc.be     → petsfollow-nuxtjs
-#   api.petsfollow.ll-it-sc.be → petsfollow-api
+# Domaines custom petsFollow via Load Balancer global + Serverless NEG.
+# Staging : petsfollow.ll-it-sc.be / api.petsfollow.ll-it-sc.be
+# Prod    : PETSFOLLOW_GCP_ENV=prod → petsfollow.app / api.petsfollow.app
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/gcp-env.sh
-source "${SCRIPT_DIR}/lib/gcp-env.sh"
+if [[ "${PETSFOLLOW_GCP_ENV:-}" == "prod" ]]; then
+  # shellcheck source=lib/gcp-env-prod.sh
+  source "${SCRIPT_DIR}/lib/gcp-env-prod.sh"
+else
+  # shellcheck source=lib/gcp-env.sh
+  source "${SCRIPT_DIR}/lib/gcp-env.sh"
+fi
 
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
 
@@ -171,15 +176,22 @@ ensure_host_route \
   "$API_PATH_MATCHER" \
   "$API_CERT_NAME"
 
+OVH_ZONE_HINT="ll-it-sc.be"
+OVH_HOST_SITE="petsfollow"
+OVH_HOST_API="api.petsfollow"
+if [[ "${PETSFOLLOW_GCP_ENV:-}" == "prod" ]]; then
+  OVH_ZONE_HINT="petsfollow.app"
+  OVH_HOST_SITE="@ (apex) ou vide"
+  OVH_HOST_API="api"
+fi
+
 cat <<EOF
 
-OK — prochaines étapes manuelles (OVH, zone ll-it-sc.be) :
+OK — prochaines étapes manuelles (OVH, zone ${OVH_ZONE_HINT}) :
 
-1. Créer deux enregistrements A :
-   - Sous-domaine : petsfollow
-     Cible        : ${LB_IP}
-   - Sous-domaine : api.petsfollow
-     Cible        : ${LB_IP}
+1. Créer deux enregistrements A vers ${LB_IP} :
+   - Hôte : ${OVH_HOST_SITE}  →  ${CUSTOM_DOMAIN}
+   - Hôte : ${OVH_HOST_API}   →  ${API_CUSTOM_DOMAIN}
 2. Attendre propagation DNS + certificat ACTIVE :
    gcloud compute ssl-certificates describe ${FRONTEND_CERT_NAME} --global --format='yaml(managed)'
 3. Tester :

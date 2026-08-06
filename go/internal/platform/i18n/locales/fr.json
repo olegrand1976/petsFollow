@@ -174,7 +174,7 @@
     "invalid_webhook": "Payload webhook invalide",
     "document_not_ready": "Document pas encore prêt — réessayez",
     "invoicing_gateway_error": "Erreur du service de facturation électronique",
-    "related_document_invalid": "Document lié invalide (facture émise, livrée ou rejetée requise)",
+    "related_document_invalid": "Document lié invalide (facture en envoi, émise, livrée ou rejetée requise)",
     "order_persist_failed": "Échec d’enregistrement de la commande Billit — document rejeté, vous pouvez renvoyer",
     "consultation_has_report": "Impossible d'annuler : un compte-rendu a déjà été enregistré",
     "consultation_session_not_reschedulable": "Une consultation sans RDV ne peut pas être replanifiée",
@@ -194,7 +194,12 @@
     "research_disabled": "Module Research désactivé",
     "research_anon_salt_required": "Configuration Research incomplète (sel d’anonymisation manquant)",
     "not_consultation_history": "Cette visite n'appartient pas à l'historique des consultations (ou RDV agenda encore ouvert)",
-    "not_consultation_session": "Seules les consultations walk-in peuvent être supprimées ainsi"
+    "not_consultation_session": "Seules les consultations walk-in peuvent être supprimées ainsi",
+    "invoicing_secrets_mismatch": "Clé Billit illisible — reconnectez la facturation (Paramètres → Facturation)",
+    "related_invoice_not_on_billit": "La facture liée n’a pas encore été créée chez Billit — envoyez-la d’abord",
+    "be_vat_required": "Numéro de TVA belge requis",
+    "be_vat_invalid": "Numéro de TVA belge invalide (format ou clé de contrôle)",
+    "be_address_required": "Adresse complète requise pour la Belgique (rue, code postal, ville)"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

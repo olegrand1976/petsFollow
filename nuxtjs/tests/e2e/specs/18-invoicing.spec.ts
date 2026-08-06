@@ -60,7 +60,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
 
     await fillField(page, 'invoicing-cp-name', `Client E2E ${Date.now()}`)
     await page.getByTestId('invoicing-country').selectOption('BE')
-    await fillField(page, 'invoicing-cp-vat', 'BE0123456789')
+    await fillField(page, 'invoicing-cp-vat', 'BE1000000021')
     await fillField(page, 'invoicing-cp-street', 'Rue E2E 1')
     await fillField(page, 'invoicing-cp-postal', '1000')
     await fillField(page, 'invoicing-cp-city', 'Bruxelles')
@@ -115,7 +115,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
         counterparty: {
           name: 'Client CN',
           country: 'BE',
-          vatNumber: 'BE0999999999',
+          vatNumber: 'BE1000000021',
           street: 'Rue 1',
           city: 'Bruxelles',
           postal: '1000',
@@ -132,7 +132,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
         counterparty: {
           name: 'Client CN',
           country: 'BE',
-          vatNumber: 'BE0999999999',
+          vatNumber: 'BE1000000021',
           street: 'Rue 1',
           city: 'Bruxelles',
           postal: '1000',
@@ -148,7 +148,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
         counterparty: {
           name: 'Client PF',
           country: 'BE',
-          vatNumber: 'BE0888888888',
+          vatNumber: 'BE1000000120',
           street: 'Rue 2',
           city: 'Bruxelles',
           postal: '1000',

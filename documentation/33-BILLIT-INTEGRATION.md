@@ -194,14 +194,23 @@ Secrets API : **pas** en clair dans Postgres — référence Secret Manager `pet
 ```bash
 BILLIT_ENABLED=false
 BILLIT_MOCK_ENABLED=true          # local / CI
-BILLIT_BASE_URL=https://api.billit.be   # confirmer sandbox URL Billit
+# Staging / pilote local → sandbox ; prod (main) → api.billit.be (whitelist Access Point)
+# https://docs.accesspoint.billit.eu/docs/sandbox-vs-production
+BILLIT_BASE_URL=https://api.sandbox.billit.be
 BILLIT_MASTER_PARTY_ID=
 BILLIT_MASTER_API_KEY=            # SM
 BILLIT_WEBHOOK_SECRET=            # SM
-BILLIT_RESELLER_REGISTER_URL=     # lien partner
+BILLIT_RESELLER_REGISTER_URL=https://my.sandbox.billit.be/Account/Register
 BILLIT_DEFAULT_DOCS_INCLUDED=50
 INVOICING_SAAS_PRICE_EUR_CENTS=8800
 ```
+
+| Env petsFollow | Billit | API | UI register |
+|----------------|--------|-----|-------------|
+| staging GCP / `make api-billit-live` | **Sandbox** | `https://api.sandbox.billit.be` | `https://my.sandbox.billit.be` |
+| prod (`main`) opt-in | **Production** | `https://api.billit.be` | `https://my.billit.be` |
+
+Sandbox et Production sont **isolés** (clés API non interchangeables). Accès Production Access Point = contrat + whitelist Billit.
 
 #### 2.4 Handlers / BFF
 
@@ -383,7 +392,7 @@ Règles :
 
 ```text
 1. Phase 0 signée
-2. Staging : BILLIT_ENABLED + sandbox, 1 practice seed
+2. Staging : `BILLIT_ENABLED` + sandbox (`api.sandbox.billit.be`), 1 practice seed ; mock off dès secret webhook SM présent
 3. Phase 1 Flux A (prod LL-IT-SC) — valeur conformité immédiate
 4. Phase 2–3 staging → pilote 2 cabinets
 5. Feature flag prod progressive

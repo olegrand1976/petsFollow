@@ -40,6 +40,7 @@ func SealAPIKey(backend, keyMaterial, apiKey string) (string, error) {
 }
 
 // OpenAPIKey recovers the practice API key from a sealed ref.
+// Decrypt / unknown-ref failures wrap ErrSecrets so handlers can ask for reconnect.
 func OpenAPIKey(backend, keyMaterial, ref string) (string, error) {
 	ref = strings.TrimSpace(ref)
 	switch {
@@ -48,18 +49,18 @@ func OpenAPIKey(backend, keyMaterial, ref string) (string, error) {
 	case strings.HasPrefix(ref, secretPrefixEnc):
 		raw, err := base64.RawStdEncoding.DecodeString(strings.TrimPrefix(ref, secretPrefixEnc))
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("%w: decode", ErrSecrets)
 		}
 		if strings.TrimSpace(keyMaterial) == "" {
-			return "", errors.New("BILLIT_SECRETS_KEY required to open enc secret")
+			return "", fmt.Errorf("%w: BILLIT_SECRETS_KEY required", ErrSecrets)
 		}
 		pt, err := decryptAESGCM(deriveKey(keyMaterial), raw)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("%w: decrypt", ErrSecrets)
 		}
 		return string(pt), nil
 	default:
-		return "", fmt.Errorf("unknown secret ref")
+		return "", fmt.Errorf("%w: unknown secret ref", ErrSecrets)
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -20,10 +21,17 @@ type Client struct {
 	httpClient *http.Client
 }
 
+// DefaultBaseURL is the Billit production API. Staging / local live pilotes must
+// pass https://api.sandbox.billit.be explicitly (isolated env, separate ApiKeys).
+const DefaultBaseURL = "https://api.billit.be"
+
+// SandboxBaseURL is the isolated test API (no real Peppol / government traffic).
+const SandboxBaseURL = "https://api.sandbox.billit.be"
+
 func NewClient(baseURL string) *Client {
 	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	if baseURL == "" {
-		baseURL = "https://api.billit.be"
+		baseURL = DefaultBaseURL
 	}
 	return &Client{
 		baseURL: baseURL,
@@ -38,7 +46,9 @@ func (c *Client) EnsureParty(_ context.Context, practice invoicing.PracticeParty
 }
 
 func (c *Client) CheckParty(ctx context.Context, partyID, apiKey string) (invoicing.GatewayStatus, error) {
-	res, err := c.doJSON(ctx, http.MethodGet, "/v1/party", partyID, apiKey, nil)
+	// Billit OpenAPI: GET /v1/parties/{partyID} (singular /v1/party is 405 on sandbox).
+	path := "/v1/parties/" + url.PathEscape(strings.TrimSpace(partyID))
+	res, err := c.doJSON(ctx, http.MethodGet, path, partyID, apiKey, nil)
 	if err != nil {
 		return invoicing.GatewayStatus{}, err
 	}
@@ -91,9 +101,34 @@ func parsePartyStatus(body []byte) invoicing.GatewayStatus {
 				}
 				return st
 			}
+			if partyLooksReady(nested) {
+				st.Complete = true
+				st.Message = "ok"
+				return st
+			}
 		}
 	}
+	// GET /v1/parties/{id} returns Party fields without a Complete flag.
+	if partyLooksReady(raw) {
+		st.Complete = true
+		st.Message = "ok"
+		return st
+	}
 	return st
+}
+
+// partyLooksReady: Billit Party DTO with identity fields (sandbox/prod have no Complete bool).
+func partyLooksReady(raw map[string]any) bool {
+	_, hasID := raw["PartyID"]
+	if !hasID {
+		_, hasID = raw["PartyId"]
+	}
+	name, _ := raw["Name"].(string)
+	vat, _ := raw["VATNumber"].(string)
+	if vat == "" {
+		vat, _ = raw["VatNumber"].(string)
+	}
+	return hasID && strings.TrimSpace(name) != "" && strings.TrimSpace(vat) != ""
 }
 
 func readCompleteness(raw map[string]any) (complete bool, found bool, message string) {

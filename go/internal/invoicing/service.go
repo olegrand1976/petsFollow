@@ -33,6 +33,10 @@ var (
 	ErrSaasBillingDisabled = errors.New("saas_billing_disabled")
 	// ErrGateway wraps live/mock Billit HTTP failures (mapped to HTTP 502).
 	ErrGateway = errors.New("invoicing_gateway")
+	// ErrSecrets: practice ApiKey cannot be opened (key rotation) — reconnect Billit.
+	ErrSecrets = errors.New("invoicing_secrets_mismatch")
+	// ErrRelatedInvoiceNotOnBillit: credit note linked to an invoice never created on Billit.
+	ErrRelatedInvoiceNotOnBillit = errors.New("related_invoice_not_on_billit")
 )
 
 // Store is the persistence port used by Service.
@@ -304,8 +308,8 @@ func (s *Service) CreateDocument(ctx context.Context, practiceID, userID string,
 		}
 		if in.Type == DocCreditNote {
 			switch related.Status {
-			case StatusIssued, StatusDelivered, StatusRejected:
-				// ok — avoir sur facture déjà émise / livrée / rejetée Peppol (rejeu)
+			case StatusIssued, StatusDelivered, StatusRejected, StatusSending:
+				// ok — avoir dès que la facture a un parcours Billit (envoi / livré / rejet)
 			default:
 				return Document{}, ErrRelatedDocument
 			}
@@ -384,7 +388,16 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 	key, err := OpenAPIKey(s.cfg.BillitSecretsBackend, s.cfg.BillitSecretsKey, ref)
 	if err != nil {
 		restore(doc.BillitOrderID, prevStatus, "")
-		return Document{}, err
+		if errors.Is(err, ErrSecrets) {
+			return Document{}, err
+		}
+		return Document{}, fmt.Errorf("%w: %v", ErrSecrets, err)
+	}
+	if doc.Type == DocCreditNote {
+		if err := s.enrichCreditNoteForBillit(ctx, practiceID, &doc); err != nil {
+			restore(doc.BillitOrderID, prevStatus, "")
+			return Document{}, err
+		}
 	}
 	orderID := doc.BillitOrderID
 	if orderID == "" {
@@ -433,6 +446,32 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 		return Document{}, err
 	}
 	return s.store.GetDocument(ctx, practiceID, docID)
+}
+
+// enrichCreditNoteForBillit requires the related invoice to exist on Billit and
+// sets AboutInvoiceNumber when the invoice has a Billit/PF number.
+func (s *Service) enrichCreditNoteForBillit(ctx context.Context, practiceID string, doc *Document) error {
+	relatedID := strings.TrimSpace(doc.RelatedDocumentID)
+	if relatedID == "" {
+		return ErrRelatedDocument
+	}
+	related, err := s.store.GetDocument(ctx, practiceID, relatedID)
+	if err != nil {
+		if errors.Is(err, ErrDocNotFound) {
+			return ErrRelatedDocument
+		}
+		return err
+	}
+	if related.Type != DocInvoice || related.Source == SourceSaasMaster {
+		return ErrRelatedDocument
+	}
+	if strings.TrimSpace(related.BillitOrderID) == "" && strings.TrimSpace(related.Number) == "" {
+		return ErrRelatedInvoiceNotOnBillit
+	}
+	if n := strings.TrimSpace(related.Number); n != "" {
+		doc.AboutInvoiceNumber = n
+	}
+	return nil
 }
 
 func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error) {

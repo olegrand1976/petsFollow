@@ -151,7 +151,7 @@ CREATE=$(curl -sf -X POST "$API/api/v1/practices/me/invoicing/documents" \
     \"counterparty\": {
       \"name\": \"Smoke BE $(date +%s)\",
       \"country\": \"BE\",
-      \"vatNumber\": \"BE0999999999\",
+      \"vatNumber\": \"BE1000000021\",
       \"street\": \"Rue Smoke 1\",
       \"city\": \"Bruxelles\",
       \"postal\": \"1000\"

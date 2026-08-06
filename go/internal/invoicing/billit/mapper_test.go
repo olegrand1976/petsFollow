@@ -21,14 +21,14 @@ func TestMapDocumentCountries(t *testing.T) {
 	t.Run("be", func(t *testing.T) {
 		doc := base
 		doc.Counterparty = invoicing.Counterparty{
-			Name: "Vet BE", Country: "BE", VATNumber: "BE0123456789", CompanyNumber: "0123456789",
+			Name: "Vet BE", Country: "BE", VATNumber: "BE1000000021", CompanyNumber: "0123456789",
 			Street: "Rue 1", City: "Bruxelles", Postal: "1000",
 		}
 		ord, err := billit.MapDocument(doc)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ord.Customer.VATNumber != "BE0123456789" || ord.Customer.CountryCode != "BE" {
+		if ord.Customer.VATNumber != "BE1000000021" || ord.Customer.CountryCode != "BE" {
 			t.Fatalf("%+v", ord.Customer)
 		}
 		if len(ord.OrderLines) != 1 || ord.OrderLines[0].UnitPriceExcl != 100 {
@@ -83,6 +83,42 @@ func TestMapDocumentCountries(t *testing.T) {
 		doc.Counterparty = invoicing.Counterparty{Name: "X", Country: "IT"}
 		if _, err := billit.MapDocument(doc); err == nil {
 			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("credit_note_about_invoice", func(t *testing.T) {
+		doc := base
+		doc.Type = invoicing.DocCreditNote
+		doc.AboutInvoiceNumber = "INV-100"
+		doc.Counterparty = invoicing.Counterparty{
+			Name: "Vet BE", Country: "BE", VATNumber: "BE1000000021",
+			Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+		}
+		ord, err := billit.MapDocument(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ord.OrderType != "CreditNote" {
+			t.Fatalf("type=%s", ord.OrderType)
+		}
+		if ord.AboutInvoiceNumber != "INV-100" {
+			t.Fatalf("AboutInvoiceNumber=%q", ord.AboutInvoiceNumber)
+		}
+	})
+
+	t.Run("credit_note_omit_about_when_empty", func(t *testing.T) {
+		doc := base
+		doc.Type = invoicing.DocCreditNote
+		doc.Counterparty = invoicing.Counterparty{
+			Name: "Vet BE", Country: "BE", VATNumber: "BE1000000021",
+			Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+		}
+		ord, err := billit.MapDocument(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ord.AboutInvoiceNumber != "" {
+			t.Fatalf("want omit AboutInvoiceNumber got %q", ord.AboutInvoiceNumber)
 		}
 	})
 }

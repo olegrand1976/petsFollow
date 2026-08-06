@@ -4,69 +4,55 @@ substitutions:
   _AR_REPO: petsfollow
   _SERVICE_ACCOUNT: petsfollow-run
   _VPC_CONNECTOR: premedica-connector
-  _CLOUDSQL_INSTANCE: premedica-prod-2025:europe-west9:premedica-db-staging
-  _API_SERVICE: petsfollow-api
-  _FRONTEND_SERVICE: petsfollow-nuxtjs
-  _ORTHANC_SERVICE: petsfollow-orthanc
+  # Instance SQL PROD — ne jamais pointer premedica-db-staging.
+  _CLOUDSQL_INSTANCE: premedica-prod-2025:europe-west9:petsfollow-db-prod
+  _API_SERVICE: petsfollow-api-prod
+  _FRONTEND_SERVICE: petsfollow-nuxtjs-prod
+  _MIGRATE_JOB: petsfollow-migrate-prod
   _SKIP_MIGRATE: "false"
-  # true = skip Orthanc image + deploy (API/Nuxt PACS stays off without URL).
-  _SKIP_ORTHANC: "false"
-  # Billit sandbox master (LL-IT Software & Computer) — PartyID non secret.
-  _BILLIT_MASTER_PARTY_ID: "1133539"
 
 options:
   machineType: E2_HIGHCPU_8
   logging: CLOUD_LOGGING_ONLY
 
 steps:
+  - id: guard-sql
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_CLOUDSQL_INSTANCE}" == *"FIXME"* ]] \
+          || [[ "${_CLOUDSQL_INSTANCE}" == *"premedica-db-staging"* ]]; then
+          echo "REFUSE: _CLOUDSQL_INSTANCE invalide pour prod: ${_CLOUDSQL_INSTANCE}" >&2
+          exit 1
+        fi
+        echo "→ SQL prod OK: ${_CLOUDSQL_INSTANCE}"
+
   - id: build-api
     name: gcr.io/kaniko-project/executor:latest
     args:
       - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID
-      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:latest
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:prod
       - --cache=true
       - --context=dir://.
       - --dockerfile=deploy/Dockerfile.api
+    waitFor: ["guard-sql"]
 
   - id: build-frontend
     name: gcr.io/kaniko-project/executor:latest
     args:
       - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID
-      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:latest
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:prod
       - --cache=true
       - --context=dir://.
       - --dockerfile=deploy/Dockerfile.nuxtjs
-      # CSP connect-src : API publique (jamais localhost bake).
-      - --build-arg=NUXT_PUBLIC_API_BASE=https://api.petsfollow.ll-it-sc.be
-      - --build-arg=NUXT_PUBLIC_APP_ENV=staging
-      # Modules Pro tag « dev » (nav + pages) — mirror make nuxtjs-dev.
-      - --build-arg=NUXT_PUBLIC_PHARMACY_ENABLED=true
-      - --build-arg=NUXT_PUBLIC_BILLIT_ENABLED=true
-      - --build-arg=NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=true
-      # PACS : bake off ; runtime enable via deploy-frontend when Orthanc URL present.
+      - --build-arg=NUXT_PUBLIC_API_BASE=https://api.petsfollow.app
+      - --build-arg=NUXT_PUBLIC_APP_ENV=production
+      # Modules tag « dev » off — clés absentes (Boolean("false")===true côté Nuxt).
       - --build-arg=NUXT_PUBLIC_PACS_ENABLED=false
-      # Research observatory (tag dev) — staging bake on.
-      - --build-arg=NUXT_PUBLIC_RESEARCH_ENABLED=true
-      # Multi-sites Pro UI (soft-GA) — staging bake on.
-      - --build-arg=NUXT_PUBLIC_SITES_UI_ENABLED=true
-
-  # :debug = busybox présent (/busybox/sh). :latest n'a plus de shell → OCI create fail.
-  - id: build-orthanc
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: /busybox/sh
-    args:
-      - -c
-      - |
-        if [ "${_SKIP_ORTHANC}" = "true" ]; then
-          echo "→ Orthanc build ignoré (_SKIP_ORTHANC=true)"
-          exit 0
-        fi
-        exec /kaniko/executor \
-          --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:$BUILD_ID \
-          --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:latest \
-          --cache=true \
-          --context=dir://. \
-          --dockerfile=deploy/Dockerfile.orthanc
+    waitFor: ["guard-sql"]
 
   - id: migrate
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -82,13 +68,13 @@ steps:
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID"
         SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
         CONNECTOR="projects/$PROJECT_ID/locations/${_RUN_REGION}/connectors/${_VPC_CONNECTOR}"
-        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/gcp-env-prod.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
         ENV_FILE="$$(mktemp)"
-        pf_write_api_env_file "$$ENV_FILE"
+        pf_write_api_env_file "$$ENV_FILE" false false production
         MIGRATE_SECRETS="$$(pf_migrate_secrets)"
-        gcloud run jobs deploy petsfollow-migrate \
+        gcloud run jobs deploy "${_MIGRATE_JOB}" \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" \
           --set-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
@@ -97,32 +83,9 @@ steps:
           --set-secrets="$$MIGRATE_SECRETS" \
           --command=/app/petsfollow-api --args=migrate \
           --memory=512Mi --cpu=1 --task-timeout=600 --max-retries=0 --quiet
-        gcloud run jobs execute petsfollow-migrate \
+        gcloud run jobs execute "${_MIGRATE_JOB}" \
           --project="$PROJECT_ID" --region="${_RUN_REGION}" --wait --quiet
     waitFor: ["build-api"]
-
-  - id: deploy-orthanc
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        set -euo pipefail
-        if [[ "${_SKIP_ORTHANC}" == "true" ]]; then
-          echo "→ Orthanc ignoré (_SKIP_ORTHANC=true)"
-          exit 0
-        fi
-        source infra/gcp/lib/gcp-env.sh
-        export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
-        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
-        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:$BUILD_ID"
-        # Best-effort : module tag « dev » — un échec Orthanc ne bloque pas API/Nuxt.
-        # setup-orthanc auto-passe en --deploy-only si déjà bootstrappé (pas de reset SQL).
-        if ! bash infra/gcp/setup-orthanc.sh "$$IMAGE"; then
-          echo "WARN: deploy Orthanc échoué — PACS restera off (PACS_ORTHANC_URL vide)" >&2
-          exit 0
-        fi
-    waitFor: ["build-orthanc"]
 
   - id: deploy-api
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -134,26 +97,13 @@ steps:
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID"
         SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
         CONNECTOR="projects/$PROJECT_ID/locations/${_RUN_REGION}/connectors/${_VPC_CONNECTOR}"
-        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/gcp-env-prod.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
-        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
-        # Wire PACS when Orthanc Cloud Run is up (from this build or a prior one).
-        export PACS_ORTHANC_URL="$$(orthanc_run_url)"
-        if [[ -n "$${PACS_ORTHANC_URL}" ]]; then
-          echo "→ PACS_ORTHANC_URL=$${PACS_ORTHANC_URL}"
-        else
-          echo "→ Orthanc URL absent — PACS_ENABLED reste off"
-        fi
         ENV_FILE="$$(mktemp)"
-        # false=DEV_SEED, true=ADMIN_STAGING_SEED, staging=APP_ENV (API staging only)
-        # Sandbox Billit : PartyID master + URLs/mock via pf_write_api_env_file (APP_ENV=staging).
-        export BILLIT_MASTER_PARTY_ID="${_BILLIT_MASTER_PARTY_ID}"
-        pf_write_api_env_file "$$ENV_FILE" false true staging
+        # seed off, admin staging seed off, APP_ENV=production
+        pf_write_api_env_file "$$ENV_FILE" false false production
         SECRETS="$$(pf_api_secrets)"
-        echo "→ Billit staging: BASE/mock from env file; MASTER_PARTY_ID=$${BILLIT_MASTER_PARTY_ID:-none}"
-        grep -E '^BILLIT_' "$$ENV_FILE" || true
-        # timeout 900s : WebSocket Gemini Live (appel pitch 8 min + marge)
         gcloud run deploy ${_API_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=8080 \
@@ -168,7 +118,7 @@ steps:
           --member=allUsers --role=roles/run.invoker \
           --quiet 2>/dev/null || true
         gcloud run services describe ${_API_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
-    waitFor: ["migrate", "deploy-orthanc"]
+    waitFor: ["migrate"]
 
   - id: deploy-frontend
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -179,19 +129,12 @@ steps:
         set -euo pipefail
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID"
         SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
-        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/gcp-env-prod.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
-        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
-        export PACS_ORTHANC_URL="$$(orthanc_run_url)"
-        API_URL="$$(gcloud run services describe ${_API_SERVICE} \
-          --region="${_RUN_REGION}" --project="$PROJECT_ID" \
-          --format='value(status.url)' 2>/dev/null || true)"
-        if [[ -z "$$API_URL" ]]; then
-          API_URL="$${PUBLIC_API_URL}"
-        fi
         ENV_FILE="$$(mktemp)"
-        pf_write_frontend_env_file "$$ENV_FILE" "$$API_URL" "staging"
+        # BFF runtime → domaine custom API (pas l’URL Run éphémère).
+        pf_write_frontend_env_file "$$ENV_FILE" "$${PUBLIC_API_URL}" "production"
         gcloud run deploy ${_FRONTEND_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=3000 \
@@ -204,4 +147,3 @@ steps:
           --quiet 2>/dev/null || true
         gcloud run services describe ${_FRONTEND_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
     waitFor: ["build-frontend", "deploy-api"]
-

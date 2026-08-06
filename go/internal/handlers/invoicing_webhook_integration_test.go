@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -40,7 +41,7 @@ func TestInvoicingWebhookDeliveredAndUsage(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -118,7 +119,7 @@ func TestInvoicingWebhookStatusProgression(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -186,7 +187,7 @@ func TestInvoicingWebhookDoesNotReopenRejected(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -250,6 +251,165 @@ func TestInvoicingWebhookUnknownOrderRetries(t *testing.T) {
 	code, _ = postBillitWebhook(t, api.handler, testBillitWebhookSecret, body)
 	if code != http.StatusServiceUnavailable {
 		t.Fatalf("expected 503 replay got %d", code)
+	}
+}
+
+func TestInvoicingWebhookMessageDeliveredAndUsage(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetBillitWebhookSecret(testBillitWebhookSecret)
+
+	access, practiceID := registerInvoicingPractice(t, api, "inv-wh-msg")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("connect/start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": "party_wh_msg", "apiKey": "mock-key",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("connect/complete %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type": "invoice",
+		"counterparty": map[string]any{
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
+			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+		},
+		"lines": []map[string]any{
+			{"description": "Consult", "quantity": 1, "unitPriceExclCents": 5000, "vatPercent": 21},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create doc %d %#v", code, env)
+	}
+	docID, _ := dataMap(t, env)["id"].(string)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	orderID := fmt.Sprintf("%d", time.Now().UnixNano()%1_000_000_000_000)
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET billit_order_id = $2, status = 'sending', peppol_status = 'sending'
+		WHERE id = $1 AND practice_id = $3`, docID, orderID, practiceID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Billit Access Point Message/U shape (staging webhook).
+	orderIDNum, _ := strconv.ParseInt(orderID, 10, 64)
+	payload := map[string]any{
+		"UpdatedEntityID":     700001,
+		"UpdatedEntityType":   "Message",
+		"WebhookUpdateTypeTC": "U",
+		"EntityDetail": map[string]any{
+			"OrderMessage": map[string]any{
+				"OrderID":          orderIDNum,
+				"Success":          true,
+				"TransportType":    "Peppol",
+				"MessageDirection": "Outgoing",
+			},
+			"AdditionalMessageInformation": map[string]any{
+				"EInvoiceFlowState": "Delivered",
+			},
+		},
+	}
+	raw, _ := json.Marshal(payload)
+	code, env = postBillitWebhook(t, api.handler, testBillitWebhookSecret, raw)
+	if code != http.StatusOK {
+		t.Fatalf("message webhook %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents/"+docID, access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get doc %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != string(invoicing.StatusDelivered) {
+		t.Fatalf("expected delivered %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/connection", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("connection %d %#v", code, env)
+	}
+	usage, _ := dataMap(t, env)["usageThisMonth"].(float64)
+	if usage < 1 {
+		t.Fatalf("expected usage >= 1 got %#v", env)
+	}
+}
+
+func TestInvoicingDocumentsIsolatedAcrossPractices(t *testing.T) {
+	api := newTestAPI(t)
+
+	accessA, _ := registerInvoicingPractice(t, api, "inv-iso-a")
+	accessB, _ := registerInvoicingPractice(t, api, "inv-iso-b")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", accessA, nil)
+	if code != http.StatusOK {
+		t.Fatalf("A start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", accessA, map[string]any{
+		"state": state, "partyId": "party_iso_a", "apiKey": "mock-key-a",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("A complete %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", accessA, map[string]any{
+		"type": "invoice",
+		"counterparty": map[string]any{
+			"name": "Client A", "country": "BE", "vatNumber": "BE1000000021",
+			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+		},
+		"lines": []map[string]any{
+			{"description": "Consult", "quantity": 1, "unitPriceExclCents": 5000, "vatPercent": 21},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("A create %d %#v", code, env)
+	}
+	docID, _ := dataMap(t, env)["id"].(string)
+
+	// Practice B must not see / get practice A documents (anti-redirection).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents", accessB, nil)
+	if code != http.StatusOK && code != http.StatusNotFound {
+		// Not connected yet → connection/docs may 404 invoicing_disabled or empty list.
+		// Connect B minimally so list is authorized.
+		_ = env
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", accessB, nil)
+	if code != http.StatusOK {
+		t.Fatalf("B start %d %#v", code, env)
+	}
+	stateB, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", accessB, map[string]any{
+		"state": stateB, "partyId": "party_iso_b", "apiKey": "mock-key-b",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("B complete %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents", accessB, nil)
+	if code != http.StatusOK {
+		t.Fatalf("B list %d %#v", code, env)
+	}
+	if rows, ok := env["data"].([]any); ok {
+		for _, row := range rows {
+			m, _ := row.(map[string]any)
+			if m["id"] == docID {
+				t.Fatalf("practice B must not list practice A doc %#v", rows)
+			}
+		}
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents/"+docID, accessB, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("practice B GET A doc want 404 got %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+docID+"/send", accessB, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("practice B send A doc want 404 got %d %#v", code, env)
 	}
 }
 

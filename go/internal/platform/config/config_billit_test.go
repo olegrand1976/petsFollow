@@ -18,7 +18,7 @@ func TestValidateBillitLiveRequiresURLAndWebhook(t *testing.T) {
 	if err := cfg.ValidateBillit(); err == nil {
 		t.Fatal("expected error without base URL")
 	}
-	cfg.BillitBaseURL = "https://api.billit.be"
+	cfg.BillitBaseURL = "https://api.sandbox.billit.be"
 	if err := cfg.ValidateBillit(); err == nil {
 		t.Fatal("expected error without webhook secret")
 	}

@@ -174,7 +174,7 @@
     "invalid_webhook": "Kehtetu webhooki sisu",
     "document_not_ready": "Dokument pole veel valmis — proovige uuesti",
     "invoicing_gateway_error": "Elektroonilise arvelduse teenuse viga",
-    "related_document_invalid": "Seotud dokument on vigane (nõutav on väljastatud, kohale toimetatud või tagasi lükatud arve)",
+    "related_document_invalid": "Seotud dokument kehtetu (nõutav saatmisel, väljastatud, kohale toimetatud või tagasi lükatud arve)",
     "order_persist_failed": "Billit tellimuse salvestamine ebaõnnestus — dokument lükati tagasi, saate uuesti saata",
     "consultation_has_report": "Tühistamine pole võimalik: visiidiraport on juba salvestatud",
     "consultation_session_not_reschedulable": "Kohapealset konsultatsiooni ei saa ümber planeerida",
@@ -194,7 +194,12 @@
     "research_disabled": "Research moodul on keelatud",
     "research_anon_salt_required": "Research on valesti seadistatud (anonüümsuse sool puudub)",
     "not_consultation_history": "See visiit ei kuulu konsultatsioonide ajalukku (või agenda kohtumine on veel avatud)",
-    "not_consultation_session": "Nii saab kustutada ainult walk-in konsultatsioone"
+    "not_consultation_session": "Nii saab kustutada ainult walk-in konsultatsioone",
+    "invoicing_secrets_mismatch": "Billiti võti loetamatu — ühendage arveldus uuesti (Seaded → Arveldus)",
+    "related_invoice_not_on_billit": "Seotud arvet pole Billitis veel loodud — saatke see enne",
+    "be_vat_required": "Belgia KMKR number on nõutav",
+    "be_vat_invalid": "Vigane Belgia KMKR number (vorming või kontrollnumbrid)",
+    "be_address_required": "Belgia jaoks on vaja täielikku aadressi (tänav, sihtnumber, linn)"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

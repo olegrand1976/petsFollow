@@ -317,6 +317,8 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusBadRequest, "invalid_type", "invalid_type")
 	case errors.Is(err, invoicing.ErrRelatedDocument):
 		writeErr(w, r, http.StatusBadRequest, "related_document_invalid", "related_document_invalid")
+	case errors.Is(err, invoicing.ErrRelatedInvoiceNotOnBillit):
+		writeErr(w, r, http.StatusBadRequest, "related_invoice_not_on_billit", "related_invoice_not_on_billit")
 	case errors.Is(err, invoicing.ErrOrderPersistFailed):
 		writeErr(w, r, http.StatusConflict, "order_persist_failed", "order_persist_failed")
 	case errors.Is(err, invoicing.ErrLinesRequired):
@@ -324,7 +326,18 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 	case errors.Is(err, invoicing.ErrInvalidLines):
 		writeErr(w, r, http.StatusBadRequest, "invalid_lines", "invalid_lines")
 	case errors.Is(err, invoicing.ErrInvalidCounterparty):
-		writeErr(w, r, http.StatusBadRequest, "invalid_counterparty", "invalid_counterparty")
+		reason := strings.TrimPrefix(err.Error(), invoicing.ErrInvalidCounterparty.Error())
+		reason = strings.TrimPrefix(reason, ": ")
+		reason = strings.TrimSpace(reason)
+		msgKey := "invalid_counterparty"
+		if reason != "" {
+			msgKey = reason
+		}
+		var details any
+		if reason != "" {
+			details = map[string]string{"reason": reason}
+		}
+		writeErrDetails(w, r, http.StatusBadRequest, "invalid_counterparty", msgKey, details)
 	case errors.Is(err, invoicing.ErrDocsQuotaExceeded):
 		writeErr(w, r, http.StatusConflict, "docs_quota_exceeded", "docs_quota_exceeded")
 	case errors.Is(err, invoicing.ErrPartnerNotEligible):
@@ -335,8 +348,20 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusConflict, "saas_not_eligible", "saas_not_eligible")
 	case errors.Is(err, invoicing.ErrSaasBillingDisabled):
 		writeErr(w, r, http.StatusConflict, "saas_billing_disabled", "saas_billing_disabled")
+	case errors.Is(err, invoicing.ErrSecrets):
+		writeErr(w, r, http.StatusConflict, "invoicing_secrets_mismatch", "invoicing_secrets_mismatch")
 	case errors.Is(err, invoicing.ErrGateway):
-		writeErr(w, r, http.StatusBadGateway, "bad_gateway", "invoicing_gateway_error")
+		detail := strings.TrimPrefix(err.Error(), invoicing.ErrGateway.Error())
+		detail = strings.TrimPrefix(detail, ": ")
+		detail = strings.TrimSpace(detail)
+		if len(detail) > 200 {
+			detail = detail[:200]
+		}
+		var details any
+		if detail != "" {
+			details = map[string]string{"gateway": detail}
+		}
+		writeErrDetails(w, r, http.StatusBadGateway, "bad_gateway", "invoicing_gateway_error", details)
 	default:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	}

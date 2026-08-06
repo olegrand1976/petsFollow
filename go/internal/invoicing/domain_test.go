@@ -70,11 +70,29 @@ func TestValidateCounterpartyMultiCountry(t *testing.T) {
 	}{
 		{
 			name: "be_ok",
-			c:    invoicing.Counterparty{Name: "Cabinet Vet", Country: "be", VATNumber: "BE0123456789"},
+			c: invoicing.Counterparty{
+				Name: "Cabinet Vet", Country: "be", VATNumber: "BE1000000021",
+				Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+			},
 		},
 		{
 			name:    "be_missing",
 			c:       invoicing.Counterparty{Name: "X", Country: "BE"},
+			wantErr: true,
+		},
+		{
+			name: "be_missing_address",
+			c: invoicing.Counterparty{
+				Name: "Cabinet Vet", Country: "BE", VATNumber: "BE1000000021",
+			},
+			wantErr: true,
+		},
+		{
+			name: "be_bad_checksum",
+			c: invoicing.Counterparty{
+				Name: "Cabinet Vet", Country: "BE", VATNumber: "BE0123456789",
+				Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+			},
 			wantErr: true,
 		},
 		{

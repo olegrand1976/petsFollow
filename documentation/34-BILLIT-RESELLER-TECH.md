@@ -1,6 +1,6 @@
 # 34 — Plan technique Billit reseller (petsFollow)
 
-**Statut** : plan technique — **socle livré** (mock + client live + multi-pays + webhook durci, 2026-07-28). Prochaine étape : **pilote sandbox** (checklist ci-dessous).  
+**Statut** : plan technique — **socle livré** + **câblage sandbox staging / prod main** + **parse webhook Message/EntityDetail** (2026-08-06). Prochaine étape : **pilote sandbox live** send → delivered (checklist D–F).  
 **Complète** : [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) (produit / phases / CGV).  
 **Ce doc** = mise en place **technique** du mode **Integration Partner / Reseller** : 1 PartyID par cabinet, facturation Billit → LL-IT-SC, UI Pro transparente.
 
@@ -46,21 +46,22 @@ Option send live : `BILLIT_SMOKE_PARTY_ID` + `BILLIT_SMOKE_API_KEY`. Suite UI/we
 
 **A. Prérequis Billit (hors repo)**
 
-1. Compte sandbox Integration Partner + 1 Party cabinet test + clé API user multi-Party.  
+1. Compte **sandbox** Integration Partner / Access Point : [Register sandbox](https://my.sandbox.billit.be/Account/Register) + 1 Party cabinet test + clé API user multi-Party (Profile → Users & API Key).  
 2. Secret webhook fourni par Billit (ou choisi et enregistré des deux côtés).  
-3. URL publique API (staging Cloud Run **ou** tunnel local vers `:8291`).
+3. URL publique API (staging Cloud Run **ou** tunnel local vers `:8291`).  
+4. **Production** (`main`) : contrat Access Point + whitelist Billit — [Who can be a partner](https://docs.accesspoint.billit.eu/docs/who-can-be-an-access-point-partner) ; clés **distinctes** de la sandbox ([Sandbox vs Production](https://docs.accesspoint.billit.eu/docs/sandbox-vs-production)).
 
 **B. Config runtime**
 
 ```bash
-# Exemple local live (pas mock) — NE PAS utiliser le défaut mock de api-dev
+# Exemple local live sandbox (pas mock) — NE PAS utiliser le défaut mock de api-dev
 export BILLIT_ENABLED=true
 export BILLIT_MOCK_ENABLED=false
-export BILLIT_BASE_URL=https://api.billit.be   # ou URL sandbox doc Billit
+export BILLIT_BASE_URL=https://api.sandbox.billit.be
 export BILLIT_WEBHOOK_SECRET='…'               # même valeur chez Billit
 export BILLIT_SECRETS_BACKEND=local_enc
 export BILLIT_SECRETS_KEY='…'                  # ≥ 16 chars aléatoires
-export BILLIT_RESELLER_REGISTER_URL='https://my.billit.be/account/…/Register'
+export BILLIT_RESELLER_REGISTER_URL='https://my.sandbox.billit.be/Account/Register'
 export DEV_SEED_ENABLED=true                   # local only
 export NUXT_PUBLIC_BILLIT_ENABLED=true
 # Option A (recommandée) : make api-billit-live
@@ -71,9 +72,16 @@ make billit-sandbox-smoke
 # BILLIT_SMOKE_PARTY_ID=… BILLIT_SMOKE_API_KEY=… make billit-sandbox-smoke
 ```
 
-> `make api-dev` pose `BILLIT_MOCK_ENABLED=true` **par défaut**. Pour le pilote live préférer **`make api-billit-live`**.
+> `make api-dev` pose `BILLIT_MOCK_ENABLED=true` **par défaut**. Pour le pilote live préférer **`make api-billit-live`** (défaut sandbox).
 
-Staging GCP : secrets SM + `BILLIT_ENABLED=true` / mock off sur le service API ; Nuxt `NUXT_PUBLIC_BILLIT_ENABLED=true`. Admin ops : `/admin/invoicing` (mark partner-listed après bascule Billit).
+| Surface | API | Register UI |
+|---------|-----|-------------|
+| Staging GCP / `api-billit-live` | `https://api.sandbox.billit.be` | `https://my.sandbox.billit.be/Account/Register` |
+| Prod (`main`, opt-in `BILLIT_ENABLED`) | `https://api.billit.be` | `https://my.billit.be/account/PetsFollow/Register` |
+
+Staging GCP : `deploy-run-args.sh` écrit les URLs sandbox ; `BILLIT_MOCK_ENABLED=false` **automatique** si `petsfollow-billit-webhook-secret` existe en SM (sinon mock pour ne pas fail-fast au boot). Secrets montés si présents : webhook, master API key, secrets-key. Admin ops : `/admin/invoicing` (mark partner-listed après bascule Billit).
+
+Prod : secrets `petsfollow-prod-billit-*` via `gcp-env-prod.sh` ; activer seulement après whitelist.
 
 **C. Webhook**
 
@@ -352,23 +360,26 @@ Pro forma : s’arrête à `issued` (PDF) — **jamais** `SendPeppol`.
 | Variable | Défaut | Rôle |
 |----------|--------|------|
 | `BILLIT_ENABLED` | `false` | Feature flag routes + UI |
-| `BILLIT_MOCK_ENABLED` | `true` en `make api-dev` | Gateway mock |
-| `BILLIT_BASE_URL` | sandbox URL Billit | HTTP client |
-| `BILLIT_MASTER_PARTY_ID` | — | Flux A / ops |
+| `BILLIT_MOCK_ENABLED` | `true` en `make api-dev` ; staging auto-off si webhook SM | Gateway mock |
+| `BILLIT_BASE_URL` | code : `api.billit.be` ; staging deploy : `api.sandbox.billit.be` | HTTP client |
+| `BILLIT_MASTER_PARTY_ID` | — | Flux A / ops (prod Access Point) |
 | `BILLIT_MASTER_API_KEY` | SM | Master |
-| `BILLIT_RESELLER_REGISTER_URL` | — | Lien partner |
+| `BILLIT_RESELLER_REGISTER_URL` | staging : `my.sandbox…/Account/Register` ; prod : PetsFollow Register | Lien partner |
 | `BILLIT_WEBHOOK_SECRET` | SM | Vérif webhook |
 | `BILLIT_DEFAULT_DOCS_INCLUDED` | `50` | Plafond |
 | `BILLIT_SECRETS_BACKEND` | `local_enc` \| `gcp_sm` | Où vivent les clés practice |
 | `BILLIT_SECRETS_KEY` | — | Clé AES locale (dev) |
 
+Auth HTTP Billit : headers **`ApiKey`** + **`PartyID`** (pas `Authorization: Bearer`) — voir [Authentication](https://docs.accesspoint.billit.eu/docs/authentication).
+
 ### Secret Manager (staging/prod)
 
-| Secret | Env / usage |
-|--------|-------------|
-| `petsfollow-billit-master-api-key` | Master |
-| `petsfollow-billit-webhook-secret` | Webhook |
-| `petsfollow-billit-practice-<practice_id>` | Clé API practice (si backend SM) |
+| Secret staging | Secret prod (`gcp-env-prod`) | Env |
+|----------------|------------------------------|-----|
+| `petsfollow-billit-master-api-key` | `petsfollow-prod-billit-master-api-key` | `BILLIT_MASTER_API_KEY` |
+| `petsfollow-billit-webhook-secret` | `petsfollow-prod-billit-webhook-secret` | `BILLIT_WEBHOOK_SECRET` |
+| `petsfollow-billit-secrets-key` | `petsfollow-prod-billit-secrets-key` | `BILLIT_SECRETS_KEY` |
+| `petsfollow-billit-practice-<practice_id>` | (idem préfixe prod si `gcp_sm`) | Clé API practice |
 
 ### Règle sécurité (alignée projet)
 
@@ -415,13 +426,16 @@ Envelope `{ data: ... }` comme le reste de l’API.
 | `POST` | `/api/v1/admin/invoicing/connections/{practiceId}/mark-partner-invoiced` | admin — après envoi liste à Billit |
 | `GET` | `/api/v1/admin/invoicing/usage?yyyymm=` | admin |
 
-**Contrat PF (à confirmer sandbox Billit)** :
+**Contrat PF (webhook Billit Access Point)** :
 
 - Header : `X-Billit-Signature: <hex>` (ou `sha256=<hex>` / `X-Signature`)
-- Secret : `BILLIT_WEBHOOK_SECRET`
-- Body JSON minimal attendu : `OrderID` (int ou string) + statut (`Status` / `DeliveryStatus` / `EventType`)
+- Secret : `BILLIT_WEBHOOK_SECRET` (1 secret — préférer un seul webhook Message/U en staging)
+- Body accepté :
+  - **Order plat** : `OrderID` + `Status` / `EventType` (`OrderDelivered`, …)
+  - **Message/U** (sandbox staging) : `EntityDetail.OrderMessage.OrderID` + `AdditionalMessageInformation.EInvoiceFlowState` (`Sent`→sending, `Accepted`→sending, `Delivered`→delivered, `Refused`→rejected)
 - Doc inconnu → **503** + event oublié (retry Billit) ; replay identique → **200** `duplicate`
-- 1re transition → `delivered` incrémente `usage_monthly`
+- 1re transition → `delivered` incrémente `usage_monthly` (sauf docs `saas_master`)
+- Tests : `TestParseWebhookMessage*` + `TestInvoicingWebhookMessageDeliveredAndUsage` + isolation cross-practice
 
 ### BFF Nuxt
 
@@ -436,9 +450,12 @@ Page publique webhook : **pas** via BFF si signature raw body — route Go direc
 
 ```http
 PartyID: <billit_party_id>
-Authorization: <api_key>   # selon doc Billit (header exact à caler sandbox)
+ApiKey: <api_key>
 Content-Type: application/json
+Accept: application/json
 ```
+
+En production Access Point, le PartyID **master** peut être exigé selon l’endpoint ([Authentication](https://docs.accesspoint.billit.eu/docs/authentication)) — Flux A utilise déjà `BILLIT_MASTER_PARTY_ID` + `BILLIT_MASTER_API_KEY`.
 
 ### Mapping domaine → Order
 

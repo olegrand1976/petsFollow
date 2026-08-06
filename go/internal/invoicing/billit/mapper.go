@@ -61,7 +61,7 @@ func MapDocument(doc invoicing.Document) (OrderDTO, error) {
 	if currency == "" {
 		currency = "EUR"
 	}
-	return OrderDTO{
+	ord := OrderDTO{
 		OrderType:      orderType,
 		OrderDirection: "Income",
 		OrderNumber:    doc.Number,
@@ -70,7 +70,14 @@ func MapDocument(doc invoicing.Document) (OrderDTO, error) {
 		Currency:       currency,
 		Customer:       customer,
 		OrderLines:     lines,
-	}, nil
+	}
+	// CreditNote → preceding invoice number (must exist in Billit when set).
+	if doc.Type == invoicing.DocCreditNote {
+		if n := strings.TrimSpace(doc.AboutInvoiceNumber); n != "" {
+			ord.AboutInvoiceNumber = n
+		}
+	}
+	return ord, nil
 }
 
 func mapOrderType(t invoicing.DocType) (string, error) {

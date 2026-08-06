@@ -174,7 +174,7 @@
     "invalid_webhook": "Payload webhook non valido",
     "document_not_ready": "Documento non ancora pronto — riprovare",
     "invoicing_gateway_error": "Errore del servizio di fatturazione elettronica",
-    "related_document_invalid": "Documento collegato non valido (serve una fattura emessa, consegnata o rifiutata)",
+    "related_document_invalid": "Documento collegato non valido (richiesta fattura in invio, emessa, consegnata o rifiutata)",
     "order_persist_failed": "Salvataggio ordine Billit non riuscito — documento rifiutato, è possibile reinviare",
     "consultation_has_report": "Impossibile annullare: un referto è già stato salvato",
     "consultation_session_not_reschedulable": "Una consultazione walk-in non può essere ripianificata",
@@ -194,7 +194,12 @@
     "research_disabled": "Modulo Research disattivato",
     "research_anon_salt_required": "Research non configurato (sale di anonimizzazione mancante)",
     "not_consultation_history": "Questa visita non fa parte dello storico consultazioni (o l'appuntamento in agenda è ancora aperto)",
-    "not_consultation_session": "Solo le consultazioni walk-in possono essere eliminate così"
+    "not_consultation_session": "Solo le consultazioni walk-in possono essere eliminate così",
+    "invoicing_secrets_mismatch": "Chiave Billit illeggibile — riconnetti la fatturazione (Impostazioni → Fatturazione)",
+    "related_invoice_not_on_billit": "La fattura collegata non esiste ancora su Billit — inviala prima",
+    "be_vat_required": "Partita IVA belga obbligatoria",
+    "be_vat_invalid": "Partita IVA belga non valida (formato o cifre di controllo)",
+    "be_address_required": "Indirizzo completo obbligatorio per il Belgio (via, CAP, città)"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

@@ -174,7 +174,7 @@
     "invalid_webhook": "Invalid webhook payload",
     "document_not_ready": "Document not ready yet — retry",
     "invoicing_gateway_error": "Electronic invoicing service error",
-    "related_document_invalid": "Invalid related document (issued, delivered or rejected invoice required)",
+    "related_document_invalid": "Invalid related document (sending, issued, delivered or rejected invoice required)",
     "order_persist_failed": "Failed to persist Billit order — document rejected, you can retry send",
     "consultation_has_report": "Cannot cancel: a visit report has already been saved",
     "consultation_session_not_reschedulable": "A walk-in consultation cannot be rescheduled",
@@ -194,7 +194,12 @@
     "research_disabled": "Research module disabled",
     "research_anon_salt_required": "Research misconfigured (anonymisation salt missing)",
     "not_consultation_history": "This visit is not part of consultation history (or the agenda appointment is still open)",
-    "not_consultation_session": "Only walk-in consultations can be deleted this way"
+    "not_consultation_session": "Only walk-in consultations can be deleted this way",
+    "invoicing_secrets_mismatch": "Billit key unreadable — reconnect invoicing (Settings → Invoicing)",
+    "related_invoice_not_on_billit": "Related invoice was not created on Billit yet — send it first",
+    "be_vat_required": "Belgian VAT number required",
+    "be_vat_invalid": "Invalid Belgian VAT number (format or check digits)",
+    "be_address_required": "Full address required for Belgium (street, postal code, city)"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

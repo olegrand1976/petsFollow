@@ -5,10 +5,30 @@
 # ou export avant deploy manuel. Voir documentation/07-STRIPE-BILLING.md
 set -euo pipefail
 
+pf_sm_database_url() { printf '%s' "${PF_SM_DATABASE_URL:-petsfollow-database-url}"; }
+pf_sm_migrate_database_url() { printf '%s' "${PF_SM_MIGRATE_DATABASE_URL:-petsfollow-migrate-database-url}"; }
+pf_sm_jwt_signing_key() { printf '%s' "${PF_SM_JWT_SIGNING_KEY:-petsfollow-jwt-signing-key}"; }
+pf_sm_redis_url() { printf '%s' "${PF_SM_REDIS_URL:-petsfollow-redis-url}"; }
+pf_sm_billit_secrets_key() { printf '%s' "${PF_SM_BILLIT_SECRETS_KEY:-petsfollow-billit-secrets-key}"; }
+pf_sm_billit_webhook_secret() { printf '%s' "${PF_SM_BILLIT_WEBHOOK_SECRET:-petsfollow-billit-webhook-secret}"; }
+pf_sm_billit_master_api_key() { printf '%s' "${PF_SM_BILLIT_MASTER_API_KEY:-petsfollow-billit-master-api-key}"; }
+
+# True if Secret Manager has at least one version for the named secret.
+pf_sm_has_secret() {
+  local name="$1"
+  gcloud secrets versions access latest \
+    --secret="$name" --project="$GCP_PROJECT_ID" >/dev/null 2>&1
+}
+
 pf_resolve_redis_addr() {
-  local redis_url host port
+  local redis_url host port redis_secret
+  redis_secret="$(pf_sm_redis_url)"
   redis_url="$(gcloud secrets versions access latest \
-    --secret=petsfollow-redis-url --project="$GCP_PROJECT_ID" 2>/dev/null || true)"
+    --secret="$redis_secret" --project="$GCP_PROJECT_ID" 2>/dev/null || true)"
+  if [[ -z "$redis_url" && "$redis_secret" != "petsfollow-redis-url" ]]; then
+    redis_url="$(gcloud secrets versions access latest \
+      --secret=petsfollow-redis-url --project="$GCP_PROJECT_ID" 2>/dev/null || true)"
+  fi
   if [[ -n "$redis_url" ]]; then
     host="$(python3 -c "from urllib.parse import urlparse; u=urlparse('$redis_url'); print(u.hostname or '')")"
     port="$(python3 -c "from urllib.parse import urlparse; u=urlparse('$redis_url'); print(u.port or 6379)")"
@@ -42,8 +62,14 @@ pf_write_api_env_file() {
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
+  # Billit Access Point : staging → sandbox API ; prod (main) → api.billit.be (whitelist).
+  # Docs : https://docs.accesspoint.billit.eu/docs/sandbox-vs-production
   local billit_mock="false"
   local billit_secrets_backend=""
+  local billit_base_url=""
+  local billit_reseller_url=""
+  local billit_webhook_sm
+  billit_webhook_sm="$(pf_sm_billit_webhook_secret)"
   if [[ "$app_env" == "staging" ]]; then
     pharmacy_enabled="${PHARMACY_ENABLED:-true}"
     billit_enabled="${BILLIT_ENABLED:-true}"
@@ -57,10 +83,19 @@ pf_write_api_env_file() {
     else
       pacs_enabled="${PACS_ENABLED:-false}"
     fi
-    # Billit tag-dev : mock gateway (pas d’appels live). local_enc + clé via pf_api_secrets.
+    # Billit staging = sandbox. Live mock-off only when webhook secret is in SM
+    # (ValidateBillit refuses live without BILLIT_WEBHOOK_SECRET) — sinon mock.
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
-      billit_mock="${BILLIT_MOCK_ENABLED:-true}"
+      billit_base_url="${BILLIT_BASE_URL:-https://api.sandbox.billit.be}"
+      billit_reseller_url="${BILLIT_RESELLER_REGISTER_URL:-https://my.sandbox.billit.be/Account/Register}"
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
+      if [[ -n "${BILLIT_MOCK_ENABLED:-}" ]]; then
+        billit_mock="${BILLIT_MOCK_ENABLED}"
+      elif pf_sm_has_secret "$billit_webhook_sm"; then
+        billit_mock="false"
+      else
+        billit_mock="true"
+      fi
     fi
   else
     pharmacy_enabled="${PHARMACY_ENABLED:-false}"
@@ -72,6 +107,8 @@ pf_write_api_env_file() {
     sms_enabled="${SMS_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
+      billit_base_url="${BILLIT_BASE_URL:-https://api.billit.be}"
+      billit_reseller_url="${BILLIT_RESELLER_REGISTER_URL:-https://my.billit.be/account/PetsFollow/Register}"
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
     fi
   fi
@@ -94,6 +131,7 @@ SUPPORT_INBOX_EMAIL: "${SUPPORT_INBOX_EMAIL:-barbara@petsfollow.app}"
 COMMERCIAL_CONTACT_PHONE: "${COMMERCIAL_CONTACT_PHONE:-0478.02.33.77}"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
+CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-${PUBLIC_SITE_URL}}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
 # Déclarations DAF : dry-run FORCÉ (staging + prod). Une clé software-house (listes)
@@ -138,6 +176,22 @@ EOF
   if [[ -n "$billit_secrets_backend" ]]; then
     cat >>"$path" <<EOF
 BILLIT_SECRETS_BACKEND: "${billit_secrets_backend}"
+EOF
+  fi
+  if [[ -n "$billit_base_url" ]]; then
+    cat >>"$path" <<EOF
+BILLIT_BASE_URL: "${billit_base_url}"
+EOF
+  fi
+  if [[ -n "$billit_reseller_url" ]]; then
+    cat >>"$path" <<EOF
+BILLIT_RESELLER_REGISTER_URL: "${billit_reseller_url}"
+EOF
+  fi
+  # PartyID master (non secret) — Flux A SaaS + header Access Point en prod.
+  if [[ -n "${BILLIT_MASTER_PARTY_ID:-}" ]]; then
+    cat >>"$path" <<EOF
+BILLIT_MASTER_PARTY_ID: "${BILLIT_MASTER_PARTY_ID}"
 EOF
   fi
 }
@@ -208,7 +262,10 @@ EOF
 }
 
 pf_api_secrets() {
-  local secrets="DATABASE_URL=petsfollow-database-url:latest,JWT_SIGNING_KEY=petsfollow-jwt-signing-key:latest"
+  local db_secret jwt_secret
+  db_secret="$(pf_sm_database_url)"
+  jwt_secret="$(pf_sm_jwt_signing_key)"
+  local secrets="DATABASE_URL=${db_secret}:latest,JWT_SIGNING_KEY=${jwt_secret}:latest"
   if gcloud secrets versions access latest \
     --secret=petsfollow-smtp-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},SMTP_PASS=petsfollow-smtp-password:latest"
@@ -287,12 +344,22 @@ pf_api_secrets() {
     --secret=petsfollow-vamreg-afmps-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},VAMREG_AFMPS_API_KEY=petsfollow-vamreg-afmps-api-key:latest"
   fi
-  # Billit local_enc (staging tag-dev mock / live) — clé dédiée si présente, sinon JWT.
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-billit-secrets-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-billit-secrets-key:latest"
+  # Billit local_enc + live sandbox/prod — secrets optionnels (absents = mock ou module off).
+  # Staging : petsfollow-billit-* ; prod : PF_SM_BILLIT_* → petsfollow-prod-billit-* (gcp-env-prod).
+  local billit_secrets_key_sm billit_webhook_sm billit_master_sm
+  billit_secrets_key_sm="$(pf_sm_billit_secrets_key)"
+  billit_webhook_sm="$(pf_sm_billit_webhook_secret)"
+  billit_master_sm="$(pf_sm_billit_master_api_key)"
+  if pf_sm_has_secret "$billit_secrets_key_sm"; then
+    secrets="${secrets},BILLIT_SECRETS_KEY=${billit_secrets_key_sm}:latest"
   else
-    secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-jwt-signing-key:latest"
+    secrets="${secrets},BILLIT_SECRETS_KEY=${jwt_secret}:latest"
+  fi
+  if pf_sm_has_secret "$billit_webhook_sm"; then
+    secrets="${secrets},BILLIT_WEBHOOK_SECRET=${billit_webhook_sm}:latest"
+  fi
+  if pf_sm_has_secret "$billit_master_sm"; then
+    secrets="${secrets},BILLIT_MASTER_API_KEY=${billit_master_sm}:latest"
   fi
   if gcloud secrets versions access latest \
     --secret=petsfollow-orthanc-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
@@ -302,11 +369,15 @@ pf_api_secrets() {
 }
 
 pf_migrate_secrets() {
+  local migrate_secret db_secret jwt_secret
+  migrate_secret="$(pf_sm_migrate_database_url)"
+  db_secret="$(pf_sm_database_url)"
+  jwt_secret="$(pf_sm_jwt_signing_key)"
   if gcloud secrets versions access latest \
-    --secret=petsfollow-migrate-database-url --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    printf '%s' "DATABASE_URL=petsfollow-migrate-database-url:latest,JWT_SIGNING_KEY=petsfollow-jwt-signing-key:latest"
+    --secret="$migrate_secret" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    printf '%s' "DATABASE_URL=${migrate_secret}:latest,JWT_SIGNING_KEY=${jwt_secret}:latest"
   else
-    echo "→ Job migrate : fallback petsfollow-database-url" >&2
-    printf '%s' "DATABASE_URL=petsfollow-database-url:latest,JWT_SIGNING_KEY=petsfollow-jwt-signing-key:latest"
+    echo "→ Job migrate : fallback ${db_secret}" >&2
+    printf '%s' "DATABASE_URL=${db_secret}:latest,JWT_SIGNING_KEY=${jwt_secret}:latest"
   fi
 }

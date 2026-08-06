@@ -80,7 +80,7 @@ func TestInvoicingConnectAndSendMock(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -153,7 +153,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"type":    "invoice",
 		"visitId": visitID,
 		"counterparty": map[string]any{
-			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -171,7 +171,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"type":    "invoice",
 		"visitId": "00000000-0000-4000-8000-000000000099",
 		"counterparty": map[string]any{
-			"name": "X", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "X", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -186,7 +186,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"type":  "invoice",
 		"dafId": "00000000-0000-4000-8000-000000000099",
 		"counterparty": map[string]any{
-			"name": "X", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "X", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -238,7 +238,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"visitId": visit2,
 		"dafId":   dafID,
 		"counterparty": map[string]any{
-			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -268,7 +268,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"visitId": visitID,
 		"dafId":   draftID,
 		"counterparty": map[string]any{
-			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -284,7 +284,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 		"visitId": visitID,
 		"dafId":   dafID,
 		"counterparty": map[string]any{
-			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Sophie Demo", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -318,7 +318,7 @@ func TestInvoicingProformaResendRefused(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "proforma",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -372,7 +372,7 @@ func TestInvoicingQuotaExceeded(t *testing.T) {
 		c, e := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 			"type": "invoice",
 			"counterparty": map[string]any{
-				"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+				"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 				"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 			},
 			"lines": []map[string]any{
@@ -426,7 +426,7 @@ func TestInvoicingQuotaCountsInFlightSending(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "InFlight", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "InFlight", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -448,7 +448,7 @@ func TestInvoicingQuotaCountsInFlightSending(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Second", "country": "BE", "vatNumber": "BE0888888888",
+			"name": "Second", "country": "BE", "vatNumber": "BE1000000120",
 			"street": "Rue 2", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -506,7 +506,7 @@ func TestInvoicingQuotaIgnoresSaasMasterSending(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Practice", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Practice", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -560,7 +560,7 @@ func TestInvoicingCreditNoteRejectsSaasMasterRelated(t *testing.T) {
 		"type":              "credit_note",
 		"relatedDocumentId": saasID,
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -633,7 +633,7 @@ func TestInvoicingRejectedCanRetry(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{
@@ -759,7 +759,7 @@ func TestInvoicingCreditNoteRequiresRelatedInvoice(t *testing.T) {
 	}
 
 	cp := map[string]any{
-		"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+		"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 		"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 	}
 	lines := []map[string]any{
@@ -798,6 +798,113 @@ func TestInvoicingCreditNoteRequiresRelatedInvoice(t *testing.T) {
 	if code != http.StatusCreated {
 		t.Fatalf("CN with related %d %#v", code, env)
 	}
+	cnID, _ := dataMap(t, env)["id"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+cnID+"/send", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("CN send after invoice on Billit %d %#v", code, env)
+	}
+}
+
+func TestInvoicingCreditNoteSendRequiresRelatedOnBillit(t *testing.T) {
+	api := newTestAPI(t)
+	access, practiceID := registerInvoicingPractice(t, api, "inv-cn-nobillit")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": "party_cn_nb", "apiKey": "mock-key",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("complete %d %#v", code, env)
+	}
+	cp := map[string]any{
+		"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
+		"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+	}
+	lines := []map[string]any{
+		{"description": "X", "quantity": 1, "unitPriceExclCents": 1000, "vatPercent": 21},
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type": "invoice", "counterparty": cp, "lines": lines,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("invoice %d %#v", code, env)
+	}
+	invID, _ := dataMap(t, env)["id"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+invID+"/send", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("send %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type": "credit_note", "relatedDocumentId": invID, "counterparty": cp, "lines": lines,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("CN %d %#v", code, env)
+	}
+	cnID, _ := dataMap(t, env)["id"].(string)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET billit_order_id = NULL, number = NULL, status = 'delivered'
+		WHERE id = $1 AND practice_id = $2`, invID, practiceID); err != nil {
+		t.Fatal(err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+cnID+"/send", access, nil)
+	if code != http.StatusBadRequest {
+		t.Fatalf("CN send without Billit invoice want 400 got %d %#v", code, env)
+	}
+	if errObj, _ := env["error"].(map[string]any); errObj["msgKey"] != "related_invoice_not_on_billit" {
+		t.Fatalf("msgKey %#v", env)
+	}
+}
+
+func TestInvoicingSecretsMismatchOnSend(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetBillitSecretsBackend("local_enc")
+	api.api.TestSetBillitSecretsKey("original-billit-secrets-key!!")
+
+	access, _ := registerInvoicingPractice(t, api, "inv-sec-rot")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": "party_sec", "apiKey": "mock-key-live",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("complete %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type": "invoice",
+		"counterparty": map[string]any{
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
+			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+		},
+		"lines": []map[string]any{
+			{"description": "X", "quantity": 1, "unitPriceExclCents": 1000, "vatPercent": 21},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	docID, _ := dataMap(t, env)["id"].(string)
+
+	// Simulate BILLIT_SECRETS_KEY rotation after connect.
+	api.api.TestSetBillitSecretsKey("rotated-billit-secrets-key!!!")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+docID+"/send", access, nil)
+	if code != http.StatusConflict {
+		t.Fatalf("want 409 secrets mismatch got %d %#v", code, env)
+	}
+	if errObj, _ := env["error"].(map[string]any); errObj["msgKey"] != "invoicing_secrets_mismatch" {
+		t.Fatalf("msgKey %#v", env)
+	}
 }
 
 func TestInvoicingStaleSendingRejected(t *testing.T) {
@@ -818,7 +925,7 @@ func TestInvoicingStaleSendingRejected(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
 		"type": "invoice",
 		"counterparty": map[string]any{
-			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
 		},
 		"lines": []map[string]any{

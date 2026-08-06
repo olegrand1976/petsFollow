@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -92,6 +93,8 @@ type Document struct {
 	CreatedAt         time.Time    `json:"createdAt"`
 	UpdatedAt         time.Time    `json:"updatedAt"`
 	Lines             []Line       `json:"lines,omitempty"`
+	// AboutInvoiceNumber is set at send-time for CreditNotes (Billit AboutInvoiceNumber). Not persisted.
+	AboutInvoiceNumber string `json:"-"`
 }
 
 type Connection struct {
@@ -175,6 +178,27 @@ var (
 	reITCodice             = regexp.MustCompile(`(?i)^[A-Z0-9]{7}$`)
 )
 
+// validBelgianVAT checks format + mod-97 checksum (aligné Billit / SPF Finances).
+func validBelgianVAT(vat string) bool {
+	v := strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(vat), " ", ""))
+	if !reBEVat.MatchString(v) {
+		return false
+	}
+	digits := strings.TrimPrefix(v, "BE")
+	if len(digits) == 9 {
+		digits = "0" + digits
+	}
+	if len(digits) != 10 || !reDigits.MatchString(digits) {
+		return false
+	}
+	base, err1 := strconv.ParseInt(digits[:8], 10, 64)
+	check, err2 := strconv.ParseInt(digits[8:], 10, 64)
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	return 97-(base%97) == check
+}
+
 // CountryFromVAT returns the ISO-2 prefix of a VAT number (e.g. BE0123… → BE).
 // Empty / non-prefixed VAT → "" (caller chooses default).
 func CountryFromVAT(vat string) string {
@@ -224,8 +248,12 @@ func ValidateCounterparty(c Counterparty) error {
 		if c.VATNumber == "" {
 			return fmt.Errorf("%w: be_vat_required", ErrInvalidCounterparty)
 		}
-		if !reBEVat.MatchString(strings.ReplaceAll(c.VATNumber, " ", "")) {
+		if !validBelgianVAT(c.VATNumber) {
 			return fmt.Errorf("%w: be_vat_invalid", ErrInvalidCounterparty)
+		}
+		// Peppol BE needs a postal address on the customer party.
+		if c.Street == "" || c.City == "" || c.Postal == "" {
+			return fmt.Errorf("%w: be_address_required", ErrInvalidCounterparty)
 		}
 	case "FR":
 		if c.VATNumber == "" {

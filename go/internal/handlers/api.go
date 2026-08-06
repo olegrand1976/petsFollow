@@ -132,6 +132,12 @@ func (a *API) TestSetStagingSeedRunner(fn func(ctx context.Context, pool *pgxpoo
 // TestSetBillitWebhookSecret sets BILLIT_WEBHOOK_SECRET (integration tests only).
 func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
 
+// TestSetBillitSecretsKey sets BILLIT_SECRETS_KEY (integration tests only — simulate rotation).
+func (a *API) TestSetBillitSecretsKey(key string) { a.cfg.BillitSecretsKey = key }
+
+// TestSetBillitSecretsBackend sets BILLIT_SECRETS_BACKEND (integration tests only).
+func (a *API) TestSetBillitSecretsBackend(backend string) { a.cfg.BillitSecretsBackend = backend }
+
 func (a *API) TestSetSaasInvoicesSecret(secret string) { a.cfg.SaasInvoicesSecret = secret }
 
 // TestReplaceSMSSender swaps the SMS sender (integration tests only).
