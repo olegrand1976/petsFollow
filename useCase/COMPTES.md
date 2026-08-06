@@ -21,7 +21,7 @@ Environnement : **staging** (ou seed local).
 | Research (tag `dev`) | `research.demo@petsfollow.test` | Web `/research` | *(pas d’UC commercial tant que tag `dev`)* |
 | Research via multi-profil | `vet.demo@petsfollow.test` (switch profil → `research`) | Web `/research` | Même MDP véto — seed attache le profil chercheur |
 | Research via multi-profil | `admin.demo@petsfollow.test` (switch → `research`) | Web `/research` | MDP admin |
-| Véto VetPlus | `vet.demo@petsfollow.test` | Web VetPro | VP-*, X-01…06, EQ-01 |
+| Véto VetPlus | `vet.demo@petsfollow.test` | Web VetPro | VP-*, X-01…06, EQ-01 — multi-sites seed (primary + Antenne Liège) |
 | Onboarding | `vet.onboarding@petsfollow.test` | Web VetPro | VP-02 (**Destructif**) |
 | Collègue | `vet.colleague@petsfollow.test` | Web VetPro | EQ-01 |
 | Assistante | `vet.assist@petsfollow.test` | Web VetPro | EQ-01 |

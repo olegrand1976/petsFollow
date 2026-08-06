@@ -2161,4 +2161,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get bloodPressureSave => 'Opslaan';
+
+  @override
+  String get calendarSelectSite => 'Kies een site';
 }

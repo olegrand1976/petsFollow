@@ -809,5 +809,9 @@
   "bpMethodInvasive": "Invasivo",
   "bpSiteLabel": "Sitio (opcional)",
   "bpCommentLabel": "Comentario (opcional)",
-  "bloodPressureSave": "Guardar"
+  "bloodPressureSave": "Guardar",
+  "calendarSelectSite": "Elija una sede",
+  "@calendarSelectSite": {
+    "description": "Book visit: pick practice site when multi-site"
+  }
 }

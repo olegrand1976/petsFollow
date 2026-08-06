@@ -215,6 +215,7 @@ Compte : `vet.demo@petsfollow.test`
 | C3.14 | P2 | Rappel J-1 idempotent | `curl -X POST /internal/visit-reminders/run -H 'X-Visit-Reminders-Secret: dev-visit-reminders'` ×2 | 1er run : rappel journalisé ; 2e run : `smsSent`+`smsDryRun` = 0, aucune ligne en plus |
 | C3.15 | P2 | Rappel J-1 sans secret | Même appel sans header | 401 `unauthorized` |
 | C3.11 | P1 | Détail RDV véto/ASV | `/calendar` en `vet.demo` (ou `vet.assist`) → détail RDV | Mêmes options desk que secrétaire (note, modifier heure, supprimer, pré-consult, salle d’attente) ; **pas** de CR inline — CTA **Nouvelle consultation** **et** **Voir la consultation** ouvrent le **même** workspace `/consultations/{id}` (stade édition vs lecture) ; fermer sans save n’annule pas un RDV agenda ; secrétaire : aucun CTA ; Vitest `visitConsultationCta` + `useConsultationFlow` (preserveVisit) ; e2e `13-team-staff-smoke` B2d (véto) + B2e (ASV) + `03b-consultation` (RDV → CTA → visite conservée) |
+| C3.16 | P1 | Multi-sites | Seed VetPlus (≥2 sites) ; settings CRUD lieux ; filtre topbar ; badge site agenda ; consultations suivent le site ; overlap cross-site OK | Go `TestPracticeSites*` (+ reactivate) ; e2e `03f-sites` ; widget Flutter `book_visit_site_*` ; mono-site transparent |
 
 ### C4 — Messagerie Pro
 

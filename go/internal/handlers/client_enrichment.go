@@ -511,6 +511,7 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 
 type createVisitReq struct {
 	ScheduledAt       *string `json:"scheduledAt"`
+	SiteID            string  `json:"siteId"`
 	Notes             string  `json:"notes"`
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
@@ -598,8 +599,23 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID)
+	resolvedSite, err := a.store.ResolveBookingSiteID(r.Context(), pet.PracticeID, req.SiteID)
 	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	req.SiteID = resolvedSite
+
+	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID, req.SiteID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
@@ -642,7 +658,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 				writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_booking_disabled")
 				return
 			}
-			if err := a.validateClientSlot(r, pet.PracticeID, *scheduledAt, duration, ""); err != nil {
+			if err := a.validateClientSlot(r, pet.PracticeID, req.SiteID, *scheduledAt, duration, ""); err != nil {
 				writeErr(w, r, http.StatusBadRequest, "bad_request", err.Error())
 				return
 			}
@@ -653,7 +669,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	} else if scheduledAt != nil && !consultationSession {
 		// Timed RDV: block vacation (overlap under lock in CreateVisitBooked).
 		// Walk-in consultation sessions skip vacation — terrain / cabinet immédiat.
-		if onVac, err := a.store.IsOnVacation(r.Context(), pet.PracticeID, *scheduledAt); err != nil {
+		if onVac, err := a.store.IsOnVacation(r.Context(), pet.PracticeID, req.SiteID, *scheduledAt); err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		} else if onVac {
@@ -665,6 +681,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	in := store.CreateVisitInput{
 		PetID:               pet.ID,
 		PracticeID:          pet.PracticeID,
+		SiteID:              req.SiteID,
 		Source:              source,
 		Notes:               req.Notes,
 		ScheduledAt:         scheduledAt,
@@ -685,7 +702,21 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		visit, err = a.store.CreateVisitBooked(r.Context(), in)
 		if err != nil {
 			if errors.Is(err, store.ErrValidation) {
-				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+				msg := err.Error()
+				switch {
+				case strings.Contains(msg, "slot_taken"):
+					writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
+				case strings.Contains(msg, "site_inactive"), strings.Contains(msg, "invalid_site"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
+				case strings.Contains(msg, "scheduled_required"):
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "scheduled_required")
+				default:
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_visit")
+				}
+				return
+			}
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
 				return
 			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -694,6 +725,19 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	} else {
 		visit, err = a.store.CreateVisit(r.Context(), in)
 		if err != nil {
+			if errors.Is(err, store.ErrValidation) {
+				msg := err.Error()
+				code := "invalid_visit"
+				if strings.Contains(msg, "site_inactive") {
+					code = "invalid_site"
+				}
+				writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+				return
+			}
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_site")
+				return
+			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
@@ -710,22 +754,22 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusCreated, visit)
 }
 
-func (a *API) validateClientSlot(r *http.Request, practiceID string, start time.Time, duration int, excludeID string) error {
-	onVac, err := a.store.IsOnVacation(r.Context(), practiceID, start)
+func (a *API) validateClientSlot(r *http.Request, practiceID, siteID string, start time.Time, duration int, excludeID string) error {
+	onVac, err := a.store.IsOnVacation(r.Context(), practiceID, siteID, start)
 	if err != nil {
 		return errors.New("internal")
 	}
 	if onVac {
 		return errors.New("on_vacation")
 	}
-	overlap, err := a.store.HasVisitOverlap(r.Context(), practiceID, start, duration, excludeID)
+	overlap, err := a.store.HasVisitOverlap(r.Context(), practiceID, siteID, start, duration, excludeID)
 	if err != nil {
 		return errors.New("internal")
 	}
 	if overlap {
 		return errors.New("slot_taken")
 	}
-	slots, err := a.store.ListAvailableSlots(r.Context(), practiceID, start.Add(-time.Minute), start.Add(24*time.Hour))
+	slots, err := a.store.ListAvailableSlots(r.Context(), practiceID, siteID, start.Add(-time.Minute), start.Add(24*time.Hour))
 	if err != nil {
 		return errors.New("internal")
 	}
@@ -748,7 +792,7 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 	}
 	status := r.URL.Query().Get("status")
 	if status == "" || status == "pending" {
-		visits, err := a.store.ListPracticePendingVetActions(r.Context(), id.PracticeID)
+		visits, err := a.store.ListPracticePendingVetActions(r.Context(), id.PracticeID, siteIDQuery(r))
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
@@ -779,6 +823,7 @@ func (a *API) listVetConsultations(w http.ResponseWriter, r *http.Request) {
 	}
 	q := r.URL.Query()
 	f := store.ListConsultationsFilter{
+		SiteID: siteIDQuery(r),
 		Status: strings.TrimSpace(q.Get("status")),
 		Query:  strings.TrimSpace(q.Get("q")),
 	}
@@ -1149,7 +1194,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			if visit.DurationMinutes != nil {
 				dur = *visit.DurationMinutes
 			}
-			overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *visit.ProposedScheduledAt, dur, visit.ID)
+			overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, visit.SiteID, *visit.ProposedScheduledAt, dur, visit.ID)
 			if oerr != nil {
 				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 				return

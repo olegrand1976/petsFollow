@@ -2845,7 +2845,9 @@
     "reportReferenceOn": "Segnato come consulto di riferimento",
     "reportReferenceOff": "Rimosso dai consulti di riferimento",
     "reportTargetLangUk": "Ucraino",
-    "reportTargetLangRu": "Russo"
+    "reportTargetLangRu": "Russo",
+    "columnSite": "Sede",
+    "creatingOnSite": "Creazione sulla sede: {name} (vista Tutte le sedi)."
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -4455,5 +4457,29 @@
         "desc": "La clinica attiva Research; gli aggregati anonimi alimentano l’osservatorio."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Sede",
+    "allSites": "Tutte le sedi",
+    "settingsTitle": "Sedi (sites)",
+    "settingsHint": "Gestisci le sedi dello studio. Agenda e slot di prenotazione sono configurati per sede.",
+    "addSite": "Aggiungi sede",
+    "name": "Nome della sede",
+    "city": "Città (opzionale)",
+    "create": "Crea",
+    "deactivate": "Disattiva",
+    "reactivate": "Riattiva",
+    "makePrimary": "Imposta come principale",
+    "primary": "Principale",
+    "inactive": "Inattivo",
+    "empty": "Nessuna sede.",
+    "loadFailed": "Impossibile caricare le sedi.",
+    "actionFailed": "Impossibile aggiornare questa sede.",
+    "created": "Sede creata.",
+    "deactivated": "Sede disattivata.",
+    "reactivated": "Sede riattivata.",
+    "primaryUpdated": "Sede principale aggiornata.",
+    "devBadge": "dev",
+    "editingSite": "Modifica agenda / slot per: {name} (vista Tutte le sedi)."
   }
 }

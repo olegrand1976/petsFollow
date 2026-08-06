@@ -155,6 +155,9 @@ func (s *Store) EncodeVetForCommercial(ctx context.Context, commercialUserID str
 		practiceID, in.PracticeName, in.Phone, contactEmail, in.AddressLine1, in.City, in.PostalCode); err != nil {
 		return "", err
 	}
+	if _, err := insertPrimarySiteTx(ctx, tx, practiceID); err != nil {
+		return "", err
+	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, assigned_commercial_id, preferred_locale, must_change_password)
 		VALUES ($1, $2, $3, $4, 'vet', $5, NOW(), $6, $7, true)`,

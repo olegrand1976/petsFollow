@@ -1375,6 +1375,7 @@ class ApiClient {
     String petId, {
     String? notes,
     DateTime? scheduledAt,
+    String? siteId,
     bool confirmDirect = false,
     bool silentConfirm = false,
     bool consultationSession = false,
@@ -1383,6 +1384,7 @@ class ApiClient {
     final res = await dio.post('/api/v1/pets/$petId/visits', data: {
       if (notes != null) 'notes': notes,
       if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+      if (siteId != null && siteId.isNotEmpty) 'siteId': siteId,
       if (confirmDirect) 'confirmDirect': true,
       if (silentConfirm) 'silentConfirm': true,
       if (consultationSession) 'consultationSession': true,
@@ -1413,12 +1415,14 @@ class ApiClient {
     String practiceId, {
     required DateTime from,
     required DateTime to,
+    String? siteId,
   }) async {
     final res = await dio.get(
       '/api/v1/practices/$practiceId/availability',
       queryParameters: {
         'from': from.toUtc().toIso8601String(),
         'to': to.toUtc().toIso8601String(),
+        if (siteId != null && siteId.isNotEmpty) 'siteId': siteId,
       },
     );
     return PracticeAvailability.fromJson(

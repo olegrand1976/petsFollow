@@ -3365,7 +3365,9 @@
     "reportReferenceOn": "Marked as reference consultation",
     "reportReferenceOff": "Removed from reference consultations",
     "reportTargetLangUk": "Ukrainian",
-    "reportTargetLangRu": "Russian"
+    "reportTargetLangRu": "Russian",
+    "columnSite": "Site",
+    "creatingOnSite": "Creating on site: {name} (All sites view)."
   },
   "manager": {
     "dashboard": {
@@ -4455,5 +4457,29 @@
         "desc": "Practice enables Research; anonymous aggregates feed the observatory."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Site",
+    "allSites": "All sites",
+    "settingsTitle": "Locations (sites)",
+    "settingsHint": "Manage practice locations. Calendar and client booking slots are configured per site.",
+    "addSite": "Add a site",
+    "name": "Site name",
+    "city": "City (optional)",
+    "create": "Create",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "makePrimary": "Set as primary",
+    "primary": "Primary",
+    "inactive": "Inactive",
+    "empty": "No sites.",
+    "loadFailed": "Could not load sites.",
+    "actionFailed": "Could not update this site.",
+    "created": "Site created.",
+    "deactivated": "Site deactivated.",
+    "reactivated": "Site reactivated.",
+    "primaryUpdated": "Primary site updated.",
+    "devBadge": "dev",
+    "editingSite": "Editing schedule / slots for: {name} (All sites view)."
   }
 }

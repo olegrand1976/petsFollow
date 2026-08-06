@@ -480,7 +480,10 @@ func RunMassWithOptions(ctx context.Context, pool *pgxpool.Pool, opts MassOption
 		{Weekday: 5, StartTime: "09:00", EndTime: "12:00"},
 	}
 	for _, mp := range practices {
-		if _, err := st.PutVetSchedule(ctx, mp.practiceID, true, 30, &year, slots); err != nil {
+		if _, err := st.EnsurePrimarySite(ctx, mp.practiceID); err != nil {
+			return fmt.Errorf("mass site %s: %w", mp.vetEmail, err)
+		}
+		if _, err := st.PutVetSchedule(ctx, mp.practiceID, "", true, 30, &year, slots); err != nil {
 			return fmt.Errorf("mass schedule %s: %w", mp.vetEmail, err)
 		}
 	}

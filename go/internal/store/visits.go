@@ -16,6 +16,8 @@ type Visit struct {
 	ID                  string     `json:"id"`
 	PetID               string     `json:"petId"`
 	PracticeID          string     `json:"practiceId"`
+	SiteID              string     `json:"siteId,omitempty"`
+	SiteName            string     `json:"siteName,omitempty"`
 	ScheduledAt         *time.Time `json:"scheduledAt,omitempty"`
 	Status              string     `json:"status"`
 	Notes               string     `json:"notes"`
@@ -55,6 +57,7 @@ type Visit struct {
 type CreateVisitInput struct {
 	PetID             string
 	PracticeID        string
+	SiteID            string // empty → primary site
 	Source            string // client | vet | care_pro
 	Notes             string
 	ScheduledAt       *time.Time
@@ -74,12 +77,15 @@ func isProVisitSource(source string) bool {
 
 func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status, COALESCE(v.notes,''), v.source, v.created_at,
 			'', '', '',
-			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng, COALESCE(consultation_session, false)
-		FROM visits.visits WHERE pet_id = $1 AND deleted_at IS NULL
-		ORDER BY COALESCE(scheduled_at, created_at) DESC`, petID)
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+		FROM visits.visits v
+		LEFT JOIN practice.sites si ON si.id = v.site_id
+		WHERE v.pet_id = $1 AND v.deleted_at IS NULL
+		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC`, petID)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +95,8 @@ func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
 
 func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, status string) ([]Visit, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -97,6 +104,7 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE v.practice_id = $1 AND v.status = $2 AND v.deleted_at IS NULL
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 		LIMIT 100`, practiceID, status)
@@ -119,6 +127,7 @@ type ConsultationListItem struct {
 
 // ListConsultationsFilter filters practice consultations (walk-ins + visits with CR).
 type ListConsultationsFilter struct {
+	SiteID   string // empty or "all" = all sites
 	Status   string
 	Query    string
 	From     *time.Time
@@ -147,6 +156,16 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 		`v.deleted_at IS NULL`,
 	}
 	argN := 2
+
+	if sid := strings.TrimSpace(f.SiteID); sid != "" && sid != "all" {
+		resolved, err := s.ResolveSiteID(ctx, practiceID, sid, true)
+		if err != nil {
+			return nil, err
+		}
+		where = append(where, fmt.Sprintf(`v.site_id = $%d`, argN))
+		args = append(args, resolved)
+		argN++
+	}
 
 	if status := strings.TrimSpace(f.Status); status != "" {
 		where = append(where, fmt.Sprintf(`v.status = $%d`, argN))
@@ -192,7 +211,8 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 	offsetPh := argN + 1
 
 	q := fmt.Sprintf(`
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -225,6 +245,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE %s
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 		LIMIT $%d OFFSET $%d`,
@@ -243,7 +264,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 		var item ConsultationListItem
 		var v Visit
 		if err := rows.Scan(
-			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
@@ -260,9 +281,20 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 	return out, rows.Err()
 }
 
-func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID string) ([]Visit, error) {
+func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID, siteID string) ([]Visit, error) {
+	args := []any{practiceID}
+	siteFilter := ""
+	if sid := strings.TrimSpace(siteID); sid != "" && sid != "all" {
+		resolved, err := s.ResolveSiteID(ctx, practiceID, sid, true)
+		if err != nil {
+			return nil, err
+		}
+		siteFilter = ` AND v.site_id = $2`
+		args = append(args, resolved)
+	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -270,12 +302,13 @@ func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID st
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE v.practice_id = $1
 		  AND v.pending_action_by = 'vet'
 		  AND v.status IN ('requested', 'reschedule_pending')
-		  AND v.deleted_at IS NULL
+		  AND v.deleted_at IS NULL`+siteFilter+`
 		ORDER BY COALESCE(v.scheduled_at, v.proposed_scheduled_at, v.created_at) DESC
-		LIMIT 100`, practiceID)
+		LIMIT 100`, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +321,7 @@ func scanVisitsFull(rows pgx.Rows) ([]Visit, error) {
 	for rows.Next() {
 		var v Visit
 		if err := rows.Scan(
-			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
@@ -303,7 +336,39 @@ func scanVisitsFull(rows pgx.Rows) ([]Visit, error) {
 	return out, rows.Err()
 }
 
+func (s *Store) resolveCreateVisitSiteID(ctx context.Context, in *CreateVisitInput) error {
+	siteID, err := s.ResolveBookingSiteID(ctx, in.PracticeID, in.SiteID)
+	if err != nil {
+		return err
+	}
+	in.SiteID = siteID
+	return nil
+}
+
 func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, error) {
+	if err := s.resolveCreateVisitSiteID(ctx, &in); err != nil {
+		return Visit{}, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Visit{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var siteActive bool
+	if err := tx.QueryRow(ctx, `
+		SELECT active FROM practice.sites
+		WHERE id = $1 AND practice_id = $2 FOR UPDATE`, in.SiteID, in.PracticeID,
+	).Scan(&siteActive); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Visit{}, fmt.Errorf("%w: invalid_site", ErrValidation)
+		}
+		return Visit{}, err
+	}
+	if !siteActive {
+		return Visit{}, fmt.Errorf("%w: site_inactive", ErrValidation)
+	}
+
 	id := uuid.NewString()
 	status := "requested"
 	var pending *string
@@ -321,22 +386,31 @@ func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, er
 		pending = &vet
 	}
 	var v Visit
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+	err = tx.QueryRow(ctx, `
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
 			COALESCE(visit_type_id::text,'')`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
-	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
+	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
-	return v, err
+	if err != nil {
+		return Visit{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Visit{}, err
+	}
+	return v, nil
 }
 
-// CreateVisitBooked serializes bookings for a practice and re-checks overlap under lock.
+// CreateVisitBooked serializes bookings for a site and re-checks overlap under lock.
 func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Visit, error) {
 	if in.ScheduledAt == nil {
 		return Visit{}, fmt.Errorf("%w: scheduled_required", ErrValidation)
+	}
+	if err := s.resolveCreateVisitSiteID(ctx, &in); err != nil {
+		return Visit{}, err
 	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -344,14 +418,29 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	}
 	defer tx.Rollback(ctx)
 
+	// Lock site row first (same resource as DeactivateSite) then re-check active.
+	var siteActive bool
+	if err := tx.QueryRow(ctx, `
+		SELECT active FROM practice.sites
+		WHERE id = $1 AND practice_id = $2 FOR UPDATE`, in.SiteID, in.PracticeID,
+	).Scan(&siteActive); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Visit{}, fmt.Errorf("%w: invalid_site", ErrValidation)
+		}
+		return Visit{}, err
+	}
+	if !siteActive {
+		return Visit{}, fmt.Errorf("%w: site_inactive", ErrValidation)
+	}
+
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO practice.vet_schedule (practice_id)
-		VALUES ($1) ON CONFLICT (practice_id) DO NOTHING`, in.PracticeID); err != nil {
+		INSERT INTO practice.vet_schedule (site_id, practice_id)
+		VALUES ($1, $2) ON CONFLICT (site_id) DO NOTHING`, in.SiteID, in.PracticeID); err != nil {
 		return Visit{}, err
 	}
 	var locked string
 	if err := tx.QueryRow(ctx, `
-		SELECT practice_id::text FROM practice.vet_schedule WHERE practice_id = $1 FOR UPDATE`, in.PracticeID,
+		SELECT site_id::text FROM practice.vet_schedule WHERE site_id = $1 FOR UPDATE`, in.SiteID,
 	).Scan(&locked); err != nil {
 		return Visit{}, err
 	}
@@ -365,14 +454,15 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 		var n int
 		if err := tx.QueryRow(ctx, `
 			SELECT COUNT(*)::int FROM visits.visits
-			WHERE practice_id = $1
+			WHERE site_id = $1
+			  AND deleted_at IS NULL
 			  AND status IN ('requested', 'confirmed', 'reschedule_pending')
 			  AND COALESCE(consultation_session, false) = false
 			  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
 			  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
 			  AND COALESCE(proposed_scheduled_at, scheduled_at)
 			      + (COALESCE(duration_minutes, $4) || ' minutes')::interval > $2`,
-			in.PracticeID, *in.ScheduledAt, end, dur,
+			in.SiteID, *in.ScheduledAt, end, dur,
 		).Scan(&n); err != nil {
 			return Visit{}, err
 		}
@@ -399,13 +489,13 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	id := uuid.NewString()
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
 			COALESCE(visit_type_id::text,'')`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
-	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
+	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
 	if err != nil {
 		return Visit{}, err
@@ -419,12 +509,15 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
-			waiting_room_at
-		FROM visits.visits WHERE id = $1 AND deleted_at IS NULL`, id,
-	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status, COALESCE(v.notes,''), v.source, v.created_at,
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.request_preconsult,false), COALESCE(v.consultation_session,false),
+			v.waiting_room_at
+		FROM visits.visits v
+		LEFT JOIN practice.sites si ON si.id = v.site_id
+		WHERE v.id = $1 AND v.deleted_at IS NULL`, id,
+	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -437,7 +530,8 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string) (Visit, error) {
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -445,10 +539,11 @@ func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE v.id = $1 AND v.practice_id = $2 AND v.deleted_at IS NULL`,
 		visitID, practiceID,
 	).Scan(
-		&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status,
+		&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status,
 		&v.Notes, &v.Source, &v.CreatedAt,
 		&v.PetName, &v.ClientName, &v.ClientID,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,

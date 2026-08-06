@@ -54,6 +54,24 @@
   line-height: 1.2;
 }
 
+.pro-topbar__site {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+}
+
+.pro-topbar__site-select {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+  background: var(--pf-vet-surface);
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  max-width: 11rem;
+}
+
 .pro-topbar__env {
   flex-shrink: 0;
   display: inline-flex;

@@ -3,7 +3,7 @@ import { proxyApi } from '~/server/utils/api'
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const params = new URLSearchParams()
-  for (const key of ['status', 'q', 'from', 'to', 'hasAudio', 'limit', 'offset'] as const) {
+  for (const key of ['status', 'q', 'from', 'to', 'hasAudio', 'limit', 'offset', 'siteId'] as const) {
     const v = query[key]
     if (typeof v === 'string' && v.trim()) {
       params.set(key, v.trim())

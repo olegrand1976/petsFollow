@@ -45,6 +45,8 @@ steps:
       - --build-arg=NUXT_PUBLIC_PACS_ENABLED=false
       # Research observatory (tag dev) — staging bake on.
       - --build-arg=NUXT_PUBLIC_RESEARCH_ENABLED=true
+      # Multi-sites Pro UI (soft-GA) — staging bake on.
+      - --build-arg=NUXT_PUBLIC_SITES_UI_ENABLED=true
 
   # :debug = busybox présent (/busybox/sh). :latest n'a plus de shell → OCI create fail.
   - id: build-orthanc

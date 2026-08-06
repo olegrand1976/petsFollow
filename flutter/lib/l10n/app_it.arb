@@ -872,5 +872,9 @@
   "bpMethodInvasive": "Invasivo",
   "bpSiteLabel": "Sito (facoltativo)",
   "bpCommentLabel": "Commento (facoltativo)",
-  "bloodPressureSave": "Salva"
+  "bloodPressureSave": "Salva",
+  "calendarSelectSite": "Scegli una sede",
+  "@calendarSelectSite": {
+    "description": "Book visit: pick practice site when multi-site"
+  }
 }

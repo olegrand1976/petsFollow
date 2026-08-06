@@ -288,6 +288,9 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 		practiceID, in.PracticeName, in.Email); err != nil {
 		return RegisterVetResult{}, err
 	}
+	if _, err := insertPrimarySiteTx(ctx, tx, practiceID); err != nil {
+		return RegisterVetResult{}, err
+	}
 	var assignedCommercial any
 	if in.AssignedCommercialID != "" {
 		assignedCommercial = in.AssignedCommercialID
@@ -427,6 +430,15 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 			} else {
 				// Toujours exposer la map (même vide) pour que le client distingue « erreur » vs « aucun droit ».
 				out["practicePermissions"] = perms
+			}
+			if _, err := s.EnsurePrimarySite(ctx, u.PracticeID); err != nil {
+				log.Printf("GetUserMe EnsurePrimarySite practice=%s: %v", u.PracticeID, err)
+			}
+			if summaries, serr := s.ListSiteSummaries(ctx, u.PracticeID); serr == nil {
+				out["sites"] = summaries
+			}
+			if defSite, derr := s.GetTeamDefaultSiteID(ctx, u.PracticeID, userID); derr == nil && defSite != "" {
+				out["defaultSiteId"] = defSite
 			}
 		}
 	}

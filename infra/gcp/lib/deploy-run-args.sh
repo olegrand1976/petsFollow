@@ -147,7 +147,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub
+  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub sites_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -157,6 +157,7 @@ pf_write_frontend_env_file() {
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-true}"
+    sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-true}"
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-true}"
     else
@@ -168,6 +169,7 @@ pf_write_frontend_env_file() {
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
     pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-}"
+    sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-}"
   fi
   if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PHARMACY_ENABLED: \"true\"
@@ -187,6 +189,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$research_pub" == "true" || "$research_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_RESEARCH_ENABLED: \"true\"
+"
+  fi
+  if [[ "$sites_pub" == "true" || "$sites_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_SITES_UI_ENABLED: \"true\"
 "
   fi
   cat >"$path" <<EOF

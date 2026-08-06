@@ -56,8 +56,10 @@ func TestResearchOptInETLAndOverview(t *testing.T) {
 	}
 	visitID := uuid.NewString()
 	_, err = api.pool.Exec(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, created_at)
-		VALUES ($1, $2, $3, NOW(), 'confirmed', 'research etl test', 'vet', NOW())`,
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, created_at)
+		VALUES ($1, $2, $3,
+			(SELECT id FROM practice.sites WHERE practice_id = $3 AND is_primary LIMIT 1),
+			NOW(), 'confirmed', 'research etl test', 'vet', NOW())`,
 		visitID, petID, practiceID)
 	if err != nil {
 		t.Fatalf("insert visit: %v", err)

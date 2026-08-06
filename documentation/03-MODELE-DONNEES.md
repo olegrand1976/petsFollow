@@ -7,7 +7,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Schéma | Rôle |
 |--------|------|
 | `identity` | Users, tokens email/reset, OAuth/2FA, locale, payout commercial (`payout_iban`…), zone de base commercial (`base_lat`/`base_lng`/`base_city`/`base_postal_code` — `000058`) |
-| `practice` | Cabinets (profil société/banque `000026`), clients liés, invitations, link-requests, `vet_schedule` / vacations (`000024`), import jobs (`000028`) |
+| `practice` | Cabinets (profil société/banque `000026`), **sites** multi-lieux (`000150`), clients liés, invitations, link-requests, `vet_schedule` / vacations par site (`000024`+`000150`), import jobs (`000028`) |
 | `pets` | Animaux, dossier events, relevés de poids (`weight_readings` — `000060`), tension (`blood_pressure_readings` — `000127`) |
 | `heartrate` | Sessions relevé respiratoire |
 | `labs` | Panels de prise de sang + résultats analytes (`000128`) — [41](41-TENSION-LABOS.md) |
@@ -27,7 +27,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Domaine | Tables |
 |---------|--------|
 | Auth | `identity.users` (+ `professional_specialty` pour `care_pro` ; rôle `research` — `000130`), `email_verification_tokens`, `password_reset_tokens`, `identity.profiles` |
-| Cabinet | `practice.practices` (+ `research_opt_in_at` / `research_opt_in_by` — `000131`), `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations`, `team_members` (rôles + JSON `permissions` — caps `shares.read`/`shares.manage`, `pharmacy.read`/`pharmacy.write`, etc. via `DefaultTeamPermissions`) |
+| Cabinet | `practice.practices` (+ `research_opt_in_at` / `research_opt_in_by` — `000131`), `practice.sites` (lieux enfants, 1 `is_primary` / practice — `000150`), `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule` / `vet_schedule_slots` / `vet_vacations` (PK/FK `site_id`), `team_members` (+ `default_site_id` ; rôles + JSON `permissions` — caps `shares.read`/`shares.manage`, `pharmacy.read`/`pharmacy.write`, `calendar.manage`, etc. via `DefaultTeamPermissions`) |
 | Research (dev) | `research.anon_events`, `research.weekly_aggregates`, `research.etl_watermarks`, `research.groups`, `research.group_members` — pas de PII dans events ; `practice_id_hash` interne seulement |
 | ACL pets | `pets.pet_access` (partage dossier) — lecture staff = `shares.read`, mutation = `shares.manage` |
 | Import | `practice.client_import_jobs`, `client_import_rows` (+ grants `000029`) |

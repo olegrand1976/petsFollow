@@ -47,8 +47,10 @@ func insertConfirmedVisitFixture(t *testing.T, api *testAPI, petID string, at ti
 	ctx := context.Background()
 	var id string
 	err := api.pool.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, source, consultation_session)
-		SELECT gen_random_uuid(), p.id, p.practice_id, $2, 'confirmed', 'vet', FALSE
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, source, consultation_session)
+		SELECT gen_random_uuid(), p.id, p.practice_id,
+			(SELECT s.id FROM practice.sites s WHERE s.practice_id = p.practice_id AND s.is_primary LIMIT 1),
+			$2, 'confirmed', 'vet', FALSE
 		FROM pets.pets p WHERE p.id = $1
 		RETURNING id::text`, petID, at).Scan(&id)
 	if err != nil {

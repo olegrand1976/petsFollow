@@ -17,6 +17,8 @@ export type ProUser = {
   isReferenceVet?: boolean
   /** Effective team capabilities (practice staff only) — mirrors Go TeamPermission map. */
   practicePermissions?: Record<string, boolean>
+  sites?: Array<{ id: string; name: string; isPrimary?: boolean; timezone?: string; active?: boolean }>
+  defaultSiteId?: string
 }
 
 type InFlight = {

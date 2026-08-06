@@ -42,9 +42,8 @@ func TestPracticeAvailabilityIncludesPhoneWhenDisabled(t *testing.T) {
 	}
 
 	_, err = api.pool.Exec(ctx, `
-		INSERT INTO practice.vet_schedule (practice_id, client_booking_enabled, slot_duration_minutes, timezone, updated_at)
-		VALUES ($1, false, 30, 'Europe/Brussels', NOW())
-		ON CONFLICT (practice_id) DO UPDATE SET client_booking_enabled = false, updated_at = NOW()`, practiceID)
+		UPDATE practice.vet_schedule SET client_booking_enabled = false, updated_at = NOW()
+		WHERE practice_id = $1`, practiceID)
 	if err != nil {
 		t.Fatalf("disable booking: %v", err)
 	}

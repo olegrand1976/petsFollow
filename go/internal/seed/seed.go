@@ -86,6 +86,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedDemoSchedules(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedVetPlusAntenne(ctx, pool, st); err != nil {
+		return err
+	}
 	if err := seedCarePros(ctx, pool); err != nil {
 		return err
 	}
@@ -314,7 +317,75 @@ func seedDemoSchedules(ctx context.Context, pool *pgxpool.Pool, st *store.Store)
 	}
 	defer rows.Close()
 	year := time.Now().Year()
-	slots := []store.ScheduleSlot{
+	slots := demoScheduleSlots()
+	for rows.Next() {
+		var practiceID string
+		if err := rows.Scan(&practiceID); err != nil {
+			return err
+		}
+		if _, err := st.EnsurePrimarySite(ctx, practiceID); err != nil {
+			return err
+		}
+		if _, err := st.PutVetSchedule(ctx, practiceID, "", true, 30, &year, slots); err != nil {
+			return err
+		}
+	}
+	return rows.Err()
+}
+
+// seedVetPlusAntenne adds a second bookable site on VetPlus (idempotent) for multi-site demos.
+const vetPlusAntenneName = "Antenne Liège"
+
+func seedVetPlusAntenne(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	var practiceID, primaryID string
+	err := pool.QueryRow(ctx, `
+		SELECT p.id::text, s.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test' AND u.role = 'vet'
+		JOIN practice.sites s ON s.practice_id = p.id AND s.is_primary
+		LIMIT 1`).Scan(&practiceID, &primaryID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("vetplus antenne lookup: %w", err)
+	}
+
+	var existingID string
+	err = pool.QueryRow(ctx, `
+		SELECT id::text FROM practice.sites
+		WHERE practice_id = $1 AND name = $2
+		LIMIT 1`, practiceID, vetPlusAntenneName).Scan(&existingID)
+	if err == nil && existingID != "" {
+		year := time.Now().Year()
+		slots := demoScheduleSlots()
+		if _, err := st.PutVetSchedule(ctx, practiceID, existingID, true, 30, &year, slots); err != nil {
+			return fmt.Errorf("vetplus antenne schedule refresh: %w", err)
+		}
+		return nil
+	}
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("vetplus antenne exists check: %w", err)
+	}
+
+	site, err := st.CreateSite(ctx, practiceID, store.CreateSiteInput{
+		Name:                   vetPlusAntenneName,
+		City:                   "Liège",
+		CopyScheduleFromSiteID: primaryID,
+	})
+	if err != nil {
+		return fmt.Errorf("vetplus antenne create: %w", err)
+	}
+	year := time.Now().Year()
+	if _, err := st.PutVetSchedule(ctx, practiceID, site.ID, true, 30, &year, demoScheduleSlots()); err != nil {
+		return fmt.Errorf("vetplus antenne schedule: %w", err)
+	}
+	log.Printf("VetPlus multi-sites: primary + %q", vetPlusAntenneName)
+	return nil
+}
+
+func demoScheduleSlots() []store.ScheduleSlot {
+	return []store.ScheduleSlot{
 		{Weekday: 1, StartTime: "09:00", EndTime: "12:00"},
 		{Weekday: 1, StartTime: "14:00", EndTime: "18:00"},
 		{Weekday: 2, StartTime: "09:00", EndTime: "12:00"},
@@ -324,16 +395,6 @@ func seedDemoSchedules(ctx context.Context, pool *pgxpool.Pool, st *store.Store)
 		{Weekday: 4, StartTime: "14:00", EndTime: "18:00"},
 		{Weekday: 5, StartTime: "09:00", EndTime: "12:00"},
 	}
-	for rows.Next() {
-		var practiceID string
-		if err := rows.Scan(&practiceID); err != nil {
-			return err
-		}
-		if _, err := st.PutVetSchedule(ctx, practiceID, true, 30, &year, slots); err != nil {
-			return err
-		}
-	}
-	return rows.Err()
 }
 
 func payoutLegalName(p practiceDef) string {
@@ -1457,8 +1518,10 @@ func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID, vetUserID st
 	}
 	visitID := uuid.NewString()
 	_, err := tx.Exec(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
+		VALUES ($1, $2, $3,
+			(SELECT id FROM practice.sites WHERE practice_id = $3 AND is_primary LIMIT 1),
+			$4, $5, $6, $7, $8, $9)`,
 		visitID, petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
 	if err != nil {
 		return err
@@ -1647,10 +1710,12 @@ func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	_, err = pool.Exec(ctx, `
 		INSERT INTO visits.visits (
-			id, pet_id, practice_id, scheduled_at, status, notes, source,
+			id, pet_id, practice_id, site_id, scheduled_at, status, notes, source,
 			pending_action_by, duration_minutes, address_text
 		) VALUES (
-			$1, $2, $3, date_trunc('day', NOW()) + INTERVAL '10 hours', 'confirmed',
+			$1, $2, $3,
+			(SELECT id FROM practice.sites WHERE practice_id = $3 AND is_primary LIMIT 1),
+			date_trunc('day', NOW()) + INTERVAL '10 hours', 'confirmed',
 			'Ferrage Spirit — démo care_pro', 'vet', NULL, 30, 'Écurie VetPlus Demo'
 		)`,
 		uuid.NewString(), spiritID, practiceID)
@@ -1668,7 +1733,7 @@ func logSummary() {
 	log.Println("Commerc: commercial.demo@petsfollow.test (switch tous sauf admin/manager ; vet.demo assigné)")
 	log.Println("Commerc: commercial.demo2@petsfollow.test (switch tous sauf admin/manager ; vet.parc assigné)")
 	log.Println("Vétos  : *@petsfollow.test")
-	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
+	log.Println("  vet.demo@        — VetPlus (multi-sites: primary + Antenne Liège, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
 	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
 	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")

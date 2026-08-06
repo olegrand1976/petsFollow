@@ -487,6 +487,16 @@ a.pro-kpi-card:focus-visible {
   color: color-mix(in srgb, var(--cal-type-color, var(--pf-vet-primary)) 80%, #000);
   flex-shrink: 0;
 }
+.cal-chip__site {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--pf-vet-text-muted);
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 7rem;
+}
 .cal-chip__walkin {
   font-size: 0.6rem;
   font-weight: 700;

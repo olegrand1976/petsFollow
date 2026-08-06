@@ -49,6 +49,8 @@ export default defineNuxtConfig({
       pacsViewerEngine: process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas',
       /** petsFollow Research observatory — mirror RESEARCH_ENABLED. */
       researchEnabled: publicFeatureFlag('NUXT_PUBLIC_RESEARCH_ENABLED'),
+      /** Multi-sites UI (CRUD lieux) — rétrocompatible mono-site sans flag. */
+      sitesUiEnabled: publicFeatureFlag('NUXT_PUBLIC_SITES_UI_ENABLED'),
     },
   },
   vite: {

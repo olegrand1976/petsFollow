@@ -11,6 +11,36 @@
       data-testid="new-appointment-modal"
       @submit.prevent="submit(false)"
     >
+      <p
+        v-if="isAggregatedView && createSiteName"
+        class="pro-inline-feedback"
+        role="status"
+        data-testid="new-appt-site-hint"
+      >
+        {{ $t('calendar.creatingOnSite', { name: createSiteName }) }}
+      </p>
+      <div
+        v-if="multiSite"
+        class="pro-field"
+        data-testid="new-appt-site-field"
+      >
+        <label class="pro-label" for="new-appt-site">{{ $t('calendar.columnSite') }}</label>
+        <select
+          id="new-appt-site"
+          v-model="createSiteId"
+          class="pro-select"
+          required
+          data-testid="new-appt-site"
+        >
+          <option
+            v-for="s in sites"
+            :key="s.id"
+            :value="s.id"
+          >
+            {{ s.name }}
+          </option>
+        </select>
+      </div>
       <div class="new-appt__grid">
         <section class="new-appt__section" aria-labelledby="new-appt-who">
           <h3 id="new-appt-who" class="pro-section-title">{{ $t('calendar.newAppt.sectionWho') }}</h3>
@@ -191,6 +221,21 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { mapError } = useApiError()
 const { dayKey, visitDisplayAt, visitsByDay, startOfDay } = useCalendarGrid()
+const {
+  sites,
+  multiSite,
+  concreteSiteId,
+  concreteSiteName,
+  isAggregatedView,
+  withSiteQuery,
+} = usePracticeSites()
+
+const createSiteId = ref('')
+const createSiteName = computed(() => {
+  const id = createSiteId.value || concreteSiteId.value
+  return sites.value.find((s) => s.id === id)?.name || concreteSiteName.value
+})
+const targetSiteId = computed(() => createSiteId.value || concreteSiteId.value)
 
 const clients = ref<ClientRow[]>([])
 const pets = ref<PetRow[]>([])
@@ -209,12 +254,15 @@ const notes = ref('')
 const requestPreconsult = ref(false)
 const defaultDuration = ref(30)
 
-const canSubmit = computed(() => !!clientId.value && !!petId.value && !!day.value && !!time.value)
+const canSubmit = computed(() => !!clientId.value && !!petId.value && !!day.value && !!time.value && (!multiSite.value || !!targetSiteId.value))
 
 const dayVisits = computed(() => {
   if (!day.value) return [] as CalendarVisit[]
   const map = visitsByDay(props.visits)
-  return map.get(day.value) || []
+  const list = map.get(day.value) || []
+  const sid = targetSiteId.value
+  if (!sid || !multiSite.value) return list
+  return list.filter((v) => !v.siteId || v.siteId === sid)
 })
 
 type AgendaItem = {
@@ -293,6 +341,7 @@ watch(
     visitTypeId.value = ''
     clientId.value = ''
     petId.value = ''
+    createSiteId.value = concreteSiteId.value || sites.value[0]?.id || ''
     day.value = props.defaultDay || dayKey(startOfDay(new Date()))
     time.value = '09:00'
     await loadMeta()
@@ -300,12 +349,24 @@ watch(
   },
 )
 
+watch(createSiteId, async (id, prev) => {
+  if (!props.open || !id || id === prev) return
+  try {
+    const schedRes: any = await $fetch(withSiteQuery('/api/vet/schedule', id))
+    const sched = schedRes.data ?? schedRes
+    defaultDuration.value = sched?.slotDurationMinutes || 30
+    if (!visitTypeId.value) durationMinutes.value = defaultDuration.value
+  }
+  catch { /* keep current duration */ }
+})
+
 async function loadMeta() {
   try {
+    const siteQ = targetSiteId.value
     const [clientsRes, typesRes, schedRes]: any[] = await Promise.all([
       $fetch('/api/clients'),
       $fetch('/api/vet/visit-types?active=1'),
-      $fetch('/api/vet/schedule'),
+      $fetch(withSiteQuery('/api/vet/schedule', siteQ)),
     ])
     const cl = clientsRes.data ?? clientsRes ?? []
     clients.value = (Array.isArray(cl) ? cl : [])
@@ -346,6 +407,7 @@ async function submit(confirmDirect: boolean) {
       confirmDirect,
       requestPreconsult: requestPreconsult.value,
       scheduledAt: scheduledAt.toISOString(),
+      siteId: targetSiteId.value || undefined,
     }
     if (visitTypeId.value) {
       body.visitTypeId = visitTypeId.value

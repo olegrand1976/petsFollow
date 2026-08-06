@@ -50,6 +50,8 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
   String? _practicePhone;
   String? _practiceName;
   String? _error;
+  List<PracticeBookableSite> _sites = [];
+  String? _selectedSiteId;
 
   String? get _practiceId => _selectedVet?.practiceId ?? widget.practiceId;
 
@@ -170,10 +172,41 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
           practiceId,
           from: from,
           to: to,
+          siteId: _selectedSiteId,
         );
       }
       if (!mounted) return;
+      final bookableSites = data.sites.where((s) => s.enabled).toList();
+      // Multi-site: pick a site before loading slots.
+      if (_selectedSiteId == null && bookableSites.length > 1 && data.slots.isEmpty) {
+        setState(() {
+          _sites = bookableSites;
+          _enabled = data.enabled;
+          _slots = [];
+          _practicePhone = data.practicePhone.isEmpty ? null : data.practicePhone;
+          _practiceName = data.practiceName.isEmpty ? null : data.practiceName;
+          _loadingSlots = false;
+        });
+        return;
+      }
+      // Exactly one bookable site but response had no slots (or siteId just chosen): re-fetch with siteId.
+      if (_selectedSiteId == null && bookableSites.length == 1) {
+        _selectedSiteId = bookableSites.first.siteId;
+        if (data.slots.isEmpty && widget.availabilityOverride == null) {
+          setState(() {
+            _sites = bookableSites;
+            _practicePhone = data.practicePhone.isEmpty ? null : data.practicePhone;
+            _practiceName = data.practiceName.isEmpty ? null : data.practiceName;
+          });
+          await _loadAvailability();
+          return;
+        }
+      }
+      if (_selectedSiteId == null && data.siteId.isNotEmpty) {
+        _selectedSiteId = data.siteId;
+      }
       setState(() {
+        _sites = bookableSites;
         _enabled = data.enabled;
         _slots = data.slots.map((s) => s.start).toList();
         _practicePhone = data.practicePhone.isEmpty ? null : data.practicePhone;
@@ -187,6 +220,15 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
         _error = mapApiError(e, AppLocalizations.of(context)!);
       });
     }
+  }
+
+  Future<void> _selectSite(PracticeBookableSite site) async {
+    setState(() {
+      _selectedSiteId = site.siteId;
+      _slots = [];
+      _practicePhone = site.phone.isEmpty ? _practicePhone : site.phone;
+    });
+    await _loadAvailability();
   }
 
   Future<void> _book(DateTime slot) async {
@@ -204,7 +246,11 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
           proposedScheduledAt: slot,
         );
       } else {
-        await ApiClient.instance.createVisit(widget.petId, scheduledAt: slot);
+        await ApiClient.instance.createVisit(
+          widget.petId,
+          scheduledAt: slot,
+          siteId: _selectedSiteId,
+        );
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -250,10 +296,23 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
     await openExternalUrl('tel:$digits');
   }
 
+  void _clearSiteSelection() {
+    if (_sites.length <= 1) return;
+    setState(() {
+      _selectedSiteId = null;
+      _slots = [];
+      _enabled = true;
+      _error = null;
+      _loadingSlots = false;
+    });
+  }
+
   void _clearVetSelection() {
     if (_vets.length <= 1) return;
     setState(() {
       _selectedVet = null;
+      _selectedSiteId = null;
+      _sites = [];
       _slots = [];
       _enabled = false;
       _practicePhone = null;
@@ -274,6 +333,11 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
           onPressed: _booking
               ? null
               : () {
+                  // Multi-site: back from slots → site picker (keep vet).
+                  if (_selectedSiteId != null && _sites.length > 1 && !widget.isReschedule) {
+                    _clearSiteSelection();
+                    return;
+                  }
                   if (_selectedVet != null && _vets.length > 1 && !widget.isReschedule) {
                     _clearVetSelection();
                     return;
@@ -343,6 +407,20 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
               );
             }),
           ],
+        ] else if (_selectedSiteId == null && _sites.length > 1) ...[
+          Text(l10n.calendarSelectSite),
+          const SizedBox(height: 12),
+          ..._sites.map((site) {
+            return Card(
+              child: ListTile(
+                key: Key('book_visit_site_${site.siteId}'),
+                title: Text(site.siteName),
+                subtitle: site.phone.isEmpty ? null : Text(site.phone),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _booking ? null : () => _selectSite(site),
+              ),
+            );
+          }),
         ] else if (!_enabled) ...[
           if ((_practiceName ?? _selectedVet?.practiceName ?? '').isNotEmpty) ...[
             Text(

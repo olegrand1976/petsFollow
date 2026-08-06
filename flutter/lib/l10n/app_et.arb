@@ -809,5 +809,9 @@
   "bpMethodInvasive": "Invasiivne",
   "bpSiteLabel": "Koht (valikuline)",
   "bpCommentLabel": "Kommentaar (valikuline)",
-  "bloodPressureSave": "Salvesta"
+  "bloodPressureSave": "Salvesta",
+  "calendarSelectSite": "Valige asukoht",
+  "@calendarSelectSite": {
+    "description": "Book visit: pick practice site when multi-site"
+  }
 }

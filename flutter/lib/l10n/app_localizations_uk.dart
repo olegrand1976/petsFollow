@@ -2171,4 +2171,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bloodPressureSave => 'Зберегти';
+
+  @override
+  String get calendarSelectSite => 'Оберіть місце';
 }

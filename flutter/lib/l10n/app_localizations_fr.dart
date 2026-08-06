@@ -2169,4 +2169,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bloodPressureSave => 'Enregistrer';
+
+  @override
+  String get calendarSelectSite => 'Choisissez un site';
 }

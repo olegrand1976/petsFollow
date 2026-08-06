@@ -68,6 +68,9 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 		practiceID, in.PracticeName, in.Email); err != nil {
 		return User{}, err
 	}
+	if _, err := insertPrimarySiteTx(ctx, tx, practiceID); err != nil {
+		return User{}, err
+	}
 	var termsAt *time.Time
 	if in.TermsAccepted {
 		termsAt = &now

@@ -141,6 +141,7 @@
         :visits="visits"
         :vacations="vacations"
         :focus-visit-id="focusVisitId"
+        :show-site-label="multiSite && isAggregatedView"
         @select-visit="openVisitDetail"
       />
       <ProCalendarMonthGrid
@@ -149,6 +150,7 @@
         :visits="visits"
         :vacations="vacations"
         :focus-visit-id="focusVisitId"
+        :show-site-label="multiSite && isAggregatedView"
         @select-visit="openVisitDetail"
         @select-day="zoomToDay"
       />
@@ -165,6 +167,9 @@
         </p>
         <p>
           <strong>{{ $t('calendar.columnPet') }} :</strong> {{ selectedVisit.petName }}
+        </p>
+        <p v-if="selectedVisit.siteName" data-testid="visit-site-label">
+          <strong>{{ $t('calendar.columnSite') }} :</strong> {{ selectedVisit.siteName }}
         </p>
         <p>
           <strong>{{ $t('calendar.columnWhen') }} :</strong> {{ formatWhen(selectedVisit) }}
@@ -495,6 +500,7 @@ const { t } = useI18n()
 const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
+const { withSiteQuery, concreteSiteId, initFromStorage, multiSite, isAggregatedView } = usePracticeSites()
 const activeConsult = useActiveConsultation()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canViewConsultations = computed(() => canPractice('consultations.history.read'))
@@ -762,11 +768,12 @@ async function load() {
   day1.setDate(day1.getDate() + 1)
   const todayFrom = toLocalRFC3339(day0)
   const todayTo = toLocalRFC3339(day1)
+  initFromStorage()
   try {
     const [calRes, schedRes, todayRes]: any[] = await Promise.all([
-      $fetch(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`),
-      $fetch('/api/vet/schedule'),
-      $fetch(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`),
+      $fetch(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`)),
+      $fetch(withSiteQuery('/api/vet/schedule', concreteSiteId.value)),
+      $fetch(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`)),
     ])
     const cal = calRes.data ?? calRes
     pending.value = cal.pending ?? []
@@ -1034,7 +1041,20 @@ onMounted(async () => {
   if (typeof route.query.visit === 'string' && route.query.visit) {
     await focusVisit(route.query.visit)
   }
+  if (import.meta.client) {
+    window.addEventListener('pf-site-changed', onSiteChanged as EventListener)
+  }
 })
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('pf-site-changed', onSiteChanged as EventListener)
+  }
+})
+
+function onSiteChanged() {
+  void load()
+}
 
 watch(
   () => route.query.visit,

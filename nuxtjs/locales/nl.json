@@ -3365,7 +3365,9 @@
     "reportReferenceOn": "Gemarkeerd als referentieconsultatie",
     "reportReferenceOff": "Verwijderd uit referentieconsultaties",
     "reportTargetLangUk": "Oekraïens",
-    "reportTargetLangRu": "Russisch"
+    "reportTargetLangRu": "Russisch",
+    "columnSite": "Site",
+    "creatingOnSite": "Aanmaken op site: {name} (weergave Alle sites)."
   },
   "manager": {
     "dashboard": {
@@ -4455,5 +4457,29 @@
         "desc": "Praktijk activeert Research; anonieme aggregaten voeden het observatorium."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Site",
+    "allSites": "Alle sites",
+    "settingsTitle": "Locaties (sites)",
+    "settingsHint": "Beheer de locaties van de praktijk. Agenda en boekingsslots zijn per site geconfigureerd.",
+    "addSite": "Site toevoegen",
+    "name": "Sitenaam",
+    "city": "Stad (optioneel)",
+    "create": "Aanmaken",
+    "deactivate": "Deactiveren",
+    "reactivate": "Heractiveren",
+    "makePrimary": "Als primair instellen",
+    "primary": "Primair",
+    "inactive": "Inactief",
+    "empty": "Geen sites.",
+    "loadFailed": "Sites laden mislukt.",
+    "actionFailed": "Actie op deze site mislukt.",
+    "created": "Site aangemaakt.",
+    "deactivated": "Site gedeactiveerd.",
+    "reactivated": "Site heractiveerd.",
+    "primaryUpdated": "Primaire site bijgewerkt.",
+    "devBadge": "dev",
+    "editingSite": "Agenda / slots bewerken voor: {name} (weergave Alle sites)."
   }
 }

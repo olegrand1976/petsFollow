@@ -3365,7 +3365,9 @@
     "reportReferenceOn": "Märgitud viitekonsultatsiooniks",
     "reportReferenceOff": "Eemaldatud viitekonsultatsioonidest",
     "reportTargetLangUk": "Ukraina",
-    "reportTargetLangRu": "Vene"
+    "reportTargetLangRu": "Vene",
+    "columnSite": "Asukoht",
+    "creatingOnSite": "Loomine asukohale: {name} (kõik asukohad)."
   },
   "manager": {
     "dashboard": {
@@ -4455,5 +4457,29 @@
         "desc": "Kliinik aktiveerib Research’i; anonüümsed agregaadid toidavad observatooriumi."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Asukoht",
+    "allSites": "Kõik asukohad",
+    "settingsTitle": "Asukohad (saidid)",
+    "settingsHint": "Hallake praktika asukohti. Kalender ja broneerimisajad seadistatakse asukoha kaupa.",
+    "addSite": "Lisa asukoht",
+    "name": "Asukoha nimi",
+    "city": "Linn (valikuline)",
+    "create": "Loo",
+    "deactivate": "Desaktiveeri",
+    "reactivate": "Taasta",
+    "makePrimary": "Määra peamiseks",
+    "primary": "Peamine",
+    "inactive": "Passiivne",
+    "empty": "Asukohti pole.",
+    "loadFailed": "Asukohti ei õnnestunud laadida.",
+    "actionFailed": "Asukoha muutmine ebaõnnestus.",
+    "created": "Asukoht loodud.",
+    "deactivated": "Asukoht desaktiveeritud.",
+    "reactivated": "Asukoht taastatud.",
+    "primaryUpdated": "Peamine asukoht uuendatud.",
+    "devBadge": "dev",
+    "editingSite": "Muudad ajakava / slotte asukohale: {name} (kõik asukohad)."
   }
 }

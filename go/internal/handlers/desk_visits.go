@@ -82,10 +82,10 @@ func (a *API) parseAndValidateVisitSlot(
 	dur := 30
 	if visit.DurationMinutes != nil {
 		dur = *visit.DurationMinutes
-	} else if _, slotDur, e := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID); e == nil {
+	} else if _, slotDur, e := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID, visit.SiteID); e == nil {
 		dur = slotDur
 	}
-	overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, proposed, dur, visit.ID)
+	overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, visit.SiteID, proposed, dur, visit.ID)
 	if oerr != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return time.Time{}, false
@@ -94,7 +94,7 @@ func (a *API) parseAndValidateVisitSlot(
 		writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
 		return time.Time{}, false
 	}
-	onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, proposed)
+	onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, visit.SiteID, proposed)
 	if verr != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return time.Time{}, false

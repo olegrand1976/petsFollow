@@ -46,6 +46,11 @@
           @click="emit('select-visit', v)"
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
+          <span
+            v-if="showSiteLabel && v.siteName"
+            class="cal-chip__site"
+            data-testid="calendar-chip-site"
+          >{{ v.siteName }}</span>
           <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span
             v-if="v.waitingRoomAt"
@@ -97,8 +102,9 @@ const props = withDefaults(
     vacations: CalendarVacation[]
     focusVisitId?: string
     maxPerDay?: number
+    showSiteLabel?: boolean
   }>(),
-  { maxPerDay: 3 },
+  { maxPerDay: 3, showSiteLabel: false },
 )
 
 const emit = defineEmits<{

@@ -21,21 +21,23 @@ type ScheduleSlot struct {
 }
 
 type VetSchedule struct {
-	PracticeID             string         `json:"practiceId"`
-	ClientBookingEnabled   bool           `json:"clientBookingEnabled"`
-	SlotDurationMinutes    int            `json:"slotDurationMinutes"`
-	VacationsDeclaredYear  *int           `json:"vacationsDeclaredYear,omitempty"`
-	Timezone               string         `json:"timezone"`
-	Slots                  []ScheduleSlot `json:"slots"`
-	VacationsConfiguredForYear bool       `json:"vacationsConfiguredForYear"`
+	PracticeID                 string         `json:"practiceId"`
+	SiteID                     string         `json:"siteId"`
+	ClientBookingEnabled       bool           `json:"clientBookingEnabled"`
+	SlotDurationMinutes        int            `json:"slotDurationMinutes"`
+	VacationsDeclaredYear      *int           `json:"vacationsDeclaredYear,omitempty"`
+	Timezone                   string         `json:"timezone"`
+	Slots                      []ScheduleSlot `json:"slots"`
+	VacationsConfiguredForYear bool           `json:"vacationsConfiguredForYear"`
 }
 
 type Vacation struct {
-	ID        string `json:"id"`
+	ID         string `json:"id"`
 	PracticeID string `json:"practiceId"`
-	StartsOn  string `json:"startsOn"` // YYYY-MM-DD
-	EndsOn    string `json:"endsOn"`
-	Label     string `json:"label,omitempty"`
+	SiteID     string `json:"siteId"`
+	StartsOn   string `json:"startsOn"` // YYYY-MM-DD
+	EndsOn     string `json:"endsOn"`
+	Label      string `json:"label,omitempty"`
 }
 
 type AvailableSlot struct {
@@ -43,18 +45,31 @@ type AvailableSlot struct {
 	End   time.Time `json:"end"`
 }
 
-func (s *Store) GetVetSchedule(ctx context.Context, practiceID string) (VetSchedule, error) {
+func (s *Store) GetVetSchedule(ctx context.Context, practiceID, siteID string) (VetSchedule, error) {
+	resolved, err := s.ResolveSiteID(ctx, practiceID, siteID, true)
+	if err != nil {
+		return VetSchedule{}, err
+	}
+	siteID = resolved
+
 	var out VetSchedule
 	out.PracticeID = practiceID
+	out.SiteID = siteID
 	out.SlotDurationMinutes = 30
 	out.Timezone = defaultScheduleTZ
 	var vacYear *int
-	err := s.pool.QueryRow(ctx, `
+	err = s.pool.QueryRow(ctx, `
 		SELECT client_booking_enabled, slot_duration_minutes, vacations_declared_year, timezone
-		FROM practice.vet_schedule WHERE practice_id = $1`, practiceID,
+		FROM practice.vet_schedule WHERE site_id = $1`, siteID,
 	).Scan(&out.ClientBookingEnabled, &out.SlotDurationMinutes, &vacYear, &out.Timezone)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return VetSchedule{}, err
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		// Fall back to site timezone if no schedule row yet.
+		if site, serr := s.GetSite(ctx, practiceID, siteID); serr == nil && site.Timezone != "" {
+			out.Timezone = site.Timezone
+		}
 	}
 	out.VacationsDeclaredYear = vacYear
 	year := time.Now().Year()
@@ -64,15 +79,15 @@ func (s *Store) GetVetSchedule(ctx context.Context, practiceID string) (VetSched
 		var vacCount int
 		_ = s.pool.QueryRow(ctx, `
 			SELECT COUNT(*)::int FROM practice.vet_vacations
-			WHERE practice_id = $1 AND EXTRACT(YEAR FROM starts_on) = $2`, practiceID, year,
+			WHERE site_id = $1 AND EXTRACT(YEAR FROM starts_on) = $2`, siteID, year,
 		).Scan(&vacCount)
 		out.VacationsConfiguredForYear = vacCount > 0
 	}
 
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, weekday, to_char(start_time, 'HH24:MI'), to_char(end_time, 'HH24:MI')
-		FROM practice.vet_schedule_slots WHERE practice_id = $1
-		ORDER BY weekday, start_time`, practiceID)
+		FROM practice.vet_schedule_slots WHERE site_id = $1
+		ORDER BY weekday, start_time`, siteID)
 	if err != nil {
 		return VetSchedule{}, err
 	}
@@ -90,7 +105,13 @@ func (s *Store) GetVetSchedule(ctx context.Context, practiceID string) (VetSched
 	return out, rows.Err()
 }
 
-func (s *Store) PutVetSchedule(ctx context.Context, practiceID string, clientBooking bool, duration int, vacYear *int, slots []ScheduleSlot) (VetSchedule, error) {
+func (s *Store) PutVetSchedule(ctx context.Context, practiceID, siteID string, clientBooking bool, duration int, vacYear *int, slots []ScheduleSlot) (VetSchedule, error) {
+	resolved, err := s.ResolveSiteID(ctx, practiceID, siteID, false)
+	if err != nil {
+		return VetSchedule{}, err
+	}
+	siteID = resolved
+
 	if duration != 15 && duration != 30 && duration != 60 {
 		return VetSchedule{}, fmt.Errorf("%w: invalid_duration", ErrValidation)
 	}
@@ -109,6 +130,15 @@ func (s *Store) PutVetSchedule(ctx context.Context, practiceID string, clientBoo
 		clientBooking = false
 	}
 
+	site, err := s.GetSite(ctx, practiceID, siteID)
+	if err != nil {
+		return VetSchedule{}, err
+	}
+	tz := site.Timezone
+	if tz == "" {
+		tz = defaultScheduleTZ
+	}
+
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return VetSchedule{}, err
@@ -116,39 +146,53 @@ func (s *Store) PutVetSchedule(ctx context.Context, practiceID string, clientBoo
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, `
-		INSERT INTO practice.vet_schedule (practice_id, client_booking_enabled, slot_duration_minutes, vacations_declared_year, timezone, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW())
-		ON CONFLICT (practice_id) DO UPDATE SET
+		INSERT INTO practice.vet_schedule (site_id, practice_id, client_booking_enabled, slot_duration_minutes, vacations_declared_year, timezone, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW())
+		ON CONFLICT (site_id) DO UPDATE SET
 			client_booking_enabled = EXCLUDED.client_booking_enabled,
 			slot_duration_minutes = EXCLUDED.slot_duration_minutes,
 			vacations_declared_year = EXCLUDED.vacations_declared_year,
+			timezone = EXCLUDED.timezone,
 			updated_at = NOW()`,
-		practiceID, clientBooking, duration, vacYear, defaultScheduleTZ)
+		siteID, practiceID, clientBooking, duration, vacYear, tz)
 	if err != nil {
 		return VetSchedule{}, err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM practice.vet_schedule_slots WHERE practice_id = $1`, practiceID); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM practice.vet_schedule_slots WHERE site_id = $1`, siteID); err != nil {
 		return VetSchedule{}, err
 	}
 	for _, sl := range slots {
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO practice.vet_schedule_slots (id, practice_id, weekday, start_time, end_time)
-			VALUES ($1, $2, $3, $4::time, $5::time)`,
-			uuid.NewString(), practiceID, sl.Weekday, sl.StartTime, sl.EndTime); err != nil {
+			INSERT INTO practice.vet_schedule_slots (id, practice_id, site_id, weekday, start_time, end_time)
+			VALUES ($1, $2, $3, $4, $5::time, $6::time)`,
+			uuid.NewString(), practiceID, siteID, sl.Weekday, sl.StartTime, sl.EndTime); err != nil {
 			return VetSchedule{}, err
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return VetSchedule{}, err
 	}
-	return s.GetVetSchedule(ctx, practiceID)
+	return s.GetVetSchedule(ctx, practiceID, siteID)
 }
 
-func (s *Store) ListVacations(ctx context.Context, practiceID string) ([]Vacation, error) {
-	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, to_char(starts_on, 'YYYY-MM-DD'), to_char(ends_on, 'YYYY-MM-DD'), COALESCE(label,'')
-		FROM practice.vet_vacations WHERE practice_id = $1
-		ORDER BY starts_on`, practiceID)
+func (s *Store) ListVacations(ctx context.Context, practiceID, siteID string) ([]Vacation, error) {
+	var rows pgx.Rows
+	var err error
+	if strings.TrimSpace(siteID) == "" || siteID == "all" {
+		rows, err = s.pool.Query(ctx, `
+			SELECT id::text, practice_id::text, site_id::text, to_char(starts_on, 'YYYY-MM-DD'), to_char(ends_on, 'YYYY-MM-DD'), COALESCE(label,'')
+			FROM practice.vet_vacations WHERE practice_id = $1
+			ORDER BY starts_on`, practiceID)
+	} else {
+		resolved, rerr := s.ResolveSiteID(ctx, practiceID, siteID, true)
+		if rerr != nil {
+			return nil, rerr
+		}
+		rows, err = s.pool.Query(ctx, `
+			SELECT id::text, practice_id::text, site_id::text, to_char(starts_on, 'YYYY-MM-DD'), to_char(ends_on, 'YYYY-MM-DD'), COALESCE(label,'')
+			FROM practice.vet_vacations WHERE site_id = $1
+			ORDER BY starts_on`, resolved)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +200,7 @@ func (s *Store) ListVacations(ctx context.Context, practiceID string) ([]Vacatio
 	var out []Vacation
 	for rows.Next() {
 		var v Vacation
-		if err := rows.Scan(&v.ID, &v.PracticeID, &v.StartsOn, &v.EndsOn, &v.Label); err != nil {
+		if err := rows.Scan(&v.ID, &v.PracticeID, &v.SiteID, &v.StartsOn, &v.EndsOn, &v.Label); err != nil {
 			return nil, err
 		}
 		out = append(out, v)
@@ -167,15 +211,19 @@ func (s *Store) ListVacations(ctx context.Context, practiceID string) ([]Vacatio
 	return out, rows.Err()
 }
 
-func (s *Store) CreateVacation(ctx context.Context, practiceID, startsOn, endsOn, label string) (Vacation, error) {
+func (s *Store) CreateVacation(ctx context.Context, practiceID, siteID, startsOn, endsOn, label string) (Vacation, error) {
+	resolved, err := s.ResolveSiteID(ctx, practiceID, siteID, false)
+	if err != nil {
+		return Vacation{}, err
+	}
 	id := uuid.NewString()
 	var v Vacation
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO practice.vet_vacations (id, practice_id, starts_on, ends_on, label)
-		VALUES ($1, $2, $3::date, $4::date, NULLIF($5,''))
-		RETURNING id::text, practice_id::text, to_char(starts_on, 'YYYY-MM-DD'), to_char(ends_on, 'YYYY-MM-DD'), COALESCE(label,'')`,
-		id, practiceID, startsOn, endsOn, label,
-	).Scan(&v.ID, &v.PracticeID, &v.StartsOn, &v.EndsOn, &v.Label)
+	err = s.pool.QueryRow(ctx, `
+		INSERT INTO practice.vet_vacations (id, practice_id, site_id, starts_on, ends_on, label)
+		VALUES ($1, $2, $3, $4::date, $5::date, NULLIF($6,''))
+		RETURNING id::text, practice_id::text, site_id::text, to_char(starts_on, 'YYYY-MM-DD'), to_char(ends_on, 'YYYY-MM-DD'), COALESCE(label,'')`,
+		id, practiceID, resolved, startsOn, endsOn, label,
+	).Scan(&v.ID, &v.PracticeID, &v.SiteID, &v.StartsOn, &v.EndsOn, &v.Label)
 	return v, err
 }
 
@@ -191,9 +239,21 @@ func (s *Store) DeleteVacation(ctx context.Context, practiceID, vacationID strin
 	return nil
 }
 
-func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string, from, to time.Time) ([]Visit, error) {
+// ListPracticeVisitsInRange lists agenda visits. siteID empty or "all" = all sites.
+func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteID string, from, to time.Time) ([]Visit, error) {
+	args := []any{practiceID, from, to}
+	siteFilter := ""
+	if sid := strings.TrimSpace(siteID); sid != "" && sid != "all" {
+		resolved, err := s.ResolveSiteID(ctx, practiceID, sid, true)
+		if err != nil {
+			return nil, err
+		}
+		siteFilter = ` AND v.site_id = $4`
+		args = append(args, resolved)
+	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.site_id::text, COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -207,6 +267,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
 		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE v.practice_id = $1
 		  AND v.deleted_at IS NULL
 		  AND v.status IN ('requested', 'confirmed', 'reschedule_pending')
@@ -214,8 +275,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			(v.scheduled_at IS NOT NULL AND v.scheduled_at >= $2 AND v.scheduled_at < $3)
 			OR (v.proposed_scheduled_at IS NOT NULL AND v.proposed_scheduled_at >= $2 AND v.proposed_scheduled_at < $3)
 			OR (v.scheduled_at IS NULL AND v.created_at >= $2 AND v.created_at < $3 AND v.status = 'requested')
-		  )
-		ORDER BY COALESCE(v.scheduled_at, v.proposed_scheduled_at, v.created_at)`, practiceID, from, to)
+		  )`+siteFilter+`
+		ORDER BY COALESCE(v.scheduled_at, v.proposed_scheduled_at, v.created_at)`, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +285,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 	for rows.Next() {
 		var v Visit
 		if err := rows.Scan(
-			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
@@ -240,12 +301,16 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 	return out, rows.Err()
 }
 
-func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID string) (bool, int, error) {
+func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID, siteID string) (bool, int, error) {
+	resolved, err := s.ResolveBookingSiteID(ctx, practiceID, siteID)
+	if err != nil {
+		return false, 30, err
+	}
 	var enabled bool
 	var duration int
-	err := s.pool.QueryRow(ctx, `
+	err = s.pool.QueryRow(ctx, `
 		SELECT client_booking_enabled, slot_duration_minutes
-		FROM practice.vet_schedule WHERE practice_id = $1`, practiceID,
+		FROM practice.vet_schedule WHERE site_id = $1`, resolved,
 	).Scan(&enabled, &duration)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, 30, nil
@@ -268,8 +333,8 @@ func scheduleLocation(tz string) *time.Location {
 	return time.UTC
 }
 
-func (s *Store) IsOnVacation(ctx context.Context, practiceID string, day time.Time) (bool, error) {
-	sched, err := s.GetVetSchedule(ctx, practiceID)
+func (s *Store) IsOnVacation(ctx context.Context, practiceID, siteID string, day time.Time) (bool, error) {
+	sched, err := s.GetVetSchedule(ctx, practiceID, siteID)
 	if err != nil {
 		return false, err
 	}
@@ -278,19 +343,22 @@ func (s *Store) IsOnVacation(ctx context.Context, practiceID string, day time.Ti
 	var n int
 	err = s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM practice.vet_vacations
-		WHERE practice_id = $1 AND starts_on <= $2::date AND ends_on >= $2::date`,
-		practiceID, localDay,
+		WHERE site_id = $1 AND starts_on <= $2::date AND ends_on >= $2::date`,
+		sched.SiteID, localDay,
 	).Scan(&n)
 	return n > 0, err
 }
 
-func (s *Store) HasVisitOverlap(ctx context.Context, practiceID string, start time.Time, durationMin int, excludeVisitID string) (bool, error) {
+func (s *Store) HasVisitOverlap(ctx context.Context, practiceID, siteID string, start time.Time, durationMin int, excludeVisitID string) (bool, error) {
+	resolved, err := s.ResolveSiteID(ctx, practiceID, siteID, true)
+	if err != nil {
+		return false, err
+	}
 	end := start.Add(time.Duration(durationMin) * time.Minute)
 	var n int
-	// Busy interval = proposed_scheduled_at when reschedule_pending, else scheduled_at.
-	err := s.pool.QueryRow(ctx, `
+	err = s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM visits.visits
-		WHERE practice_id = $1
+		WHERE site_id = $1
 		  AND deleted_at IS NULL
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND COALESCE(consultation_session, false) = false
@@ -299,15 +367,14 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID string, start ti
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
 		  AND COALESCE(proposed_scheduled_at, scheduled_at)
 		      + (COALESCE(duration_minutes, $5) || ' minutes')::interval > $2`,
-		practiceID, start, end, excludeVisitID, durationMin,
+		resolved, start, end, excludeVisitID, durationMin,
 	).Scan(&n)
 	return n > 0, err
 }
 
-
-// ListAvailableSlots returns bookable slots between from and to (exclusive end day).
-func (s *Store) ListAvailableSlots(ctx context.Context, practiceID string, from, to time.Time) ([]AvailableSlot, error) {
-	sched, err := s.GetVetSchedule(ctx, practiceID)
+// ListAvailableSlots returns bookable slots for a site between from and to (exclusive end day).
+func (s *Store) ListAvailableSlots(ctx context.Context, practiceID, siteID string, from, to time.Time) ([]AvailableSlot, error) {
+	sched, err := s.GetVetSchedule(ctx, practiceID, siteID)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +383,7 @@ func (s *Store) ListAvailableSlots(ctx context.Context, practiceID string, from,
 	}
 	loc := scheduleLocation(sched.Timezone)
 	duration := time.Duration(sched.SlotDurationMinutes) * time.Minute
-	vacations, err := s.ListVacations(ctx, practiceID)
+	vacations, err := s.ListVacations(ctx, practiceID, sched.SiteID)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +396,7 @@ func (s *Store) ListAvailableSlots(ctx context.Context, practiceID string, from,
 		}
 	}
 
-	busy, err := s.ListPracticeVisitsInRange(ctx, practiceID, from, to)
+	busy, err := s.ListPracticeVisitsInRange(ctx, practiceID, sched.SiteID, from, to)
 	if err != nil {
 		return nil, err
 	}

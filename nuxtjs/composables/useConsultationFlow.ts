@@ -29,6 +29,7 @@ export function useConsultationFlow() {
   const pharmacyEnabled = computed(() => isPublicFlagOn(config.public.pharmacyEnabled))
   const billitEnabled = computed(() => isPublicFlagOn(config.public.billitEnabled))
   const invoicingUiEnabled = INVOICING_UI_ENABLED
+  const { concreteSiteId } = usePracticeSites()
 
   const visitId = ref('')
   const petId = ref('')
@@ -100,6 +101,7 @@ export function useConsultationFlow() {
           scheduledAt: scheduledAtIso,
           durationMinutes: duration,
           notes: input.notes?.trim() || undefined,
+          siteId: concreteSiteId.value || undefined,
         },
       })
       const data = res?.data ?? res

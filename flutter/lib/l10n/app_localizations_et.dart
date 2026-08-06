@@ -2161,4 +2161,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get bloodPressureSave => 'Salvesta';
+
+  @override
+  String get calendarSelectSite => 'Valige asukoht';
 }

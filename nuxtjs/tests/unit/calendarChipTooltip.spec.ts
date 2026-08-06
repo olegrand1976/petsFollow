@@ -27,6 +27,18 @@ describe('calendarChipTooltip', () => {
     expect(tip).toContain('calendar.preconsultUrgentTooltip')
     expect(tip).not.toContain('calendar.preconsultAnsweredTooltip')
   })
+
+  it('includes site name when present', () => {
+    const v: CalendarVisit = {
+      id: '1',
+      status: 'confirmed',
+      siteName: 'Antenne Liège',
+      waitingRoomAt: '2026-08-02T10:00:00Z',
+    }
+    const tip = calendarChipTooltip(v, t)
+    expect(tip.startsWith('Antenne Liège')).toBe(true)
+    expect(tip).toContain('calendar.waitingRoomTooltip')
+  })
 })
 
 describe('visitConsultationCta', () => {

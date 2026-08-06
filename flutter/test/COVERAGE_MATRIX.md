@@ -15,7 +15,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Pet.weightKg parse | ✓ | · | · | `pet_weight_test` |
 | HR start/taps | · | ✓ | ✓ | flow + smoke cancel |
 | HR keys start/validate | · | ✓ | · | `heart_rate_validate_keys_test` |
-| Book visit | · | ✓ | · | `book_visit_screen_test` |
+| Book visit | · | ✓ | · | `book_visit_screen_test` (vet picker + `book_visit_site_*` multi-sites) |
 | Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
 | Send pet dossier to pro | · | ✓ | · | `pet_send_dossier_test` (consentement PHI requis ; fiche + dialogue sans débordement en 360 dp clavier ouvert) |
 | View / share consultation PDF | · | ✓ | · | `consultation_view_test` (CTA disponible/en attente sur Consultations + card Visite ; entrée menu fiche `pet_consultations_*` ; CR + share) |

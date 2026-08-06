@@ -142,4 +142,91 @@ void main() {
 
     expect(find.text(l10n.calendarPickSlot), findsOneWidget);
   });
+
+  testWidgets('shows site picker when several bookable sites', (tester) async {
+    final l10n = AppLocalizationsFr();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookVisitScreen(
+          petId: 'pet-1',
+          petName: 'Rex',
+          practiceIdFilter: 'p1',
+          initialVets: const [
+            VetLink(
+              practiceId: 'p1',
+              vetEmail: 'a@test.com',
+              vetFullName: 'Dr Alpha',
+              practiceName: 'Cabinet A',
+            ),
+          ],
+          availabilityOverride: const PracticeAvailability(
+            enabled: true,
+            practiceName: 'Cabinet A',
+            slots: [],
+            sites: [
+              PracticeBookableSite(siteId: 'site-a', siteName: 'Principal', enabled: true),
+              PracticeBookableSite(siteId: 'site-b', siteName: 'Antenne Liège', enabled: true),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.calendarSelectSite), findsOneWidget);
+    expect(find.byKey(const Key('book_visit_site_site-a')), findsOneWidget);
+    expect(find.byKey(const Key('book_visit_site_site-b')), findsOneWidget);
+    expect(find.text('Antenne Liège'), findsOneWidget);
+  });
+
+  testWidgets('back from slots returns to site picker', (tester) async {
+    final l10n = AppLocalizationsFr();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookVisitScreen(
+          petId: 'pet-1',
+          petName: 'Rex',
+          practiceIdFilter: 'p1',
+          initialVets: const [
+            VetLink(
+              practiceId: 'p1',
+              vetEmail: 'a@test.com',
+              vetFullName: 'Dr Alpha',
+              practiceName: 'Cabinet A',
+            ),
+          ],
+          availabilityOverride: PracticeAvailability(
+            enabled: true,
+            practiceName: 'Cabinet A',
+            siteId: 'site-a',
+            siteName: 'Principal',
+            slots: [
+              PracticeAvailabilitySlot(start: DateTime.parse('2099-06-01T10:00:00.000Z')),
+            ],
+            sites: const [
+              PracticeBookableSite(siteId: 'site-a', siteName: 'Principal', enabled: true),
+              PracticeBookableSite(siteId: 'site-b', siteName: 'Antenne Liège', enabled: true),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Override with siteId + slots → shows slots directly after auto-select path.
+    // Force site picker first then select.
+    expect(find.text(l10n.calendarPickSlot), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.calendarSelectSite), findsOneWidget);
+    expect(find.byKey(const Key('book_visit_site_site-b')), findsOneWidget);
+  });
 }

@@ -604,7 +604,8 @@ func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([
 // ListCareProVisits lists visits for pets accessible to the care pro (pet_access or client_access).
 func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]Visit, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, COALESCE(v.site_id::text,''), COALESCE(si.name,''),
+			v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
@@ -629,6 +630,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.sites si ON si.id = v.site_id
 		WHERE v.deleted_at IS NULL
 		AND (
 			EXISTS (
@@ -652,7 +654,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 	for rows.Next() {
 		var v Visit
 		if err := rows.Scan(
-			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.Permission,

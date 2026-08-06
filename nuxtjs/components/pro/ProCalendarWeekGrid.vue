@@ -53,6 +53,11 @@
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
           <span v-if="v.visitTypeName" class="cal-chip__type">{{ v.visitTypeName }}</span>
+          <span
+            v-if="showSiteLabel && v.siteName"
+            class="cal-chip__site"
+            data-testid="calendar-chip-site"
+          >{{ v.siteName }}</span>
           <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span
             v-if="v.waitingRoomAt"
@@ -95,6 +100,8 @@ const props = defineProps<{
   visits: CalendarVisit[]
   vacations: CalendarVacation[]
   focusVisitId?: string
+  /** Show site name on chips (multi-site practices). */
+  showSiteLabel?: boolean
 }>()
 
 const emit = defineEmits<{ 'select-visit': [visit: CalendarVisit] }>()

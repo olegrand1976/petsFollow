@@ -231,6 +231,9 @@ func (s *Store) CreateVetAsAdmin(ctx context.Context, in EncodeVetInput, assigne
 		practiceID, in.PracticeName, in.Phone, contactEmail, in.AddressLine1, in.City, in.PostalCode); err != nil {
 		return "", err
 	}
+	if _, err := insertPrimarySiteTx(ctx, tx, practiceID); err != nil {
+		return "", err
+	}
 
 	var commercialArg any
 	if assignedCommercialID != "" {

@@ -148,11 +148,111 @@
       </ProCard>
 
       <ProCard
+        v-if="canManageCalendar && sitesUiEnabled"
+        :title="$t('sites.settingsTitle')"
+        class="pro-settings-card"
+        data-testid="settings-sites"
+      >
+        <p class="pro-settings-hint">{{ $t('sites.settingsHint') }}</p>
+        <p
+          v-if="isAggregatedView && concreteSiteName"
+          class="pro-inline-feedback"
+          role="status"
+          data-testid="settings-sites-edit-hint"
+        >
+          {{ $t('sites.editingSite', { name: concreteSiteName }) }}
+        </p>
+        <ul class="settings-sites-list" data-testid="settings-sites-list">
+          <li
+            v-for="site in managedSites"
+            :key="site.id"
+            class="settings-sites-row"
+            :data-testid="`settings-site-row-${site.id}`"
+          >
+            <div class="settings-sites-row__meta">
+              <strong>{{ site.name }}</strong>
+              <span v-if="site.city" class="text-muted">{{ site.city }}</span>
+              <ProBadge v-if="site.isPrimary" variant="success">{{ $t('sites.primary') }}</ProBadge>
+              <ProBadge v-if="!site.active" variant="warning">{{ $t('sites.inactive') }}</ProBadge>
+            </div>
+            <div class="settings-sites-row__actions">
+              <ProButton
+                v-if="!site.isPrimary && site.active"
+                variant="secondary"
+                type="button"
+                :disabled="sitesBusy"
+                :data-testid="`settings-site-primary-${site.id}`"
+                @click="makeSitePrimary(site.id)"
+              >
+                {{ $t('sites.makePrimary') }}
+              </ProButton>
+              <ProButton
+                v-if="!site.isPrimary && site.active"
+                variant="ghost"
+                type="button"
+                :disabled="sitesBusy"
+                :data-testid="`settings-site-deactivate-${site.id}`"
+                @click="deactivateSite(site.id)"
+              >
+                {{ $t('sites.deactivate') }}
+              </ProButton>
+              <ProButton
+                v-if="!site.active"
+                variant="secondary"
+                type="button"
+                :disabled="sitesBusy"
+                :data-testid="`settings-site-reactivate-${site.id}`"
+                @click="reactivateSite(site.id)"
+              >
+                {{ $t('sites.reactivate') }}
+              </ProButton>
+            </div>
+          </li>
+        </ul>
+        <p v-if="!managedSites.length && !sitesLoading" class="text-muted">{{ $t('sites.empty') }}</p>
+        <div class="calendar-slot-row settings-sites-create">
+          <input
+            v-model="newSiteName"
+            type="text"
+            class="pro-input"
+            :placeholder="$t('sites.name')"
+            data-testid="settings-site-name"
+          >
+          <input
+            v-model="newSiteCity"
+            type="text"
+            class="pro-input"
+            :placeholder="$t('sites.city')"
+            data-testid="settings-site-city"
+          >
+          <ProButton
+            variant="secondary"
+            type="button"
+            :loading="sitesBusy"
+            :disabled="!newSiteName.trim()"
+            data-testid="settings-site-create"
+            @click="createSite"
+          >
+            {{ $t('sites.create') }}
+          </ProButton>
+        </div>
+        <p v-if="sitesError" class="pro-field-error" role="alert">{{ sitesError }}</p>
+        <p v-if="sitesSaved" class="text-muted" role="status">{{ sitesSaved }}</p>
+      </ProCard>
+
+      <ProCard
         v-if="canManageCalendar"
         :title="$t('settings.calendar.title')"
         class="pro-settings-card"
         data-testid="settings-calendar"
-      >        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
+      >        <p
+          v-if="isAggregatedView && concreteSiteName"
+          class="pro-inline-feedback"
+          role="status"
+        >
+          {{ $t('sites.editingSite', { name: concreteSiteName }) }}
+        </p>
+        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
           {{ $t('settings.calendar.vacationsReminder') }}
         </p>
         <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
@@ -522,6 +622,22 @@ const visitTypesSaving = ref(false)
 const visitTypesSaved = ref(false)
 const visitTypesError = ref('')
 
+type ManagedSite = {
+  id: string
+  name: string
+  city: string
+  isPrimary: boolean
+  active: boolean
+}
+const { sitesUiEnabled, concreteSiteId, concreteSiteName, isAggregatedView, withSiteQuery, initFromStorage } = usePracticeSites()
+const managedSites = ref<ManagedSite[]>([])
+const sitesLoading = ref(false)
+const sitesBusy = ref(false)
+const sitesError = ref('')
+const sitesSaved = ref('')
+const newSiteName = ref('')
+const newSiteCity = ref('')
+
 const weekdayOptions = computed(() => [
   { value: 1, label: t('settings.calendar.weekday.1') },
   { value: 2, label: t('settings.calendar.weekday.2') },
@@ -545,6 +661,163 @@ function addVisitType() {
     isActive: true,
     sortOrder: visitTypes.value.length,
   })
+}
+
+async function loadManagedSites() {
+  if (!canManageCalendar.value || !sitesUiEnabled.value) return
+  sitesLoading.value = true
+  sitesError.value = ''
+  try {
+    const res: any = await $fetch('/api/vet/sites', { query: { includeInactive: '1' } })
+    const list = res?.data ?? res
+    managedSites.value = (Array.isArray(list) ? list : []).map((s: any) => ({
+      id: String(s.id || ''),
+      name: String(s.name || ''),
+      city: String(s.city || ''),
+      isPrimary: !!s.isPrimary,
+      active: s.active !== false,
+    })).filter((s: ManagedSite) => !!s.id)
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.loadFailed')
+    managedSites.value = []
+  }
+  finally {
+    sitesLoading.value = false
+  }
+}
+
+async function refreshMeAndSites() {
+  await fetchUser(true)
+  await loadManagedSites()
+}
+
+async function createSite() {
+  const name = newSiteName.value.trim()
+  if (!name) return
+  sitesBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch('/api/vet/sites', {
+      method: 'POST',
+      body: {
+        name,
+        city: newSiteCity.value.trim() || undefined,
+        copyScheduleFromSiteId: concreteSiteId.value || undefined,
+      },
+    })
+    newSiteName.value = ''
+    newSiteCity.value = ''
+    sitesSaved.value = t('sites.created')
+    await refreshMeAndSites()
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.actionFailed')
+  }
+  finally {
+    sitesBusy.value = false
+  }
+}
+
+async function deactivateSite(siteId: string) {
+  sitesBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/deactivate`, { method: 'POST' })
+    sitesSaved.value = t('sites.deactivated')
+    await refreshMeAndSites()
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.actionFailed')
+  }
+  finally {
+    sitesBusy.value = false
+  }
+}
+
+async function reactivateSite(siteId: string) {
+  sitesBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
+      method: 'PATCH',
+      body: { active: true },
+    })
+    sitesSaved.value = t('sites.reactivated')
+    await refreshMeAndSites()
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.actionFailed')
+  }
+  finally {
+    sitesBusy.value = false
+  }
+}
+
+async function makeSitePrimary(siteId: string) {
+  sitesBusy.value = true
+  sitesError.value = ''
+  sitesSaved.value = ''
+  try {
+    await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}`, {
+      method: 'PATCH',
+      body: { isPrimary: true },
+    })
+    sitesSaved.value = t('sites.primaryUpdated')
+    await refreshMeAndSites()
+  }
+  catch (e: any) {
+    sitesError.value = mapError(e) || t('sites.actionFailed')
+  }
+  finally {
+    sitesBusy.value = false
+  }
+}
+
+async function loadCalendarSettings() {
+  if (!canManageCalendar.value) return
+  initFromStorage()
+  const siteQ = concreteSiteId.value
+  try {
+    const [schedRes, vacRes, typesRes]: any[] = await Promise.all([
+      $fetch(withSiteQuery('/api/vet/schedule', siteQ)),
+      $fetch(withSiteQuery('/api/vet/vacations', siteQ)),
+      $fetch('/api/vet/visit-types'),
+    ])
+    const sched = schedRes.data ?? schedRes
+    scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
+      weekday: s.weekday,
+      startTime: s.startTime,
+      endTime: s.endTime,
+    }))
+    slotDuration.value = sched.slotDurationMinutes || 30
+    clientBookingEnabled.value = !!sched.clientBookingEnabled
+    vacationsConfigured.value = !!sched.vacationsConfiguredForYear
+    noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
+    vacations.value = vacRes.data ?? vacRes ?? []
+    const types = typesRes.data ?? typesRes ?? []
+    visitTypes.value = (Array.isArray(types) ? types : []).map((vt: any, i: number) => ({
+      id: vt.id,
+      name: vt.name || '',
+      durationMinutes: vt.durationMinutes || 30,
+      color: vt.color || '#2A9D8F',
+      isActive: vt.isActive !== false,
+      sortOrder: vt.sortOrder ?? i,
+    }))
+    scheduleError.value = ''
+  }
+  catch (e: any) {
+    scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
+  }
+}
+
+function onSiteChanged() {
+  if (activeTab.value === 'calendar') {
+    void loadCalendarSettings()
+  }
 }
 
 async function saveVisitTypes() {
@@ -714,35 +987,17 @@ onMounted(async () => {
   }
 
   if (canManageCalendar.value) {
-    try {
-      const [schedRes, vacRes, typesRes]: any[] = await Promise.all([
-        $fetch('/api/vet/schedule'),
-        $fetch('/api/vet/vacations'),
-        $fetch('/api/vet/visit-types'),
-      ])
-      const sched = schedRes.data ?? schedRes
-      scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
-        weekday: s.weekday,
-        startTime: s.startTime,
-        endTime: s.endTime,
-      }))
-      slotDuration.value = sched.slotDurationMinutes || 30
-      clientBookingEnabled.value = !!sched.clientBookingEnabled
-      vacationsConfigured.value = !!sched.vacationsConfiguredForYear
-      noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
-      vacations.value = vacRes.data ?? vacRes ?? []
-      const types = typesRes.data ?? typesRes ?? []
-      visitTypes.value = (Array.isArray(types) ? types : []).map((vt: any, i: number) => ({
-        id: vt.id,
-        name: vt.name || '',
-        durationMinutes: vt.durationMinutes || 30,
-        color: vt.color || '#2A9D8F',
-        isActive: vt.isActive !== false,
-        sortOrder: vt.sortOrder ?? i,
-      }))
-    } catch (e: any) {
-      scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
-    }
+    await loadManagedSites()
+    await loadCalendarSettings()
+  }
+  if (import.meta.client) {
+    window.addEventListener('pf-site-changed', onSiteChanged as EventListener)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (import.meta.client) {
+    window.removeEventListener('pf-site-changed', onSiteChanged as EventListener)
   }
 })
 
@@ -804,6 +1059,7 @@ async function saveSchedule() {
   scheduleError.value = ''
   try {
     const body: any = {
+      siteId: concreteSiteId.value || undefined,
       clientBookingEnabled: clientBookingEnabled.value && scheduleSlots.value.length > 0,
       slotDurationMinutes: slotDuration.value,
       slots: scheduleSlots.value,
@@ -837,11 +1093,11 @@ async function addVacation() {
   try {
     await $fetch('/api/vet/vacations', {
       method: 'POST',
-      body: { startsOn: vacStart.value, endsOn: vacEnd.value },
+      body: { startsOn: vacStart.value, endsOn: vacEnd.value, siteId: concreteSiteId.value || undefined },
     })
     vacStart.value = ''
     vacEnd.value = ''
-    const vacRes: any = await $fetch('/api/vet/vacations')
+    const vacRes: any = await $fetch(withSiteQuery('/api/vet/vacations', concreteSiteId.value))
     vacations.value = vacRes.data ?? vacRes ?? []
     vacationsConfigured.value = true
   } catch (e: any) {
@@ -1036,6 +1292,35 @@ async function disable2FA() {
 }
 .pro-settings-card {
   margin-bottom: 1.5rem;
+}
+
+.settings-sites-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+.settings-sites-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--pf-vet-border);
+}
+.settings-sites-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.settings-sites-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.settings-sites-create {
+  margin-top: 0.75rem;
 }
 
 .pro-field-spaced {

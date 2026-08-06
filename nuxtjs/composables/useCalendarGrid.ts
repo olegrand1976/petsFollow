@@ -22,6 +22,8 @@ export type CalendarVisit = {
   visitTypeId?: string
   visitTypeName?: string
   visitTypeColor?: string
+  siteId?: string
+  siteName?: string
 }
 
 /**
@@ -53,6 +55,7 @@ export function calendarChipTooltip(
   t: (key: string) => string,
 ): string {
   const parts: string[] = []
+  if (v.siteName) parts.push(v.siteName)
   if (v.waitingRoomAt) parts.push(t('calendar.waitingRoomTooltip'))
   if (v.preconsultAlert === 'urgent') parts.push(t('calendar.preconsultUrgentTooltip'))
   else if (v.preconsultStatus === 'submitted') parts.push(t('calendar.preconsultAnsweredTooltip'))

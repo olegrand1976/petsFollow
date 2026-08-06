@@ -25,6 +25,26 @@
         class="pro-topbar__practice"
         data-testid="pro-topbar-practice"
       >{{ practiceName }}</span>
+      <label
+        v-if="showSiteSwitcher"
+        class="pro-topbar__site"
+        data-testid="pro-site-switcher"
+      >
+        <select
+          class="pro-topbar__site-select"
+          :value="effectiveSiteId"
+          :aria-label="$t('sites.switcherLabel')"
+          data-testid="pro-site-select"
+          @change="onSiteChange"
+        >
+          <option
+            v-for="s in sites"
+            :key="s.id"
+            :value="s.id"
+          >{{ s.name }}</option>
+          <option :value="SITE_ALL">{{ $t('sites.allSites') }}</option>
+        </select>
+      </label>
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
@@ -181,6 +201,25 @@ const props = withDefaults(
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser } = useProUser()
+const {
+  SITE_ALL,
+  sites,
+  multiSite,
+  sitesUiEnabled,
+  effectiveSiteId,
+  initFromStorage,
+  setSiteId,
+} = usePracticeSites()
+const showSiteSwitcher = computed(
+  () => sitesUiEnabled.value && isPracticeStaffRole(user.value?.role) && multiSite.value,
+)
+function onSiteChange(ev: Event) {
+  const v = (ev.target as HTMLSelectElement)?.value || ''
+  setSiteId(v)
+  if (import.meta.client) {
+    window.dispatchEvent(new CustomEvent('pf-site-changed', { detail: { siteId: v } }))
+  }
+}
 const { isStaging } = useAppEnv()
 const { captureOriginPage } = useSupportDiagnostics()
 const desk = useDeskSession()
@@ -227,9 +266,11 @@ const switchableProfiles = computed(() => {
 })
 
 onMounted(async () => {
+  initFromStorage()
   document.addEventListener('click', onDocClick)
   try {
     await fetchUser()
+    initFromStorage()
   } catch { /* 401 handled by middleware */ }
   void loadProfiles()
   // Idle/bootstrap owned by layout — topbar only renders switcher.

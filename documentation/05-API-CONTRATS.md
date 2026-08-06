@@ -18,7 +18,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Auth protégé | `GET/POST /auth/2fa/*` |
 | Me | `GET/PATCH /me`, avatar, password, locale, vets, household, discovery, device-tokens |
 | Véto | `/clients`, `/vet/*` (profile, availability messagerie, overview, link-requests, prospects, commissions, prefs) |
-| Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`), `GET/PUT /visits/{id}/preconsult` |
+| Calendrier RDV | `GET/PUT /vet/schedule?siteId=`, `GET/POST /vet/sites` (+ `PATCH` / `deactivate`), `GET/POST/DELETE /vet/vacations?siteId=`, `GET /vet/calendar?siteId=` (`all` = agrégat), `GET /practices/{id}/availability?siteId=` (+ liste `sites` si multi), `GET/POST /pets/{id}/visits` (body `siteId`), `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`), `GET/PUT /visits/{id}/preconsult` |
 | Pets / FR / poids / tension / labos | `/pets`, heartrate sessions, `GET/POST /pets/{id}/weights`, `GET/POST /pets/{id}/blood-pressure`, `GET/POST/PATCH/DELETE /pets/{id}/lab-panels`, `GET …/lab-analytes/{code}/trend`, timeline, photo, care-reminders, visits, horse-* — [41](41-TENSION-LABOS.md) |
 | Messaging | `/messaging/threads…` |
 | Billing | `GET /billing/plans` (monthly / annual / triennial), webhook Stripe, checkout/portal pet ; `/billing/addons` + `my-addons` = **legacy** (plus vendus, entitlements existants) |

@@ -4087,6 +4087,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Enregistrer'**
   String get bloodPressureSave;
+
+  /// Book visit: pick practice site when multi-site
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un site'**
+  String get calendarSelectSite;
 }
 
 class _AppLocalizationsDelegate

@@ -252,6 +252,7 @@ const route = useRoute()
 const { t, locale } = useI18n()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
+const { withSiteQuery, initFromStorage } = usePracticeSites()
 const activeConsult = useActiveConsultation()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
@@ -410,6 +411,7 @@ async function load() {
   loading.value = true
   loadError.value = ''
   try {
+    initFromStorage()
     const params = new URLSearchParams()
     if (query.value.trim()) params.set('q', query.value.trim())
     if (statusFilter.value) params.set('status', statusFilter.value)
@@ -419,7 +421,8 @@ async function load() {
     if (to) params.set('to', to)
     if (audioOnly.value) params.set('hasAudio', 'true')
     const qs = params.toString()
-    const res: any = await $fetch(`/api/vet/consultations${qs ? `?${qs}` : ''}`)
+    const base = `/api/vet/consultations${qs ? `?${qs}` : ''}`
+    const res: any = await $fetch(withSiteQuery(base))
     const list = (res?.data ?? res) as ConsultationRow[]
     rows.value = Array.isArray(list) ? list : []
     await loadStaleDafDrafts(rows.value.map(r => r.id).filter(Boolean))
@@ -535,6 +538,9 @@ function openReport(row: ConsultationRow) {
 }
 
 onMounted(async () => {
+  if (import.meta.client) {
+    window.addEventListener('pf-site-changed', onSiteChanged as EventListener)
+  }
   if (await redirectVisitQuery()) {
     await load()
     return
@@ -542,9 +548,16 @@ onMounted(async () => {
   await load()
 })
 onBeforeUnmount(() => {
+  if (import.meta.client) {
+    window.removeEventListener('pf-site-changed', onSiteChanged as EventListener)
+  }
   revokeAudioUrl()
   if (debounceTimer) clearTimeout(debounceTimer)
 })
+
+function onSiteChanged() {
+  void load()
+}
 </script>
 
 <style scoped>

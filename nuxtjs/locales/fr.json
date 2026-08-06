@@ -2889,7 +2889,9 @@
     "reportDiscardEdits": "Annuler les modifications",
     "reportStatusFinal": "Finalisé",
     "reportTargetLangUk": "Ukrainien",
-    "reportTargetLangRu": "Russe"
+    "reportTargetLangRu": "Russe",
+    "columnSite": "Site",
+    "creatingOnSite": "Création sur le site : {name} (vue « Tous les sites »)."
   },
   "commissions": {
     "title": "Mes rétributions",
@@ -4455,5 +4457,29 @@
         "desc": "Le cabinet active Research ; les agrégats anonymes alimentent l’observatoire."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Site",
+    "allSites": "Tous les sites",
+    "settingsTitle": "Lieux (sites)",
+    "settingsHint": "Gérez les lieux du cabinet. L’agenda et les créneaux client sont configurés par site.",
+    "addSite": "Ajouter un site",
+    "name": "Nom du site",
+    "city": "Ville (optionnel)",
+    "create": "Créer",
+    "deactivate": "Désactiver",
+    "reactivate": "Réactiver",
+    "makePrimary": "Définir comme principal",
+    "primary": "Principal",
+    "inactive": "Inactif",
+    "empty": "Aucun site.",
+    "loadFailed": "Impossible de charger les sites.",
+    "actionFailed": "Action impossible sur ce site.",
+    "created": "Site créé.",
+    "deactivated": "Site désactivé.",
+    "reactivated": "Site réactivé.",
+    "primaryUpdated": "Site principal mis à jour.",
+    "devBadge": "dev",
+    "editingSite": "Édition agenda / créneaux : {name} (vue « Tous les sites »)."
   }
 }

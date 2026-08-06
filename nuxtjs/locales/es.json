@@ -3365,7 +3365,9 @@
     "reportReferenceOn": "Marcada como consulta de referencia",
     "reportReferenceOff": "Retirada de consultas de referencia",
     "reportTargetLangUk": "Ucraniano",
-    "reportTargetLangRu": "Ruso"
+    "reportTargetLangRu": "Ruso",
+    "columnSite": "Sede",
+    "creatingOnSite": "Creando en la sede: {name} (vista Todas las sedes)."
   },
   "manager": {
     "dashboard": {
@@ -4455,5 +4457,29 @@
         "desc": "La clínica activa Research; los agregados anónimos alimentan el observatorio."
       }
     }
+  },
+  "sites": {
+    "switcherLabel": "Sede",
+    "allSites": "Todas las sedes",
+    "settingsTitle": "Ubicaciones (sedes)",
+    "settingsHint": "Gestione las sedes de la clínica. La agenda y las franjas de reserva se configuran por sede.",
+    "addSite": "Añadir sede",
+    "name": "Nombre de la sede",
+    "city": "Ciudad (opcional)",
+    "create": "Crear",
+    "deactivate": "Desactivar",
+    "reactivate": "Reactivar",
+    "makePrimary": "Definir como principal",
+    "primary": "Principal",
+    "inactive": "Inactivo",
+    "empty": "Ninguna sede.",
+    "loadFailed": "No se pudieron cargar las sedes.",
+    "actionFailed": "No se pudo actualizar esta sede.",
+    "created": "Sede creada.",
+    "deactivated": "Sede desactivada.",
+    "reactivated": "Sede reactivada.",
+    "primaryUpdated": "Sede principal actualizada.",
+    "devBadge": "dev",
+    "editingSite": "Editando agenda / franjas de: {name} (vista Todas las sedes)."
   }
 }

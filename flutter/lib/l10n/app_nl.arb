@@ -809,5 +809,9 @@
   "bpMethodInvasive": "Invasief",
   "bpSiteLabel": "Meetplaats (optioneel)",
   "bpCommentLabel": "Opmerking (optioneel)",
-  "bloodPressureSave": "Opslaan"
+  "bloodPressureSave": "Opslaan",
+  "calendarSelectSite": "Kies een site",
+  "@calendarSelectSite": {
+    "description": "Book visit: pick practice site when multi-site"
+  }
 }

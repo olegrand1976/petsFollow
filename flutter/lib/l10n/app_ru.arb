@@ -662,5 +662,9 @@
   "bpMethodInvasive": "Инвазивный",
   "bpSiteLabel": "Место (необязательно)",
   "bpCommentLabel": "Комментарий (необязательно)",
-  "bloodPressureSave": "Сохранить"
+  "bloodPressureSave": "Сохранить",
+  "calendarSelectSite": "Выберите площадку",
+  "@calendarSelectSite": {
+    "description": "Book visit: pick practice site when multi-site"
+  }
 }
