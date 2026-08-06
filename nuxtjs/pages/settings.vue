@@ -173,7 +173,7 @@
         v-if="canManageCalendar"
         :title="$t('settings.calendar.title')"
         :description="$t('settings.sections.schedule.description')"
-        :open="true"
+        :open="calendarFirstOpen === 'schedule'"
         data-testid="settings-calendar"
       >
         <p
@@ -182,9 +182,6 @@
           role="status"
         >
           {{ $t('sites.editingSite', { name: concreteSiteName }) }}
-        </p>
-        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
-          {{ $t('settings.calendar.vacationsReminder') }}
         </p>
         <div class="pro-field pro-field-spaced">
           <label class="pro-label" for="slot-duration">{{ $t('settings.calendar.duration') }}</label>
@@ -221,8 +218,12 @@
         v-if="canManageCalendar"
         :title="$t('settings.calendar.vacationsTitle')"
         :description="$t('settings.sections.vacations.description')"
+        :open="!vacationsConfigured"
         data-testid="settings-vacations"
       >
+        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
+          {{ $t('settings.calendar.vacationsReminder') }}
+        </p>
         <label class="pro-checkbox-row">
           <input v-model="noVacationsThisYear" type="checkbox">
           <span>{{ $t('settings.calendar.noVacations') }}</span>
@@ -375,7 +376,6 @@
       <ProAccordionSection
         :title="$t('settings.language.title')"
         :description="$t('settings.sections.language.description')"
-        :open="true"
         data-testid="settings-language"
       >
         <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">

@@ -48,7 +48,13 @@ describe('ProAccordionSection', () => {
 
   it('applies initial open state on mount without locking the toggle', () => {
     expect(src).toContain('onMounted')
+    expect(src).toContain('ensureOpen')
+    expect(src).toContain('watch(() => props.open, ensureOpen)')
     expect(src).toContain('detailsEl.value.open = true')
+  })
+
+  it('uses an h2 title for heading hierarchy', () => {
+    expect(src).toContain('<h2 class="pro-accordion__title">')
   })
 })
 
