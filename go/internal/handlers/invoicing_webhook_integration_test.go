@@ -441,7 +441,7 @@ func registerInvoicingPractice(t *testing.T, api *testAPI, prefix string) (acces
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet WH SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2
 		WHERE id = $1`, practiceID, email); err != nil {

@@ -51,7 +51,7 @@ func TestInvoicingConnectAndSendMock(t *testing.T) {
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet Inv SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2
 		WHERE id = $1`, practiceID, email); err != nil {
@@ -694,7 +694,7 @@ func TestInvoicingGetConnectionHidesPartyIDWithoutSettings(t *testing.T) {
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet Party SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2
 		WHERE id = $1`, practiceID, email); err != nil {
@@ -992,7 +992,7 @@ func TestInvoicingAdminMarkPartner(t *testing.T) {
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet Admin MP SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2
 		WHERE id = $1`, practiceID, email); err != nil {
@@ -1077,7 +1077,7 @@ func TestInvoicingAdminMarkPartnerNotEligible(t *testing.T) {
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet Admin NE SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2
 		WHERE id = $1`, practiceID, email); err != nil {
@@ -1143,7 +1143,7 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.practices
 		SET company_legal_name = 'Cabinet SaaS SPRL',
-		    vat_number = 'BE0123456789',
+		    vat_number = 'BE1000000021',
 		    company_number = '0123456789',
 		    contact_email = $2,
 		    address_line1 = 'Rue Demo 1',

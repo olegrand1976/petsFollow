@@ -79,6 +79,12 @@ func NewService(store Store, gw Gateway, cfg config.Config) *Service {
 	return &Service{store: store, gw: gw, cfg: cfg}
 }
 
+// TestSetSecretsKey updates BILLIT_SECRETS_KEY (integration tests — key rotation).
+func (s *Service) TestSetSecretsKey(key string) { s.cfg.BillitSecretsKey = key }
+
+// TestSetSecretsBackend updates BILLIT_SECRETS_BACKEND (integration tests).
+func (s *Service) TestSetSecretsBackend(backend string) { s.cfg.BillitSecretsBackend = backend }
+
 func (s *Service) Enabled() bool { return s.cfg.BillitEnabled }
 
 func (s *Service) GetConnection(ctx context.Context, practiceID string) (Connection, error) {
