@@ -128,7 +128,8 @@ func TestVisitOverlapIsPerSite(t *testing.T) {
 	pet, _ := pets[0].(map[string]any)
 	petID, _ := pet["id"].(string)
 
-	slot := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Hour)
+	// Far-future unique slot avoids collisions with leftover seed/shared-DB visits.
+	slot := time.Now().UTC().Add(90 * 24 * time.Hour).Truncate(time.Minute).Add(time.Duration(time.Now().UnixNano()%50) * time.Minute)
 	body := map[string]any{
 		"confirmDirect":   true,
 		"scheduledAt":     slot.Format(time.RFC3339),

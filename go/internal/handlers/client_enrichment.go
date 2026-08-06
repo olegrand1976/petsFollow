@@ -599,7 +599,14 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resolvedSite, err := a.store.ResolveBookingSiteID(r.Context(), pet.PracticeID, req.SiteID)
+	// Client multi-site booking must pick a site (site_required). Pro/care_pro
+	// without siteId fall back to primary — desk/walk-in/tests stay compatible.
+	var resolvedSite string
+	if actsAsPro && strings.TrimSpace(req.SiteID) == "" {
+		resolvedSite, err = a.store.ResolveSiteID(r.Context(), pet.PracticeID, "", false)
+	} else {
+		resolvedSite, err = a.store.ResolveBookingSiteID(r.Context(), pet.PracticeID, req.SiteID)
+	}
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
 			code := "invalid_site"
