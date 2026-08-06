@@ -1011,7 +1011,7 @@
     "subtitle": "Emisión de facturas, notas de crédito y presupuestos (Peppol).",
     "underDevelopment": "En desarrollo",
     "wip": "Active la conexión Billit (mock en local) para crear facturas de prueba.",
-    "connectionTitle": "Conexión Billit",
+    "connectionTitle": "Conexión PEPPOL",
     "status": "Estado",
     "usage": "Documentos este mes: {used} / {max}",
     "activate": "Activar facturación",

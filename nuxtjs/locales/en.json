@@ -1011,7 +1011,7 @@
     "subtitle": "Issue invoices, credit notes and quotes (Peppol).",
     "underDevelopment": "Under development",
     "wip": "Activate the Billit connection (mock locally) to create and send test invoices.",
-    "connectionTitle": "Billit connection",
+    "connectionTitle": "PEPPOL connection",
     "status": "Status",
     "usage": "Documents this month: {used} / {max}",
     "activate": "Enable invoicing",

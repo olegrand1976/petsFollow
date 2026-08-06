@@ -1720,7 +1720,7 @@
     "subtitle": "Émission de factures, notes de crédit et devis (Peppol).",
     "underDevelopment": "En cours de développement",
     "wip": "Activez la connexion Billit (mode mock en local) pour créer et envoyer des factures de test.",
-    "connectionTitle": "Connexion Billit",
+    "connectionTitle": "Connexion PEPPOL",
     "status": "Statut",
     "usage": "Documents ce mois : {used} / {max}",
     "activate": "Activer la facturation",

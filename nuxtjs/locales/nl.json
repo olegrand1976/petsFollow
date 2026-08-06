@@ -1011,7 +1011,7 @@
     "subtitle": "Facturen, creditnota’s en offertes (Peppol).",
     "underDevelopment": "In ontwikkeling",
     "wip": "Activeer de Billit-verbinding (mock lokaal) om testfacturen te maken.",
-    "connectionTitle": "Billit-verbinding",
+    "connectionTitle": "PEPPOL-verbinding",
     "status": "Status",
     "usage": "Documenten deze maand: {used} / {max}",
     "activate": "Facturatie activeren",

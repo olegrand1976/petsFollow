@@ -1676,7 +1676,7 @@
     "subtitle": "Emissione di fatture, note di credito e preventivi (Peppol).",
     "underDevelopment": "In fase di sviluppo",
     "wip": "Attiva la connessione Billit (mock in locale) per creare fatture di test.",
-    "connectionTitle": "Connessione Billit",
+    "connectionTitle": "Connessione PEPPOL",
     "status": "Stato",
     "usage": "Documenti questo mese: {used} / {max}",
     "activate": "Attiva fatturazione",

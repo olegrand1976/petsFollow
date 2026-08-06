@@ -25,21 +25,9 @@
 
       <ProCard v-if="canManageBillit" class="pro-mb-lg" data-testid="invoicing-connection">
         <div class="invoicing-conn">
-          <div>
-            <h3 class="pro-mb-sm">{{ $t('invoicing.connectionTitle') }}</h3>
-            <p class="pro-hint">
-              {{ $t('invoicing.status') }}:
-              <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
-            </p>
-            <p v-if="connection?.billitPartyId" class="pro-hint">
-              PartyID: {{ connection.billitPartyId }}
-            </p>
-            <p class="pro-hint">
-              {{ $t('invoicing.usage', {
-                used: connection?.usageThisMonth ?? 0,
-                max: connection?.docsIncludedMonthly ?? 50,
-              }) }}
-            </p>
+          <div class="invoicing-conn__head">
+            <h3 class="invoicing-conn__title">{{ $t('invoicing.connectionTitle') }}</h3>
+            <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
           </div>
           <div class="invoicing-conn__actions">
             <ProButton
@@ -103,12 +91,13 @@
         </form>
       </ProCard>
       <ProCard v-else class="pro-mb-lg" data-testid="invoicing-connection-readonly">
-        <h3 class="pro-mb-sm">{{ $t('invoicing.connectionTitle') }}</h3>
-        <p class="pro-hint">
-          {{ $t('invoicing.status') }}:
-          <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
-        </p>
-        <p class="pro-hint">{{ $t('invoicing.connectRestricted') }}</p>
+        <div class="invoicing-conn">
+          <div class="invoicing-conn__head">
+            <h3 class="invoicing-conn__title">{{ $t('invoicing.connectionTitle') }}</h3>
+            <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
+            <span class="pro-hint">{{ $t('invoicing.connectRestricted') }}</span>
+          </div>
+        </div>
       </ProCard>
 
       <ProCard v-if="isActive && canWriteDocs" class="pro-mb-lg" data-testid="invoicing-create">
@@ -628,14 +617,27 @@ async function applyConsultationPrefill() {
 .invoicing-conn {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+}
+.invoicing-conn__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+}
+.invoicing-conn__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 .invoicing-conn__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
 }
 .invoicing-docs-head {
   display: flex;

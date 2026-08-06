@@ -1011,7 +1011,7 @@
     "subtitle": "Arved, kreeditarved ja pakkumised (Peppol).",
     "underDevelopment": "Arendamisel",
     "wip": "Aktiveerige Billit’i ühendus (mock kohalikult), et luua testarveid.",
-    "connectionTitle": "Billit’i ühendus",
+    "connectionTitle": "PEPPOL-ühendus",
     "status": "Olek",
     "usage": "Dokumendid sel kuul: {used} / {max}",
     "activate": "Aktiveeri arveldamine",
