@@ -213,6 +213,11 @@ func (s *Store) ListSiteSummaries(ctx context.Context, practiceID string) ([]Sit
 	return out, nil
 }
 
+// EnsurePrimarySiteTx creates a primary site inside an existing transaction (seed / provisioning).
+func EnsurePrimarySiteTx(ctx context.Context, tx pgx.Tx, practiceID string) (string, error) {
+	return insertPrimarySiteTx(ctx, tx, practiceID)
+}
+
 // EnsurePrimarySite creates a primary site from practice profile if missing (idempotent).
 func (s *Store) EnsurePrimarySite(ctx context.Context, practiceID string) (Site, error) {
 	if site, err := s.GetPrimarySite(ctx, practiceID); err == nil {

@@ -1177,6 +1177,10 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 		vetID, practiceID, p.availability, p.autoReply); err != nil {
 		return err
 	}
+	// Visits require site_id NOT NULL (000150) — create primary before any visit insert.
+	if _, err := store.EnsurePrimarySiteTx(ctx, tx, practiceID); err != nil {
+		return fmt.Errorf("primary site: %w", err)
+	}
 
 	registry := &ids{
 		practiceID: practiceID,

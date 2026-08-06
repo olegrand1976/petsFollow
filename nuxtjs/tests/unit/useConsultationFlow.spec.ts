@@ -15,11 +15,26 @@ vi.stubGlobal('computed', <T>(fn: () => T) => ({
   },
 }))
 vi.stubGlobal('useRuntimeConfig', () => ({ public: {} }))
+vi.stubGlobal('usePracticeSites', () => ({
+  concreteSiteId: { value: 'site-primary' },
+}))
 
 describe('useConsultationFlow discardIfUnsaved', () => {
   beforeEach(() => {
     fetchMock.mockReset()
     fetchMock.mockResolvedValue({})
+    vi.resetModules()
+    vi.stubGlobal('$fetch', fetchMock)
+    vi.stubGlobal('ref', <T>(v: T) => ({ value: v }))
+    vi.stubGlobal('computed', <T>(fn: () => T) => ({
+      get value() {
+        return fn()
+      },
+    }))
+    vi.stubGlobal('useRuntimeConfig', () => ({ public: {} }))
+    vi.stubGlobal('usePracticeSites', () => ({
+      concreteSiteId: { value: 'site-primary' },
+    }))
   })
 
   it('cancels an unsaved walk-in visit (orphan cleanup)', async () => {
