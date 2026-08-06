@@ -61,6 +61,9 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     await fillField(page, 'invoicing-cp-name', `Client E2E ${Date.now()}`)
     await page.getByTestId('invoicing-country').selectOption('BE')
     await fillField(page, 'invoicing-cp-vat', 'BE0123456789')
+    await fillField(page, 'invoicing-cp-street', 'Rue E2E 1')
+    await fillField(page, 'invoicing-cp-postal', '1000')
+    await fillField(page, 'invoicing-cp-city', 'Bruxelles')
     await fillField(page, 'invoicing-line-desc', 'Consultation E2E')
     await fillField(page, 'invoicing-line-amount', '42')
 
@@ -86,7 +89,9 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     expect(sent.status(), await sent.text()).toBe(200)
     const sentBody = await sent.json() as { data?: { status?: string }, status?: string }
     expect(sentBody.data?.status || sentBody.status).toBe('delivered')
-    await expect(page.getByTestId(`invoicing-doc-${docId}`)).toContainText('delivered')
+    // Status label is i18n (e.g. FR « Livrée ») — assert via API payload above + row still present.
+    await expect(page.getByTestId(`invoicing-doc-${docId}`)).toBeVisible()
+    await expect(page.getByTestId(`invoicing-send-${docId}`)).toHaveCount(0)
 
     const badIt = await page.request.post('/api/invoicing/documents', {
       data: {

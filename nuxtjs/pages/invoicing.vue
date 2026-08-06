@@ -5,33 +5,16 @@
       :subtitle="invoicingUiEnabled ? $t('invoicing.subtitle') : undefined"
     >
       <template #actions>
-        <ProBadge variant="warning" data-testid="invoicing-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
-      </template>
-    </ProPageHeader>
-
-    <ProCard v-if="!invoicingUiEnabled" data-testid="invoicing-under-development">
-      <ProEmptyState :title="$t('invoicing.underDevelopment')" />
-    </ProCard>
-
-    <template v-else>
-      <p v-if="error" class="pro-alert pro-mb-md" data-testid="invoicing-error">{{ error }}</p>
-      <p
-        v-if="prefillHint"
-        class="pro-hint pro-mb-md"
-        data-testid="invoicing-consultation-context"
-      >
-        {{ prefillHint }}
-      </p>
-
-      <ProCard v-if="canManageBillit" class="pro-mb-lg" data-testid="invoicing-connection">
-        <div class="invoicing-conn">
-          <div class="invoicing-conn__head">
-            <h3 class="invoicing-conn__title">{{ $t('invoicing.connectionTitle') }}</h3>
-            <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
-          </div>
-          <div class="invoicing-conn__actions">
+        <div
+          v-if="invoicingUiEnabled"
+          class="invoicing-conn"
+          :data-testid="canManageBillit ? 'invoicing-connection' : 'invoicing-connection-readonly'"
+        >
+          <span class="invoicing-conn__title">{{ $t('invoicing.connectionTitle') }}</span>
+          <ProBadge :variant="statusVariant">{{ connectionStatusLabel }}</ProBadge>
+          <template v-if="canManageBillit">
             <ProButton
-              v-if="!isActive"
+              v-if="!isActive && !pendingRegistration"
               variant="primary"
               test-id="invoicing-connect-start"
               :disabled="busy"
@@ -48,6 +31,15 @@
               {{ $t('invoicing.openReseller') }}
             </ProButton>
             <ProButton
+              v-if="pendingRegistration"
+              variant="primary"
+              test-id="invoicing-connect-start"
+              :disabled="busy"
+              @click="startConnect"
+            >
+              {{ $t('invoicing.complete') }}
+            </ProButton>
+            <ProButton
               v-if="isActive || pendingKyc"
               variant="secondary"
               test-id="invoicing-refresh"
@@ -56,22 +48,60 @@
             >
               {{ $t('invoicing.refresh') }}
             </ProButton>
-          </div>
+          </template>
+          <ProBadge
+            v-else
+            variant="neutral"
+            class="invoicing-conn__restricted"
+            :title="$t('invoicing.connectRestricted')"
+            :aria-label="$t('invoicing.connectRestricted')"
+          >
+            {{ $t('invoicing.connectReadonly') }}
+          </ProBadge>
         </div>
+        <ProBadge variant="warning" data-testid="invoicing-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
+      </template>
+    </ProPageHeader>
 
+    <ProCard v-if="!invoicingUiEnabled" data-testid="invoicing-under-development">
+      <ProEmptyState :title="$t('invoicing.underDevelopment')" />
+    </ProCard>
+
+    <template v-else>
+      <p v-if="error" class="pro-alert pro-mb-md" data-testid="invoicing-error">{{ error }}</p>
+      <p
+        v-if="secretsMismatch"
+        class="pro-alert pro-mb-md"
+        data-testid="invoicing-secrets-banner"
+      >
+        {{ $t('invoicing.secretsMismatchHint') }}
+        <ProButton
+          v-if="canManageBillit"
+          variant="secondary"
+          class="pro-mt-sm"
+          test-id="invoicing-reconnect"
+          :disabled="busy"
+          @click="startConnect"
+        >
+          {{ $t('invoicing.reconnect') }}
+        </ProButton>
+      </p>
+      <p
+        v-if="prefillHint"
+        class="pro-hint pro-mb-md"
+        data-testid="invoicing-consultation-context"
+      >
+        {{ prefillHint }}
+      </p>
+
+      <!-- Liaison compte (uniquement pendant le parcours d’activation) -->
+      <ProCard v-if="canManageBillit && showCompleteForm" class="pro-mb-lg">
         <form
-          v-if="showCompleteForm"
-          class="pro-form pro-mt-md"
+          class="pro-form"
           data-testid="invoicing-complete-form"
           @submit.prevent="completeConnect"
         >
           <p class="pro-hint pro-mb-md">{{ $t('invoicing.completeHint') }}</p>
-          <ProInput
-            v-model="completeForm.state"
-            test-id="invoicing-complete-state"
-            :label="$t('invoicing.state')"
-            required
-          />
           <ProInput
             v-model="completeForm.partyId"
             test-id="invoicing-complete-party"
@@ -90,16 +120,8 @@
           </ProButton>
         </form>
       </ProCard>
-      <ProCard v-else class="pro-mb-lg" data-testid="invoicing-connection-readonly">
-        <div class="invoicing-conn">
-          <div class="invoicing-conn__head">
-            <h3 class="invoicing-conn__title">{{ $t('invoicing.connectionTitle') }}</h3>
-            <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
-            <span class="pro-hint">{{ $t('invoicing.connectRestricted') }}</span>
-          </div>
-        </div>
-      </ProCard>
 
+      <!-- Zone 2 : création -->
       <ProCard v-if="isActive && canWriteDocs" class="pro-mb-lg" data-testid="invoicing-create">
         <h3 class="pro-mb-md">{{ $t('invoicing.newDocument') }}</h3>
         <form class="pro-form" data-testid="invoicing-create-form" @submit.prevent="createDocument">
@@ -118,6 +140,7 @@
               class="pro-input"
               data-testid="invoicing-related-invoice"
               required
+              @change="onRelatedInvoiceChange"
             >
               <option value="" disabled>{{ $t('invoicing.relatedInvoicePlaceholder') }}</option>
               <option
@@ -128,7 +151,7 @@
                 {{ inv.label }}
               </option>
             </select>
-            <p v-if="!invoiceOptions.length" class="pro-hint">{{ $t('invoicing.relatedInvoiceEmpty') }}</p>
+            <p v-if="!invoiceOptions.length" class="pro-hint">{{ $t('invoicing.relatedInvoiceEmptyBillit') }}</p>
           </label>
           <ProInput
             v-model="docForm.name"
@@ -198,9 +221,24 @@
             :label="$t('invoicing.counterparty.taxId')"
             :required="!docForm.vatNumber"
           />
-          <ProInput v-model="docForm.street" :label="$t('invoicing.counterparty.street')" />
-          <ProInput v-model="docForm.postal" :label="$t('invoicing.counterparty.postal')" />
-          <ProInput v-model="docForm.city" :label="$t('invoicing.counterparty.city')" />
+          <ProInput
+            v-model="docForm.street"
+            test-id="invoicing-cp-street"
+            :label="$t('invoicing.counterparty.street')"
+            :required="docForm.country === 'BE'"
+          />
+          <ProInput
+            v-model="docForm.postal"
+            test-id="invoicing-cp-postal"
+            :label="$t('invoicing.counterparty.postal')"
+            :required="docForm.country === 'BE'"
+          />
+          <ProInput
+            v-model="docForm.city"
+            test-id="invoicing-cp-city"
+            :label="$t('invoicing.counterparty.city')"
+            :required="docForm.country === 'BE'"
+          />
           <ProInput
             v-model="docForm.lineDesc"
             test-id="invoicing-line-desc"
@@ -220,25 +258,41 @@
         </form>
       </ProCard>
 
+      <!-- Zone 3 : liste -->
       <ProCard v-if="isActive && canWriteDocs" data-testid="invoicing-documents">
         <div class="invoicing-docs-head pro-mb-md">
           <h3>{{ $t('invoicing.documentsTitle') }}</h3>
+          <div class="invoicing-filters" data-testid="invoicing-filters">
+            <button
+              v-for="f in statusFilters"
+              :key="f.id"
+              type="button"
+              class="invoicing-filter"
+              :class="{ 'invoicing-filter--active': docFilter === f.id }"
+              :data-testid="`invoicing-filter-${f.id}`"
+              @click="docFilter = f.id"
+            >
+              {{ f.label }}
+            </button>
+          </div>
         </div>
-        <ProEmptyState v-if="!documents.length" :title="$t('invoicing.emptyDocs')" />
+        <ProEmptyState v-if="!filteredDocuments.length" :title="$t('invoicing.emptyDocs')" />
         <ProTable v-else>
           <thead>
             <tr>
               <th>{{ $t('invoicing.colType') }}</th>
+              <th>{{ $t('invoicing.colNumber') }}</th>
               <th>{{ $t('invoicing.colStatus') }}</th>
               <th>{{ $t('invoicing.colTotal') }}</th>
               <th />
             </tr>
           </thead>
           <tbody>
-            <tr v-for="doc in documents" :key="doc.id" :data-testid="`invoicing-doc-${doc.id}`">
-              <td>{{ doc.type }}</td>
+            <tr v-for="doc in filteredDocuments" :key="doc.id" :data-testid="`invoicing-doc-${doc.id}`">
+              <td>{{ typeLabel(doc.type) }}</td>
+              <td>{{ doc.number || doc.counterparty?.name || doc.id.slice(0, 8) }}</td>
               <td>
-                <ProBadge variant="neutral">{{ doc.status }}</ProBadge>
+                <ProBadge :variant="docStatusVariant(doc.status)">{{ statusLabel(doc.status) }}</ProBadge>
                 <span v-if="doc.peppolStatus" class="pro-hint"> · {{ doc.peppolStatus }}</span>
               </td>
               <td>{{ formatMoney(doc.totalInclCents) }}</td>
@@ -258,7 +312,7 @@
         </ProTable>
       </ProCard>
 
-      <ProCard v-else>
+      <ProCard v-else-if="!isActive || !canWriteDocs">
         <p class="pro-hint" data-testid="invoicing-wip">{{ $t('invoicing.wip') }}</p>
       </ProCard>
     </template>
@@ -296,7 +350,21 @@ type Document = {
   status: string
   peppolStatus?: string
   totalInclCents: number
-  counterparty?: { name?: string }
+  billitOrderId?: string
+  counterparty?: {
+    name?: string
+    country?: string
+    vatNumber?: string
+    companyNumber?: string
+    street?: string
+    city?: string
+    postal?: string
+    siret?: string
+    siren?: string
+    codiceDestinatario?: string
+    pec?: string
+    taxId?: string
+  }
   number?: string
 }
 
@@ -309,9 +377,11 @@ const connection = ref<Connection | null>(null)
 const documents = ref<Document[]>([])
 const busy = ref(false)
 const error = ref('')
+const secretsMismatch = ref(false)
 const resellerUrl = ref('')
 const showCompleteForm = ref(false)
 const prefillHint = ref('')
+const docFilter = ref<'all' | 'draft' | 'sending' | 'delivered'>('all')
 const completeForm = reactive({
   state: '',
   partyId: '',
@@ -341,11 +411,6 @@ const queryDafId = computed(() => String(route.query.dafId || ''))
 const queryVisitId = computed(() => String(route.query.visitId || ''))
 const queryMode = computed(() => String(route.query.mode || ''))
 
-function applyLineDescDefaultIfEmpty() {
-  if (queryClientId.value || queryDafId.value || queryVisitId.value) return
-  if (!docForm.lineDesc) docForm.lineDesc = 'Consultation'
-}
-
 const isActive = computed(() => connection.value?.status === 'active')
 const pendingRegistration = computed(() => connection.value?.status === 'pending_registration')
 const pendingKyc = computed(() => connection.value?.status === 'pending_kyc')
@@ -360,14 +425,54 @@ const statusVariant = computed(() => {
   }
 })
 
+const connectionStatusLabel = computed(() => {
+  const s = connection.value?.status
+  if (!s) return '…'
+  const key = `invoicing.connStatus.${s}`
+  const translated = t(key)
+  return translated === key ? s : translated
+})
+
+const statusFilters = computed(() => ([
+  { id: 'all' as const, label: t('invoicing.filterAll') },
+  { id: 'draft' as const, label: t('invoicing.filterDraft') },
+  { id: 'sending' as const, label: t('invoicing.filterSending') },
+  { id: 'delivered' as const, label: t('invoicing.filterDelivered') },
+]))
+
+const filteredDocuments = computed(() => {
+  if (docFilter.value === 'all') return documents.value
+  if (docFilter.value === 'draft') {
+    return documents.value.filter((d) => d.status === 'draft' || d.status === 'rejected')
+  }
+  if (docFilter.value === 'sending') {
+    return documents.value.filter((d) => d.status === 'sending' || d.status === 'issued')
+  }
+  return documents.value.filter((d) => d.status === 'delivered')
+})
+
 function unwrap<T>(res: any): T {
   return (res?.data ?? res) as T
 }
 
+function formatApiError(e: any): string {
+  const err = e?.data?.error || e?.data?.data?.error
+  const msgKey = err?.msgKey as string | undefined
+  const message = err?.message || e?.message
+  const gateway = err?.details?.gateway as string | undefined
+  if (msgKey === 'invoicing_secrets_mismatch') {
+    secretsMismatch.value = true
+  }
+  if (msgKey && t(`errors.${msgKey}`) !== `errors.${msgKey}`) {
+    const base = t(`errors.${msgKey}`)
+    return gateway ? `${base} (${gateway})` : base
+  }
+  if (message) return gateway ? `${message} (${gateway})` : message
+  return t('invoicing.errorGeneric')
+}
+
 function canSend(doc: Document) {
-  // Proforma: émission locale (issued) sans Peppol — une seule fois depuis draft.
   if (doc.type === 'proforma') return doc.status === 'draft'
-  // Invoice / credit note: brouillon ou rejeté (rejeu Peppol) — pas issued.
   return doc.status === 'draft' || doc.status === 'rejected'
 }
 
@@ -375,11 +480,37 @@ function formatMoney(cents: number) {
   return `${(cents / 100).toFixed(2)} €`
 }
 
+function typeLabel(type: string) {
+  switch (type) {
+    case 'invoice': return t('invoicing.typeInvoice')
+    case 'credit_note': return t('invoicing.typeCreditNote')
+    case 'proforma': return t('invoicing.typeProforma')
+    default: return type
+  }
+}
+
+function statusLabel(status: string) {
+  const key = `invoicing.docStatus.${status}`
+  const translated = t(key)
+  return translated === key ? status : translated
+}
+
+function docStatusVariant(status: string) {
+  switch (status) {
+    case 'delivered': return 'success'
+    case 'sending':
+    case 'issued': return 'warning'
+    case 'rejected': return 'danger'
+    default: return 'neutral'
+  }
+}
+
 const invoiceOptions = computed(() =>
   documents.value
     .filter((d) =>
       d.type === 'invoice'
-      && ['issued', 'delivered', 'rejected'].includes(d.status),
+      && ['issued', 'delivered', 'rejected'].includes(d.status)
+      && !!(d.billitOrderId || d.number),
     )
     .map((d) => ({
       id: d.id,
@@ -387,10 +518,28 @@ const invoiceOptions = computed(() =>
         d.number || d.id.slice(0, 8),
         d.counterparty?.name,
         formatMoney(d.totalInclCents),
-        d.status,
+        statusLabel(d.status),
       ].filter(Boolean).join(' · '),
     })),
 )
+
+function onRelatedInvoiceChange() {
+  const inv = documents.value.find((d) => d.id === docForm.relatedDocumentId)
+  if (!inv?.counterparty) return
+  const cp = inv.counterparty
+  if (cp.name) docForm.name = cp.name
+  if (cp.country) docForm.country = cp.country
+  if (cp.vatNumber) docForm.vatNumber = cp.vatNumber
+  if (cp.companyNumber) docForm.companyNumber = cp.companyNumber
+  if (cp.street) docForm.street = cp.street
+  if (cp.city) docForm.city = cp.city
+  if (cp.postal) docForm.postal = cp.postal
+  if (cp.siret) docForm.siret = cp.siret
+  if (cp.siren) docForm.siren = cp.siren
+  if (cp.codiceDestinatario) docForm.codiceDestinatario = cp.codiceDestinatario
+  if (cp.pec) docForm.pec = cp.pec
+  if (cp.taxId) docForm.taxId = cp.taxId
+}
 
 async function loadConnection() {
   const res = await $fetch('/api/invoicing/connection')
@@ -409,6 +558,7 @@ async function loadDocuments() {
 async function startConnect() {
   busy.value = true
   error.value = ''
+  secretsMismatch.value = false
   try {
     const res = await $fetch('/api/invoicing/connect/start', { method: 'POST' })
     const data = unwrap<{ resellerUrl: string, state: string }>(res)
@@ -417,7 +567,7 @@ async function startConnect() {
     showCompleteForm.value = true
     await loadConnection()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   } finally {
     busy.value = false
   }
@@ -432,6 +582,7 @@ function openReseller() {
 async function completeConnect() {
   busy.value = true
   error.value = ''
+  secretsMismatch.value = false
   try {
     const res = await $fetch('/api/invoicing/connect/complete', {
       method: 'POST',
@@ -441,7 +592,7 @@ async function completeConnect() {
     showCompleteForm.value = false
     await loadDocuments()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   } finally {
     busy.value = false
   }
@@ -455,7 +606,7 @@ async function refreshConnection() {
     connection.value = unwrap<Connection>(res)
     await loadDocuments()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   } finally {
     busy.value = false
   }
@@ -474,7 +625,11 @@ async function createDocument() {
       error.value = t('invoicing.relatedInvoiceRequired')
       return
     }
-    const vatPercent = docForm.country === 'IT' ? 22 : docForm.country === 'ES' ? 21 : 21
+    if (docForm.country === 'BE' && (!docForm.street || !docForm.city || !docForm.postal)) {
+      error.value = t('invoicing.beAddressRequired')
+      return
+    }
+    const vatPercent = docForm.country === 'IT' ? 22 : 21
     await $fetch('/api/invoicing/documents', {
       method: 'POST',
       body: {
@@ -509,7 +664,7 @@ async function createDocument() {
     docForm.relatedDocumentId = ''
     await loadDocuments()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   } finally {
     busy.value = false
   }
@@ -518,12 +673,13 @@ async function createDocument() {
 async function sendDoc(id: string) {
   busy.value = true
   error.value = ''
+  secretsMismatch.value = false
   try {
     await $fetch(`/api/invoicing/documents/${id}/send`, { method: 'POST' })
     await loadDocuments()
     await loadConnection()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   } finally {
     busy.value = false
   }
@@ -535,9 +691,8 @@ onMounted(async () => {
     await loadConnection()
     await loadDocuments()
     await applyConsultationPrefill()
-    applyLineDescDefaultIfEmpty()
   } catch (e: any) {
-    error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
+    error.value = formatApiError(e)
   }
 })
 
@@ -574,7 +729,6 @@ async function applyConsultationPrefill() {
           .slice(0, 200)
         hints.push(t('invoicing.prefillDafLines', { n: items.length }))
 
-        // Mock Billit S5: sum qty × sell price from pharmacy prices (when set).
         let totalExclCents = 0
         let priced = 0
         for (const it of items) {
@@ -608,7 +762,6 @@ async function applyConsultationPrefill() {
     }
   }
 
-  if (!docForm.lineDesc) docForm.lineDesc = t('invoicing.lineDescription')
   prefillHint.value = hints.filter(Boolean).join(' · ')
 }
 </script>
@@ -617,33 +770,45 @@ async function applyConsultationPrefill() {
 .invoicing-conn {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  justify-content: space-between;
-  align-items: center;
-}
-.invoicing-conn__head {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
   min-width: 0;
 }
 .invoicing-conn__title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
+  white-space: nowrap;
 }
-.invoicing-conn__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+.invoicing-conn__restricted {
+  cursor: help;
 }
 .invoicing-docs-head {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
+.invoicing-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.invoicing-filter {
+  border: 1px solid var(--pf-vet-border);
+  background: var(--pf-vet-surface);
+  color: var(--pf-vet-text, inherit);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.invoicing-filter--active {
+  border-color: var(--pf-vet-accent);
+  color: var(--pf-vet-accent);
+  font-weight: 600;
+}
 .pro-mt-md { margin-top: 1rem; }
+.pro-mt-sm { margin-top: 0.5rem; }
 </style>
