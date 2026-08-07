@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { calendarChipTooltip, visitConsultationCta, type CalendarVisit } from '../../composables/useCalendarGrid'
+import {
+  calendarChipTooltip,
+  canShowCalendarChipDeskActions,
+  visitConsultationCta,
+  type CalendarVisit,
+} from '../../composables/useCalendarGrid'
 
 describe('calendarChipTooltip', () => {
   const t = (key: string) => key
@@ -51,6 +56,19 @@ describe('calendarChipTooltip', () => {
     const tip = calendarChipTooltip(v, t)
     expect(tip).toContain('0470 99 88 77')
     expect(tip.startsWith('Primary')).toBe(true)
+  })
+})
+
+describe('canShowCalendarChipDeskActions', () => {
+  it('shows desk actions for timed RDV still active', () => {
+    expect(canShowCalendarChipDeskActions({ status: 'confirmed' })).toBe(true)
+    expect(canShowCalendarChipDeskActions({ status: 'requested' })).toBe(true)
+  })
+
+  it('hides desk actions for walk-in sessions and terminal statuses', () => {
+    expect(canShowCalendarChipDeskActions({ status: 'confirmed', consultationSession: true })).toBe(false)
+    expect(canShowCalendarChipDeskActions({ status: 'cancelled' })).toBe(false)
+    expect(canShowCalendarChipDeskActions({ status: 'done' })).toBe(false)
   })
 })
 

@@ -188,7 +188,9 @@
         :columns="dayColumns"
         :resource-mode="dayResourceMode"
         :focus-visit-id="focusVisitId"
+        :busy-id="busyId"
         @select-visit="openVisitDetail"
+        @visit-action="onChipVisitAction"
       />
       <ProCalendarWeekGrid
         v-else-if="viewMode === 'week'"
@@ -196,8 +198,10 @@
         :visits="visits"
         :vacations="vacations"
         :focus-visit-id="focusVisitId"
+        :busy-id="busyId"
         :show-site-label="multiSite && isAggregatedView"
         @select-visit="openVisitDetail"
+        @visit-action="onChipVisitAction"
       />
       <ProCalendarMonthGrid
         v-else
@@ -205,8 +209,10 @@
         :visits="visits"
         :vacations="vacations"
         :focus-visit-id="focusVisitId"
+        :busy-id="busyId"
         :show-site-label="multiSite && isAggregatedView"
         @select-visit="openVisitDetail"
+        @visit-action="onChipVisitAction"
         @select-day="zoomToDay"
       />
     </ProCard>
@@ -603,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
+import type { CalendarDeskAction, CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
 import { visitConsultationCta } from '~/composables/useCalendarGrid'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 import {
@@ -1144,18 +1150,19 @@ async function act(id: string, action: string) {
     }
     const res: any = await $fetch(`/api/visits/${id}`, { method: 'PATCH', body })
     const data = res?.data ?? res
-    if (
-      selectedVisit.value?.id === id
-      && (action === 'mark_waiting_room' || action === 'clear_waiting_room' || action === 'send_preconsult')
-    ) {
-      selectedVisit.value = {
-        ...selectedVisit.value,
-        ...data,
-        waitingRoomAt: data?.waitingRoomAt ?? (action === 'clear_waiting_room' ? null : selectedVisit.value.waitingRoomAt),
-        preconsultStatus: data?.preconsultStatus || selectedVisit.value.preconsultStatus,
-      }
-      if (action === 'send_preconsult') {
-        await loadVisitPreconsult(id)
+    if (action === 'mark_waiting_room' || action === 'clear_waiting_room' || action === 'send_preconsult') {
+      if (selectedVisit.value?.id === id) {
+        selectedVisit.value = {
+          ...selectedVisit.value,
+          ...data,
+          waitingRoomAt:
+            data?.waitingRoomAt
+            ?? (action === 'clear_waiting_room' ? null : selectedVisit.value.waitingRoomAt),
+          preconsultStatus: data?.preconsultStatus || selectedVisit.value.preconsultStatus,
+        }
+        if (action === 'send_preconsult') {
+          await loadVisitPreconsult(id)
+        }
       }
       await load()
       return
@@ -1173,6 +1180,10 @@ async function act(id: string, action: string) {
 async function actFromDetail(action: string) {
   if (!selectedVisit.value) return
   await act(selectedVisit.value.id, action)
+}
+
+function onChipVisitAction(payload: { visit: CalendarVisit; action: CalendarDeskAction }) {
+  void act(payload.visit.id, payload.action)
 }
 
 function openVisitDetail(v: CalendarVisit) {

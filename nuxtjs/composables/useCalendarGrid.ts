@@ -32,6 +32,17 @@ export type CalendarVisit = {
   callbackPhone?: string
 }
 
+/** Desk actions available from calendar chips (same PATCH as visit detail). */
+export type CalendarDeskAction = 'mark_waiting_room' | 'clear_waiting_room' | 'cancel'
+
+export function canShowCalendarChipDeskActions(
+  v: Pick<CalendarVisit, 'status' | 'consultationSession'>,
+): boolean {
+  if (v.consultationSession) return false
+  if (v.status === 'cancelled' || v.status === 'done') return false
+  return true
+}
+
 /**
  * CTA consultation du détail RDV : écran « Nouvelle consultation » tant que le
  * RDV est à venir (ou walk-in en cours), consultation en lecture une fois le

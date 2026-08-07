@@ -29,73 +29,17 @@
           :key="`${hour}-${col.id || '__empty'}`"
           class="cal-day__cell"
         >
-          <button
+          <ProCalendarChip
             v-for="v in visitsFor(col.id, hour)"
-            :id="`calendar-chip-${v.id}`"
             :key="v.id"
-            type="button"
-            class="cal-chip cal-chip--column"
-            :class="[
-              `cal-chip--${statusVariant(v.status)}`,
-              {
-                'cal-chip--focus': focusVisitId === v.id,
-                'cal-chip--walkin': !!v.consultationSession,
-                'cal-chip--typed': !!v.visitTypeColor,
-                'cal-chip--urgent': v.preconsultAlert === 'urgent',
-                'cal-chip--waiting': !!v.waitingRoomAt,
-              },
-            ]"
-            :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
-            :title="chipTitle(v) || undefined"
-            :data-testid="`calendar-chip-${v.id}`"
-            @click="emit('select-visit', v)"
-          >
-            <span class="cal-chip__time">{{ chipTime(v) }}</span>
-            <span v-if="v.visitTypeName" class="cal-chip__type">{{ v.visitTypeName }}</span>
-            <span
-              v-if="resourceMode === 'rooms' && v.assigneeName"
-              class="cal-chip__site"
-            >{{ v.assigneeName }}</span>
-            <span
-              v-else-if="resourceMode === 'people' && v.roomName"
-              class="cal-chip__site"
-            >{{ v.roomName }}</span>
-            <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
-            <span
-              v-if="v.waitingRoomAt"
-              class="cal-chip__waiting"
-              data-testid="calendar-chip-waiting-room"
-            >{{ $t('calendar.waitingRoomTag') }}</span>
-            <span
-              v-if="v.preconsultAlert === 'urgent'"
-              class="cal-chip__urgent"
-              data-testid="calendar-chip-preconsult-urgent"
-            >{{ $t('calendar.preconsultUrgentShort') }}</span>
-            <span
-              v-else-if="v.preconsultStatus === 'submitted'"
-              class="cal-chip__preconsult cal-chip__preconsult--answered"
-              data-testid="calendar-chip-preconsult-answered"
-            >{{ $t('calendar.preconsultAnsweredTag') }}</span>
-            <span
-              v-else-if="v.preconsultStatus === 'pending'"
-              class="cal-chip__preconsult cal-chip__preconsult--sent"
-              data-testid="calendar-chip-preconsult-sent"
-            >{{ $t('calendar.preconsultSentTag') }}</span>
-            <span class="cal-chip__title">
-              {{ v.petName || '—' }} · {{ v.clientName || '—' }}
-              <span v-if="v.isWalkinPlaceholder" class="cal-chip__walkin" data-testid="calendar-chip-walkin">!</span>
-            </span>
-            <span
-              v-if="v.callbackPhone"
-              class="cal-chip__phone"
-              data-testid="calendar-chip-phone"
-              role="link"
-              tabindex="0"
-              :title="$t('clients.walkin.callbackPhone')"
-              @click.stop="dialCallbackPhone(v.callbackPhone!)"
-              @keydown.enter.stop="dialCallbackPhone(v.callbackPhone!)"
-            >{{ v.callbackPhone }}</span>
-          </button>
+            :visit="v"
+            variant="column"
+            :focused="focusVisitId === v.id"
+            :busy="busyId === v.id"
+            :resource-mode="resourceMode"
+            @select="emit('select-visit', v)"
+            @action="(action) => emit('visit-action', { visit: v, action })"
+          />
         </div>
       </div>
     </div>
@@ -103,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { calendarChipTooltip, dialCallbackPhone, type CalendarVisit } from '~/composables/useCalendarGrid'
+import type { CalendarDeskAction, CalendarVisit } from '~/composables/useCalendarGrid'
 
 export type CalendarDayColumn = { id: string; label: string }
 export type CalendarResourceMode = 'people' | 'rooms'
@@ -114,24 +58,26 @@ const props = withDefaults(defineProps<{
   columns: CalendarDayColumn[]
   resourceMode?: CalendarResourceMode | null
   focusVisitId?: string
+  busyId?: string
   /** First hour shown (inclusive). */
   hourStart?: number
   /** Last hour shown (inclusive). */
   hourEnd?: number
 }>(), {
   resourceMode: null,
+  busyId: '',
   hourStart: 7,
   hourEnd: 20,
 })
 
-const emit = defineEmits<{ 'select-visit': [visit: CalendarVisit] }>()
+const emit = defineEmits<{
+  'select-visit': [visit: CalendarVisit]
+  'visit-action': [payload: { visit: CalendarVisit; action: CalendarDeskAction }]
+}>()
 
-const { t } = useI18n()
 const {
   dayKey,
   visitDisplayAt,
-  isUnscheduled,
-  statusVariant,
   startOfDay,
 } = useCalendarGrid()
 
@@ -175,26 +121,9 @@ function visitsFor(colId: string, hour: number) {
 function formatHour(h: number) {
   return `${String(h).padStart(2, '0')}:00`
 }
-
-function chipTitle(v: CalendarVisit) {
-  return calendarChipTooltip(v, t)
-}
-
-function chipTime(v: CalendarVisit) {
-  if (isUnscheduled(v)) return t('calendar.unscheduled')
-  const at = visitDisplayAt(v)
-  if (!at) return '—'
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const time = `${pad(at.getHours())}:${pad(at.getMinutes())}`
-  if (v.proposedScheduledAt) return `${time} (${t('calendar.proposed')})`
-  return time
-}
 </script>
 
 <style scoped>
-.cal-day {
-  overflow-x: auto;
-}
 .cal-day__header,
 .cal-day__row {
   display: grid;
@@ -245,11 +174,5 @@ function chipTime(v: CalendarVisit) {
   flex-direction: column;
   gap: 0.25rem;
   background: var(--pf-vet-surface);
-}
-.cal-chip__walkin {
-  display: inline-block;
-  margin-left: 0.2rem;
-  color: var(--pf-vet-alert);
-  font-weight: 700;
 }
 </style>
