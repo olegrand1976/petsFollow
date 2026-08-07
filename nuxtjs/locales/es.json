@@ -928,6 +928,17 @@
       "nextPromptHint": "¿Pasar a la continuación de la consulta (receta, DAF, factura) o seguir editando el informe?",
       "nextPromptStay": "Seguir editando el informe",
       "nextPromptContinue": "Ir a la continuación"
+    },
+    "billing": {
+      "title": "Facturación / Peppol",
+      "hint": "Datos fiscales usados para rellenar facturas.",
+      "hintOptional": "Opcional — rellena la contraparte Peppol al facturar.",
+      "country": "País",
+      "vatNumber": "NIF/IVA",
+      "companyNumber": "Nº de empresa",
+      "street": "Calle",
+      "postal": "Código postal",
+      "city": "Ciudad"
     }
   },
   "consultations": {
@@ -1033,7 +1044,7 @@
     "amountRequired": "Indique un importe sin IVA válido (> 0).",
     "errorGeneric": "Ha ocurrido un error",
     "issue": "Emitir",
-    "noSendProforma": "Proforma — sin Peppol (emitir desde borrador)",
+    "noSendProforma": "Proforma — email cliente + validación, luego factura Peppol automática",
     "connectRestricted": "Solo el veterinario de referencia puede activar o modificar la conexión Peppol.",
     "connectReadonly": "Solo lectura",
     "relatedInvoice": "Factura de origen",
@@ -1053,7 +1064,9 @@
       "taxId": "NIF / CIF",
       "street": "Calle",
       "postal": "Código postal",
-      "city": "Ciudad"
+      "city": "Ciudad",
+      "email": "Correo",
+      "emailProformaHint": "Obligatorio para enviar el presupuesto al cliente (enlace de validación)."
     },
     "create": "Crear la factura",
     "createDocument": "Crear el documento",
@@ -1085,12 +1098,32 @@
     },
     "docStatus": {
       "draft": "Borrador",
-      "issued": "Emitida",
+      "issued": "Enviado al cliente",
       "sending": "Envío Peppol",
       "delivered": "Entregada",
       "rejected": "Rechazada",
-      "cancelled": "Anulada"
-    }
+      "cancelled": "Anulada",
+      "accepted": "Aceptado por el cliente"
+    },
+    "clientSearch": "Buscar un cliente",
+    "clientSearchPlaceholder": "Nombre, email o teléfono…",
+    "addLine": "Añadir línea",
+    "removeLine": "Eliminar",
+    "pickMedication": "Medicamento",
+    "medSearchPlaceholder": "Buscar un medicamento…",
+    "totalExcl": "Total s/IVA",
+    "totalVat": "IVA",
+    "totalIncl": "Total c/IVA",
+    "linesRequired": "Añada al menos una línea válida (descripción, cantidad y PU > 0).",
+    "lines": {
+      "title": "Líneas",
+      "description": "Descripción",
+      "qty": "Cant.",
+      "unitPrice": "PU s/IVA (€)",
+      "vat": "IVA %",
+      "actions": "Acciones"
+    },
+    "sendToClient": "Enviar al cliente"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiótico",
@@ -2709,7 +2742,11 @@
     "room_busy": "Esta sala ya está ocupada en este horario",
     "invalid_assignee": "Profesional no válido",
     "invalid_room": "Sala no válida",
-    "room_name_taken": "Ya existe una sala con este nombre en este centro"
+    "room_name_taken": "Ya existe una sala con este nombre en este centro",
+    "email_required": "El correo del destinatario es obligatorio para la proforma.",
+    "proforma_token_invalid": "Enlace de validación no válido.",
+    "proforma_expired": "Enlace de validación caducado.",
+    "proforma_already_accepted": "Presupuesto ya aceptado."
   },
   "commercial": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Inactiva",
     "reactivate": "Reactivar",
     "reactivated": "Sala reactivada."
+  },
+  "proformaPublic": {
+    "title": "Validar presupuesto",
+    "loading": "Cargando…",
+    "brandTitle": "Presupuesto petsFollow",
+    "brandText": "Valide el presupuesto de su clínica veterinaria para iniciar la facturación electrónica.",
+    "subtitle": "Presupuesto de {practiceName}",
+    "total": "Total IVA incl.",
+    "accept": "Validar presupuesto",
+    "thanksTitle": "Presupuesto aceptado",
+    "thanksIntro": "Gracias. Se emitirá automáticamente una factura electrónica.",
+    "expired": "Este enlace ha caducado.",
+    "invalid": "Enlace no válido o ya utilizado.",
+    "errorGeneric": "No se pudo validar el presupuesto."
   }
 }

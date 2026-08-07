@@ -1593,6 +1593,17 @@
       "nextPromptHint": "Passare al seguito della consultazione (prescrizione, DAF, fattura) o continuare a modificare il referto?",
       "nextPromptStay": "Continua il referto",
       "nextPromptContinue": "Vai al seguito"
+    },
+    "billing": {
+      "title": "Fatturazione / Peppol",
+      "hint": "Dati fiscali usati per precompilare le fatture.",
+      "hintOptional": "Opzionale — precompila la controparte Peppol in fatturazione.",
+      "country": "Paese",
+      "vatNumber": "Partita IVA",
+      "companyNumber": "Codice azienda",
+      "street": "Via",
+      "postal": "CAP",
+      "city": "Città"
     }
   },
   "consultations": {
@@ -1698,7 +1709,7 @@
     "amountRequired": "Indicare un importo IVA esclusa valido (> 0).",
     "errorGeneric": "Si è verificato un errore",
     "issue": "Emetti",
-    "noSendProforma": "Proforma — niente Peppol (emetti dalla bozza)",
+    "noSendProforma": "Proforma — email cliente + validazione, poi fattura Peppol automatica",
     "connectRestricted": "Solo il veterinario di riferimento può attivare o modificare la connessione Peppol.",
     "connectReadonly": "Sola lettura",
     "relatedInvoice": "Fattura di origine",
@@ -1718,7 +1729,9 @@
       "taxId": "NIF / CIF",
       "street": "Via",
       "postal": "CAP",
-      "city": "Città"
+      "city": "Città",
+      "email": "Email",
+      "emailProformaHint": "Obbligatoria per inviare il preventivo al cliente (link di validazione)."
     },
     "create": "Crea la fattura",
     "createDocument": "Crea il documento",
@@ -1750,12 +1763,32 @@
     },
     "docStatus": {
       "draft": "Bozza",
-      "issued": "Emessa",
+      "issued": "Inviato al cliente",
       "sending": "Invio Peppol",
       "delivered": "Consegnata",
       "rejected": "Rifiutata",
-      "cancelled": "Annullata"
-    }
+      "cancelled": "Annullata",
+      "accepted": "Accettato dal cliente"
+    },
+    "clientSearch": "Cerca un cliente",
+    "clientSearchPlaceholder": "Nome, email o telefono…",
+    "addLine": "Aggiungi riga",
+    "removeLine": "Rimuovi",
+    "pickMedication": "Farmaco",
+    "medSearchPlaceholder": "Cerca un farmaco…",
+    "totalExcl": "Totale IVA escl.",
+    "totalVat": "IVA",
+    "totalIncl": "Totale IVA incl.",
+    "linesRequired": "Aggiungi almeno una riga valida (descrizione, quantità e PU > 0).",
+    "lines": {
+      "title": "Righe",
+      "description": "Descrizione",
+      "qty": "Qtà",
+      "unitPrice": "PU IVA escl. (€)",
+      "vat": "IVA %",
+      "actions": "Azioni"
+    },
+    "sendToClient": "Invia al cliente"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotico",
@@ -3672,7 +3705,11 @@
     "room_busy": "Questa sala è già occupata in questo slot",
     "invalid_assignee": "Professionista non valido",
     "invalid_room": "Sala non valida",
-    "room_name_taken": "Esiste già una sala con questo nome in questa sede"
+    "room_name_taken": "Esiste già una sala con questo nome in questa sede",
+    "email_required": "Email del destinatario obbligatoria per il proforma.",
+    "proforma_token_invalid": "Link di validazione non valido.",
+    "proforma_expired": "Link di validazione scaduto.",
+    "proforma_already_accepted": "Preventivo già accettato."
   },
   "manager": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Inattiva",
     "reactivate": "Riattiva",
     "reactivated": "Sala riattivata."
+  },
+  "proformaPublic": {
+    "title": "Valida preventivo",
+    "loading": "Caricamento…",
+    "brandTitle": "Preventivo petsFollow",
+    "brandText": "Valida il preventivo del tuo ambulatorio veterinario per avviare la fatturazione elettronica.",
+    "subtitle": "Preventivo di {practiceName}",
+    "total": "Totale IVA incl.",
+    "accept": "Valida preventivo",
+    "thanksTitle": "Preventivo accettato",
+    "thanksIntro": "Grazie. Verrà emessa automaticamente una fattura elettronica.",
+    "expired": "Questo link è scaduto.",
+    "invalid": "Link non valido o già utilizzato.",
+    "errorGeneric": "Impossibile validare il preventivo."
   }
 }

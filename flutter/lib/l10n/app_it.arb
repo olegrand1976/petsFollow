@@ -876,5 +876,6 @@
   "calendarSelectSite": "Scegli una sede",
   "@calendarSelectSite": {
     "description": "Book visit: pick practice site when multi-site"
-  }
+  },
+  "proformaValidateCta": "Valida preventivo"
 }

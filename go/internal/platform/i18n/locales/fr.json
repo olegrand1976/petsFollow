@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "commercial",
     "preconsult_urgency_low": "Faible",
     "preconsult_urgency_medium": "Modérée",
-    "preconsult_urgency_high": "Élevée"
+    "preconsult_urgency_high": "Élevée",
+    "proforma_validate_subject": "Devis à valider — {practiceName}",
+    "proforma_validate_tagline": "Devis / proforma",
+    "proforma_validate_preheader": "Validez le devis de {practiceName} ({amount}) pour lancer la facturation.",
+    "proforma_validate_greeting": "Bonjour {fullName},",
+    "proforma_validate_intro": "{practiceName} vous a envoyé un devis à valider.",
+    "proforma_validate_detail": "Montant TTC : {amount}\n\nEn validant, vous acceptez le devis : une facture électronique sera émise automatiquement.",
+    "proforma_validate_cta": "Valider le devis",
+    "proforma_validate_disclaimer": "Si vous n'attendiez pas cet email, ignorez-le. Le lien expire après 14 jours."
   },
   "push": {
     "new_message_title": "Nouveau message",

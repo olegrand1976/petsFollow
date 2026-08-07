@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "comercial",
     "preconsult_urgency_low": "Baja",
     "preconsult_urgency_medium": "Moderada",
-    "preconsult_urgency_high": "Alta"
+    "preconsult_urgency_high": "Alta",
+    "proforma_validate_subject": "Presupuesto por validar — {practiceName}",
+    "proforma_validate_tagline": "Presupuesto / proforma",
+    "proforma_validate_preheader": "Valide el presupuesto de {practiceName} ({amount}) para facturar.",
+    "proforma_validate_greeting": "Hola {fullName},",
+    "proforma_validate_intro": "{practiceName} le ha enviado un presupuesto para validar.",
+    "proforma_validate_detail": "Importe IVA incl.: {amount}\n\nAl validar, acepta el presupuesto y se emitirá automáticamente una factura electrónica.",
+    "proforma_validate_cta": "Validar presupuesto",
+    "proforma_validate_disclaimer": "Si no esperaba este correo, ignórelo. El enlace caduca a los 14 días."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

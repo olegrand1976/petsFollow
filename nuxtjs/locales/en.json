@@ -928,6 +928,17 @@
       "linkLabelClient": "Client invite link",
       "linkLabelCabinet": "Practice signup link",
       "copyCabinet": "Copy practice link"
+    },
+    "billing": {
+      "title": "Billing / Peppol",
+      "hint": "Tax details used to prefill invoices.",
+      "hintOptional": "Optional — prefills the Peppol counterparty when invoicing.",
+      "country": "Country",
+      "vatNumber": "VAT number",
+      "companyNumber": "Company number",
+      "street": "Street",
+      "postal": "Postal code",
+      "city": "City"
     }
   },
   "consultations": {
@@ -1045,7 +1056,9 @@
       "taxId": "NIF / CIF",
       "street": "Street",
       "postal": "Postal code",
-      "city": "City"
+      "city": "City",
+      "email": "Email",
+      "emailProformaHint": "Required to send the quote to the client (validation link)."
     },
     "prefillFromDaf": "Prefill from a DAF",
     "prefillDirect": "Direct invoicing after consultation",
@@ -1058,7 +1071,7 @@
     "typeCreditNote": "Credit note",
     "typeProforma": "Proforma / quote",
     "createDocument": "Create document",
-    "noSendProforma": "Proforma — no Peppol send (issue from draft)",
+    "noSendProforma": "Proforma — client email + approval, then automatic Peppol invoice",
     "issue": "Issue",
     "connectRestricted": "Only the reference veterinarian can activate or change the Peppol connection.",
     "connectReadonly": "Read only",
@@ -1085,12 +1098,32 @@
     },
     "docStatus": {
       "draft": "Draft",
-      "issued": "Issued",
+      "issued": "Sent to client",
       "sending": "Peppol sending",
       "delivered": "Delivered",
       "rejected": "Rejected",
-      "cancelled": "Cancelled"
-    }
+      "cancelled": "Cancelled",
+      "accepted": "Accepted by client"
+    },
+    "clientSearch": "Search a client",
+    "clientSearchPlaceholder": "Name, email or phone…",
+    "addLine": "Add line",
+    "removeLine": "Remove",
+    "pickMedication": "Medication",
+    "medSearchPlaceholder": "Search a medication…",
+    "totalExcl": "Total excl. VAT",
+    "totalVat": "VAT",
+    "totalIncl": "Total incl. VAT",
+    "linesRequired": "Add at least one valid line (description, quantity and unit price > 0).",
+    "lines": {
+      "title": "Lines",
+      "description": "Description",
+      "qty": "Qty",
+      "unitPrice": "Unit excl. (€)",
+      "vat": "VAT %",
+      "actions": "Actions"
+    },
+    "sendToClient": "Send to client"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotic",
@@ -2709,7 +2742,11 @@
     "internal": "Internal server error",
     "not_ready": "Service not ready",
     "generic": "An error occurred",
-    "pet_not_in_practice": "Pet is not linked to this practice"
+    "pet_not_in_practice": "Pet is not linked to this practice",
+    "email_required": "Recipient email is required for proforma.",
+    "proforma_token_invalid": "Invalid validation link.",
+    "proforma_expired": "Validation link expired.",
+    "proforma_already_accepted": "Quote already accepted."
   },
   "commercial": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Inactive",
     "reactivate": "Reactivate",
     "reactivated": "Room reactivated."
+  },
+  "proformaPublic": {
+    "title": "Approve quote",
+    "loading": "Loading…",
+    "brandTitle": "petsFollow quote",
+    "brandText": "Approve your veterinary practice quote to start e-invoicing.",
+    "subtitle": "Quote from {practiceName}",
+    "total": "Total incl. VAT",
+    "accept": "Approve quote",
+    "thanksTitle": "Quote approved",
+    "thanksIntro": "Thank you. An e-invoice will be issued automatically.",
+    "expired": "This link has expired.",
+    "invalid": "Invalid or already used link.",
+    "errorGeneric": "Could not approve the quote."
   }
 }

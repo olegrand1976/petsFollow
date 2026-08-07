@@ -121,6 +121,22 @@ func TestMapDocumentCountries(t *testing.T) {
 			t.Fatalf("want omit AboutInvoiceNumber got %q", ord.AboutInvoiceNumber)
 		}
 	})
+
+	t.Run("proforma_maps_to_offer", func(t *testing.T) {
+		doc := base
+		doc.Type = invoicing.DocProforma
+		doc.Counterparty = invoicing.Counterparty{
+			Name: "Vet BE", Country: "BE", VATNumber: "BE1000000021",
+			Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+		}
+		ord, err := billit.MapDocument(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ord.OrderType != "Offer" {
+			t.Fatalf("proforma OrderType=%s want Offer", ord.OrderType)
+		}
+	})
 }
 
 func hasID(ord billit.OrderDTO, typ, val string) bool {

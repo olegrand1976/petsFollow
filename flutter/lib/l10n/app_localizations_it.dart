@@ -2172,4 +2172,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Scegli una sede';
+
+  @override
+  String get proformaValidateCta => 'Valida preventivo';
 }

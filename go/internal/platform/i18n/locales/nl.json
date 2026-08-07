@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "commercieel",
     "preconsult_urgency_low": "Laag",
     "preconsult_urgency_medium": "Matig",
-    "preconsult_urgency_high": "Hoog"
+    "preconsult_urgency_high": "Hoog",
+    "proforma_validate_subject": "Offerte ter goedkeuring — {practiceName}",
+    "proforma_validate_tagline": "Offerte / proforma",
+    "proforma_validate_preheader": "Keur de offerte van {practiceName} ({amount}) goed om te factureren.",
+    "proforma_validate_greeting": "Hallo {fullName},",
+    "proforma_validate_intro": "{practiceName} stuurde u een offerte ter goedkeuring.",
+    "proforma_validate_detail": "Bedrag incl. btw: {amount}\n\nDoor te valideren aanvaardt u de offerte: er wordt automatisch een e-factuur aangemaakt.",
+    "proforma_validate_cta": "Offerte goedkeuren",
+    "proforma_validate_disclaimer": "Als u deze e-mail niet verwachtte, negeer hem. De link verloopt na 14 dagen."
   },
   "push": {
     "new_message_title": "Nieuw bericht",

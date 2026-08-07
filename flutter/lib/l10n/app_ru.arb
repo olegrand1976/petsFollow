@@ -666,5 +666,6 @@
   "calendarSelectSite": "Выберите площадку",
   "@calendarSelectSite": {
     "description": "Book visit: pick practice site when multi-site"
-  }
+  },
+  "proformaValidateCta": "Подтвердить проформу"
 }

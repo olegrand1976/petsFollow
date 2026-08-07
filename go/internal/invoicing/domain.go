@@ -22,12 +22,16 @@ type DocStatus string
 
 const (
 	StatusDraft     DocStatus = "draft"
-	StatusIssued    DocStatus = "issued"
+	StatusIssued    DocStatus = "issued" // proforma: emailed, awaiting client accept
+	StatusAccepted  DocStatus = "accepted" // proforma: client validated → invoice created
 	StatusSending   DocStatus = "sending"
 	StatusDelivered DocStatus = "delivered"
 	StatusRejected  DocStatus = "rejected"
 	StatusCancelled DocStatus = "cancelled"
 )
+
+// ProformaClientTokenTTL is how long a validation magic-link stays valid.
+const ProformaClientTokenTTL = 14 * 24 * time.Hour
 
 type ConnectionStatus string
 
@@ -89,12 +93,16 @@ type Document struct {
 	DAFID             string       `json:"dafId,omitempty"`
 	PeppolStatus      string       `json:"peppolStatus,omitempty"`
 	SentAt            *time.Time   `json:"sentAt,omitempty"`
+	AcceptedAt        *time.Time   `json:"acceptedAt,omitempty"`
+	TokenExpiresAt    *time.Time   `json:"tokenExpiresAt,omitempty"`
 	CreatedBy         string       `json:"createdBy,omitempty"`
 	CreatedAt         time.Time    `json:"createdAt"`
 	UpdatedAt         time.Time    `json:"updatedAt"`
 	Lines             []Line       `json:"lines,omitempty"`
 	// AboutInvoiceNumber is set at send-time for CreditNotes (Billit AboutInvoiceNumber). Not persisted.
 	AboutInvoiceNumber string `json:"-"`
+	// PublicToken is the client validation magic-link secret (set on proforma issue; omitted from list JSON).
+	PublicToken string `json:"-"`
 }
 
 type Connection struct {

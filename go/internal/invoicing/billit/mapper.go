@@ -87,7 +87,8 @@ func mapOrderType(t invoicing.DocType) (string, error) {
 	case invoicing.DocCreditNote:
 		return "CreditNote", nil
 	case invoicing.DocProforma:
-		return "ProForma", nil
+		// Billit has no ProForma OrderType; quotes/proformas use Offer (no Peppol).
+		return "Offer", nil
 	default:
 		return "", fmt.Errorf("unsupported doc type %q", t)
 	}

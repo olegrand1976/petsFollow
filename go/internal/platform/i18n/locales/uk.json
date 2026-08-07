@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "менеджер із продажу",
     "preconsult_urgency_low": "Низька",
     "preconsult_urgency_medium": "Помірна",
-    "preconsult_urgency_high": "Висока"
+    "preconsult_urgency_high": "Висока",
+    "proforma_validate_subject": "Проформа на підтвердження — {practiceName}",
+    "proforma_validate_tagline": "Проформа",
+    "proforma_validate_preheader": "Підтвердіть проформу від {practiceName} ({amount}), щоб розпочати виставлення рахунку.",
+    "proforma_validate_greeting": "Вітаємо, {fullName}!",
+    "proforma_validate_intro": "{practiceName} надіслав вам проформу на підтвердження.",
+    "proforma_validate_detail": "Сума з ПДВ: {amount}\n\nПідтверджуючи, ви приймаєте проформу: електронний рахунок буде виставлено автоматично.",
+    "proforma_validate_cta": "Підтвердити проформу",
+    "proforma_validate_disclaimer": "Якщо ви не очікували цей лист, проігноруйте його. Посилання дійсне 14 днів."
   },
   "push": {
     "new_message_title": "Нове повідомлення",

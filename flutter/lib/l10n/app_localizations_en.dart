@@ -2157,4 +2157,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Choose a site';
+
+  @override
+  String get proformaValidateCta => 'Approve quote';
 }

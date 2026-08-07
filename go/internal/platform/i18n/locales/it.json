@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "commerciale",
     "preconsult_urgency_low": "Bassa",
     "preconsult_urgency_medium": "Moderata",
-    "preconsult_urgency_high": "Alta"
+    "preconsult_urgency_high": "Alta",
+    "proforma_validate_subject": "Preventivo da validare — {practiceName}",
+    "proforma_validate_tagline": "Preventivo / proforma",
+    "proforma_validate_preheader": "Valida il preventivo di {practiceName} ({amount}) per avviare la fatturazione.",
+    "proforma_validate_greeting": "Buongiorno {fullName},",
+    "proforma_validate_intro": "{practiceName} le ha inviato un preventivo da validare.",
+    "proforma_validate_detail": "Importo IVA incl.: {amount}\n\nConvalidando accetta il preventivo: verrà emessa automaticamente una fattura elettronica.",
+    "proforma_validate_cta": "Valida preventivo",
+    "proforma_validate_disclaimer": "Se non si aspettava questa email, la ignori. Il link scade dopo 14 giorni."
   },
   "push": {
     "new_message_title": "Nuovo messaggio",

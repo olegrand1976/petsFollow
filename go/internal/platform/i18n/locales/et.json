@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "müügiesindaja",
     "preconsult_urgency_low": "Madal",
     "preconsult_urgency_medium": "Keskmine",
-    "preconsult_urgency_high": "Kõrge"
+    "preconsult_urgency_high": "Kõrge",
+    "proforma_validate_subject": "Pakkumine kinnitamiseks — {practiceName}",
+    "proforma_validate_tagline": "Pakkumine / proforma",
+    "proforma_validate_preheader": "Kinnitage {practiceName} pakkumine ({amount}), et alustada arveldust.",
+    "proforma_validate_greeting": "Tere {fullName},",
+    "proforma_validate_intro": "{practiceName} saatis teile kinnitamiseks pakkumise.",
+    "proforma_validate_detail": "Summa koos käibemaksuga: {amount}\n\nKinnitamisel nõustute pakkumisega ning e-arve koostatakse automaatselt.",
+    "proforma_validate_cta": "Kinnita pakkumine",
+    "proforma_validate_disclaimer": "Kui te ei oodanud seda e-kirja, ignoreerige seda. Link aegub 14 päeva pärast."
   },
   "push": {
     "new_message_title": "Uus sõnum",

@@ -1637,6 +1637,17 @@
       "linkLabelClient": "Lien invitation clients",
       "linkLabelCabinet": "Lien inscription cabinet",
       "copyCabinet": "Copier le lien cabinet"
+    },
+    "billing": {
+      "title": "Facturation / Peppol",
+      "hint": "Coordonnées fiscales utilisées pour préremplir les factures.",
+      "hintOptional": "Optionnel — préremplit la contrepartie Peppol à la facturation.",
+      "country": "Pays",
+      "vatNumber": "N° TVA",
+      "companyNumber": "N° entreprise (BCE)",
+      "street": "Rue",
+      "postal": "Code postal",
+      "city": "Ville"
     }
   },
   "consultations": {
@@ -1754,7 +1765,9 @@
       "taxId": "NIF / CIF",
       "street": "Rue",
       "postal": "Code postal",
-      "city": "Ville"
+      "city": "Ville",
+      "email": "E-mail",
+      "emailProformaHint": "Obligatoire pour envoyer le devis au client (lien de validation)."
     },
     "prefillFromDaf": "Prérempli depuis un DAF",
     "prefillDirect": "Facturation directe après consultation",
@@ -1767,7 +1780,7 @@
     "typeCreditNote": "Note de crédit",
     "typeProforma": "Proforma / devis",
     "createDocument": "Créer le document",
-    "noSendProforma": "Proforma — pas d’envoi Peppol (émettre depuis le brouillon)",
+    "noSendProforma": "Proforma — e-mail client + validation, puis facture Peppol automatique",
     "issue": "Émettre",
     "connectRestricted": "Seul le vétérinaire de référence peut activer ou modifier la connexion Peppol.",
     "connectReadonly": "Lecture seule",
@@ -1794,12 +1807,32 @@
     },
     "docStatus": {
       "draft": "Brouillon",
-      "issued": "Émise",
+      "issued": "Envoyé au client",
       "sending": "Envoi Peppol",
       "delivered": "Livrée",
       "rejected": "Rejetée",
-      "cancelled": "Annulée"
-    }
+      "cancelled": "Annulée",
+      "accepted": "Accepté par le client"
+    },
+    "clientSearch": "Rechercher un client",
+    "clientSearchPlaceholder": "Nom, email ou téléphone…",
+    "addLine": "Ajouter une ligne",
+    "removeLine": "Supprimer",
+    "pickMedication": "Médicament",
+    "medSearchPlaceholder": "Rechercher un médicament…",
+    "totalExcl": "Total HT",
+    "totalVat": "TVA",
+    "totalIncl": "Total TTC",
+    "linesRequired": "Ajoutez au moins une ligne valide (description, quantité et PU HT > 0).",
+    "lines": {
+      "title": "Lignes",
+      "description": "Description",
+      "qty": "Qté",
+      "unitPrice": "PU HT (€)",
+      "vat": "TVA %",
+      "actions": "Actions"
+    },
+    "sendToClient": "Envoyer au client"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotique",
@@ -3716,7 +3749,11 @@
     "internal": "Erreur interne du serveur",
     "not_ready": "Service non prêt",
     "generic": "Une erreur est survenue",
-    "pet_not_in_practice": "Animal non rattaché à ce cabinet"
+    "pet_not_in_practice": "Animal non rattaché à ce cabinet",
+    "email_required": "E-mail du destinataire requis pour le proforma.",
+    "proforma_token_invalid": "Lien de validation invalide.",
+    "proforma_expired": "Lien de validation expiré.",
+    "proforma_already_accepted": "Devis déjà accepté."
   },
   "manager": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Inactive",
     "reactivate": "Réactiver",
     "reactivated": "Salle réactivée."
+  },
+  "proformaPublic": {
+    "title": "Valider le devis",
+    "loading": "Chargement…",
+    "brandTitle": "Devis petsFollow",
+    "brandText": "Validez le devis de votre cabinet vétérinaire pour lancer la facturation électronique.",
+    "subtitle": "Devis de {practiceName}",
+    "total": "Total TTC",
+    "accept": "Valider le devis",
+    "thanksTitle": "Devis accepté",
+    "thanksIntro": "Merci. Une facture électronique va être émise automatiquement.",
+    "expired": "Ce lien a expiré.",
+    "invalid": "Lien invalide ou déjà utilisé.",
+    "errorGeneric": "Impossible de valider le devis."
   }
 }

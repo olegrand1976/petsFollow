@@ -928,6 +928,17 @@
       "linkLabelClient": "Cliënt-uitnodigingslink",
       "linkLabelCabinet": "Praktijk-aanmeldlink",
       "copyCabinet": "Praktijklink kopiëren"
+    },
+    "billing": {
+      "title": "Facturatie / Peppol",
+      "hint": "Fiscale gegevens voor het voorinvullen van facturen.",
+      "hintOptional": "Optioneel — vult de Peppol-tegenpartij voor bij facturatie.",
+      "country": "Land",
+      "vatNumber": "Btw-nummer",
+      "companyNumber": "Ondernemingsnummer",
+      "street": "Straat",
+      "postal": "Postcode",
+      "city": "Stad"
     }
   },
   "consultations": {
@@ -1045,7 +1056,9 @@
       "taxId": "NIF / CIF",
       "street": "Straat",
       "postal": "Postcode",
-      "city": "Stad"
+      "city": "Stad",
+      "email": "E-mail",
+      "emailProformaHint": "Verplicht om de offerte naar de klant te sturen (validatielink)."
     },
     "prefillFromDaf": "Vooraf ingevuld vanuit DAF",
     "prefillDirect": "Directe facturatie na consultatie",
@@ -1058,7 +1071,7 @@
     "typeCreditNote": "Creditnota",
     "typeProforma": "Proforma / offerte",
     "createDocument": "Document aanmaken",
-    "noSendProforma": "Proforma — geen Peppol (uitgeven vanuit concept)",
+    "noSendProforma": "Proforma — e-mail klant + validatie, daarna automatische Peppol-factuur",
     "issue": "Uitgeven",
     "connectRestricted": "Alleen de referentieveterinair kan de Peppol-koppeling activeren of wijzigen.",
     "connectReadonly": "Alleen lezen",
@@ -1085,12 +1098,32 @@
     },
     "docStatus": {
       "draft": "Concept",
-      "issued": "Uitgegeven",
+      "issued": "Naar klant gestuurd",
       "sending": "Peppol verzending",
       "delivered": "Geleverd",
       "rejected": "Afgewezen",
-      "cancelled": "Geannuleerd"
-    }
+      "cancelled": "Geannuleerd",
+      "accepted": "Door klant aanvaard"
+    },
+    "clientSearch": "Klant zoeken",
+    "clientSearchPlaceholder": "Naam, e-mail of telefoon…",
+    "addLine": "Regel toevoegen",
+    "removeLine": "Verwijderen",
+    "pickMedication": "Geneesmiddel",
+    "medSearchPlaceholder": "Geneesmiddel zoeken…",
+    "totalExcl": "Totaal excl. btw",
+    "totalVat": "Btw",
+    "totalIncl": "Totaal incl. btw",
+    "linesRequired": "Voeg minstens één geldige regel toe (omschrijving, aantal en EP > 0).",
+    "lines": {
+      "title": "Regels",
+      "description": "Omschrijving",
+      "qty": "Aantal",
+      "unitPrice": "EP excl. (€)",
+      "vat": "Btw %",
+      "actions": "Acties"
+    },
+    "sendToClient": "Naar klant sturen"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotica",
@@ -2709,7 +2742,11 @@
     "room_busy": "Deze ruimte is al bezet in dit tijdslot",
     "invalid_assignee": "Ongeldige medewerker",
     "invalid_room": "Ongeldige ruimte",
-    "room_name_taken": "Er bestaat al een ruimte met deze naam op deze locatie"
+    "room_name_taken": "Er bestaat al een ruimte met deze naam op deze locatie",
+    "email_required": "E-mailadres van de ontvanger is verplicht voor proforma.",
+    "proforma_token_invalid": "Ongeldige validatielink.",
+    "proforma_expired": "Validatielink verlopen.",
+    "proforma_already_accepted": "Offerte al aanvaard."
   },
   "commercial": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Inactief",
     "reactivate": "Heractiveren",
     "reactivated": "Zaal heractiveerd."
+  },
+  "proformaPublic": {
+    "title": "Offerte goedkeuren",
+    "loading": "Laden…",
+    "brandTitle": "petsFollow-offerte",
+    "brandText": "Keur de offerte van uw dierenartspraktijk goed om e-facturatie te starten.",
+    "subtitle": "Offerte van {practiceName}",
+    "total": "Totaal incl. btw",
+    "accept": "Offerte goedkeuren",
+    "thanksTitle": "Offerte aanvaard",
+    "thanksIntro": "Dank u. Er wordt automatisch een e-factuur aangemaakt.",
+    "expired": "Deze link is verlopen.",
+    "invalid": "Ongeldige of reeds gebruikte link.",
+    "errorGeneric": "Offerte kon niet worden goedgekeurd."
   }
 }

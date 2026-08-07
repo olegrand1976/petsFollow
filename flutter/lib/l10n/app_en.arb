@@ -813,5 +813,6 @@
   "calendarSelectSite": "Choose a site",
   "@calendarSelectSite": {
     "description": "Book visit: pick practice site when multi-site"
-  }
+  },
+  "proformaValidateCta": "Approve quote"
 }

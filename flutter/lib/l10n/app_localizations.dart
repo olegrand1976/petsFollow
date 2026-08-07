@@ -4093,6 +4093,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Choisissez un site'**
   String get calendarSelectSite;
+
+  /// No description provided for @proformaValidateCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider le devis'**
+  String get proformaValidateCta;
 }
 
 class _AppLocalizationsDelegate

@@ -928,6 +928,17 @@
       "nextPromptHint": "Kas liigud konsultatsiooni järgmiste sammude juurde (retsept, DAF, arve) või jätkad aruande muutmist?",
       "nextPromptStay": "Jätka aruande muutmist",
       "nextPromptContinue": "Mine järgmiste sammude juurde"
+    },
+    "billing": {
+      "title": "Arveldus / Peppol",
+      "hint": "Maksuandmed arvete eeltäitmiseks.",
+      "hintOptional": "Valikuline — eeltäidab Peppol-vastaspoole arveldamisel.",
+      "country": "Riik",
+      "vatNumber": "KMKR number",
+      "companyNumber": "Ettevõtte number",
+      "street": "Tänav",
+      "postal": "Postiindeks",
+      "city": "Linn"
     }
   },
   "consultations": {
@@ -1033,7 +1044,7 @@
     "amountRequired": "Sisesta kehtiv summa ilma käibemaksuta (> 0).",
     "errorGeneric": "Midagi läks valesti",
     "issue": "Väljasta",
-    "noSendProforma": "Proforma — Peppoli pole (väljasta mustandist)",
+    "noSendProforma": "Proforma — kliendi e-post + kinnitus, seejärel automaatne Peppol-arve",
     "connectRestricted": "Ainult peaveterinaar saab Peppoli ühendust aktiveerida või muuta.",
     "connectReadonly": "Ainult vaatamine",
     "relatedInvoice": "Algne arve",
@@ -1053,7 +1064,9 @@
       "taxId": "NIF / CIF",
       "street": "Tänav",
       "postal": "Postiindeks",
-      "city": "Linn"
+      "city": "Linn",
+      "email": "E-post",
+      "emailProformaHint": "Kohustuslik pakkumise saatmiseks kliendile (kinnituslink)."
     },
     "create": "Loo arve",
     "createDocument": "Loo dokument",
@@ -1085,12 +1098,32 @@
     },
     "docStatus": {
       "draft": "Mustand",
-      "issued": "Väljastatud",
+      "issued": "Kliendile saadetud",
       "sending": "Peppol saatmine",
       "delivered": "Kohale toimetatud",
       "rejected": "Tagasi lükatud",
-      "cancelled": "Tühistatud"
-    }
+      "cancelled": "Tühistatud",
+      "accepted": "Klient kinnitas"
+    },
+    "clientSearch": "Otsi klienti",
+    "clientSearchPlaceholder": "Nimi, e-post või telefon…",
+    "addLine": "Lisa rida",
+    "removeLine": "Eemalda",
+    "pickMedication": "Ravim",
+    "medSearchPlaceholder": "Otsi ravimit…",
+    "totalExcl": "Kokku ilma KM",
+    "totalVat": "KM",
+    "totalIncl": "Kokku koos KM",
+    "linesRequired": "Lisa vähemalt üks kehtiv rida (kirjeldus, kogus ja ühikuhind > 0).",
+    "lines": {
+      "title": "Read",
+      "description": "Kirjeldus",
+      "qty": "Kogus",
+      "unitPrice": "Ühik ilma KM (€)",
+      "vat": "KM %",
+      "actions": "Tegevused"
+    },
+    "sendToClient": "Saada kliendile"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiootikum",
@@ -2709,7 +2742,11 @@
     "room_busy": "See ruum on selles ajavahemikus juba hõivatud",
     "invalid_assignee": "Sobimatu praktik",
     "invalid_room": "Sobimatu ruum",
-    "room_name_taken": "Selle nimega ruum on selles asukohas juba olemas"
+    "room_name_taken": "Selle nimega ruum on selles asukohas juba olemas",
+    "email_required": "Proforma jaoks on saaja e-post kohustuslik.",
+    "proforma_token_invalid": "Kehtetu kinnituslink.",
+    "proforma_expired": "Kinnituslink on aegunud.",
+    "proforma_already_accepted": "Pakkumine on juba kinnitatud."
   },
   "commercial": {
     "dashboard": {
@@ -4711,5 +4748,19 @@
     "inactive": "Mitteaktiivne",
     "reactivate": "Aktiveeri uuesti",
     "reactivated": "Ruum taasaktiveeritud."
+  },
+  "proformaPublic": {
+    "title": "Kinnita pakkumine",
+    "loading": "Laadimine…",
+    "brandTitle": "petsFollow pakkumine",
+    "brandText": "Kinnitage oma loomaarsti kabineti pakkumine e-arveldamise alustamiseks.",
+    "subtitle": "Pakkumine: {practiceName}",
+    "total": "Kokku koos käibemaksuga",
+    "accept": "Kinnita pakkumine",
+    "thanksTitle": "Pakkumine kinnitatud",
+    "thanksIntro": "Aitäh. E-arve koostatakse automaatselt.",
+    "expired": "See link on aegunud.",
+    "invalid": "Kehtetu või juba kasutatud link.",
+    "errorGeneric": "Pakkumist ei õnnestunud kinnitada."
   }
 }

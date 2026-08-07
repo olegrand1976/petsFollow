@@ -2164,4 +2164,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Valige asukoht';
+
+  @override
+  String get proformaValidateCta => 'Kinnita pakkumine';
 }

@@ -183,6 +183,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerPreconsultPublicRoutes(r, authRL.Middleware)
 	a.registerDossierSharePublicRoutes(r, authRL.Middleware)
 	a.registerConsultationSharePublicRoutes(r, authRL.Middleware)
+	a.registerInvoicingPublicRoutes(r, authRL.Middleware)
 	a.registerCommercialMailPublicRoutes(r, authRL.Middleware)
 	a.registerCommercialDiscoveryRoutes(r, authRL.Middleware)
 	a.registerAuthRoutes(r, authRL.Middleware)

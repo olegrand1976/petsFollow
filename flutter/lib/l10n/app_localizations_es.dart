@@ -2168,4 +2168,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Elija una sede';
+
+  @override
+  String get proformaValidateCta => 'Validar presupuesto';
 }

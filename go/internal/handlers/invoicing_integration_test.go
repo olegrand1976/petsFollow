@@ -299,7 +299,7 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 	}
 }
 
-func TestInvoicingProformaResendRefused(t *testing.T) {
+func TestInvoicingProformaClientAccept(t *testing.T) {
 	api := newTestAPI(t)
 	access, _ := registerInvoicingPractice(t, api, "inv-pf")
 
@@ -320,6 +320,7 @@ func TestInvoicingProformaResendRefused(t *testing.T) {
 		"counterparty": map[string]any{
 			"name": "Client", "country": "BE", "vatNumber": "BE1000000021",
 			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+			"email": "client.pf@petsfollow.test",
 		},
 		"lines": []map[string]any{
 			{"description": "Devis", "quantity": 1, "unitPriceExclCents": 2000, "vatPercent": 21},
@@ -337,10 +338,43 @@ func TestInvoicingProformaResendRefused(t *testing.T) {
 	if dataMap(t, env)["status"] != string(invoicing.StatusIssued) {
 		t.Fatalf("want issued %#v", env)
 	}
+	acceptPath, _ := dataMap(t, env)["acceptPath"].(string)
+	if acceptPath == "" {
+		t.Fatalf("want acceptPath in DEV_SEED %#v", env)
+	}
+	if dataMap(t, env)["billitOrderId"] != nil && dataMap(t, env)["billitOrderId"] != "" {
+		t.Fatalf("proforma must not create Billit order %#v", env)
+	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+docID+"/send", access, nil)
 	if code != http.StatusConflict {
 		t.Fatalf("resend want 409 got %d %#v", code, env)
+	}
+
+	token := strings.TrimPrefix(acceptPath, "/proforma/")
+	code, env = doJSON(t, api.handler, http.MethodGet, "/api/v1/public/proforma/"+token, nil)
+	if code != http.StatusOK {
+		t.Fatalf("public get %d %#v", code, env)
+	}
+	if dataMap(t, env)["canAccept"] != true {
+		t.Fatalf("want canAccept %#v", env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/public/proforma/"+token+"/accept", nil)
+	if code != http.StatusOK {
+		t.Fatalf("accept %d %#v", code, env)
+	}
+	inv, _ := dataMap(t, env)["invoice"].(map[string]any)
+	if inv == nil {
+		t.Fatalf("want invoice %#v", env)
+	}
+	st, _ := inv["status"].(string)
+	if st != string(invoicing.StatusDelivered) && st != string(invoicing.StatusSending) && st != string(invoicing.StatusIssued) {
+		t.Fatalf("invoice status %#v", inv)
+	}
+	pf, _ := dataMap(t, env)["proforma"].(map[string]any)
+	if pf["status"] != string(invoicing.StatusAccepted) {
+		t.Fatalf("proforma want accepted %#v", pf)
 	}
 }
 

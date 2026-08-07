@@ -2164,4 +2164,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Kies een site';
+
+  @override
+  String get proformaValidateCta => 'Offerte goedkeuren';
 }

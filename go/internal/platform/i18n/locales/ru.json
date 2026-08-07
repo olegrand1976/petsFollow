@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "менеджер по продажам",
     "preconsult_urgency_low": "Низкая",
     "preconsult_urgency_medium": "Умеренная",
-    "preconsult_urgency_high": "Высокая"
+    "preconsult_urgency_high": "Высокая",
+    "proforma_validate_subject": "Проформа на подтверждение — {practiceName}",
+    "proforma_validate_tagline": "Проформа",
+    "proforma_validate_preheader": "Подтвердите проформу от {practiceName} ({amount}), чтобы начать выставление счёта.",
+    "proforma_validate_greeting": "Здравствуйте, {fullName}!",
+    "proforma_validate_intro": "{practiceName} отправил вам проформу на подтверждение.",
+    "proforma_validate_detail": "Сумма с НДС: {amount}\n\nПодтверждая, вы принимаете проформу: электронный счёт будет выставлен автоматически.",
+    "proforma_validate_cta": "Подтвердить проформу",
+    "proforma_validate_disclaimer": "Если вы не ожидали это письмо, проигнорируйте его. Ссылка действует 14 дней."
   },
   "push": {
     "new_message_title": "Новое сообщение",

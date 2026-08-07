@@ -2177,4 +2177,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Выберите площадку';
+
+  @override
+  String get proformaValidateCta => 'Подтвердить проформу';
 }

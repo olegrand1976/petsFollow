@@ -2174,4 +2174,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get calendarSelectSite => 'Оберіть місце';
+
+  @override
+  String get proformaValidateCta => 'Підтвердити проформу';
 }

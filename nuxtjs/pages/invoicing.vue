@@ -153,12 +153,31 @@
             </select>
             <p v-if="!invoiceOptions.length" class="pro-hint">{{ $t('invoicing.relatedInvoiceEmptyBillit') }}</p>
           </label>
+          <div class="pro-field" data-testid="invoicing-client-search">
+            <label class="pro-field__label" for="invoicing-client-search-input">{{ $t('invoicing.clientSearch') }}</label>
+            <ProCombobox
+              v-model="clientSearch"
+              input-id="invoicing-client-search-input"
+              :placeholder="$t('invoicing.clientSearchPlaceholder')"
+              :min-chars="1"
+              :search-fn="searchClients"
+              @select="onClientSelect"
+            />
+          </div>
           <ProInput
             v-model="docForm.name"
             test-id="invoicing-cp-name"
             :label="$t('invoicing.counterparty.name')"
             required
           />
+          <ProInput
+            v-model="docForm.email"
+            test-id="invoicing-cp-email"
+            type="email"
+            :label="$t('invoicing.counterparty.email')"
+            :required="docForm.type === 'proforma'"
+          />
+          <p v-if="docForm.type === 'proforma'" class="pro-hint">{{ $t('invoicing.counterparty.emailProformaHint') }}</p>
           <label class="pro-field">
             <span class="pro-field__label">{{ $t('invoicing.counterparty.country') }}</span>
             <select v-model="docForm.country" class="pro-input" data-testid="invoicing-country" required>
@@ -239,19 +258,78 @@
             :label="$t('invoicing.counterparty.city')"
             :required="docForm.country === 'BE'"
           />
-          <ProInput
-            v-model="docForm.lineDesc"
-            test-id="invoicing-line-desc"
-            :label="$t('invoicing.lineDescription')"
-            required
-          />
-          <ProInput
-            v-model="docForm.lineAmount"
-            test-id="invoicing-line-amount"
-            type="number"
-            :label="$t('invoicing.lineAmountExcl')"
-            required
-          />
+
+          <div class="invoicing-lines" data-testid="invoicing-lines">
+            <h4 class="invoicing-lines__title">{{ $t('invoicing.lines.title') }}</h4>
+            <div
+              v-for="(line, idx) in docLines"
+              :key="line.key"
+              class="invoicing-line"
+              :data-testid="`invoicing-line-${idx}`"
+            >
+              <ProInput
+                v-model="line.description"
+                :test-id="`invoicing-line-${idx}-desc`"
+                :label="$t('invoicing.lines.description')"
+                required
+              />
+              <div class="invoicing-line__row">
+                <ProInput
+                  v-model="line.quantity"
+                  :test-id="`invoicing-line-${idx}-qty`"
+                  type="number"
+                  :label="$t('invoicing.lines.qty')"
+                  required
+                />
+                <ProInput
+                  v-model="line.unitPriceExcl"
+                  :test-id="`invoicing-line-${idx}-unit`"
+                  type="number"
+                  :label="$t('invoicing.lines.unitPrice')"
+                  required
+                />
+                <label class="pro-field">
+                  <span class="pro-field__label">{{ $t('invoicing.lines.vat') }}</span>
+                  <select
+                    v-model.number="line.vatPercent"
+                    class="pro-input"
+                    :data-testid="`invoicing-line-${idx}-vat`"
+                  >
+                    <option v-for="rate in vatPresets" :key="rate" :value="rate">{{ rate }}</option>
+                  </select>
+                </label>
+              </div>
+              <div v-if="pharmacyEnabled" class="invoicing-line__med" :data-testid="`invoicing-line-${idx}-med`">
+                <label class="pro-field__label" :for="`invoicing-med-${idx}`">{{ $t('invoicing.pickMedication') }}</label>
+                <ProCombobox
+                  v-model="line.med"
+                  :input-id="`invoicing-med-${idx}`"
+                  :placeholder="$t('invoicing.medSearchPlaceholder')"
+                  :min-chars="2"
+                  :search-fn="searchMedications"
+                  @select="(item) => onMedicationSelect(idx, item)"
+                />
+              </div>
+              <ProButton
+                v-if="docLines.length > 1"
+                type="button"
+                variant="ghost"
+                :test-id="`invoicing-remove-line-${idx}`"
+                @click="removeLine(idx)"
+              >
+                {{ $t('invoicing.removeLine') }}
+              </ProButton>
+            </div>
+            <ProButton type="button" variant="secondary" test-id="invoicing-add-line" @click="addLine">
+              {{ $t('invoicing.addLine') }}
+            </ProButton>
+            <div class="invoicing-totals" data-testid="invoicing-totals">
+              <span>{{ $t('invoicing.totalExcl') }} : {{ formatMoney(lineTotals.excl) }}</span>
+              <span>{{ $t('invoicing.totalVat') }} : {{ formatMoney(lineTotals.vat) }}</span>
+              <span><strong>{{ $t('invoicing.totalIncl') }} : {{ formatMoney(lineTotals.incl) }}</strong></span>
+            </div>
+          </div>
+
           <ProButton type="submit" test-id="invoicing-new-doc" :disabled="busy">
             {{ $t('invoicing.createDocument') }}
           </ProButton>
@@ -304,7 +382,7 @@
                   :disabled="busy"
                   @click="sendDoc(doc.id)"
                 >
-                  {{ doc.type === 'proforma' ? $t('invoicing.issue') : $t('invoicing.send') }}
+                  {{ doc.type === 'proforma' ? $t('invoicing.sendToClient') : $t('invoicing.send') }}
                 </ProButton>
               </td>
             </tr>
@@ -322,6 +400,7 @@
 <script setup lang="ts">
 import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
 definePageMeta({
   middleware: ['vet-only', 'practice-perm'],
@@ -335,6 +414,7 @@ if (!isPublicFlagOn(runtimeConfig.public.billitEnabled)) {
 
 /** Source unique — voir `utils/invoicing-ui.ts`. */
 const invoicingUiEnabled = INVOICING_UI_ENABLED
+const pharmacyEnabled = computed(() => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled))
 
 type Connection = {
   practiceId: string
@@ -364,8 +444,44 @@ type Document = {
     codiceDestinatario?: string
     pec?: string
     taxId?: string
+    email?: string
   }
   number?: string
+}
+
+type ClientRow = {
+  userId: string
+  email: string
+  fullName: string
+  contactPhone?: string
+  billingVatNumber?: string
+  billingCompanyNumber?: string
+  billingStreet?: string
+  billingCity?: string
+  billingPostal?: string
+  billingCountry?: string
+}
+
+type DocLine = {
+  key: string
+  description: string
+  quantity: string
+  unitPriceExcl: string
+  vatPercent: number
+  med: ProComboboxItem | null
+}
+
+let lineKeySeq = 0
+function emptyLine(vatDefault = 21): DocLine {
+  lineKeySeq += 1
+  return {
+    key: `line-${lineKeySeq}`,
+    description: '',
+    quantity: '1',
+    unitPriceExcl: '',
+    vatPercent: vatDefault,
+    med: null,
+  }
 }
 
 const { t } = useI18n()
@@ -375,6 +491,8 @@ const canWriteDocs = computed(() => canPractice('clients.write'))
 const route = useRoute()
 const connection = ref<Connection | null>(null)
 const documents = ref<Document[]>([])
+const clients = ref<ClientRow[]>([])
+const clientSearch = ref<ProComboboxItem | null>(null)
 const busy = ref(false)
 const error = ref('')
 const secretsMismatch = ref(false)
@@ -391,6 +509,7 @@ const docForm = reactive({
   type: 'invoice' as 'invoice' | 'credit_note' | 'proforma',
   relatedDocumentId: '',
   name: '',
+  email: '',
   country: 'BE',
   vatNumber: '',
   companyNumber: '',
@@ -402,9 +521,9 @@ const docForm = reactive({
   street: '',
   postal: '',
   city: '',
-  lineDesc: '',
-  lineAmount: '',
 })
+const docLines = ref<DocLine[]>([emptyLine(21)])
+const vatPresets = [0, 6, 12, 21, 22]
 
 const queryClientId = computed(() => String(route.query.clientUserId || ''))
 const queryDafId = computed(() => String(route.query.dafId || ''))
@@ -450,6 +569,33 @@ const filteredDocuments = computed(() => {
   }
   return documents.value.filter((d) => d.status === 'delivered')
 })
+
+const lineTotals = computed(() => {
+  let excl = 0
+  let vat = 0
+  for (const line of docLines.value) {
+    const qty = Number(line.quantity)
+    const unitCents = Math.round(Number(line.unitPriceExcl) * 100)
+    if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(unitCents) || unitCents <= 0) continue
+    const lineExcl = Math.round(unitCents * qty)
+    const lineVat = Math.round(lineExcl * Number(line.vatPercent) / 100)
+    excl += lineExcl
+    vat += lineVat
+  }
+  return { excl, vat, incl: excl + vat }
+})
+
+watch(
+  () => docForm.country,
+  (country) => {
+    const def = country === 'IT' ? 22 : 21
+    for (const line of docLines.value) {
+      if (line.vatPercent === 21 || line.vatPercent === 22) {
+        line.vatPercent = def
+      }
+    }
+  },
+)
 
 function unwrap<T>(res: any): T {
   return (res?.data ?? res) as T
@@ -498,7 +644,8 @@ function statusLabel(status: string) {
 
 function docStatusVariant(status: string) {
   switch (status) {
-    case 'delivered': return 'success'
+    case 'delivered':
+    case 'accepted': return 'success'
     case 'sending':
     case 'issued': return 'warning'
     case 'rejected': return 'danger'
@@ -529,6 +676,7 @@ function onRelatedInvoiceChange() {
   if (!inv?.counterparty) return
   const cp = inv.counterparty
   if (cp.name) docForm.name = cp.name
+  if (cp.email) docForm.email = cp.email
   if (cp.country) docForm.country = cp.country
   if (cp.vatNumber) docForm.vatNumber = cp.vatNumber
   if (cp.companyNumber) docForm.companyNumber = cp.companyNumber
@@ -540,6 +688,97 @@ function onRelatedInvoiceChange() {
   if (cp.codiceDestinatario) docForm.codiceDestinatario = cp.codiceDestinatario
   if (cp.pec) docForm.pec = cp.pec
   if (cp.taxId) docForm.taxId = cp.taxId
+}
+
+function applyClientToForm(c: ClientRow) {
+  docForm.name = c.fullName || docForm.name
+  docForm.email = c.email || docForm.email
+  if (c.billingCountry) docForm.country = c.billingCountry
+  if (c.billingVatNumber) docForm.vatNumber = c.billingVatNumber
+  if (c.billingCompanyNumber) docForm.companyNumber = c.billingCompanyNumber
+  if (c.billingStreet) docForm.street = c.billingStreet
+  if (c.billingCity) docForm.city = c.billingCity
+  if (c.billingPostal) docForm.postal = c.billingPostal
+}
+
+async function loadClients() {
+  try {
+    const res: any = await $fetch('/api/clients')
+    const list = unwrap<ClientRow[]>(res)
+    clients.value = Array.isArray(list) ? list : []
+  } catch {
+    clients.value = []
+  }
+}
+
+async function searchClients(q: string): Promise<ProComboboxItem[]> {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return []
+  return clients.value
+    .filter((c) => {
+      const name = String(c.fullName ?? '').toLowerCase()
+      const email = String(c.email ?? '').toLowerCase()
+      const phone = String(c.contactPhone ?? '').toLowerCase()
+      return name.includes(needle) || email.includes(needle) || phone.includes(needle)
+    })
+    .slice(0, 20)
+    .map((c) => ({
+      id: c.userId,
+      label: c.fullName || c.email,
+      hint: c.email,
+      raw: c,
+    }))
+}
+
+function onClientSelect(item: ProComboboxItem) {
+  const client = (item.raw as ClientRow | undefined) ?? clients.value.find((c) => c.userId === item.id)
+  if (!client) return
+  applyClientToForm(client)
+}
+
+function addLine() {
+  const def = docForm.country === 'IT' ? 22 : 21
+  docLines.value.push(emptyLine(def))
+}
+
+function removeLine(idx: number) {
+  if (docLines.value.length <= 1) return
+  docLines.value.splice(idx, 1)
+}
+
+async function searchMedications(q: string): Promise<ProComboboxItem[]> {
+  if (!pharmacyEnabled.value) return []
+  const res = await $fetch<any>('/api/vet/pharmacy/medications/search', { query: { q, limit: '20' } })
+  const items = unwrap<{ items?: any[] }>(res)?.items ?? []
+  return items.map((m: any) => ({
+    id: String(m.id),
+    label: String(m.name || ''),
+    hint: m.cnk ? String(m.cnk) : undefined,
+    raw: m,
+  }))
+}
+
+async function onMedicationSelect(idx: number, item: ProComboboxItem) {
+  const line = docLines.value[idx]
+  if (!line) return
+  line.description = item.label
+  line.med = item
+  try {
+    const priceRes = await $fetch(`/api/vet/pharmacy/prices/${item.id}`)
+    const price: any = unwrap(priceRes)
+    const sell = Number(price?.sellPriceCents)
+    if (Number.isFinite(sell) && sell > 0) {
+      line.unitPriceExcl = (sell / 100).toFixed(2)
+    }
+    const vat = Number(price?.vatPercent)
+    if (Number.isFinite(vat) && vat >= 0) {
+      line.vatPercent = vat
+    } else if (!line.vatPercent) {
+      line.vatPercent = docForm.country === 'IT' ? 22 : 21
+    }
+  } catch {
+    // price optional
+  }
 }
 
 async function loadConnection() {
@@ -613,13 +852,31 @@ async function refreshConnection() {
   }
 }
 
+function buildPayloadLines() {
+  return docLines.value.map((line) => {
+    const quantity = Number(line.quantity)
+    const unitPriceExclCents = Math.round(Number(line.unitPriceExcl) * 100)
+    return {
+      description: line.description.trim(),
+      quantity,
+      unitPriceExclCents,
+      vatPercent: Number(line.vatPercent),
+    }
+  }).filter((l) =>
+    l.description
+    && Number.isFinite(l.quantity) && l.quantity > 0
+    && Number.isFinite(l.unitPriceExclCents) && l.unitPriceExclCents > 0
+    && Number.isFinite(l.vatPercent) && l.vatPercent >= 0,
+  )
+}
+
 async function createDocument() {
   busy.value = true
   error.value = ''
   try {
-    const excl = Math.round(Number(docForm.lineAmount) * 100)
-    if (!Number.isFinite(excl) || excl <= 0) {
-      error.value = t('invoicing.amountRequired')
+    const lines = buildPayloadLines()
+    if (!lines.length) {
+      error.value = t('invoicing.linesRequired')
       return
     }
     if (docForm.type === 'credit_note' && !docForm.relatedDocumentId) {
@@ -630,7 +887,6 @@ async function createDocument() {
       error.value = t('invoicing.beAddressRequired')
       return
     }
-    const vatPercent = docForm.country === 'IT' ? 22 : 21
     await $fetch('/api/invoicing/documents', {
       method: 'POST',
       body: {
@@ -640,6 +896,7 @@ async function createDocument() {
         dafId: queryDafId.value || undefined,
         counterparty: {
           name: docForm.name,
+          email: docForm.email || undefined,
           country: docForm.country,
           vatNumber: docForm.vatNumber || undefined,
           companyNumber: docForm.companyNumber || undefined,
@@ -652,17 +909,11 @@ async function createDocument() {
           city: docForm.city || undefined,
           postal: docForm.postal || undefined,
         },
-        lines: [
-          {
-            description: docForm.lineDesc,
-            quantity: 1,
-            unitPriceExclCents: excl,
-            vatPercent,
-          },
-        ],
+        lines,
       },
     })
     docForm.relatedDocumentId = ''
+    docLines.value = [emptyLine(docForm.country === 'IT' ? 22 : 21)]
     await loadDocuments()
   } catch (e: any) {
     error.value = formatApiError(e)
@@ -689,7 +940,7 @@ async function sendDoc(id: string) {
 onMounted(async () => {
   if (!invoicingUiEnabled) return
   try {
-    await loadConnection()
+    await Promise.all([loadConnection(), loadClients()])
     await loadDocuments()
     await applyConsultationPrefill()
   } catch (e: any) {
@@ -708,9 +959,9 @@ async function applyConsultationPrefill() {
     try {
       const res = await $fetch(`/api/clients/${queryClientId.value}`)
       const c: any = unwrap(res)
-      if (c?.fullName) {
-        docForm.name = c.fullName
-        hints.push(c.fullName)
+      if (c) {
+        applyClientToForm(c as ClientRow)
+        if (c.fullName) hints.push(c.fullName)
       }
     }
     catch {
@@ -724,34 +975,46 @@ async function applyConsultationPrefill() {
       const doc: any = unwrap(res)
       const items = Array.isArray(doc?.items) ? doc.items : []
       if (items.length) {
-        docForm.lineDesc = items
-          .map((it: any) => `${it.medicationName || 'Médicament'} × ${it.qty}`)
-          .join(', ')
-          .slice(0, 200)
-        hints.push(t('invoicing.prefillDafLines', { n: items.length }))
-
-        let totalExclCents = 0
+        const defVat = docForm.country === 'IT' ? 22 : 21
+        const nextLines: DocLine[] = []
         let priced = 0
         for (const it of items) {
           const medId = String(it.medicationId || it.refMedicationId || '')
           const qty = Number(it.qty) || 0
-          if (!medId || qty <= 0) continue
-          try {
-            const priceRes = await $fetch(`/api/vet/pharmacy/prices/${medId}`)
-            const price: any = unwrap(priceRes)
-            const sell = Number(price?.sellPriceCents)
-            if (Number.isFinite(sell) && sell > 0) {
-              totalExclCents += Math.round(sell * qty)
-              priced++
+          const line = emptyLine(defVat)
+          line.description = String(it.medicationName || 'Médicament')
+          line.quantity = qty > 0 ? String(qty) : '1'
+          if (medId) {
+            try {
+              const priceRes = await $fetch(`/api/vet/pharmacy/prices/${medId}`)
+              const price: any = unwrap(priceRes)
+              const sell = Number(price?.sellPriceCents)
+              if (Number.isFinite(sell) && sell > 0) {
+                line.unitPriceExcl = (sell / 100).toFixed(2)
+                priced++
+              }
+              const vat = Number(price?.vatPercent)
+              if (Number.isFinite(vat) && vat >= 0) line.vatPercent = vat
+            }
+            catch {
+              // price optional — leave PU empty to complete
             }
           }
-          catch {
-            // price optional
-          }
+          nextLines.push(line)
         }
-        if (priced > 0 && totalExclCents > 0) {
-          docForm.lineAmount = (totalExclCents / 100).toFixed(2)
-          hints.push(t('invoicing.prefillDafAmount', { amount: docForm.lineAmount }))
+        if (nextLines.length) {
+          docLines.value = nextLines
+          hints.push(t('invoicing.prefillDafLines', { n: nextLines.length }))
+          let excl = 0
+          for (const line of nextLines) {
+            const qty = Number(line.quantity)
+            const unitCents = Math.round(Number(line.unitPriceExcl) * 100)
+            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(unitCents) || unitCents <= 0) continue
+            excl += Math.round(unitCents * qty)
+          }
+          if (priced > 0 && excl > 0) {
+            hints.push(t('invoicing.prefillDafAmount', { amount: (excl / 100).toFixed(2) }))
+          }
         }
       }
       if (doc?.clientName && !docForm.name) {
@@ -809,6 +1072,38 @@ async function applyConsultationPrefill() {
   border-color: var(--pf-vet-accent);
   color: var(--pf-vet-accent);
   font-weight: 600;
+}
+.invoicing-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0.5rem 0 1rem;
+}
+.invoicing-lines__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.invoicing-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--pf-vet-border, #e5e7eb);
+}
+.invoicing-line__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem;
+}
+.invoicing-line__med {
+  max-width: 28rem;
+}
+.invoicing-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.95rem;
 }
 .pro-mt-md { margin-top: 1rem; }
 .pro-mt-sm { margin-top: 0.5rem; }

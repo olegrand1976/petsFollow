@@ -643,7 +643,15 @@
     "sales_branch_congrats_fallback_name": "salesperson",
     "preconsult_urgency_low": "Low",
     "preconsult_urgency_medium": "Moderate",
-    "preconsult_urgency_high": "High"
+    "preconsult_urgency_high": "High",
+    "proforma_validate_subject": "Quote to approve — {practiceName}",
+    "proforma_validate_tagline": "Quote / proforma",
+    "proforma_validate_preheader": "Approve the quote from {practiceName} ({amount}) to start invoicing.",
+    "proforma_validate_greeting": "Hello {fullName},",
+    "proforma_validate_intro": "{practiceName} sent you a quote to approve.",
+    "proforma_validate_detail": "Amount incl. VAT: {amount}\n\nBy approving, you accept the quote and an e-invoice will be issued automatically.",
+    "proforma_validate_cta": "Approve quote",
+    "proforma_validate_disclaimer": "If you did not expect this email, ignore it. The link expires after 14 days."
   },
   "push": {
     "new_message_title": "New message",

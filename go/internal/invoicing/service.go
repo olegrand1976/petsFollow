@@ -2,6 +2,8 @@ package invoicing
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/url"
@@ -37,6 +39,9 @@ var (
 	ErrSecrets = errors.New("invoicing_secrets_mismatch")
 	// ErrRelatedInvoiceNotOnBillit: credit note linked to an invoice never created on Billit.
 	ErrRelatedInvoiceNotOnBillit = errors.New("related_invoice_not_on_billit")
+	ErrProformaTokenInvalid      = errors.New("proforma_token_invalid")
+	ErrProformaAlreadyAccepted   = errors.New("proforma_already_accepted")
+	ErrProformaExpired           = errors.New("proforma_expired")
 )
 
 // Store is the persistence port used by Service.
@@ -56,6 +61,9 @@ type Store interface {
 	ClaimEmptyBillitOrder(ctx context.Context, practiceID, docID string) (claimed bool, err error)
 	ClaimDocumentForSend(ctx context.Context, practiceID, docID string, yyyymm, quotaLimit int) (doc Document, prevStatus DocStatus, err error)
 	ClaimSaasDocumentForSend(ctx context.Context, practiceID, docID string) (doc Document, prevStatus DocStatus, err error)
+	IssueProformaForClient(ctx context.Context, practiceID, docID, token string, expiresAt, sentAt time.Time) (Document, error)
+	GetProformaByPublicToken(ctx context.Context, token string) (Document, string, error) // doc, practiceName
+	AcceptProformaByToken(ctx context.Context, token string, now time.Time) (proforma Document, err error)
 	GetDocumentByIdempotency(ctx context.Context, practiceID, key string) (Document, error)
 	UpdateDocumentExternal(ctx context.Context, practiceID, docID, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time) error
 	ApplyBillitWebhookStatus(ctx context.Context, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error
@@ -374,6 +382,14 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 		return Document{}, ErrConnectionNotActive
 	}
 
+	peek, err := s.store.GetDocument(ctx, practiceID, docID)
+	if err != nil {
+		return Document{}, err
+	}
+	if peek.Type == DocProforma {
+		return s.issueProformaToClient(ctx, practiceID, docID)
+	}
+
 	yyyymm := currentYYYYMM()
 	limit := c.DocsIncludedMonthly
 	if limit <= 0 {
@@ -452,6 +468,144 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 		return Document{}, err
 	}
 	return s.store.GetDocument(ctx, practiceID, docID)
+}
+
+// issueProformaToClient emails a magic-link (handler) — no Billit Offer create.
+func (s *Service) issueProformaToClient(ctx context.Context, practiceID, docID string) (Document, error) {
+	doc, err := s.store.GetDocument(ctx, practiceID, docID)
+	if err != nil {
+		return Document{}, err
+	}
+	email := strings.TrimSpace(doc.Counterparty.Email)
+	if email == "" || !strings.Contains(email, "@") {
+		return Document{}, fmt.Errorf("%w: email_required", ErrInvalidCounterparty)
+	}
+	token, err := randomToken(32)
+	if err != nil {
+		return Document{}, err
+	}
+	now := time.Now().UTC()
+	expires := now.Add(ProformaClientTokenTTL)
+	out, err := s.store.IssueProformaForClient(ctx, practiceID, docID, token, expires, now)
+	if err != nil {
+		return Document{}, err
+	}
+	out.PublicToken = token
+	return out, nil
+}
+
+// PublicProformaView is the unauthenticated preview payload.
+type PublicProformaView struct {
+	Status         DocStatus    `json:"status"`
+	PracticeName   string       `json:"practiceName"`
+	Counterparty   Counterparty `json:"counterparty"`
+	Currency       string       `json:"currency"`
+	TotalExclCents int64        `json:"totalExclCents"`
+	TotalVATCents  int64        `json:"totalVatCents"`
+	TotalInclCents int64        `json:"totalInclCents"`
+	Lines          []Line       `json:"lines"`
+	ExpiresAt      *time.Time   `json:"expiresAt,omitempty"`
+	AcceptedAt     *time.Time   `json:"acceptedAt,omitempty"`
+	CanAccept      bool         `json:"canAccept"`
+}
+
+func (s *Service) GetPublicProforma(ctx context.Context, token string) (PublicProformaView, error) {
+	if !s.Enabled() {
+		return PublicProformaView{}, ErrDisabled
+	}
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return PublicProformaView{}, ErrProformaTokenInvalid
+	}
+	doc, practiceName, err := s.store.GetProformaByPublicToken(ctx, token)
+	if err != nil {
+		return PublicProformaView{}, err
+	}
+	now := time.Now().UTC()
+	expired := doc.TokenExpiresAt != nil && now.After(*doc.TokenExpiresAt)
+	canAccept := doc.Status == StatusIssued && doc.AcceptedAt == nil && !expired
+	return PublicProformaView{
+		Status:         doc.Status,
+		PracticeName:   practiceName,
+		Counterparty:   doc.Counterparty,
+		Currency:       doc.Currency,
+		TotalExclCents: doc.TotalExclCents,
+		TotalVATCents:  doc.TotalVATCents,
+		TotalInclCents: doc.TotalInclCents,
+		Lines:          doc.Lines,
+		ExpiresAt:      doc.TokenExpiresAt,
+		AcceptedAt:     doc.AcceptedAt,
+		CanAccept:      canAccept,
+	}, nil
+}
+
+// AcceptProformaResult is returned after client validation + Peppol send attempt.
+type AcceptProformaResult struct {
+	Proforma Document `json:"proforma"`
+	Invoice  Document `json:"invoice"`
+}
+
+// AcceptProforma converts an issued proforma into an invoice and sends Peppol.
+func (s *Service) AcceptProforma(ctx context.Context, token string) (AcceptProformaResult, error) {
+	if !s.Enabled() {
+		return AcceptProformaResult{}, ErrDisabled
+	}
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return AcceptProformaResult{}, ErrProformaTokenInvalid
+	}
+	now := time.Now().UTC()
+	proforma, err := s.store.AcceptProformaByToken(ctx, token, now)
+	already := false
+	if errors.Is(err, ErrProformaAlreadyAccepted) {
+		already = true
+		var practiceName string
+		proforma, practiceName, err = s.store.GetProformaByPublicToken(ctx, token)
+		_ = practiceName
+		if err != nil {
+			return AcceptProformaResult{}, err
+		}
+	} else if err != nil {
+		return AcceptProformaResult{}, err
+	}
+
+	idemKey := "proforma-accept:" + proforma.ID
+	if already {
+		if inv, err := s.store.GetDocumentByIdempotency(ctx, proforma.PracticeID, idemKey); err == nil {
+			return AcceptProformaResult{Proforma: proforma, Invoice: inv}, nil
+		}
+	}
+
+	invoice, err := s.CreateDocument(ctx, proforma.PracticeID, proforma.CreatedBy, CreateDocumentInput{
+		Type:           DocInvoice,
+		IdempotencyKey: idemKey,
+		Counterparty:   proforma.Counterparty,
+		Lines:          proforma.Lines,
+		RelatedID:      proforma.ID,
+		VisitID:        proforma.VisitID,
+		DAFID:          proforma.DAFID,
+	})
+	if err != nil {
+		return AcceptProformaResult{Proforma: proforma}, err
+	}
+	if invoice.Status != StatusDraft && invoice.Status != StatusRejected {
+		return AcceptProformaResult{Proforma: proforma, Invoice: invoice}, nil
+	}
+	sent, err := s.SendDocument(ctx, proforma.PracticeID, invoice.ID)
+	if err != nil {
+		invoice, _ = s.store.GetDocument(ctx, proforma.PracticeID, invoice.ID)
+		return AcceptProformaResult{Proforma: proforma, Invoice: invoice}, err
+	}
+	proforma, _ = s.store.GetDocument(ctx, proforma.PracticeID, proforma.ID)
+	return AcceptProformaResult{Proforma: proforma, Invoice: sent}, nil
+}
+
+func randomToken(nBytes int) (string, error) {
+	b := make([]byte, nBytes)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // enrichCreditNoteForBillit requires the related invoice to exist on Billit and

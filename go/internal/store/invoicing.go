@@ -474,18 +474,20 @@ func (s *Store) GetDocumentByIdempotency(ctx context.Context, practiceID, key st
 func (s *Store) GetDocument(ctx context.Context, practiceID, docID string) (invoicing.Document, error) {
 	var doc invoicing.Document
 	var typ, status string
-	var number, orderID, related, visitID, dafID, peppol, createdBy *string
+	var number, orderID, related, visitID, dafID, peppol, createdBy, publicToken *string
 	var cp []byte
-	var sentAt *time.Time
+	var sentAt, acceptedAt, tokenExpiresAt *time.Time
 	var source string
 	err := s.pool.QueryRow(ctx, `
 		SELECT id, practice_id, type, status, COALESCE(source, 'practice'), number, billit_order_id, idempotency_key,
 		       counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
-		       related_document_id, visit_id, daf_id, peppol_status, sent_at, created_by, created_at, updated_at
+		       related_document_id, visit_id, daf_id, peppol_status, sent_at, accepted_at, token_expires_at,
+		       public_token, created_by, created_at, updated_at
 		FROM invoicing.documents WHERE id = $1 AND practice_id = $2`, docID, practiceID).Scan(
 		&doc.ID, &doc.PracticeID, &typ, &status, &source, &number, &orderID, &doc.IdempotencyKey,
 		&cp, &doc.Currency, &doc.TotalExclCents, &doc.TotalVATCents, &doc.TotalInclCents,
-		&related, &visitID, &dafID, &peppol, &sentAt, &createdBy, &doc.CreatedAt, &doc.UpdatedAt,
+		&related, &visitID, &dafID, &peppol, &sentAt, &acceptedAt, &tokenExpiresAt,
+		&publicToken, &createdBy, &doc.CreatedAt, &doc.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -517,7 +519,12 @@ func (s *Store) GetDocument(ctx context.Context, practiceID, docID string) (invo
 	if createdBy != nil {
 		doc.CreatedBy = *createdBy
 	}
+	if publicToken != nil {
+		doc.PublicToken = *publicToken
+	}
 	doc.SentAt = sentAt
+	doc.AcceptedAt = acceptedAt
+	doc.TokenExpiresAt = tokenExpiresAt
 	_ = json.Unmarshal(cp, &doc.Counterparty)
 
 	rows, err := s.pool.Query(ctx, `
@@ -928,3 +935,122 @@ func (s *Store) SetSaasBillingEnabled(ctx context.Context, practiceID string, en
 	}
 	return nil
 }
+
+// IssueProformaForClient moves draft → issued with a client validation token (no Billit).
+func (s *Store) IssueProformaForClient(ctx context.Context, practiceID, docID, token string, expiresAt, sentAt time.Time) (invoicing.Document, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return invoicing.Document{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var typ, status string
+	err = tx.QueryRow(ctx, `
+		SELECT type, status FROM invoicing.documents
+		WHERE id = $1 AND practice_id = $2 FOR UPDATE`, docID, practiceID).Scan(&typ, &status)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, invoicing.ErrDocNotFound
+		}
+		return invoicing.Document{}, err
+	}
+	if typ != string(invoicing.DocProforma) || status != string(invoicing.StatusDraft) {
+		return invoicing.Document{}, invoicing.ErrDocNotDraft
+	}
+	tag, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'issued',
+		    public_token = $3,
+		    token_expires_at = $4,
+		    sent_at = $5,
+		    peppol_status = 'awaiting_client',
+		    updated_at = now()
+		WHERE id = $1 AND practice_id = $2`,
+		docID, practiceID, token, expiresAt, sentAt,
+	)
+	if err != nil {
+		return invoicing.Document{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.Document{}, invoicing.ErrDocNotFound
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return invoicing.Document{}, err
+	}
+	return s.GetDocument(ctx, practiceID, docID)
+}
+
+// GetProformaByPublicToken returns the proforma and practice display name.
+func (s *Store) GetProformaByPublicToken(ctx context.Context, token string) (invoicing.Document, string, error) {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return invoicing.Document{}, "", invoicing.ErrProformaTokenInvalid
+	}
+	var docID, practiceID, practiceName string
+	err := s.pool.QueryRow(ctx, `
+		SELECT d.id::text, d.practice_id::text, COALESCE(p.name, '')
+		FROM invoicing.documents d
+		JOIN practice.practices p ON p.id = d.practice_id
+		WHERE d.public_token = $1 AND d.type = 'proforma'`, token).Scan(&docID, &practiceID, &practiceName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, "", invoicing.ErrProformaTokenInvalid
+		}
+		return invoicing.Document{}, "", err
+	}
+	doc, err := s.GetDocument(ctx, practiceID, docID)
+	if err != nil {
+		return invoicing.Document{}, "", err
+	}
+	return doc, practiceName, nil
+}
+
+// AcceptProformaByToken marks an issued proforma as accepted (one-shot).
+func (s *Store) AcceptProformaByToken(ctx context.Context, token string, now time.Time) (invoicing.Document, error) {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return invoicing.Document{}, invoicing.ErrProformaTokenInvalid
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return invoicing.Document{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var docID, practiceID, status string
+	var expiresAt, acceptedAt *time.Time
+	err = tx.QueryRow(ctx, `
+		SELECT id::text, practice_id::text, status, token_expires_at, accepted_at
+		FROM invoicing.documents
+		WHERE public_token = $1 AND type = 'proforma'
+		FOR UPDATE`, token).Scan(&docID, &practiceID, &status, &expiresAt, &acceptedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, invoicing.ErrProformaTokenInvalid
+		}
+		return invoicing.Document{}, err
+	}
+	if acceptedAt != nil || status == string(invoicing.StatusAccepted) {
+		return invoicing.Document{}, invoicing.ErrProformaAlreadyAccepted
+	}
+	if status != string(invoicing.StatusIssued) {
+		return invoicing.Document{}, invoicing.ErrProformaTokenInvalid
+	}
+	if expiresAt != nil && now.After(*expiresAt) {
+		return invoicing.Document{}, invoicing.ErrProformaExpired
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'accepted',
+		    accepted_at = $2,
+		    peppol_status = 'accepted',
+		    updated_at = now()
+		WHERE id = $1`, docID, now); err != nil {
+		return invoicing.Document{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return invoicing.Document{}, err
+	}
+	return s.GetDocument(ctx, practiceID, docID)
+}
+

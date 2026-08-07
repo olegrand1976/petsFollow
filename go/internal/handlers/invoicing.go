@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,6 +35,19 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 		pr.Post("/admin/invoicing/practices/{practiceId}/saas-billing", a.adminInvoicingSaasBilling)
 		pr.Post("/admin/invoicing/connections/{practiceId}/saas-draft", a.adminInvoicingSaasDraft)
 		pr.Post("/admin/invoicing/connections/{practiceId}/saas-documents/{docId}/send", a.adminInvoicingSaasSend)
+	})
+}
+
+func (a *API) registerInvoicingPublicRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	if a.invoicing == nil || !a.cfg.BillitEnabled {
+		return
+	}
+	r.Group(func(pr chi.Router) {
+		if rateLimit != nil {
+			pr.Use(rateLimit)
+		}
+		pr.Get("/public/proforma/{token}", a.getPublicProforma)
+		pr.Post("/public/proforma/{token}/accept", a.postPublicProformaAccept)
 	})
 }
 
@@ -195,7 +210,108 @@ func (a *API) invoicingSendDocument(w http.ResponseWriter, r *http.Request) {
 		a.writeInvoicingErr(w, r, err)
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, doc)
+	out := map[string]any{
+		"id":             doc.ID,
+		"practiceId":     doc.PracticeID,
+		"type":           doc.Type,
+		"status":         doc.Status,
+		"source":         doc.Source,
+		"number":         doc.Number,
+		"billitOrderId":  doc.BillitOrderID,
+		"idempotencyKey": doc.IdempotencyKey,
+		"counterparty":   doc.Counterparty,
+		"currency":       doc.Currency,
+		"totalExclCents": doc.TotalExclCents,
+		"totalVatCents":  doc.TotalVATCents,
+		"totalInclCents": doc.TotalInclCents,
+		"relatedDocumentId": doc.RelatedDocumentID,
+		"visitId":        doc.VisitID,
+		"dafId":          doc.DAFID,
+		"peppolStatus":   doc.PeppolStatus,
+		"sentAt":         doc.SentAt,
+		"acceptedAt":     doc.AcceptedAt,
+		"tokenExpiresAt": doc.TokenExpiresAt,
+		"createdBy":      doc.CreatedBy,
+		"createdAt":      doc.CreatedAt,
+		"updatedAt":      doc.UpdatedAt,
+		"lines":          doc.Lines,
+	}
+	if doc.Type == invoicing.DocProforma && doc.PublicToken != "" {
+		cta := strings.TrimRight(a.cfg.ProPublicSiteURL, "/") + "/proforma/" + doc.PublicToken
+		a.afterProformaIssued(r.Context(), id.UserID, id.PracticeID, doc, cta)
+		if a.cfg.DevSeedEnabled {
+			out["acceptPath"] = "/proforma/" + doc.PublicToken
+		}
+	}
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
+func (a *API) getPublicProforma(w http.ResponseWriter, r *http.Request) {
+	view, err := a.invoicing.GetPublicProforma(r.Context(), chi.URLParam(r, "token"))
+	if err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, view)
+}
+
+func (a *API) postPublicProformaAccept(w http.ResponseWriter, r *http.Request) {
+	res, err := a.invoicing.AcceptProforma(r.Context(), chi.URLParam(r, "token"))
+	if err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, res)
+}
+
+func (a *API) afterProformaIssued(ctx context.Context, authorUserID, practiceID string, doc invoicing.Document, ctaURL string) {
+	if a.notifier != nil {
+		locale := "fr"
+		practiceName := ""
+		if party, _, err := a.store.GetPracticeInvoicingProfile(ctx, practiceID); err == nil {
+			practiceName = party.LegalName
+		}
+		to := strings.TrimSpace(doc.Counterparty.Email)
+		if to != "" {
+			if err := a.notifier.SendProformaForValidation(
+				to, locale, doc.Counterparty.Name, practiceName,
+				formatMoneyEUR(doc.TotalInclCents), ctaURL,
+			); err != nil {
+				fmt.Printf("proforma email doc %s: %v\n", doc.ID, err)
+			}
+		}
+	}
+	a.recordProformaTimelineEvent(ctx, authorUserID, doc, ctaURL)
+}
+
+func formatMoneyEUR(cents int64) string {
+	return fmt.Sprintf("%.2f €", float64(cents)/100.0)
+}
+
+func (a *API) recordProformaTimelineEvent(ctx context.Context, authorUserID string, doc invoicing.Document, ctaURL string) {
+	petID := ""
+	if doc.VisitID != "" {
+		if v, err := a.store.GetVisit(ctx, doc.VisitID); err == nil {
+			petID = v.PetID
+		}
+	}
+	if petID == "" && doc.DAFID != "" {
+		if d, err := a.store.GetDAF(ctx, doc.PracticeID, doc.DAFID); err == nil {
+			petID = d.PetID
+		}
+	}
+	if petID == "" || authorUserID == "" {
+		return
+	}
+	title := "Proforma à valider"
+	body := fmt.Sprintf("Devis %s — validez pour facturation.", formatMoneyEUR(doc.TotalInclCents))
+	meta := map[string]any{
+		"kind":       "proforma_pending",
+		"documentId": doc.ID,
+		"url":        ctaURL,
+		"cta":        "Valider",
+	}
+	_ = a.store.InsertDossierEventWithMeta(ctx, petID, authorUserID, title, body, meta)
 }
 
 func (a *API) adminInvoicingConnections(w http.ResponseWriter, r *http.Request) {
@@ -307,6 +423,12 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusConflict, "connection_not_active", "connection_not_active")
 	case errors.Is(err, invoicing.ErrDocNotFound):
 		writeErr(w, r, http.StatusNotFound, "not_found", "document_not_found")
+	case errors.Is(err, invoicing.ErrProformaTokenInvalid):
+		writeErr(w, r, http.StatusNotFound, "not_found", "proforma_token_invalid")
+	case errors.Is(err, invoicing.ErrProformaExpired):
+		writeErr(w, r, http.StatusGone, "gone", "proforma_expired")
+	case errors.Is(err, invoicing.ErrProformaAlreadyAccepted):
+		writeErr(w, r, http.StatusConflict, "conflict", "proforma_already_accepted")
 	case errors.Is(err, invoicing.ErrDocNotDraft):
 		writeErr(w, r, http.StatusConflict, "document_not_draft", "document_not_draft")
 	case errors.Is(err, invoicing.ErrSendInProgress):

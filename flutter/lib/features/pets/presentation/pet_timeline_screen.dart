@@ -17,6 +17,7 @@ import 'package:petsfollow_mobile/features/pets/presentation/consultation_view_s
 import 'package:petsfollow_mobile/features/pets/presentation/lab_panels_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PetTimelineScreen extends StatefulWidget {
   const PetTimelineScreen({
@@ -189,6 +190,20 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     final meta = m['meta'];
     if (meta is! Map) return '';
     return (meta['reportStatus']?.toString() ?? '').trim();
+  }
+
+  String? _proformaValidateUrl(Map<String, dynamic> m) {
+    final meta = m['meta'];
+    if (meta is! Map) return null;
+    if ((meta['kind']?.toString() ?? '') != 'proforma_pending') return null;
+    final url = (meta['url']?.toString() ?? '').trim();
+    return url.isEmpty ? null : url;
+  }
+
+  Future<void> _openProformaUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Widget? _consultationCta({
@@ -508,6 +523,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 );
                           final openReport = flags.available;
                           final pendingReport = flags.pending;
+                          final proformaUrl = type == 'event' ? _proformaValidateUrl(m) : null;
+                          final eventTitle = (m['title'] as String?)?.trim();
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
@@ -516,7 +533,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                     ? 'timeline_visit_report_$visitId'
                                     : pendingReport
                                         ? 'timeline_visit_pending_$visitId'
-                                        : 'timeline_item_$rowId',
+                                        : proformaUrl != null
+                                            ? 'timeline_proforma_$rowId'
+                                            : 'timeline_item_$rowId',
                               ),
                               leading: visitId != null && openReport
                                   ? _consultationLeading(
@@ -529,12 +548,18 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                       backgroundColor: _colorForType(type, p.textMuted)
                                           .withValues(alpha: 0.15),
                                       child: Icon(
-                                        _iconForType(type),
+                                        proformaUrl != null
+                                            ? Icons.request_quote_outlined
+                                            : _iconForType(type),
                                         color: _colorForType(type, p.textMuted),
                                         size: 20,
                                       ),
                                     ),
-                              title: Text(_typeLabel(l10n, type)),
+                              title: Text(
+                                (type == 'event' && eventTitle != null && eventTitle.isNotEmpty)
+                                    ? eventTitle
+                                    : _typeLabel(l10n, type),
+                              ),
                               subtitle: Text(
                                 [
                                   if (createdAt != null) dateFmt.format(createdAt.toLocal()),
@@ -543,9 +568,19 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 ].join(' · '),
                               ),
                               trailing: visitId == null
-                                  ? (type == 'lab_panel'
-                                      ? const Icon(Icons.chevron_right)
-                                      : null)
+                                  ? (proformaUrl != null
+                                      ? TextButton(
+                                          key: Key('timeline_proforma_cta_$rowId'),
+                                          style: TextButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            visualDensity: VisualDensity.compact,
+                                          ),
+                                          onPressed: () => _openProformaUrl(proformaUrl),
+                                          child: Text(l10n.proformaValidateCta),
+                                        )
+                                      : (type == 'lab_panel'
+                                          ? const Icon(Icons.chevron_right)
+                                          : null))
                                   : _consultationCta(
                                       l10n: l10n,
                                       visitId: visitId,
@@ -564,7 +599,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                         ),
                                       );
                                     }
-                                  : null,
+                                  : proformaUrl != null
+                                      ? () => _openProformaUrl(proformaUrl)
+                                      : null,
                             ),
                           );
                         }),

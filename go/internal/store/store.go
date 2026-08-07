@@ -186,6 +186,12 @@ type ClientSummary struct {
 	ContactPhone           string `json:"contactPhone,omitempty"`
 	Address                string `json:"address,omitempty"`
 	NationalRegistryNumber string `json:"nationalRegistryNumber,omitempty"`
+	BillingVATNumber       string `json:"billingVatNumber,omitempty"`
+	BillingCompanyNumber   string `json:"billingCompanyNumber,omitempty"`
+	BillingStreet          string `json:"billingStreet,omitempty"`
+	BillingCity            string `json:"billingCity,omitempty"`
+	BillingPostal          string `json:"billingPostal,omitempty"`
+	BillingCountry         string `json:"billingCountry,omitempty"`
 	PetCount               int    `json:"petCount"`
 }
 
@@ -251,17 +257,25 @@ const clientSummarySelect = `
 		COALESCE(u.first_name,''), COALESCE(u.last_name,''),
 		COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
 		COALESCE(u.address,''), COALESCE(u.national_registry_number,''),
+		COALESCE(u.billing_vat_number,''), COALESCE(u.billing_company_number,''),
+		COALESCE(u.billing_street,''), COALESCE(u.billing_city,''),
+		COALESCE(u.billing_postal,''), COALESCE(u.billing_country,''),
 		COUNT(p.id)::int`
 
 const clientSummaryGroupBy = `
 		u.id, u.email, u.full_name, u.first_name, u.last_name,
-		u.avatar_url, u.contact_phone, u.address, u.national_registry_number`
+		u.avatar_url, u.contact_phone, u.address, u.national_registry_number,
+		u.billing_vat_number, u.billing_company_number,
+		u.billing_street, u.billing_city, u.billing_postal, u.billing_country`
 
 func scanClientSummary(scan func(dest ...any) error) (ClientSummary, error) {
 	var c ClientSummary
 	err := scan(
 		&c.UserID, &c.Email, &c.FullName, &c.FirstName, &c.LastName,
-		&c.AvatarURL, &c.ContactPhone, &c.Address, &c.NationalRegistryNumber, &c.PetCount,
+		&c.AvatarURL, &c.ContactPhone, &c.Address, &c.NationalRegistryNumber,
+		&c.BillingVATNumber, &c.BillingCompanyNumber,
+		&c.BillingStreet, &c.BillingCity, &c.BillingPostal, &c.BillingCountry,
+		&c.PetCount,
 	)
 	return c, err
 }
@@ -1063,7 +1077,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		) rc ON true
 		WHERE p.pet_id=$1
 		UNION ALL
-		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb
+		SELECT id::text, 'event', event_type, content, created_at, COALESCE(meta, '{}'::jsonb)
 		FROM pets.dossier_events WHERE pet_id=$1
 		UNION ALL
 		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
@@ -1103,6 +1117,10 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 }
 
 func (s *Store) InsertDossierEvent(ctx context.Context, petID, authorUserID, eventType, content string) error {
+	return s.InsertDossierEventWithMeta(ctx, petID, authorUserID, eventType, content, nil)
+}
+
+func (s *Store) InsertDossierEventWithMeta(ctx context.Context, petID, authorUserID, eventType, content string, meta map[string]any) error {
 	petID = strings.TrimSpace(petID)
 	authorUserID = strings.TrimSpace(authorUserID)
 	eventType = strings.TrimSpace(eventType)
@@ -1110,10 +1128,17 @@ func (s *Store) InsertDossierEvent(ctx context.Context, petID, authorUserID, eve
 	if petID == "" || authorUserID == "" || eventType == "" || content == "" {
 		return ErrValidation
 	}
-	_, err := s.pool.Exec(ctx, `
-		INSERT INTO pets.dossier_events (id, pet_id, author_user_id, event_type, content)
-		VALUES ($1, $2::uuid, $3::uuid, $4, $5)`,
-		uuid.NewString(), petID, authorUserID, eventType, content)
+	if meta == nil {
+		meta = map[string]any{}
+	}
+	raw, err := json.Marshal(meta)
+	if err != nil {
+		return err
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO pets.dossier_events (id, pet_id, author_user_id, event_type, content, meta)
+		VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6::jsonb)`,
+		uuid.NewString(), petID, authorUserID, eventType, content, raw)
 	return err
 }
 
