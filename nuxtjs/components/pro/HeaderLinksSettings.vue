@@ -2,10 +2,14 @@
   <div class="header-links-settings" data-testid="settings-header-links">
     <p class="pro-profile-form__hint">{{ $t('headerLinks.settingsHint') }}</p>
 
-    <section v-if="catalog.length" class="header-links-settings__block" data-testid="settings-header-links-catalog">
-      <h3 class="header-links-settings__subtitle">{{ $t('headerLinks.catalogTitle') }}</h3>
-      <ul class="header-links-settings__list">
-        <li v-for="(row, idx) in catalogRows" :key="row.id" class="header-links-settings__row">
+    <ul v-if="rows.length" class="header-links-settings__list" data-testid="settings-header-links-list">
+      <li
+        v-for="(row, idx) in rows"
+        :key="row.id"
+        class="header-links-settings__row"
+        :data-testid="`header-link-row-${row.id}`"
+      >
+        <template v-if="row.kind === 'catalog'">
           <label class="header-links-settings__toggle">
             <input
               v-model="row.enabled"
@@ -15,111 +19,85 @@
             >
             <span>{{ catalogLabel(row.id, row.label) }}</span>
           </label>
-          <div class="header-links-settings__order">
-            <button
-              type="button"
-              class="pro-topbar__icon-btn"
-              :disabled="idx === 0"
-              :aria-label="$t('headerLinks.moveUp')"
-              @click="moveCatalog(idx, -1)"
-            >
-              <ProIcon name="keyboard_arrow_up" :size="18" />
-            </button>
-            <button
-              type="button"
-              class="pro-topbar__icon-btn"
-              :disabled="idx === catalogRows.length - 1"
-              :aria-label="$t('headerLinks.moveDown')"
-              @click="moveCatalog(idx, 1)"
-            >
-              <ProIcon name="keyboard_arrow_down" :size="18" />
-            </button>
-          </div>
-        </li>
-      </ul>
-    </section>
-
-    <section class="header-links-settings__block" data-testid="settings-header-links-custom">
-      <div class="header-links-settings__custom-head">
-        <h3 class="header-links-settings__subtitle">{{ $t('headerLinks.customTitle') }}</h3>
-        <span class="text-muted">{{ custom.length }}/{{ maxCustom }}</span>
-      </div>
-
-      <ul v-if="custom.length" class="header-links-settings__list">
-        <li v-for="(c, idx) in custom" :key="c.id" class="header-links-settings__custom-row">
+        </template>
+        <template v-else>
           <div class="header-links-settings__custom-fields">
             <ProInput
-              v-model="c.label"
+              v-model="row.label"
               :label="$t('headerLinks.customLabel')"
-              :name="`custom-label-${c.id}`"
+              :name="`custom-label-${row.id}`"
               maxlength="40"
               required
               @update:model-value="emitPrefs"
             />
             <ProInput
-              v-model="c.url"
+              v-model="row.url"
               :label="$t('headerLinks.customUrl')"
-              :name="`custom-url-${c.id}`"
+              :name="`custom-url-${row.id}`"
               type="url"
               required
               @update:model-value="emitPrefs"
             />
           </div>
-          <div class="header-links-settings__order">
-            <button
-              type="button"
-              class="pro-topbar__icon-btn"
-              :disabled="idx === 0"
-              :aria-label="$t('headerLinks.moveUp')"
-              @click="moveCustom(idx, -1)"
-            >
-              <ProIcon name="keyboard_arrow_up" :size="18" />
-            </button>
-            <button
-              type="button"
-              class="pro-topbar__icon-btn"
-              :disabled="idx === custom.length - 1"
-              :aria-label="$t('headerLinks.moveDown')"
-              @click="moveCustom(idx, 1)"
-            >
-              <ProIcon name="keyboard_arrow_down" :size="18" />
-            </button>
-            <button
-              type="button"
-              class="pro-topbar__icon-btn"
-              :aria-label="$t('headerLinks.remove')"
-              :data-testid="`header-link-remove-${c.id}`"
-              @click="removeCustom(idx)"
-            >
-              <ProIcon name="delete" :size="18" />
-            </button>
-          </div>
-        </li>
-      </ul>
+        </template>
+        <div class="header-links-settings__order">
+          <button
+            type="button"
+            class="pro-topbar__icon-btn"
+            :disabled="idx === 0"
+            :aria-label="$t('headerLinks.moveUp')"
+            :data-testid="`header-link-up-${row.id}`"
+            @click="move(idx, -1)"
+          >
+            <ProIcon name="keyboard_arrow_up" :size="18" />
+          </button>
+          <button
+            type="button"
+            class="pro-topbar__icon-btn"
+            :disabled="idx === rows.length - 1"
+            :aria-label="$t('headerLinks.moveDown')"
+            :data-testid="`header-link-down-${row.id}`"
+            @click="move(idx, 1)"
+          >
+            <ProIcon name="keyboard_arrow_down" :size="18" />
+          </button>
+          <button
+            v-if="row.kind === 'custom'"
+            type="button"
+            class="pro-topbar__icon-btn"
+            :aria-label="$t('headerLinks.remove')"
+            :data-testid="`header-link-remove-${row.id}`"
+            @click="removeCustom(idx)"
+          >
+            <ProIcon name="delete" :size="18" />
+          </button>
+        </div>
+      </li>
+    </ul>
 
+    <div class="header-links-settings__custom-head">
+      <span class="text-muted">{{ customCount }}/{{ maxCustom }}</span>
       <ProButton
         type="button"
         variant="secondary"
-        :disabled="custom.length >= maxCustom"
+        :disabled="customCount >= maxCustom"
         data-testid="header-links-add-custom"
         @click="addCustom"
       >
         {{ $t('headerLinks.addCustom') }}
       </ProButton>
-      <p v-if="custom.length >= maxCustom" class="pro-profile-form__hint">{{ $t('headerLinks.maxReached') }}</p>
-    </section>
+    </div>
+    <p v-if="customCount >= maxCustom" class="pro-profile-form__hint">{{ $t('headerLinks.maxReached') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-export type HeaderLinkCustom = { id: string, label: string, url: string }
-export type HeaderLinkCatalogRow = { id: string, label: string, url: string, enabled: boolean }
-export type HeaderLinksPrefs = {
-  configured: boolean
-  enabled: string[]
-  order: string[]
-  custom: HeaderLinkCustom[]
-}
+import type { HeaderLinkCatalogRow, HeaderLinkUnifiedRow, HeaderLinksPrefs } from '~/utils/headerLinks'
+import {
+  buildUnifiedRows,
+  moveRow,
+  prefsFromUnifiedRows,
+} from '~/utils/headerLinks'
 
 const props = withDefaults(
   defineProps<{
@@ -139,34 +117,19 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const catalogRows = ref<HeaderLinkCatalogRow[]>([])
-const custom = ref<HeaderLinkCustom[]>([])
+const rows = ref<HeaderLinkUnifiedRow[]>([])
+let applyingLocal = false
+
+const customCount = computed(() => rows.value.filter((r) => r.kind === 'custom').length)
 
 watch(
   () => [props.catalog, props.modelValue] as const,
   () => {
-    syncFromProps()
+    if (applyingLocal) return
+    rows.value = buildUnifiedRows(props.catalog || [], props.modelValue)
   },
   { immediate: true, deep: true },
 )
-
-function syncFromProps() {
-  const prefs = props.modelValue
-  const cat = (props.catalog || []).map((c) => ({ ...c }))
-  // Order catalog rows by prefs.order when present.
-  if (prefs.order?.length) {
-    cat.sort((a, b) => {
-      const ia = prefs.order.indexOf(a.id)
-      const ib = prefs.order.indexOf(b.id)
-      if (ia === -1 && ib === -1) return 0
-      if (ia === -1) return 1
-      if (ib === -1) return -1
-      return ia - ib
-    })
-  }
-  catalogRows.value = cat
-  custom.value = (prefs.custom || []).map((c) => ({ ...c }))
-}
 
 function catalogLabel(id: string, fallback: string) {
   const key = `headerLinks.catalog.${id}`
@@ -174,90 +137,56 @@ function catalogLabel(id: string, fallback: string) {
   return translated === key ? fallback : translated
 }
 
-function buildPrefs(): HeaderLinksPrefs {
-  const enabled = catalogRows.value.filter((r) => r.enabled).map((r) => r.id)
-  for (const c of custom.value) {
-    if (c.id && !enabled.includes(c.id)) enabled.push(c.id)
-  }
-  const order = [
-    ...catalogRows.value.filter((r) => r.enabled).map((r) => r.id),
-    ...custom.value.map((c) => c.id),
-  ]
-  return {
-    configured: true,
-    enabled,
-    order,
-    custom: custom.value.map((c) => ({
-      id: c.id,
-      label: c.label.trim(),
-      url: c.url.trim(),
-    })),
-  }
-}
-
 function emitPrefs() {
-  emit('update:modelValue', buildPrefs())
+  applyingLocal = true
+  emit('update:modelValue', prefsFromUnifiedRows(rows.value))
+  nextTick(() => {
+    applyingLocal = false
+  })
 }
 
-function moveCatalog(idx: number, delta: number) {
-  const next = idx + delta
-  if (next < 0 || next >= catalogRows.value.length) return
-  const arr = [...catalogRows.value]
-  const [row] = arr.splice(idx, 1)
-  arr.splice(next, 0, row)
-  catalogRows.value = arr
+/** Flush local draft fields into v-model (call before parent save). */
+function flush() {
   emitPrefs()
 }
 
-function moveCustom(idx: number, delta: number) {
-  const next = idx + delta
-  if (next < 0 || next >= custom.value.length) return
-  const arr = [...custom.value]
-  const [row] = arr.splice(idx, 1)
-  arr.splice(next, 0, row)
-  custom.value = arr
+function move(idx: number, delta: number) {
+  rows.value = moveRow(rows.value, idx, delta)
   emitPrefs()
 }
 
 function addCustom() {
-  if (custom.value.length >= props.maxCustom) return
+  if (customCount.value >= props.maxCustom) return
   const id = `custom_${Math.random().toString(36).slice(2, 10)}`
-  custom.value = [...custom.value, { id, label: '', url: 'https://' }]
+  rows.value = [...rows.value, { kind: 'custom', id, label: '', url: 'https://' }]
   emitPrefs()
 }
 
 function removeCustom(idx: number) {
-  custom.value = custom.value.filter((_, i) => i !== idx)
+  rows.value = rows.value.filter((_, i) => i !== idx)
   emitPrefs()
 }
+
+defineExpose({ flush })
 </script>
 
 <style scoped>
-.header-links-settings__block {
-  margin-top: 1rem;
-}
-.header-links-settings__subtitle {
-  margin: 0 0 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--pf-vet-primary);
-}
 .header-links-settings__custom-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 .header-links-settings__list {
   list-style: none;
-  margin: 0 0 0.75rem;
+  margin: 0.75rem 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-.header-links-settings__row,
-.header-links-settings__custom-row {
+.header-links-settings__row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -273,6 +202,7 @@ function removeCustom(idx: number) {
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
+  padding-top: 0.35rem;
 }
 .header-links-settings__order {
   display: inline-flex;

@@ -73,6 +73,7 @@
       >
         <ProHeaderLinksSettings
           v-if="headerLinksLoaded"
+          ref="headerLinksSettingsRef"
           v-model="headerLinksPrefs"
           :catalog="headerLinksCatalog"
           :max-custom="headerLinksMaxCustom"
@@ -500,7 +501,8 @@
 <script setup lang="ts">
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
 import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
-import type { HeaderLinkCatalogRow, HeaderLinksPrefs } from '~/components/pro/HeaderLinksSettings.vue'
+import type { HeaderLinkCatalogRow, HeaderLinksPrefs } from '~/utils/headerLinks'
+import { validateHeaderLinksCustoms } from '~/utils/headerLinks'
 import type { AppLocale } from '~/composables/useLocaleSync'
 import {
   DEFAULT_DESK_IDLE_MINUTES,
@@ -539,6 +541,7 @@ const headerLinksError = ref('')
 const headerLinksSaving = ref(false)
 const headerLinksSaved = ref(false)
 const headerLinksSaveError = ref('')
+const headerLinksSettingsRef = ref<{ flush: () => void } | null>(null)
 
 const activeTab = ref('profile')
 const settingsTabs = computed(() => {
@@ -1012,8 +1015,16 @@ async function saveHeaderLinks() {
   headerLinksSaving.value = true
   headerLinksSaved.value = false
   headerLinksSaveError.value = ''
+  headerLinksSettingsRef.value?.flush()
+  await nextTick()
   if (!profileLoaded.value) {
     headerLinksSaveError.value = t('settings.profileLoadFailed')
+    headerLinksSaving.value = false
+    return
+  }
+  const validationKey = validateHeaderLinksCustoms(headerLinksPrefs.value.custom || [])
+  if (validationKey) {
+    headerLinksSaveError.value = t(`headerLinks.${validationKey}`)
     headerLinksSaving.value = false
     return
   }
@@ -1045,6 +1056,9 @@ async function saveHeaderLinks() {
       custom: Array.isArray(prefs.custom) ? prefs.custom : [],
     }
     headerLinksSaved.value = true
+    if (import.meta.client) {
+      window.dispatchEvent(new CustomEvent('pf-header-links-changed'))
+    }
   } catch (e: any) {
     headerLinksSaveError.value = mapError(e)
   } finally {

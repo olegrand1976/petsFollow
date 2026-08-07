@@ -161,6 +161,7 @@ Compte : `vet.demo@petsfollow.test`
 | C1.5 | P1 | Plages / vacances | Schedule + vacations | Calendrier respecte indispos |
 | C1.6 | P2 | Prefs email véto | Notifs message / FR / visit | Toggle persist |
 | C1.7 | P2 | Client booking | Activer/désactiver booking client | Flutter BookVisit reflète l’état |
+| C1.8 | P1 | Liens utiles header | Settings → Liens utiles (catalogue BE/FR/ES + customs https) ; topbar dropdown | Persist `header_links` ; `GET /vet/header-links` ; Go `TestHeaderLinks_*` |
 
 ### Digest produit (interne + Nouveautés)
 
@@ -174,7 +175,7 @@ Compte : `vet.demo@petsfollow.test`
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) |
+| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) ; topbar **Liens utiles** (`GET /vet/header-links`, catalogue pays + customs) |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
 | C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) |
 | C2.4 | P0 | Dossier pet | Chart FR, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
@@ -754,8 +755,12 @@ Fichiers : `go/internal/handlers/security_hardening_integration_test.go`, `pitch
 | S10 | Enregistrement pitch (`pitch-sims/`) | Upload et historique **sans** `audioUrl` / `audioObjectKey` ; `hasAudio=true` ; stream 200 propriétaire **et** son manager, ≠ 200 anonyme et commercial d'une autre équipe ; `Cache-Control: private, no-store` |
 | S11 | Liste `publicPrefixes` | Épinglée à `avatars/ pets/ messages/ brand/` — l'élargir expose des objets au binding `allUsers`, donc décision explicite |
 | S12 | `Upload` d'une clé sensible | Aucune URL rendue par le store (local **et** GCS) pour `documents/`, `pitch-sims/`, `consultation-shares-v2/`, `compendium-imports/` |
+| S17 | `PATCH /me/password` | Refresh d'un **autre** appareil → **401** ; la paire réémise à l'appelant → **200** |
+| S18 | Manager attache un profil sur un contact d'une **autre** équipe | 403/404 — le périmètre s'arrête à ses commerciaux rattachés |
 
 Conséquence assumée de S7/S8 : l'access token reste valide jusqu'à son expiration (~15 min) — la révocation est vérifiée au refresh, pas à chaque requête. Le bump est **global au compte** : un logout web ferme aussi la session Flutter.
+
+Au premier déploiement, les tokens émis avant la migration n'ont pas de claim `tv` (lu à 0 ≠ 1 en base) : toutes les sessions actives tombent au premier refresh et chacun se reconnecte une fois.
 
 #### Gardes inverses (anti sur-restriction)
 
@@ -766,6 +771,7 @@ Un durcissement qui casse la fonctionnalité passe tous les tests « doit refuse
 | S13 | `checkoutUrl` réellement émis par `POST /pets` | **200** — un `mock-complete` qui refuserait tout satisferait sinon S6 |
 | S14 | Admin attache un profil `vet` | **201** — la restriction S5 ne doit viser que la voie commerciale |
 | S15 | Trois refresh consécutifs | **200** à chaque fois — un bump de `token_version` au refresh déconnecterait tout le monde en boucle tout en satisfaisant S7 |
+| S16 | Manager attache un profil sur un contact de **son** équipe | **201** — restreindre au seul commercial assigné rendrait la route morte pour les managers |
 
 #### Face Pro (Vitest)
 

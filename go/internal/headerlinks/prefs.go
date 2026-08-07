@@ -108,9 +108,6 @@ func NormalizeAndValidate(countryCode string, in Prefs) (Prefs, error) {
 			return Prefs{}, fmt.Errorf("too_many_custom_links")
 		}
 	}
-	for _, c := range customByID {
-		out.Custom = append(out.Custom, c)
-	}
 	// Stable order of custom slice by walking input order then leftovers.
 	out.Custom = reorderCustoms(in.Custom, customByID)
 

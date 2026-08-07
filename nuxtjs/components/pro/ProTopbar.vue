@@ -340,6 +340,9 @@ const switchableProfiles = computed(() => {
 onMounted(async () => {
   initFromStorage()
   document.addEventListener('click', onDocClick)
+  if (import.meta.client) {
+    window.addEventListener('pf-header-links-changed', onHeaderLinksChanged)
+  }
   try {
     await fetchUser()
     initFromStorage()
@@ -355,8 +358,15 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
+  if (import.meta.client) {
+    window.removeEventListener('pf-header-links-changed', onHeaderLinksChanged)
+  }
   if (props.showNotifications) stopPolling()
 })
+
+function onHeaderLinksChanged() {
+  void loadHeaderLinks()
+}
 
 watch(
   () => desk.uiBlocked.value,
