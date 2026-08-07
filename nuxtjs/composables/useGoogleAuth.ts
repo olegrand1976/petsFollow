@@ -44,6 +44,13 @@ export function loadGoogleIdentityScript(): Promise<void> {
   return googleScriptPromise
 }
 
+/** GSI `renderButton` width: min 200, max 400 (px). */
+function googleButtonWidth(el: HTMLElement): number {
+  const raw = Math.round(el.getBoundingClientRect().width || el.clientWidth || 0)
+  if (raw <= 0) return 400
+  return Math.min(400, Math.max(200, raw))
+}
+
 export async function mountGoogleSignInButton(
   el: HTMLElement,
   clientId: string,
@@ -56,12 +63,13 @@ export async function mountGoogleSignInButton(
     client_id: clientId,
     callback: (response) => onCredential(response.credential),
   })
+  el.replaceChildren()
   window.google.accounts.id.renderButton(el, {
     type: 'standard',
     theme: 'outline',
     size: 'large',
     text: 'continue_with',
     shape: 'rectangular',
-    width: 320,
+    width: googleButtonWidth(el),
   })
 }

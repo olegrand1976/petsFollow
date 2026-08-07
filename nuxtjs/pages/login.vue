@@ -272,8 +272,8 @@ watch(step, async (s) => {
 }
 
 .pro-login-google {
-  display: flex;
-  justify-content: center;
+  display: block;
+  width: 100%;
   min-height: 44px;
 }
 
