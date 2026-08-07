@@ -859,7 +859,7 @@ Prérequis : API `:8291` + Nuxt `:3002` + seed (`AUTH_RATE_LIMIT_PER_MIN=1000` v
 
 CI PR : job `playwright` — stack Postgres + API + Nuxt preview, exécute `--grep @p0`.
 
-Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt → **puis** job `cleanup-quality` (si deploy OK) qui purge les artefacts smoke/e2e (`infra/gcp/cleanup-staging-quality.sh`). Manuel : `make gcp-staging-quality-cleanup` ou `PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup`.
+Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt → **puis** job `cleanup-quality` (`if: always()` — tourne même si deploy/Playwright échouent) qui purge **tous** les artefacts smoke/e2e (`infra/gcp/cleanup-staging-quality.sh` : users éphémères, mesures, visites/CR, salles/sites, prospects, tickets support, pharmacie — hors `saas_master` et factures delivered). Les smoke manuels staging (`make gcp-smoke`, `make smoke-pharmacy-s6-staging`, `infra/gcp/postdeploy.sh`) enchaînent la même purge. Garde-fou : `tests/unit/e2e-cleanup-coverage.spec.ts` casse `make test-nuxt` si un préfixe email e2e n'est pas couvert par le SQL de purge — toute nouvelle donnée e2e doit porter un marqueur `e2e`/`E2E` purgé par le script. Manuel : `make gcp-staging-quality-cleanup` ou `PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup`.
 
 Prod (`deploy-gcp-prod.yml`) : **pas** de suite CI complète (déjà validée sur PR + staging) — deploy puis smoke **non mutatif** (`SMOKE_PROFILE=prod`). Local : `make smoke-prod`.
 

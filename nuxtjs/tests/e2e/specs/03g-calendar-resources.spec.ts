@@ -149,6 +149,9 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
       }
     }
 
+    // Marqueur notes → purgé par cleanup-staging-quality.sh (notes LIKE 'e2e %').
+    await page.getByTestId('new-appt-notes').fill(`e2e rdv resources ${Date.now()}`)
+
     // Far-out weekday + unique afternoon slot to avoid assignee_busy on busy staging.
     const future = new Date()
     future.setDate(future.getDate() + 28 + (Date.now() % 5))

@@ -45,6 +45,9 @@ jobs:
           gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
       - name: Postdeploy (jobs + smoke, sans seed)
         # Seed staging : manuel uniquement (admin Pro « RESET STAGING » ou postdeploy.sh --seed).
+        # Purge quality déléguée au job cleanup-quality (if: always()) — pas de double purge ici.
+        env:
+          PF_SKIP_QUALITY_CLEANUP: "1"
         run: bash infra/gcp/postdeploy.sh
       - name: Summary
         run: |
@@ -101,9 +104,11 @@ jobs:
 
   cleanup-quality:
     name: Purge artefacts smoke/e2e (staging DB)
-    # Après deploy OK (smoke postdeploy mutatif) — même si Playwright cancelled/skipped.
+    # Toujours purger si le deploy a démarré : même en échec/cancel (le smoke postdeploy
+    # mutatif a pu tourner avant) et même si Playwright fail/cancelled/skipped.
+    # deploy skipped (job quality rouge) = rien n'a mutaté staging → pas de purge inutile.
     needs: [deploy, playwright]
-    if: always() && needs.deploy.result == 'success'
+    if: always() && needs.deploy.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

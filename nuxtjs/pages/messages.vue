@@ -91,6 +91,7 @@
                 v-model="draft"
                 class="pro-textarea"
                 rows="3"
+                data-testid="messages-composer"
                 :placeholder="$t('messages.placeholder')"
               />
               <div class="pro-chat__composer-actions">

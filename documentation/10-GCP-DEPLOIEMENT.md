@@ -70,7 +70,7 @@ bash infra/gcp/postdeploy.sh --seed   # reset CLI (+ email si SEED_NOTIFY_STAFF)
 
 ### Cleanup artefacts quality (post Playwright)
 
-Après chaque suite Playwright staging, le job `cleanup-quality` purge les écritures smoke/e2e (messages, BP/labs, prospects CRM timestampés, users `smoke*@petsfollow.test`, docs factu draft) — aussi si Playwright est cancelled (smoke postdeploy déjà mutatif). Manuel :
+Après chaque run du workflow staging, le job `cleanup-quality` (`if: always()` — même si deploy ou Playwright échouent) purge **toutes** les écritures smoke/e2e : messages (+ média `e2e media`), BP/FC/poids/labos, visites + CR e2e, salles `Box e2e` / sites `E2E Antenne`, prospects CRM, tickets support `E2E support`, lots pharmacie `E2E-*`/`S6-*` (+ DAF/BL/inventaire), users éphémères (`smoke*`, `register+`, `pw-*`, `hr-dur-*`, …) et cabinets orphelins, docs factu draft. Exclusions : `saas_master` et factures delivered/issued (Billit live). Les smoke manuels (`make gcp-smoke`, `smoke-pharmacy-s6-staging`, `postdeploy.sh`) enchaînent la même purge automatiquement. Garde-fou : `nuxtjs/tests/unit/e2e-cleanup-coverage.spec.ts` (préfixes emails e2e ↔ SQL). Manuel :
 
 ```bash
 make gcp-staging-quality-cleanup

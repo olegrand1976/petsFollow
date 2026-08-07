@@ -47,6 +47,18 @@ if ! curl -sf --max-time 5 "${PUBLIC_API_URL}/health" >/dev/null 2>&1; then
   export PETSFOLLOW_API_URL="$API_URL"
 fi
 
+# Purge des artefacts smoke même si le smoke échoue (PF_SKIP_QUALITY_CLEANUP=1
+# pour la déléguer, ex. job cleanup-quality du workflow staging).
+run_quality_cleanup() {
+  if [[ "${PF_SKIP_QUALITY_CLEANUP:-}" == "1" ]]; then
+    return 0
+  fi
+  echo "→ Purge artefacts smoke/e2e (staging DB)"
+  bash "${SCRIPT_DIR}/cleanup-staging-quality.sh" \
+    || echo "WARN: purge quality échouée — relancer make gcp-staging-quality-cleanup" >&2
+}
+trap run_quality_cleanup EXIT
+
 bash "$(cd "${SCRIPT_DIR}/../.." && pwd)/scripts/smoke-test.sh"
 
 cat <<EOF

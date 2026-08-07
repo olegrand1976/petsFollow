@@ -90,6 +90,8 @@ test('envoi pièce jointe image sur un thread', { tag: '@p0' }, async ({ page })
   fs.writeFileSync(tmp, jpeg)
 
   try {
+    // Marqueur body → purgé par cleanup-staging-quality.sh ('e2e media %').
+    await page.getByTestId('messages-composer').fill(`e2e media ${Date.now()}`)
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(tmp)
     await expect(page.locator('.pro-chat__media-img').last()).toBeVisible({ timeout: 20000 })

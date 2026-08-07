@@ -211,15 +211,23 @@ gcp-staging-quality-cleanup:
 billit-saas-master-smoke:
 	@bash scripts/smoke-billit-saas-master.sh
 
+# Smoke staging mutatif → purge quality systématique derrière (même en échec).
 smoke-staging:
-	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
+	@set +e; PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh; rc=$$?; \
+	echo "→ Purge artefacts smoke/e2e (staging DB)"; \
+	bash infra/gcp/cleanup-staging-quality.sh || echo "WARN: purge quality échouée — relancer make gcp-staging-quality-cleanup" >&2; \
+	exit $$rc
 
 # Pharmacie S6 : receipt → DAF → VAMReg dry-run → movements (local ou PETSFOLLOW_API_URL=staging).
 smoke-pharmacy-s6:
 	@bash scripts/smoke-pharmacy-s6.sh
 
+# Mutatif sur staging → purge quality systématique derrière (même en échec).
 smoke-pharmacy-s6-staging:
-	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-pharmacy-s6.sh
+	@set +e; PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-pharmacy-s6.sh; rc=$$?; \
+	echo "→ Purge artefacts smoke/e2e (staging DB)"; \
+	bash infra/gcp/cleanup-staging-quality.sh || echo "WARN: purge quality échouée — relancer make gcp-staging-quality-cleanup" >&2; \
+	exit $$rc
 
 gcp-github:
 	bash infra/gcp/setup-github-deploy.sh
