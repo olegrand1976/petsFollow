@@ -1,7 +1,10 @@
 import { isProRole, parseJwtRole } from '~/composables/useAuth'
 import { applySalesOpsLayout } from '~/utils/applySalesOpsLayout'
 
-/** Pick Pro shell layout for /produits (vet / commercial / admin). */
+/**
+ * Pose le shell Pro selon le rôle pour les pages partagées multi-layouts
+ * (`/produits`, `/nouveautes` : vet → default, admin / commercial / manager → shell dédié).
+ */
 export default defineNuxtRouteMiddleware(async () => {
   let role: string | null = null
   try {

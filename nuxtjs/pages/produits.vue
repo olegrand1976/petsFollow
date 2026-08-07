@@ -113,7 +113,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: ['products-layout'],
+  middleware: ['shared-pro-layout'],
 })
 
 const { t, tm, rt } = useI18n()

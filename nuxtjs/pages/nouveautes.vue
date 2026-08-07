@@ -35,6 +35,12 @@
 </template>
 
 <script setup lang="ts">
+// Page partagée entre les 4 shells (vet / admin / commercial / manager) :
+// le middleware shared-pro-layout pose le layout selon le rôle, sinon retombe sur `default`.
+definePageMeta({
+  middleware: ['shared-pro-layout'],
+})
+
 type DigestItem = {
   date: string
   headline: string
