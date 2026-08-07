@@ -72,6 +72,9 @@ func TestPharmacyDAFPetDispensesAndDrafts(t *testing.T) {
 	var petID, practiceID string
 	for _, row := range env["data"].([]any) {
 		p, _ := row.(map[string]any)
+		if p["isWalkinPlaceholder"] == true {
+			continue
+		}
 		petID, _ = p["id"].(string)
 		practiceID, _ = p["practiceId"].(string)
 		if petID != "" {

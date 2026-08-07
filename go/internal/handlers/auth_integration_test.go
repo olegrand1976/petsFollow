@@ -123,6 +123,22 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	return &testAPI{handler: r, pool: pool, api: api}
 }
 
+func firstNonWalkinPetID(t *testing.T, pets []any) string {
+	t.Helper()
+	for _, row := range pets {
+		p, _ := row.(map[string]any)
+		if p["isWalkinPlaceholder"] == true {
+			continue
+		}
+		id, _ := p["id"].(string)
+		if id != "" {
+			return id
+		}
+	}
+	t.Fatal("no non-walkin pet in list")
+	return ""
+}
+
 func uniqueEmail(prefix string) string {
 	return fmt.Sprintf("%s+%d@petsfollow.test", prefix, time.Now().UnixNano())
 }

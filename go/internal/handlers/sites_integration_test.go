@@ -125,8 +125,7 @@ func TestVisitOverlapIsPerSite(t *testing.T) {
 	if len(pets) == 0 {
 		t.Fatal("no pets")
 	}
-	pet, _ := pets[0].(map[string]any)
-	petID, _ := pet["id"].(string)
+	petID := firstNonWalkinPetID(t, pets)
 
 	// Far-future slots with retry — unassigned queue conflicts with seed/other tests.
 	base := time.Now().UTC().Add(90 * 24 * time.Hour).Truncate(time.Hour)
@@ -264,7 +263,7 @@ func TestDeactivateBlockedByOrphanRequestedVisit(t *testing.T) {
 	if len(pets) == 0 {
 		t.Fatal("no pets")
 	}
-	petID, _ := pets[0].(map[string]any)["id"].(string)
+	petID := firstNonWalkinPetID(t, pets)
 
 	// Requested visit without scheduled slot (orphan queue).
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{

@@ -255,11 +255,16 @@ func TestPharmacyDAFWithVisitID(t *testing.T) {
 		}
 	}
 	if petID == "" {
-		// fallback first pet
-		if rows, ok := env["data"].([]any); ok && len(rows) > 0 {
-			p, _ := rows[0].(map[string]any)
-			petID, _ = p["id"].(string)
-			ownerID, _ = p["ownerUserId"].(string)
+		// fallback first non-walkin pet
+		if rows, ok := env["data"].([]any); ok {
+			petID = firstNonWalkinPetID(t, rows)
+			for _, row := range rows {
+				p, _ := row.(map[string]any)
+				if p["id"] == petID {
+					ownerID, _ = p["ownerUserId"].(string)
+					break
+				}
+			}
 		}
 	}
 	if petID == "" {
@@ -475,6 +480,9 @@ func TestPharmacyDAFUpsertForVisit(t *testing.T) {
 	var petID string
 	for _, row := range env["data"].([]any) {
 		p, _ := row.(map[string]any)
+		if p["isWalkinPlaceholder"] == true {
+			continue
+		}
 		petID, _ = p["id"].(string)
 		if petID != "" {
 			break

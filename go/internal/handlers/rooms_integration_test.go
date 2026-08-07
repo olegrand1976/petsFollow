@@ -83,7 +83,7 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	if len(pets) < 1 {
 		t.Fatal("no pets")
 	}
-	petID, _ := pets[0].(map[string]any)["id"].(string)
+	petID := firstNonWalkinPetID(t, pets)
 
 	// Find a free slot tomorrow morning-ish via availability or schedule window.
 	start := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Hour)
