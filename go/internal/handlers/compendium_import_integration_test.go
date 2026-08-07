@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -84,6 +85,9 @@ func TestCompendiumImportFlow(t *testing.T) {
 	if detail.Job.Status != "extracted" {
 		t.Fatalf("expected extracted, got %s err=%s", detail.Job.Status, detail.Job.ErrorMessage)
 	}
+	if detail.Job.ExtractTotal != 1 {
+		t.Fatalf("extractTotal=%d want 1 for 2-page range", detail.Job.ExtractTotal)
+	}
 	if detail.Job.ExtractPct != 100 {
 		t.Fatalf("extractPct=%d", detail.Job.ExtractPct)
 	}
@@ -145,6 +149,73 @@ func TestCompendiumImportFlow(t *testing.T) {
 	}
 	if hits[0].CNK != "2888001" {
 		t.Fatalf("unexpected %#v", hits[0])
+	}
+}
+
+func TestCompendiumImportMultiChunk(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://localhost:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	prev := pharmacy.CompendiumPagesPerChunk
+	pharmacy.CompendiumPagesPerChunk = 3
+	t.Cleanup(func() { pharmacy.CompendiumPagesPerChunk = prev })
+
+	var calls [][2]int
+	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
+		calls = append(calls, [2]int{start, end})
+		p := start
+		return []pharmacy.ExtractedMedication{
+			{CNK: fmt.Sprintf("2889%03d", start), Name: fmt.Sprintf("Chunk Med %d", start), SourcePage: &p},
+		}, nil
+	})
+	t.Cleanup(handlers.TestClearCompendiumExtract)
+
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	pdf := []byte("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n")
+	// pages 1–8 with chunk=3 → 3 chunks: 1-3, 4-6, 7-8
+	code, env := doCompendiumUpload(t, api.handler, adminTok, pdf, 1, 8)
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+	jobID, _ := env["data"].(map[string]any)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/extract", adminTok, nil)
+	if code != http.StatusAccepted {
+		t.Fatalf("extract %d %#v", code, env)
+	}
+
+	st := store.New(api.pool)
+	deadline := time.Now().Add(5 * time.Second)
+	var detail store.CompendiumImportDetail
+	for time.Now().Before(deadline) {
+		detail, err = st.GetCompendiumImportDetail(context.Background(), jobID)
+		if err != nil {
+			t.Fatalf("detail: %v", err)
+		}
+		if detail.Job.Status == "extracted" || detail.Job.Status == "failed" {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if detail.Job.Status != "extracted" {
+		t.Fatalf("status %s err=%s calls=%v", detail.Job.Status, detail.Job.ErrorMessage, calls)
+	}
+	if detail.Job.ExtractTotal != 3 || detail.Job.ExtractDone != 3 {
+		t.Fatalf("progress done=%d total=%d", detail.Job.ExtractDone, detail.Job.ExtractTotal)
+	}
+	if len(calls) != 3 || calls[0] != [2]int{1, 3} || calls[1] != [2]int{4, 6} || calls[2] != [2]int{7, 8} {
+		t.Fatalf("calls %#v", calls)
+	}
+	if len(detail.Rows) != 3 {
+		t.Fatalf("rows=%d %#v", len(detail.Rows), detail.Rows)
 	}
 }
 

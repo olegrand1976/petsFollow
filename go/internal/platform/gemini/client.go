@@ -14,6 +14,9 @@ import (
 const (
 	defaultModel     = "gemini-3.6-flash"
 	defaultLiteModel = "gemini-3.5-flash-lite"
+	// mediaHTTPTimeout covers PDF extract chunks (full-page catalogue pages are heavy).
+	mediaHTTPTimeout = 5 * time.Minute
+	defaultHTTPTimeout = 90 * time.Second
 )
 
 type Mapper interface {
@@ -26,6 +29,9 @@ type Client struct {
 	Model      string // pitch turn/stream/coach (agentic)
 	LiteModel  string // import mapping + analyzer (high throughput)
 	HTTPClient *http.Client
+	// MediaHTTPClient is used for binary media generateContent (PDF extract).
+	// Falls back to HTTPClient when nil.
+	MediaHTTPClient *http.Client
 }
 
 type MappingSuggestion struct {
@@ -49,9 +55,22 @@ func New(apiKey, model, liteModel string) *Client {
 		Model:     model,
 		LiteModel: liteModel,
 		HTTPClient: &http.Client{
-			Timeout: 90 * time.Second,
+			Timeout: defaultHTTPTimeout,
+		},
+		MediaHTTPClient: &http.Client{
+			Timeout: mediaHTTPTimeout,
 		},
 	}
+}
+
+func (c *Client) httpForMedia() *http.Client {
+	if c != nil && c.MediaHTTPClient != nil {
+		return c.MediaHTTPClient
+	}
+	if c != nil && c.HTTPClient != nil {
+		return c.HTTPClient
+	}
+	return &http.Client{Timeout: mediaHTTPTimeout}
 }
 
 func (c *Client) Configured() bool {

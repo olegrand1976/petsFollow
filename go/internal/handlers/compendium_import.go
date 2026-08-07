@@ -244,8 +244,12 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// One Gemini call for the whole page range (full PDF + prompt bounds).
-	if err := a.store.MarkCompendiumExtracting(r.Context(), id, 1); err != nil {
+	chunks := pharmacy.ChunkPageRanges(job.PageStart, job.PageEnd, pharmacy.CompendiumPagesPerChunk)
+	if len(chunks) == 0 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_page_range")
+		return
+	}
+	if err := a.store.MarkCompendiumExtracting(r.Context(), id, len(chunks)); err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 			return
@@ -266,40 +270,64 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 }
 
 func (a *API) runCompendiumExtract(jobID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-	defer cancel()
-
-	job, err := a.store.GetCompendiumImportJob(ctx, jobID)
+	job, err := a.store.GetCompendiumImportJob(context.Background(), jobID)
 	if err != nil {
 		return
 	}
+	chunks := pharmacy.ChunkPageRanges(job.PageStart, job.PageEnd, pharmacy.CompendiumPagesPerChunk)
+	if len(chunks) == 0 {
+		_ = a.store.FailCompendiumImportJob(context.Background(), jobID, "invalid_page_range")
+		return
+	}
+	// Budget: media HTTP timeout is 5 min/chunk — keep headroom for trim + CNK match + persist.
+	// Max UI range is 200 pages → ≤34 chunks → ~3 h worst case.
+	timeout := 10*time.Minute + time.Duration(len(chunks))*5*time.Minute
+	if timeout > 3*time.Hour {
+		timeout = 3 * time.Hour
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	// Persist failure even if the run ctx already timed out / cancelled.
+	failCtx := context.WithoutCancel(ctx)
+
 	rc, _, err := a.media.Open(ctx, job.PDFObjectKey)
 	if err != nil {
 		log.Printf("compendium extract %s: pdf open: %v", jobID, err)
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_open_failed")
+		_ = a.store.FailCompendiumImportJob(failCtx, jobID, "pdf_open_failed")
 		return
 	}
 	pdfBytes, err := io.ReadAll(io.LimitReader(rc, maxCompendiumPDFBytes+1))
 	_ = rc.Close()
 	if err != nil || len(pdfBytes) == 0 || len(pdfBytes) > maxCompendiumPDFBytes {
 		log.Printf("compendium extract %s: pdf read err=%v len=%d", jobID, err, len(pdfBytes))
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_read_failed")
+		_ = a.store.FailCompendiumImportJob(failCtx, jobID, "pdf_read_failed")
 		return
 	}
 
 	extractor := &pharmacy.CompendiumExtractor{Gemini: a.gemini}
 	var meds []pharmacy.ExtractedMedication
-	if testCompendiumExtract != nil {
-		meds, err = testCompendiumExtract(ctx, pdfBytes, job.PageStart, job.PageEnd)
-	} else {
-		meds, err = extractor.ExtractChunk(ctx, pdfBytes, job.PageStart, job.PageEnd)
+	for i, ch := range chunks {
+		start, end := ch[0], ch[1]
+		var chunkMeds []pharmacy.ExtractedMedication
+		if testCompendiumExtract != nil {
+			chunkMeds, err = testCompendiumExtract(ctx, pdfBytes, start, end)
+		} else {
+			chunkPDF, trimErr := pharmacy.ExtractPDFPages(pdfBytes, start, end)
+			if trimErr != nil {
+				log.Printf("compendium extract %s: trim p%d-%d: %v", jobID, start, end, trimErr)
+				_ = a.store.FailCompendiumImportJob(failCtx, jobID, "trim_failed")
+				return
+			}
+			chunkMeds, err = extractor.ExtractChunk(ctx, chunkPDF, start, end)
+		}
+		if err != nil {
+			log.Printf("compendium extract %s: gemini chunk %d/%d p%d-%d: %v", jobID, i+1, len(chunks), start, end, err)
+			_ = a.store.FailCompendiumImportJob(failCtx, jobID, "extract_failed")
+			return
+		}
+		meds = append(meds, chunkMeds...)
+		_ = a.store.SetCompendiumExtractProgress(ctx, jobID, i+1)
 	}
-	if err != nil {
-		log.Printf("compendium extract %s: gemini: %v", jobID, err)
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "extract_failed")
-		return
-	}
-	_ = a.store.SetCompendiumExtractProgress(ctx, jobID, 1)
 
 	all := make([]store.CompendiumRowInsert, 0, len(meds))
 	for _, m := range meds {
@@ -360,7 +388,7 @@ func (a *API) runCompendiumExtract(jobID string) {
 
 	if err := a.store.ReplaceCompendiumExtractRows(ctx, jobID, all); err != nil {
 		log.Printf("compendium extract %s: persist: %v", jobID, err)
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "persist_failed")
+		_ = a.store.FailCompendiumImportJob(failCtx, jobID, "persist_failed")
 	}
 }
 

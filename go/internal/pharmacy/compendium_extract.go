@@ -67,8 +67,8 @@ Rules:
 - packSize: packaging line (sac 1 kg, flacon 100 ml, caps 3 x 10, …)
 - prescriptionOnly: true when marked R/
 - isAntibiotic: true when clearly antibiotic / antibactérien / ATC J01*
-- sourcePage: absolute page number when known
-- Skip headers, footers, TOC, ads, copyright lines
+- sourcePage: absolute PDF page number when known (not the printed catalogue footer)
+- Skip headers, footers, TOC, section dividers (e.g. "CATALOGUE"), ads, copyright lines
 - One JSON object per distinct commercial presentation`
 
 // CompendiumExtractor extracts medication rows from PDF page chunks via Gemini.
@@ -81,14 +81,19 @@ func (e *CompendiumExtractor) ExtractChunk(ctx context.Context, pdfChunk []byte,
 		return nil, fmt.Errorf("gemini_not_configured")
 	}
 	user := fmt.Sprintf(
-		"The attached PDF may contain many pages. Extract medication monographs ONLY from absolute pages %d through %d inclusive. Ignore all other pages. Return JSON only. Do not invent CNK.",
-		absStart, absEnd,
+		"The attached PDF contains only absolute pages %d through %d (PDF page 1 = absolute page %d). Extract all medication monographs from these pages. Two-column catalogue layout: NAME (Lab), substance: strength, form+route (may be glued e.g. comprimépo), Posologie, species codes, withdrawal, pack, R/. Return JSON only. Do not invent CNK. Set sourcePage to absolute page numbers (%d–%d).",
+		absStart, absEnd, absStart, absStart, absEnd,
 	)
 	raw, err := e.Gemini.GenerateJSONWithMedia(ctx, compendiumExtractSystem, user, "application/pdf", pdfChunk, 0.1)
 	if err != nil {
 		return nil, err
 	}
-	return ParseCompendiumExtractJSON(raw)
+	meds, err := ParseCompendiumExtractJSON(raw)
+	if err != nil {
+		return nil, err
+	}
+	RemapSourcePages(meds, absStart, absEnd)
+	return meds, nil
 }
 
 // ParseCompendiumExtractJSON normalizes Gemini JSON into medication rows.

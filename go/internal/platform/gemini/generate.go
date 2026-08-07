@@ -83,7 +83,7 @@ func (c *Client) generateWithMedia(ctx context.Context, model, system, userPromp
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpForMedia().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("gemini_request: %w", err)
 	}
