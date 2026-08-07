@@ -553,6 +553,8 @@ func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([
 			COALESCE(u.first_name,''), COALESCE(u.last_name,''),
 			COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
 			COALESCE(u.address,''), COALESCE(u.national_registry_number,''),
+			-- Billing fiscal réservé Pro cabinet (invoicing) — pas exposé care_pro.
+			''::text, ''::text, ''::text, ''::text, ''::text, ''::text,
 			(
 				SELECT COUNT(*)::int FROM pets.pets p
 				WHERE p.owner_user_id=u.id AND (

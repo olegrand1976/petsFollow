@@ -23,6 +23,12 @@ type CreateClientInput struct {
 	ContactPhone           string
 	Address                string
 	NationalRegistryNumber string
+	BillingVATNumber       string
+	BillingCompanyNumber   string
+	BillingStreet          string
+	BillingCity            string
+	BillingPostal          string
+	BillingCountry         string
 	SkipJourney            bool
 }
 
@@ -116,11 +122,16 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, first_name, last_name, role, practice_id,
 			email_verified_at, preferred_locale, must_change_password, contact_phone,
-			address, national_registry_number
-		) VALUES ($1, $2, $3, $4, $5, $6, 'client', $7, NOW(), $8, true, $9, $10, $11)`,
+			address, national_registry_number,
+			billing_vat_number, billing_company_number,
+			billing_street, billing_city, billing_postal, billing_country
+		) VALUES ($1, $2, $3, $4, $5, $6, 'client', $7, NOW(), $8, true, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 		clientID, in.Email, string(hash), in.FullName, in.FirstName, in.LastName, practiceID,
 		i18n.NormalizeLocale(in.Locale), strings.TrimSpace(in.ContactPhone),
-		strings.TrimSpace(in.Address), strings.TrimSpace(in.NationalRegistryNumber)); err != nil {
+		strings.TrimSpace(in.Address), strings.TrimSpace(in.NationalRegistryNumber),
+		strings.TrimSpace(in.BillingVATNumber), strings.TrimSpace(in.BillingCompanyNumber),
+		strings.TrimSpace(in.BillingStreet), strings.TrimSpace(in.BillingCity),
+		strings.TrimSpace(in.BillingPostal), strings.ToUpper(strings.TrimSpace(in.BillingCountry))); err != nil {
 		return "", err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -182,11 +193,16 @@ func (s *Store) CreateClientStandalone(ctx context.Context, in CreateClientInput
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, first_name, last_name, role, practice_id,
 			email_verified_at, preferred_locale, must_change_password, contact_phone,
-			address, national_registry_number
-		) VALUES ($1, $2, $3, $4, $5, $6, 'client', NULL, NOW(), $7, true, $8, $9, $10)`,
+			address, national_registry_number,
+			billing_vat_number, billing_company_number,
+			billing_street, billing_city, billing_postal, billing_country
+		) VALUES ($1, $2, $3, $4, $5, $6, 'client', NULL, NOW(), $7, true, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
 		clientID, in.Email, string(hash), in.FullName, in.FirstName, in.LastName,
 		i18n.NormalizeLocale(in.Locale), strings.TrimSpace(in.ContactPhone),
-		strings.TrimSpace(in.Address), strings.TrimSpace(in.NationalRegistryNumber)); err != nil {
+		strings.TrimSpace(in.Address), strings.TrimSpace(in.NationalRegistryNumber),
+		strings.TrimSpace(in.BillingVATNumber), strings.TrimSpace(in.BillingCompanyNumber),
+		strings.TrimSpace(in.BillingStreet), strings.TrimSpace(in.BillingCity),
+		strings.TrimSpace(in.BillingPostal), strings.ToUpper(strings.TrimSpace(in.BillingCountry))); err != nil {
 		return "", err
 	}
 	if in.SkipJourney {

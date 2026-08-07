@@ -261,7 +261,7 @@ Auto : Playwright `@p1` [`03d-visit-report-ai-bff.spec.ts`](../nuxtjs/tests/e2e/
 |----|-----|-----|--------|---------|
 | I7.0 | P1 | UI WIP (flag off) | `/invoicing` si `INVOICING_UI_ENABLED=false` | Message under-development |
 | I7.1 | P1 | Connect mock | UI ou `POST …/connect/start` + complete | Statut `active` |
-| I7.2 | P1 | Facture BE | Créer facture BE + TVA + send | draft → delivered (mock) |
+| I7.2 | P1 | Facture BE multi-lignes | Créer facture BE (2 lignes + TVA) + autocomplete client billing + send | draft → delivered (mock) ; totaux HT/TTC |
 | I7.3 | P1 | Contrepartie IT | Pays IT sans codice/PEC | Erreur validation |
 | I7.4 | P1 | Credit note / proforma | CN + `relatedDocumentId` ; proforma send | CN OK ; proforma → `issued` |
 | I7.5 | P1 | Quota mensuel | `docs_included_monthly=1` puis 2e send ; doc `sending` | 409 `docs_quota_exceeded` |

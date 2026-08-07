@@ -324,3 +324,81 @@ func TestClientIdentityCreateWithoutPasswordAndPatch(t *testing.T) {
 		t.Fatalf("bad niss want 400 national_registry_invalid got %d %#v", code, env)
 	}
 }
+
+func TestClientBillingPatchAndExport(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	email := fmt.Sprintf("client.billing.%s@petsfollow.test", uuid.NewString()[:8])
+	password := "ClientDemo123!"
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email":                  email,
+		"password":               password,
+		"firstName":              "Billie",
+		"lastName":               "Ng",
+		"billingVatNumber":       "BE1000000021",
+		"billingCompanyNumber":   "1000000021",
+		"billingStreet":          "1 rue Peppol",
+		"billingCity":            "Liège",
+		"billingPostal":          "4000",
+		"billingCountry":         "be",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create with billing %d %#v", code, env)
+	}
+	clientID, _ := dataMap(t, env)["userId"].(string)
+	if clientID == "" {
+		t.Fatalf("missing userId: %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients/"+clientID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get %d %#v", code, env)
+	}
+	got := dataMap(t, env)
+	if got["billingVatNumber"] != "BE1000000021" || got["billingCountry"] != "BE" {
+		t.Fatalf("create billing %#v", got)
+	}
+	if got["billingStreet"] != "1 rue Peppol" || got["billingCity"] != "Liège" || got["billingPostal"] != "4000" {
+		t.Fatalf("create address billing %#v", got)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingStreet": "2 av. Louise",
+		"billingCity":   "Bruxelles",
+		"billingPostal": "1050",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("patch billing %d %#v", code, env)
+	}
+	got = dataMap(t, env)
+	if got["billingStreet"] != "2 av. Louise" || got["billingCity"] != "Bruxelles" || got["billingPostal"] != "1050" {
+		t.Fatalf("patched billing %#v", got)
+	}
+	if got["billingVatNumber"] != "BE1000000021" {
+		t.Fatalf("vat should persist %#v", got)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingCountry": "B",
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "billing_country_invalid" {
+		t.Fatalf("short country want 400 billing_country_invalid got %d %#v", code, env)
+	}
+
+	clientTok := loginToken(t, api.handler, email, password)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("export %d %#v", code, env)
+	}
+	profile, _ := dataMap(t, env)["profile"].(map[string]any)
+	if profile == nil {
+		t.Fatalf("export missing profile %#v", env)
+	}
+	if profile["billing_vat_number"] != "BE1000000021" {
+		t.Fatalf("export billing_vat_number=%v", profile["billing_vat_number"])
+	}
+	if profile["billing_street"] != "2 av. Louise" {
+		t.Fatalf("export billing_street=%v", profile["billing_street"])
+	}
+}

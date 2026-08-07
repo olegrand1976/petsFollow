@@ -6,8 +6,9 @@ export async function fillField(page: Page, testId: string, value: string) {
   const el = page.getByTestId(testId)
   await expect(el).toBeVisible()
   await el.click()
-  await el.fill(value)
-  if ((await el.inputValue()) !== value) {
+  const inputType = await el.getAttribute('type')
+  // type=number : Playwright fill() can hang on some Chromium builds — set via native setter.
+  if (inputType === 'number') {
     await el.evaluate((node, v) => {
       const input = node as HTMLInputElement
       const proto = window.HTMLInputElement.prototype
@@ -16,6 +17,18 @@ export async function fillField(page: Page, testId: string, value: string) {
       input.dispatchEvent(new Event('input', { bubbles: true }))
       input.dispatchEvent(new Event('change', { bubbles: true }))
     }, value)
+  } else {
+    await el.fill(value)
+    if ((await el.inputValue()) !== value) {
+      await el.evaluate((node, v) => {
+        const input = node as HTMLInputElement
+        const proto = window.HTMLInputElement.prototype
+        const desc = Object.getOwnPropertyDescriptor(proto, 'value')
+        desc?.set?.call(input, v)
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+      }, value)
+    }
   }
   await expect(el).toHaveValue(value)
 }

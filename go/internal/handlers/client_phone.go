@@ -15,6 +15,8 @@ import (
 const contactPhoneMaxRunes = 40
 const clientAddressMaxRunes = 500
 const nationalRegistryMaxRunes = 20
+const billingFieldMaxRunes = 120
+const billingCountryMaxRunes = 2
 
 // normalizeContactPhone trims and validates length.
 // requireNonEmpty: empty after trim → "contact_phone_required".
@@ -58,12 +60,42 @@ func normalizeNationalRegistry(raw string) (niss string, errCode string) {
 	return niss, ""
 }
 
+func normalizeBillingField(raw string, maxRunes int) (string, string) {
+	v := strings.TrimSpace(raw)
+	if utf8.RuneCountInString(v) > maxRunes {
+		return "", "billing_field_too_long"
+	}
+	return v, ""
+}
+
+func normalizeBillingCountry(raw string) (string, string) {
+	v := strings.ToUpper(strings.TrimSpace(raw))
+	if v == "" {
+		return "", ""
+	}
+	if utf8.RuneCountInString(v) != billingCountryMaxRunes {
+		return "", "billing_country_invalid"
+	}
+	for _, r := range v {
+		if r < 'A' || r > 'Z' {
+			return "", "billing_country_invalid"
+		}
+	}
+	return v, ""
+}
+
 type patchClientReq struct {
 	ContactPhone           *string `json:"contactPhone"`
 	FirstName              *string `json:"firstName"`
 	LastName               *string `json:"lastName"`
 	Address                *string `json:"address"`
 	NationalRegistryNumber *string `json:"nationalRegistryNumber"`
+	BillingVATNumber       *string `json:"billingVatNumber"`
+	BillingCompanyNumber   *string `json:"billingCompanyNumber"`
+	BillingStreet          *string `json:"billingStreet"`
+	BillingCity            *string `json:"billingCity"`
+	BillingPostal          *string `json:"billingPostal"`
+	BillingCountry         *string `json:"billingCountry"`
 }
 
 func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +109,10 @@ func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.ContactPhone == nil && req.FirstName == nil && req.LastName == nil &&
-		req.Address == nil && req.NationalRegistryNumber == nil {
+		req.Address == nil && req.NationalRegistryNumber == nil &&
+		req.BillingVATNumber == nil && req.BillingCompanyNumber == nil &&
+		req.BillingStreet == nil && req.BillingCity == nil &&
+		req.BillingPostal == nil && req.BillingCountry == nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
 		return
 	}
@@ -113,6 +148,54 @@ func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		patch.NationalRegistryNumber = &niss
+	}
+	if req.BillingVATNumber != nil {
+		v, code := normalizeBillingField(*req.BillingVATNumber, billingFieldMaxRunes)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingVATNumber = &v
+	}
+	if req.BillingCompanyNumber != nil {
+		v, code := normalizeBillingField(*req.BillingCompanyNumber, billingFieldMaxRunes)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingCompanyNumber = &v
+	}
+	if req.BillingStreet != nil {
+		v, code := normalizeBillingField(*req.BillingStreet, billingFieldMaxRunes)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingStreet = &v
+	}
+	if req.BillingCity != nil {
+		v, code := normalizeBillingField(*req.BillingCity, billingFieldMaxRunes)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingCity = &v
+	}
+	if req.BillingPostal != nil {
+		v, code := normalizeBillingField(*req.BillingPostal, billingFieldMaxRunes)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingPostal = &v
+	}
+	if req.BillingCountry != nil {
+		v, code := normalizeBillingCountry(*req.BillingCountry)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingCountry = &v
 	}
 	clientID := chi.URLParam(r, "clientID")
 	client, err := a.store.UpdateClientProfileByPractice(r.Context(), id.PracticeID, clientID, patch)

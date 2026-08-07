@@ -67,6 +67,12 @@ type ClientProfilePatch struct {
 	LastName               *string
 	Address                *string
 	NationalRegistryNumber *string
+	BillingVATNumber       *string
+	BillingCompanyNumber   *string
+	BillingStreet          *string
+	BillingCity            *string
+	BillingPostal          *string
+	BillingCountry         *string
 }
 
 // UpdateClientProfileByPractice updates identity fields for a client linked to the practice.
@@ -82,6 +88,12 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 	last := cur.LastName
 	addr := cur.Address
 	niss := cur.NationalRegistryNumber
+	vat := cur.BillingVATNumber
+	company := cur.BillingCompanyNumber
+	street := cur.BillingStreet
+	city := cur.BillingCity
+	postal := cur.BillingPostal
+	country := cur.BillingCountry
 	if patch.ContactPhone != nil {
 		phone = strings.TrimSpace(*patch.ContactPhone)
 	}
@@ -97,6 +109,24 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 	if patch.NationalRegistryNumber != nil {
 		niss = strings.TrimSpace(*patch.NationalRegistryNumber)
 	}
+	if patch.BillingVATNumber != nil {
+		vat = strings.TrimSpace(*patch.BillingVATNumber)
+	}
+	if patch.BillingCompanyNumber != nil {
+		company = strings.TrimSpace(*patch.BillingCompanyNumber)
+	}
+	if patch.BillingStreet != nil {
+		street = strings.TrimSpace(*patch.BillingStreet)
+	}
+	if patch.BillingCity != nil {
+		city = strings.TrimSpace(*patch.BillingCity)
+	}
+	if patch.BillingPostal != nil {
+		postal = strings.TrimSpace(*patch.BillingPostal)
+	}
+	if patch.BillingCountry != nil {
+		country = strings.ToUpper(strings.TrimSpace(*patch.BillingCountry))
+	}
 	fullName := strings.TrimSpace(first + " " + last)
 	if fullName == "" {
 		fullName = cur.FullName
@@ -108,12 +138,19 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 			last_name = $5,
 			address = $6,
 			national_registry_number = $7,
-			full_name = $8
+			full_name = $8,
+			billing_vat_number = $9,
+			billing_company_number = $10,
+			billing_street = $11,
+			billing_city = $12,
+			billing_postal = $13,
+			billing_country = $14
 		FROM practice.practice_clients pc
 		WHERE u.id = pc.client_user_id
 			AND pc.practice_id = $1
 			AND pc.client_user_id = $2`,
-		practiceID, clientID, phone, first, last, addr, niss, fullName)
+		practiceID, clientID, phone, first, last, addr, niss, fullName,
+		vat, company, street, city, postal, country)
 	if err != nil {
 		return ClientSummary{}, err
 	}

@@ -2008,12 +2008,21 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 		return fmt.Errorf("vet.demo practice for team seed: %w", err)
 	}
 
-	// Modules ON pour client.demo
+	// Modules ON pour client.demo + coordonnées fiscales Peppol (autocomplete facturation)
 	var clientDemoID string
 	if err := pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email='client.demo@petsfollow.test'`).Scan(&clientDemoID); err == nil {
 		_, _ = st.UpdateFeatureModules(ctx, clientDemoID, store.FeatureModules{
 			ModuleCarePlus: true, ModuleHorse: true, ModuleKennel: true, ModuleFamily: true,
 		})
+		_, _ = pool.Exec(ctx, `
+			UPDATE identity.users SET
+				billing_vat_number = 'BE1000000021',
+				billing_company_number = '1000000021',
+				billing_street = '12 rue de la Loi',
+				billing_city = 'Bruxelles',
+				billing_postal = '1000',
+				billing_country = 'BE'
+			WHERE id = $1`, clientDemoID)
 	}
 
 	// Horse contacts / competitions on Spirit

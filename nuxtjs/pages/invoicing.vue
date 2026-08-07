@@ -203,6 +203,7 @@
           <ProInput
             v-if="docForm.country === 'BE'"
             v-model="docForm.companyNumber"
+            test-id="invoicing-cp-company"
             :label="$t('invoicing.counterparty.companyNumber')"
           />
           <ProInput
@@ -587,11 +588,14 @@ const lineTotals = computed(() => {
 
 watch(
   () => docForm.country,
-  (country) => {
-    const def = country === 'IT' ? 22 : 21
+  (country, prev) => {
+    const oldDef = prev === 'IT' ? 22 : 21
+    const newDef = country === 'IT' ? 22 : 21
+    if (oldDef === newDef) return
+    // N'écrase que le défaut pays précédent — préserve 0/6/12 et TVA pharma posée explicitement.
     for (const line of docLines.value) {
-      if (line.vatPercent === 21 || line.vatPercent === 22) {
-        line.vatPercent = def
+      if (line.vatPercent === oldDef) {
+        line.vatPercent = newDef
       }
     }
   },
@@ -671,34 +675,59 @@ const invoiceOptions = computed(() =>
     })),
 )
 
+function applyCounterparty(cp: {
+  name?: string
+  email?: string
+  country?: string
+  vatNumber?: string
+  companyNumber?: string
+  street?: string
+  city?: string
+  postal?: string
+  siret?: string
+  siren?: string
+  codiceDestinatario?: string
+  pec?: string
+  taxId?: string
+}, opts?: { keepCountryFallback?: string }) {
+  docForm.name = cp.name || ''
+  docForm.email = cp.email || ''
+  docForm.country = cp.country || opts?.keepCountryFallback || 'BE'
+  docForm.vatNumber = cp.vatNumber || ''
+  docForm.companyNumber = cp.companyNumber || ''
+  docForm.street = cp.street || ''
+  docForm.city = cp.city || ''
+  docForm.postal = cp.postal || ''
+  docForm.siret = cp.siret || ''
+  docForm.siren = cp.siren || ''
+  docForm.codiceDestinatario = cp.codiceDestinatario || ''
+  docForm.pec = cp.pec || ''
+  docForm.taxId = cp.taxId || ''
+}
+
+function resetCounterpartyForm() {
+  applyCounterparty({}, { keepCountryFallback: 'BE' })
+  docForm.relatedDocumentId = ''
+  clientSearch.value = null
+}
+
 function onRelatedInvoiceChange() {
   const inv = documents.value.find((d) => d.id === docForm.relatedDocumentId)
   if (!inv?.counterparty) return
-  const cp = inv.counterparty
-  if (cp.name) docForm.name = cp.name
-  if (cp.email) docForm.email = cp.email
-  if (cp.country) docForm.country = cp.country
-  if (cp.vatNumber) docForm.vatNumber = cp.vatNumber
-  if (cp.companyNumber) docForm.companyNumber = cp.companyNumber
-  if (cp.street) docForm.street = cp.street
-  if (cp.city) docForm.city = cp.city
-  if (cp.postal) docForm.postal = cp.postal
-  if (cp.siret) docForm.siret = cp.siret
-  if (cp.siren) docForm.siren = cp.siren
-  if (cp.codiceDestinatario) docForm.codiceDestinatario = cp.codiceDestinatario
-  if (cp.pec) docForm.pec = cp.pec
-  if (cp.taxId) docForm.taxId = cp.taxId
+  applyCounterparty(inv.counterparty)
 }
 
 function applyClientToForm(c: ClientRow) {
-  docForm.name = c.fullName || docForm.name
-  docForm.email = c.email || docForm.email
-  if (c.billingCountry) docForm.country = c.billingCountry
-  if (c.billingVatNumber) docForm.vatNumber = c.billingVatNumber
-  if (c.billingCompanyNumber) docForm.companyNumber = c.billingCompanyNumber
-  if (c.billingStreet) docForm.street = c.billingStreet
-  if (c.billingCity) docForm.city = c.billingCity
-  if (c.billingPostal) docForm.postal = c.billingPostal
+  applyCounterparty({
+    name: c.fullName || '',
+    email: c.email || '',
+    country: c.billingCountry || undefined,
+    vatNumber: c.billingVatNumber || '',
+    companyNumber: c.billingCompanyNumber || '',
+    street: c.billingStreet || '',
+    city: c.billingCity || '',
+    postal: c.billingPostal || '',
+  }, { keepCountryFallback: docForm.country || 'BE' })
 }
 
 async function loadClients() {
@@ -773,9 +802,8 @@ async function onMedicationSelect(idx: number, item: ProComboboxItem) {
     const vat = Number(price?.vatPercent)
     if (Number.isFinite(vat) && vat >= 0) {
       line.vatPercent = vat
-    } else if (!line.vatPercent) {
-      line.vatPercent = docForm.country === 'IT' ? 22 : 21
     }
+    // Sinon conserver la TVA ligne (y compris 0 %) — pas de `!vatPercent`.
   } catch {
     // price optional
   }
@@ -912,8 +940,8 @@ async function createDocument() {
         lines,
       },
     })
-    docForm.relatedDocumentId = ''
-    docLines.value = [emptyLine(docForm.country === 'IT' ? 22 : 21)]
+    resetCounterpartyForm()
+    docLines.value = [emptyLine(21)]
     await loadDocuments()
   } catch (e: any) {
     error.value = formatApiError(e)

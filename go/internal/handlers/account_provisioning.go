@@ -20,6 +20,12 @@ type createClientReq struct {
 	ContactPhone           string `json:"contactPhone"`
 	Address                string `json:"address"`
 	NationalRegistryNumber string `json:"nationalRegistryNumber"`
+	BillingVATNumber       string `json:"billingVatNumber"`
+	BillingCompanyNumber   string `json:"billingCompanyNumber"`
+	BillingStreet          string `json:"billingStreet"`
+	BillingCity            string `json:"billingCity"`
+	BillingPostal          string `json:"billingPostal"`
+	BillingCountry         string `json:"billingCountry"`
 	VetUserID              string `json:"vetUserId"`
 }
 
@@ -67,6 +73,12 @@ func createClientInputFromReq(req createClientReq, r *http.Request) store.Create
 		ContactPhone:           req.ContactPhone,
 		Address:                req.Address,
 		NationalRegistryNumber: req.NationalRegistryNumber,
+		BillingVATNumber:       req.BillingVATNumber,
+		BillingCompanyNumber:   req.BillingCompanyNumber,
+		BillingStreet:          req.BillingStreet,
+		BillingCity:            req.BillingCity,
+		BillingPostal:          req.BillingPostal,
+		BillingCountry:         req.BillingCountry,
 		Locale:                 localeOf(r),
 	}
 }
@@ -276,6 +288,42 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	req.NationalRegistryNumber = niss
+	vat, vatCode := normalizeBillingField(req.BillingVATNumber, billingFieldMaxRunes)
+	if vatCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", vatCode)
+		return req, false
+	}
+	req.BillingVATNumber = vat
+	company, companyCode := normalizeBillingField(req.BillingCompanyNumber, billingFieldMaxRunes)
+	if companyCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", companyCode)
+		return req, false
+	}
+	req.BillingCompanyNumber = company
+	street, streetCode := normalizeBillingField(req.BillingStreet, billingFieldMaxRunes)
+	if streetCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", streetCode)
+		return req, false
+	}
+	req.BillingStreet = street
+	city, cityCode := normalizeBillingField(req.BillingCity, billingFieldMaxRunes)
+	if cityCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", cityCode)
+		return req, false
+	}
+	req.BillingCity = city
+	postal, postalCode := normalizeBillingField(req.BillingPostal, billingFieldMaxRunes)
+	if postalCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", postalCode)
+		return req, false
+	}
+	req.BillingPostal = postal
+	country, countryCode := normalizeBillingCountry(req.BillingCountry)
+	if countryCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", countryCode)
+		return req, false
+	}
+	req.BillingCountry = country
 	// Password optional: empty → server generates an opaque temp (never shown to the vet).
 	if req.Email == "" || req.FullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")

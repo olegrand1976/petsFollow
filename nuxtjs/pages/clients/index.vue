@@ -94,6 +94,48 @@
           :label="$t('clients.create.nationalRegistryNumber')"
           :maxlength="20"
         />
+        <h4 class="create-client-billing-title" data-testid="create-client-billing-section">{{ $t('clients.billing.title') }}</h4>
+        <p class="pro-hint">{{ $t('clients.billing.hintOptional') }}</p>
+        <label class="pro-field">
+          <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
+          <select v-model="clientForm.billingCountry" class="pro-input" data-testid="create-client-billing-country">
+            <option value="">—</option>
+            <option value="BE">BE</option>
+            <option value="FR">FR</option>
+            <option value="IT">IT</option>
+            <option value="ES">ES</option>
+          </select>
+        </label>
+        <ProInput
+          v-model="clientForm.billingVatNumber"
+          test-id="create-client-billing-vat"
+          :label="$t('clients.billing.vatNumber')"
+          :maxlength="120"
+        />
+        <ProInput
+          v-model="clientForm.billingCompanyNumber"
+          test-id="create-client-billing-company"
+          :label="$t('clients.billing.companyNumber')"
+          :maxlength="120"
+        />
+        <ProInput
+          v-model="clientForm.billingStreet"
+          test-id="create-client-billing-street"
+          :label="$t('clients.billing.street')"
+          :maxlength="120"
+        />
+        <ProInput
+          v-model="clientForm.billingPostal"
+          test-id="create-client-billing-postal"
+          :label="$t('clients.billing.postal')"
+          :maxlength="120"
+        />
+        <ProInput
+          v-model="clientForm.billingCity"
+          test-id="create-client-billing-city"
+          :label="$t('clients.billing.city')"
+          :maxlength="120"
+        />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
         <div class="create-client-actions">
@@ -334,6 +376,12 @@ const emptyClientForm = () => ({
   contactPhone: '',
   address: '',
   nationalRegistryNumber: '',
+  billingVatNumber: '',
+  billingCompanyNumber: '',
+  billingStreet: '',
+  billingCity: '',
+  billingPostal: '',
+  billingCountry: '',
 })
 
 const createOpen = ref(false)
@@ -376,6 +424,12 @@ async function createClient() {
         contactPhone: clientForm.contactPhone.trim(),
         address: clientForm.address.trim(),
         nationalRegistryNumber: clientForm.nationalRegistryNumber.trim(),
+        billingVatNumber: clientForm.billingVatNumber.trim(),
+        billingCompanyNumber: clientForm.billingCompanyNumber.trim(),
+        billingStreet: clientForm.billingStreet.trim(),
+        billingCity: clientForm.billingCity.trim(),
+        billingPostal: clientForm.billingPostal.trim(),
+        billingCountry: clientForm.billingCountry.trim(),
       },
     })
     const createdId = (res?.data ?? res)?.userId as string | undefined
@@ -428,6 +482,18 @@ async function linkExistingClient() {
     if (niss) body.nationalRegistryNumber = niss
     if (firstName) body.firstName = firstName
     if (lastName) body.lastName = lastName
+    const vat = clientForm.billingVatNumber.trim()
+    const company = clientForm.billingCompanyNumber.trim()
+    const street = clientForm.billingStreet.trim()
+    const city = clientForm.billingCity.trim()
+    const postal = clientForm.billingPostal.trim()
+    const country = clientForm.billingCountry.trim()
+    if (vat) body.billingVatNumber = vat
+    if (company) body.billingCompanyNumber = company
+    if (street) body.billingStreet = street
+    if (city) body.billingCity = city
+    if (postal) body.billingPostal = postal
+    if (country) body.billingCountry = country
     if (Object.keys(body).length) {
       await $fetch(`/api/clients/${linkedId}`, { method: 'PATCH', body })
     }

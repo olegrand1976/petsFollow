@@ -218,6 +218,48 @@
                   :label="$t('clients.detail.nationalRegistryNumber')"
                   :maxlength="20"
                 />
+                <h4 class="client-billing-title" data-testid="client-billing-section">{{ $t('clients.billing.title') }}</h4>
+                <p class="pro-hint">{{ $t('clients.billing.hint') }}</p>
+                <label class="pro-field">
+                  <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
+                  <select v-model="identityDraft.billingCountry" class="pro-input" data-testid="client-billing-country">
+                    <option value="">—</option>
+                    <option value="BE">BE</option>
+                    <option value="FR">FR</option>
+                    <option value="IT">IT</option>
+                    <option value="ES">ES</option>
+                  </select>
+                </label>
+                <ProInput
+                  v-model="identityDraft.billingVatNumber"
+                  test-id="client-billing-vat"
+                  :label="$t('clients.billing.vatNumber')"
+                  :maxlength="120"
+                />
+                <ProInput
+                  v-model="identityDraft.billingCompanyNumber"
+                  test-id="client-billing-company"
+                  :label="$t('clients.billing.companyNumber')"
+                  :maxlength="120"
+                />
+                <ProInput
+                  v-model="identityDraft.billingStreet"
+                  test-id="client-billing-street"
+                  :label="$t('clients.billing.street')"
+                  :maxlength="120"
+                />
+                <ProInput
+                  v-model="identityDraft.billingPostal"
+                  test-id="client-billing-postal"
+                  :label="$t('clients.billing.postal')"
+                  :maxlength="120"
+                />
+                <ProInput
+                  v-model="identityDraft.billingCity"
+                  test-id="client-billing-city"
+                  :label="$t('clients.billing.city')"
+                  :maxlength="120"
+                />
                 <div class="pro-flex-gap">
                   <ProButton
                     type="submit"
@@ -236,6 +278,8 @@
               <p class="text-muted">{{ client.contactPhone || '—' }}</p>
               <p class="text-muted">{{ client.address || '—' }}</p>
               <p class="text-muted">{{ client.nationalRegistryNumber || '—' }}</p>
+              <p class="text-muted">{{ client.billingVatNumber || '—' }}</p>
+              <p class="text-muted">{{ [client.billingStreet, client.billingPostal, client.billingCity, client.billingCountry].filter(Boolean).join(', ') || '—' }}</p>
             </template>
             <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
           </div>
@@ -259,6 +303,12 @@ type ClientRow = {
   contactPhone?: string
   address?: string
   nationalRegistryNumber?: string
+  billingVatNumber?: string
+  billingCompanyNumber?: string
+  billingStreet?: string
+  billingCity?: string
+  billingPostal?: string
+  billingCountry?: string
 }
 
 type ClientOverview = {
@@ -302,6 +352,12 @@ const identityDraft = reactive({
   contactPhone: '',
   address: '',
   nationalRegistryNumber: '',
+  billingVatNumber: '',
+  billingCompanyNumber: '',
+  billingStreet: '',
+  billingCity: '',
+  billingPostal: '',
+  billingCountry: '',
 })
 const identitySaving = ref(false)
 const identityMsg = ref('')
@@ -313,6 +369,12 @@ function syncIdentityDraft(c: ClientRow | null) {
   identityDraft.contactPhone = c?.contactPhone || ''
   identityDraft.address = c?.address || ''
   identityDraft.nationalRegistryNumber = c?.nationalRegistryNumber || ''
+  identityDraft.billingVatNumber = c?.billingVatNumber || ''
+  identityDraft.billingCompanyNumber = c?.billingCompanyNumber || ''
+  identityDraft.billingStreet = c?.billingStreet || ''
+  identityDraft.billingCity = c?.billingCity || ''
+  identityDraft.billingPostal = c?.billingPostal || ''
+  identityDraft.billingCountry = c?.billingCountry || ''
 }
 
 const identityDirty = computed(() => {
@@ -323,7 +385,13 @@ const identityDirty = computed(() => {
     identityDraft.lastName.trim() !== (c.lastName || '').trim() ||
     identityDraft.contactPhone.trim() !== (c.contactPhone || '').trim() ||
     identityDraft.address.trim() !== (c.address || '').trim() ||
-    identityDraft.nationalRegistryNumber.trim() !== (c.nationalRegistryNumber || '').trim()
+    identityDraft.nationalRegistryNumber.trim() !== (c.nationalRegistryNumber || '').trim() ||
+    identityDraft.billingVatNumber.trim() !== (c.billingVatNumber || '').trim() ||
+    identityDraft.billingCompanyNumber.trim() !== (c.billingCompanyNumber || '').trim() ||
+    identityDraft.billingStreet.trim() !== (c.billingStreet || '').trim() ||
+    identityDraft.billingCity.trim() !== (c.billingCity || '').trim() ||
+    identityDraft.billingPostal.trim() !== (c.billingPostal || '').trim() ||
+    identityDraft.billingCountry.trim() !== (c.billingCountry || '').trim()
   )
 })
 
@@ -340,6 +408,12 @@ async function saveIdentity() {
         contactPhone: identityDraft.contactPhone.trim(),
         address: identityDraft.address.trim(),
         nationalRegistryNumber: identityDraft.nationalRegistryNumber.trim(),
+        billingVatNumber: identityDraft.billingVatNumber.trim(),
+        billingCompanyNumber: identityDraft.billingCompanyNumber.trim(),
+        billingStreet: identityDraft.billingStreet.trim(),
+        billingCity: identityDraft.billingCity.trim(),
+        billingPostal: identityDraft.billingPostal.trim(),
+        billingCountry: identityDraft.billingCountry.trim(),
       },
     })
     const data = res.data ?? res
@@ -536,6 +610,11 @@ onMounted(async () => {
 .client-identity-edit {
   margin-top: 0.75rem;
   max-width: 28rem;
+}
+.client-billing-title {
+  margin: 1.25rem 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 .pro-mb-md {
   margin-bottom: 1rem;
