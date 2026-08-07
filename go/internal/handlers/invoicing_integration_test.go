@@ -376,6 +376,49 @@ func TestInvoicingProformaClientAccept(t *testing.T) {
 	if pf["status"] != string(invoicing.StatusAccepted) {
 		t.Fatalf("proforma want accepted %#v", pf)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var tok *string
+	err := api.pool.QueryRow(ctx, `
+		SELECT public_token FROM invoicing.documents WHERE id = $1`, docID).Scan(&tok)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tok != nil && *tok != "" {
+		t.Fatalf("public_token should be cleared after Peppol handoff, got %q", *tok)
+	}
+	code, env = doJSON(t, api.handler, http.MethodGet, "/api/v1/public/proforma/"+token, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("cleared token GET want 404 got %d %#v", code, env)
+	}
+
+	// Simulate Peppol failure leftover: rejected invoice + token restored → retry accept re-sends.
+	invID, _ := inv["id"].(string)
+	if invID == "" {
+		t.Fatal("invoice id missing")
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'rejected', peppol_status = 'send_failed', billit_order_id = NULL
+		WHERE id = $1`, invID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET public_token = $2, token_expires_at = now() + interval '14 days'
+		WHERE id = $1`, docID, token); err != nil {
+		t.Fatal(err)
+	}
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/public/proforma/"+token+"/accept", nil)
+	if code != http.StatusOK {
+		t.Fatalf("retry accept %d %#v", code, env)
+	}
+	inv2, _ := dataMap(t, env)["invoice"].(map[string]any)
+	st2, _ := inv2["status"].(string)
+	if st2 != string(invoicing.StatusDelivered) && st2 != string(invoicing.StatusSending) && st2 != string(invoicing.StatusIssued) {
+		t.Fatalf("retry invoice status %#v", inv2)
+	}
 }
 
 func TestInvoicingQuotaExceeded(t *testing.T) {

@@ -64,6 +64,7 @@ type Store interface {
 	IssueProformaForClient(ctx context.Context, practiceID, docID, token string, expiresAt, sentAt time.Time) (Document, error)
 	GetProformaByPublicToken(ctx context.Context, token string) (Document, string, error) // doc, practiceName
 	AcceptProformaByToken(ctx context.Context, token string, now time.Time) (proforma Document, err error)
+	ClearProformaPublicToken(ctx context.Context, practiceID, docID string) error
 	GetDocumentByIdempotency(ctx context.Context, practiceID, key string) (Document, error)
 	UpdateDocumentExternal(ctx context.Context, practiceID, docID, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time) error
 	ApplyBillitWebhookStatus(ctx context.Context, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error
@@ -570,9 +571,31 @@ func (s *Service) AcceptProforma(ctx context.Context, token string) (AcceptProfo
 	}
 
 	idemKey := "proforma-accept:" + proforma.ID
+	finalize := func(pf Document, inv Document) (AcceptProformaResult, error) {
+		// Invalidate magic-link only once Peppol is in flight / done (keep token on draft/rejected for retry).
+		if inv.Status != StatusDraft && inv.Status != StatusRejected {
+			_ = s.store.ClearProformaPublicToken(ctx, pf.PracticeID, pf.ID)
+			if refreshed, err := s.store.GetDocument(ctx, pf.PracticeID, pf.ID); err == nil {
+				pf = refreshed
+			}
+		}
+		return AcceptProformaResult{Proforma: pf, Invoice: inv}, nil
+	}
+	sendIfNeeded := func(pf Document, inv Document) (AcceptProformaResult, error) {
+		if inv.Status != StatusDraft && inv.Status != StatusRejected {
+			return finalize(pf, inv)
+		}
+		sent, err := s.SendDocument(ctx, pf.PracticeID, inv.ID)
+		if err != nil {
+			inv, _ = s.store.GetDocument(ctx, pf.PracticeID, inv.ID)
+			return AcceptProformaResult{Proforma: pf, Invoice: inv}, err
+		}
+		return finalize(pf, sent)
+	}
+
 	if already {
 		if inv, err := s.store.GetDocumentByIdempotency(ctx, proforma.PracticeID, idemKey); err == nil {
-			return AcceptProformaResult{Proforma: proforma, Invoice: inv}, nil
+			return sendIfNeeded(proforma, inv)
 		}
 	}
 
@@ -588,16 +611,7 @@ func (s *Service) AcceptProforma(ctx context.Context, token string) (AcceptProfo
 	if err != nil {
 		return AcceptProformaResult{Proforma: proforma}, err
 	}
-	if invoice.Status != StatusDraft && invoice.Status != StatusRejected {
-		return AcceptProformaResult{Proforma: proforma, Invoice: invoice}, nil
-	}
-	sent, err := s.SendDocument(ctx, proforma.PracticeID, invoice.ID)
-	if err != nil {
-		invoice, _ = s.store.GetDocument(ctx, proforma.PracticeID, invoice.ID)
-		return AcceptProformaResult{Proforma: proforma, Invoice: invoice}, err
-	}
-	proforma, _ = s.store.GetDocument(ctx, proforma.PracticeID, proforma.ID)
-	return AcceptProformaResult{Proforma: proforma, Invoice: sent}, nil
+	return sendIfNeeded(proforma, invoice)
 }
 
 func randomToken(nBytes int) (string, error) {

@@ -261,7 +261,19 @@ func (a *API) postPublicProformaAccept(w http.ResponseWriter, r *http.Request) {
 		a.writeInvoicingErr(w, r, err)
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, res)
+	// Minimal public payload — no practice internals / Billit ids.
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"proforma": map[string]any{
+			"id":     res.Proforma.ID,
+			"status": res.Proforma.Status,
+		},
+		"invoice": map[string]any{
+			"id":             res.Invoice.ID,
+			"status":         res.Invoice.Status,
+			"totalInclCents": res.Invoice.TotalInclCents,
+			"currency":       res.Invoice.Currency,
+		},
+	})
 }
 
 func (a *API) afterProformaIssued(ctx context.Context, authorUserID, practiceID string, doc invoicing.Document, ctaURL string) {

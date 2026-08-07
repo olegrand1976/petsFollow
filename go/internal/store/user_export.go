@@ -194,7 +194,7 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 		) ORDER BY i.created_at), '[]'::jsonb)
 			FROM notifications.sms_inbound i WHERE i.user_id = $1`,
 		"invoicingDocuments": `SELECT COALESCE(jsonb_agg(
-			(to_jsonb(d) - 'idempotency_key') ORDER BY d.created_at), '[]'::jsonb)
+			(to_jsonb(d) - 'idempotency_key' - 'public_token') ORDER BY d.created_at), '[]'::jsonb)
 			FROM invoicing.documents d WHERE d.created_by = $1`,
 		"pharmacyDafAsClient": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(d) - 'pdf_object_key') ORDER BY d.created_at), '[]'::jsonb)

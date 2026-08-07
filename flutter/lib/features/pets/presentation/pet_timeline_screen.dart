@@ -203,7 +203,11 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   Future<void> _openProformaUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final host = uri.host.toLowerCase();
+    final local = host == 'localhost' || host == '127.0.0.1';
+    if (uri.scheme == 'https' || (uri.scheme == 'http' && local)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget? _consultationCta({

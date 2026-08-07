@@ -1054,3 +1054,22 @@ func (s *Store) AcceptProformaByToken(ctx context.Context, token string, now tim
 	return s.GetDocument(ctx, practiceID, docID)
 }
 
+// ClearProformaPublicToken drops the magic-link secret after successful Peppol handoff.
+func (s *Store) ClearProformaPublicToken(ctx context.Context, practiceID, docID string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET public_token = NULL,
+		    token_expires_at = NULL,
+		    updated_at = now()
+		WHERE id = $1 AND practice_id = $2 AND type = 'proforma'`,
+		docID, practiceID,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.ErrDocNotFound
+	}
+	return nil
+}
+
