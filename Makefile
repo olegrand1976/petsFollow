@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
 
 help:
 	@echo "petsFollow — commandes"
@@ -45,6 +45,7 @@ help:
 	@echo "  make play-android-bundle-prod      AAB Play + API prod (api.petsfollow.app)"
 	@echo "  make play-android-bundle     AAB Play (API_BASE=https://… requis)"
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
+	@echo "  make gcp-bff-proxy-secret    secret BFF→API IP client (ATTACH=1 → API+Nuxt)"
 	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
 	@echo "  make gcp-visit-reminders-scheduler  Scheduler quotidien rappel J-1 RDV (VISIT_REMINDERS_SECRET=…)"
@@ -256,6 +257,15 @@ gcp-setup-media:
 
 gcp-setup-stripe:
 	bash infra/gcp/setup-stripe-secrets.sh
+
+# Secret BFF→API (X-PF-Client-IP). ATTACH=1 monte sur petsfollow-api + petsfollow-nuxtjs.
+# Prod : PETSFOLLOW_GCP_ENV=prod make gcp-bff-proxy-secret ATTACH=1
+gcp-bff-proxy-secret:
+	@if [ "$${ATTACH:-}" = "1" ]; then \
+	  bash infra/gcp/setup-bff-proxy-secret.sh --attach-run; \
+	else \
+	  bash infra/gcp/setup-bff-proxy-secret.sh; \
+	fi
 
 gcp-retention-scheduler:
 	bash infra/gcp/setup-retention-scheduler.sh
