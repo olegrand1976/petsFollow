@@ -193,7 +193,7 @@ func (s *Store) ListAllPetStudies(ctx context.Context, limit int) ([]PetStudy, e
 	return out, rows.Err()
 }
 
-// DeletePetStudyByID removes an imaging.pet_studies row (admin prune / ops).
+// DeletePetStudyByID removes an imaging.pet_studies row (clinical hard-delete / admin prune).
 func (s *Store) DeletePetStudyByID(ctx context.Context, id string) error {
 	tag, err := s.pool.Exec(ctx, `DELETE FROM imaging.pet_studies WHERE id = $1`, id)
 	if err != nil {

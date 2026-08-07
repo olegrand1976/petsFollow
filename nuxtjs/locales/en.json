@@ -313,6 +313,45 @@
     "fullscreen": "Fullscreen",
     "exitFullscreen": "Exit fullscreen"
   },
+  "headerLinks": {
+    "title": "Useful links",
+    "menuAria": "Useful links",
+    "settingsDescription": "Shortcuts shown in the top bar for the whole practice team.",
+    "settingsHint": "Enable official sites for your country and add your own links (lab, insurer, intranet…).",
+    "catalogTitle": "Catalog (practice country)",
+    "customTitle": "Custom links",
+    "customLabel": "Label",
+    "customUrl": "URL (https)",
+    "addCustom": "Add a link",
+    "remove": "Remove",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "maxReached": "Maximum number of custom links reached.",
+    "save": "Save links",
+    "saved": "Links saved.",
+    "loading": "Loading…",
+    "loadFailed": "Could not load useful links.",
+    "catalog": {
+      "be_afsca": "FASFC — veterinarians",
+      "be_afsca_news": "FASFC — newsletters",
+      "be_vetcompendium": "Vetcompendium",
+      "be_afmps": "FAMHP",
+      "be_sanitel_med": "Sanitel-Med",
+      "be_amcra": "AMCRA",
+      "be_ordre": "Veterinary Order",
+      "fr_ordre": "National Veterinary Order",
+      "fr_ircp": "SPC index (ANMV)",
+      "fr_calypso": "CalypsoVet",
+      "fr_pharmacovigilance": "ANMV pharmacovigilance",
+      "fr_icad": "I-CAD",
+      "fr_anses": "ANSES",
+      "es_cimavet": "CIMA Vet",
+      "es_aemps": "AEMPS — veterinary medicines",
+      "es_presvet": "PRESVET",
+      "es_notificavet": "NotificaVET",
+      "es_ocv": "Organización Colegial Veterinaria"
+    }
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Group settings by topic — open a block to edit it.",
@@ -1388,7 +1427,9 @@
     "afscaTitle": "AFSCA news",
     "afscaEmptyTitle": "No recent newsletters",
     "afscaEmptyDescription": "Could not load the feed right now. Check the AFSCA website.",
-    "afscaViewAll": "All AFSCA newsletters"
+    "afscaSourceNote": "Source: FASFC / AFSCA (Federal Agency for the Safety of the Food Chain). The petsFollow feed is refreshed at most every 6 hours.",
+    "afscaViewAll": "All AFSCA newsletters",
+    "afscaSiteLink": "Official AFSCA website"
   },
   "messages": {
     "title": "Messaging",
@@ -4329,10 +4370,12 @@
       "measureCalibrated": "Calibrated (mm)",
       "measureUncalibrated": "Uncalibrated (px)",
       "measureHintPx": "No reliable calibration — measuring in image pixels",
-      "measureHintResized": "Orthanc preview resized vs DICOM — px only (use Cornerstone for mm)",
+      "measureHintResized": "Orthanc preview resized — estimated mm from DICOM metadata",
       "contrastUp": "Increase contrast",
       "contrastDown": "Decrease contrast",
-      "measureHintScaled": "Approximate calibration — Orthanc preview resized (estimated mm)"
+      "measureHintScaled": "Approximate calibration — Orthanc preview resized (estimated mm)",
+      "measureCalibratedSource": "Calibrated (mm · {source})",
+      "measureCalibratedScaled": "Approx. calibrated (mm)"
     },
     "admin": {
       "title": "PACS — monitoring",
@@ -4402,6 +4445,14 @@
       "submit": "Send",
       "empty": "No comments on this study yet.",
       "error": "Could not load or send the comment."
+    },
+    "delete": {
+      "aria": "Delete study",
+      "title": "Delete imaging study?",
+      "body": "Confirm permanent deletion of “{name}”?",
+      "warn": "Irreversible: Orthanc file and pet link (hard-delete).",
+      "confirm": "Delete permanently",
+      "error": "Could not delete the study. Retry or wake the PACS."
     }
   },
   "research": {

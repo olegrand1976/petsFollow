@@ -63,6 +63,11 @@ const commentsLoading = ref(false)
 const commentsBusy = ref(false)
 const commentsError = ref('')
 
+const deleteOpen = ref(false)
+const deleteBusy = ref(false)
+const deleteError = ref('')
+const pendingDelete = ref<{ id: string, label: string } | null>(null)
+
 /** Hold launch pad ~1.4s after ready so step « ready » is visible. */
 const celebrateReady = ref(false)
 let celebrateTimer: ReturnType<typeof setTimeout> | null = null
@@ -96,7 +101,7 @@ onBeforeUnmount(() => {
 const isStarting = computed(() => waking.value || status.value.state === 'starting')
 /** Only show pad during wake/starting or short ready celebration — never on first silent poll. */
 const showLaunchPad = computed(() => isStarting.value || celebrateReady.value)
-const actionsLocked = computed(() => status.value.state !== 'ready' || isStarting.value || uploadBusy.value)
+const actionsLocked = computed(() => status.value.state !== 'ready' || isStarting.value || uploadBusy.value || deleteBusy.value)
 const wakeDisabled = computed(() => isStarting.value || (!hasPolled.value && loading.value))
 
 const badgeVariant = computed(() => {
@@ -122,9 +127,11 @@ function rankStudiesForOpen(items: any[]): any[] {
 }
 
 function pacsFetchMessage(e: any, fallback: string): string {
-  const key = e?.data?.msgKey || e?.data?.error?.msgKey
+  const key = e?.data?.msgKey || e?.data?.error?.msgKey || e?.data?.error?.code || e?.data?.code
   if (key === 'pacs_instance_unavailable') return t('pacs.instanceUnavailable')
   if (key === 'pacs_error' || key === 'pacs_unavailable') return t('pacs.orthancError')
+  if (key === 'pacs_delete_failed') return t('pacs.delete.error')
+  if (key === 'pacs_not_ready') return t('pacs.offlineHint')
   const msg = e?.data?.message || e?.message
   if (typeof msg === 'string' && msg && msg !== 'Error') return msg
   return fallback
@@ -214,6 +221,50 @@ async function submitComment() {
     commentsError.value = pacsFetchMessage(e, t('pacs.comments.error'))
   } finally {
     commentsBusy.value = false
+  }
+}
+
+function studyLabel(s: any): string {
+  return String(s?.description || s?.modality || s?.orthancStudyId || s?.id || '')
+}
+
+function askDeleteStudy(s: any, ev: Event) {
+  ev.stopPropagation()
+  ev.preventDefault()
+  if (actionsLocked.value || !s?.id) return
+  pendingDelete.value = { id: s.id, label: studyLabel(s) }
+  deleteError.value = ''
+  deleteOpen.value = true
+}
+
+function clearViewerSelection() {
+  selectedStudyId.value = ''
+  selectedPetStudyId.value = ''
+  leftInstanceId.value = ''
+  rightInstanceId.value = ''
+  instances.value = []
+  seriesIds.value = []
+  selectedSeriesId.value = ''
+  comments.value = []
+  commentDraft.value = ''
+  commentsError.value = ''
+}
+
+async function confirmDeleteStudy() {
+  const pending = pendingDelete.value
+  if (!pending?.id || deleteBusy.value) return
+  deleteBusy.value = true
+  deleteError.value = ''
+  try {
+    await apiFetch(`/api/pets/${props.petId}/pacs/studies/${pending.id}`, { method: 'DELETE' })
+    if (selectedPetStudyId.value === pending.id) clearViewerSelection()
+    deleteOpen.value = false
+    pendingDelete.value = null
+    await loadStudies()
+  } catch (e: any) {
+    deleteError.value = pacsFetchMessage(e, t('pacs.delete.error'))
+  } finally {
+    deleteBusy.value = false
   }
 }
 
@@ -400,19 +451,34 @@ onMounted(() => {
         :description="t('pacs.emptyDescription')"
       />
       <div v-else class="pacs-studies">
-        <button
+        <div
           v-for="s in studies"
           :key="s.id"
-          type="button"
           class="pacs-study"
           :class="{ 'is-active': selectedStudyId === s.orthancStudyId }"
-          data-testid="pacs-study-item"
-          :disabled="actionsLocked"
-          @click="openStudy(s)"
         >
-          <strong>{{ s.description || s.modality || s.orthancStudyId }}</strong>
-          <span>{{ s.modality }} · {{ s.studyInstanceUid || s.orthancStudyId }}</span>
-        </button>
+          <button
+            type="button"
+            class="pacs-study__open"
+            data-testid="pacs-study-item"
+            :disabled="actionsLocked"
+            @click="openStudy(s)"
+          >
+            <strong>{{ s.description || s.modality || s.orthancStudyId }}</strong>
+            <span>{{ s.modality }} · {{ s.studyInstanceUid || s.orthancStudyId }}</span>
+          </button>
+          <button
+            type="button"
+            class="pacs-study__delete"
+            data-testid="pacs-study-delete"
+            :disabled="actionsLocked"
+            :aria-label="t('pacs.delete.aria')"
+            :title="t('pacs.delete.aria')"
+            @click="askDeleteStudy(s, $event)"
+          >
+            <ProIcon name="delete" :size="18" />
+          </button>
+        </div>
       </div>
 
       <div v-if="seriesIds.length > 1" class="pacs-instances">
@@ -529,6 +595,39 @@ onMounted(() => {
         </p>
       </section>
     </template>
+
+    <ProModal
+      v-model:open="deleteOpen"
+      size="md"
+      :title="t('pacs.delete.title')"
+      test-id="pacs-delete-modal"
+      :prevent-close="deleteBusy"
+    >
+      <p>{{ t('pacs.delete.body', { name: pendingDelete?.label || '' }) }}</p>
+      <p class="pacs-delete__warn">{{ t('pacs.delete.warn') }}</p>
+      <p v-if="deleteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">
+        {{ deleteError }}
+      </p>
+      <template #footer>
+        <ProButton
+          variant="secondary"
+          test-id="pacs-delete-cancel"
+          :disabled="deleteBusy"
+          @click="deleteOpen = false"
+        >
+          {{ t('common.cancel') }}
+        </ProButton>
+        <ProButton
+          variant="primary"
+          test-id="pacs-delete-confirm"
+          :disabled="deleteBusy"
+          :loading="deleteBusy"
+          @click="confirmDeleteStudy"
+        >
+          {{ t('pacs.delete.confirm') }}
+        </ProButton>
+      </template>
+    </ProModal>
   </div>
 </template>
 
@@ -555,12 +654,27 @@ onMounted(() => {
 @keyframes pacs-spin { to { transform: rotate(360deg); } }
 .pacs-studies { display: flex; flex-direction: column; gap: 0.35rem; }
 .pacs-study {
-  text-align: left; border: 1px solid var(--pf-vet-border); background: var(--pf-vet-bg);
-  border-radius: 8px; padding: 0.6rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.15rem;
+  display: flex; align-items: stretch; gap: 0.25rem;
+  border: 1px solid var(--pf-vet-border); background: var(--pf-vet-bg);
+  border-radius: 8px; overflow: hidden;
 }
-.pacs-study:disabled { opacity: 0.5; cursor: not-allowed; }
-.pacs-study.is-active { border-color: var(--pf-vet-accent); }
-.pacs-study span { font-size: 0.8rem; opacity: 0.75; }
+.pacs-study.is-active { border-color: var(--pf-vet-accent); background: color-mix(in srgb, var(--pf-vet-accent) 8%, var(--pf-vet-bg)); }
+.pacs-study__open {
+  flex: 1; text-align: left; border: 0; background: transparent;
+  padding: 0.6rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.15rem;
+  color: inherit; font: inherit;
+}
+.pacs-study__open:disabled { opacity: 0.55; cursor: not-allowed; }
+.pacs-study__open strong { color: var(--pf-vet-primary); font-size: 0.95rem; }
+.pacs-study__open span { font-size: 0.8rem; color: var(--pf-vet-muted, #64748b); word-break: break-all; }
+.pacs-study__delete {
+  flex-shrink: 0; border: 0; border-left: 1px solid var(--pf-vet-border);
+  background: transparent; color: var(--pf-vet-alert); padding: 0 0.65rem; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pacs-study__delete:hover:not(:disabled) { background: color-mix(in srgb, var(--pf-vet-alert) 12%, transparent); }
+.pacs-study__delete:disabled { opacity: 0.45; cursor: not-allowed; }
+.pacs-delete__warn { margin: 0.75rem 0 0; font-size: 0.9rem; color: var(--pf-vet-alert); }
 .pacs-instances { display: flex; flex-wrap: wrap; gap: 1rem; }
 .pacs-instances select { margin-left: 0.35rem; }
 .pacs-container__hint { color: var(--pf-vet-primary); opacity: 0.9; }

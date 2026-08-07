@@ -48,6 +48,42 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <div
+        v-if="showHeaderLinksMenu"
+        class="pro-topbar__dropdown-wrap"
+        data-testid="pro-header-links"
+      >
+        <button
+          type="button"
+          class="pro-topbar__icon-btn"
+          :aria-label="$t('headerLinks.menuAria')"
+          aria-haspopup="true"
+          :aria-expanded="linksOpen"
+          data-testid="pro-header-links-btn"
+          @click.stop="toggleLinks"
+        >
+          <ProIcon name="travel_explore" :size="20" />
+        </button>
+        <div v-if="linksOpen" class="pro-topbar__dropdown pro-topbar__dropdown--links" role="menu">
+          <p class="pro-topbar__dropdown-title">{{ $t('headerLinks.title') }}</p>
+          <ul class="pro-topbar__links-list">
+            <li v-for="link in headerLinkItems" :key="link.id">
+              <a
+                :href="link.url"
+                class="pro-topbar__links-item"
+                target="_blank"
+                rel="noopener noreferrer"
+                role="menuitem"
+                :data-testid="`pro-header-link-${link.id}`"
+                @click="linksOpen = false"
+              >
+                <span>{{ catalogLinkLabel(link) }}</span>
+                <ProIcon name="open_in_new" :size="16" />
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
       <NuxtLink
         to="/support"
         class="pro-topbar__icon-btn"
@@ -189,16 +225,18 @@ const props = withDefaults(
     settingsLink?: string
     showNotifications?: boolean
     showDeskSwitcher?: boolean
+    showHeaderLinks?: boolean
   }>(),
   {
     homeLink: '/',
     settingsLink: undefined,
     showNotifications: true,
     showDeskSwitcher: true,
+    showHeaderLinks: false,
   },
 )
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser } = useProUser()
 const {
@@ -234,12 +272,46 @@ const {
 } = useProNotifications()
 
 const notifOpen = ref(false)
+const linksOpen = ref(false)
+type HeaderLinkItem = { id: string, label: string, url: string, kind: string }
+const headerLinkItems = ref<HeaderLinkItem[]>([])
 const profiles = ref<ProfileRow[]>([])
 const profileSwitchBusy = ref(false)
 const profileSwitchError = ref('')
 
+const showHeaderLinksMenu = computed(
+  () => props.showHeaderLinks && isPracticeStaffRole(user.value?.role) && headerLinkItems.value.length > 0,
+)
+
+function catalogLinkLabel(link: HeaderLinkItem) {
+  if (link.kind === 'custom') return link.label
+  const key = `headerLinks.catalog.${link.id}`
+  const translated = t(key)
+  return translated === key ? link.label : translated
+}
+
+function toggleLinks() {
+  notifOpen.value = false
+  closeProfileDetails()
+  linksOpen.value = !linksOpen.value
+}
+
+async function loadHeaderLinks() {
+  if (!props.showHeaderLinks) return
+  try {
+    const res: any = await $fetch('/api/vet/header-links', {
+      query: { locale: locale.value },
+    })
+    const data = res?.data ?? res
+    headerLinkItems.value = Array.isArray(data?.items) ? data.items : []
+  } catch {
+    headerLinkItems.value = []
+  }
+}
+
 function onToggleNav() {
   notifOpen.value = false
+  linksOpen.value = false
   closeProfileDetails()
   toggleDrawer()
 }
@@ -273,6 +345,7 @@ onMounted(async () => {
     initFromStorage()
   } catch { /* 401 handled by middleware */ }
   void loadProfiles()
+  void loadHeaderLinks()
   // Idle/bootstrap owned by layout — topbar only renders switcher.
   if (props.showNotifications && !desk.uiBlocked.value) {
     await refreshNotif()
@@ -300,6 +373,7 @@ watch(
 
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
+  linksOpen.value = false
   closeProfileDetails()
   closeDrawer()
   if (notifOpen.value) void refreshNotif()
@@ -322,6 +396,7 @@ function onSupportNav() {
   captureOriginPage()
   closeProfileDetails()
   notifOpen.value = false
+  linksOpen.value = false
 }
 
 function onDocClick(e: MouseEvent) {
@@ -329,6 +404,7 @@ function onDocClick(e: MouseEvent) {
   if (!(target instanceof Element)) return
   if (!target.closest('.pro-topbar__dropdown-wrap')) {
     notifOpen.value = false
+    linksOpen.value = false
     closeProfileDetails()
   }
 }

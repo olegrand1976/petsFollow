@@ -220,6 +220,14 @@ func TestAdminCanStillAttachPracticeProfile(t *testing.T) {
 	}
 
 	target := insertVerifiedUser(t, api, "client", uniqueEmail("adm-attach"), "ClientDemo123!", "Admin Attach", nil)
+	// L'attachement inscrit la cible à l'équipe du cabinet seedé : sans purge,
+	// le test grossit l'effectif VetPlus pour tous les suivants.
+	t.Cleanup(func() {
+		ctx := context.Background()
+		_, _ = api.pool.Exec(ctx, `DELETE FROM practice.team_members WHERE user_id = $1::uuid`, target)
+		_, _ = api.pool.Exec(ctx, `DELETE FROM identity.profiles WHERE user_id = $1::uuid`, target)
+	})
+
 	code, env = doAuthJSON(t, api.handler, http.MethodPost,
 		"/api/v1/admin/users/"+target+"/profiles", adminTok,
 		map[string]any{"role": "vet", "practiceId": practiceID})

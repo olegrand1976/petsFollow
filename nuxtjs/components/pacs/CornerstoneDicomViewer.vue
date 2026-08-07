@@ -31,6 +31,8 @@ const tool = ref<CsTool>('wl')
 const frameIndex = ref(0)
 const maxFrame = ref(0)
 const pixelSpacing = ref<PacsSpacingMm | null>(null)
+/** DICOM tag source from API metadata. */
+const spacingSource = ref('')
 /** True only after calibrateImageSpacing applied from API metadata (aligned with Length). */
 const spacingApplied = ref(false)
 const measureCalibrated = computed(() => spacingApplied.value)
@@ -89,6 +91,7 @@ function stackIds(instanceId: string, frames: number) {
 
 type InstanceMeta = {
   spacing: PacsSpacingMm | null
+  spacingSource: string
   frames: number
   modality?: string
 }
@@ -101,26 +104,35 @@ async function readInstanceMeta(instanceId: string): Promise<InstanceMeta> {
     const frames = Number.isFinite(nFrames) && nFrames > 0 ? nFrames : 1
     return {
       spacing: parsePixelSpacingMm(data.pixelSpacingMm),
+      spacingSource: typeof data.spacingSource === 'string' ? data.spacingSource : '',
       frames,
       modality: data.modality,
     }
   } catch {
-    return { spacing: null, frames: 1 }
+    return { spacing: null, spacingSource: '', frames: 1 }
   }
 }
 
 function applyLeftUiMeta(meta: InstanceMeta) {
   pixelSpacing.value = meta.spacing
+  spacingSource.value = meta.spacingSource
   maxFrame.value = Math.max(0, meta.frames - 1)
   spacingApplied.value = false
   const spacing = meta.spacing ? meta.spacing.join('×') : null
   const parts = [
     meta.modality,
     spacing ? `${spacing} mm` : null,
+    meta.spacingSource || null,
     maxFrame.value > 0 ? `${maxFrame.value + 1} frames` : null,
   ].filter(Boolean)
   metaLabel.value = parts.join(' · ')
 }
+
+const calibBadgeLabel = computed(() => {
+  if (!measureCalibrated.value) return t('pacs.tools.measureUncalibrated')
+  if (spacingSource.value) return t('pacs.tools.measureCalibratedSource', { source: spacingSource.value })
+  return t('pacs.tools.measureCalibrated')
+})
 
 /** @returns true when calibrateImageSpacing applied. */
 async function applyApiSpacingCalibration(
@@ -437,7 +449,7 @@ onBeforeUnmount(async () => {
         :data-calibrated="measureCalibrated ? '1' : '0'"
         data-testid="dicom-calib-badge"
       >
-        {{ measureCalibrated ? t('pacs.tools.measureCalibrated') : t('pacs.tools.measureUncalibrated') }}
+        {{ calibBadgeLabel }}
       </span>
       <span v-if="metaLabel" class="cs-viewer__meta" data-testid="dicom-meta-label">{{ metaLabel }}</span>
       <span v-if="busy" class="cs-viewer__busy">{{ t('pacs.launch.waking') }}</span>

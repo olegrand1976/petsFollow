@@ -1,6 +1,6 @@
 <template>
   <div class="pro-app">
-    <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" />
+    <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" show-header-links />
     <ProDeskLockOverlay />
     <div class="pro-app-shell">
       <ProSidebar v-if="showNav" :items="navItems" />

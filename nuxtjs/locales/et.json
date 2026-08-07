@@ -1388,7 +1388,9 @@
     "afscaTitle": "AFSCA uudised",
     "afscaEmptyTitle": "Hiljutisi uudiskirju pole",
     "afscaEmptyDescription": "Voogu ei õnnestunud laadida. Vaadake AFSCA veebisaiti.",
-    "afscaViewAll": "Kõik AFSCA uudiskirjad"
+    "afscaSourceNote": "Allikas: AFSCA (Föderaalne toiduahela ohutuse amet). petsFollow voogu värskendatakse kõige rohkem iga 6 tunni järel.",
+    "afscaViewAll": "Kõik AFSCA uudiskirjad",
+    "afscaSiteLink": "AFSCA ametlik veebisait"
   },
   "messages": {
     "title": "Sõnumid",
@@ -4329,10 +4331,12 @@
       "measureCalibrated": "Kalibreeritud (mm)",
       "measureUncalibrated": "Kalibreerimata (px)",
       "measureHintPx": "Usaldusväärne kalibreering puudub — mõõtmine piksliühikutes",
-      "measureHintResized": "Orthanci eelvaade muudetud vs DICOM — ainult px (mm jaoks Cornerstone)",
+      "measureHintResized": "Orthanci eelvaade muudetud — hinnangulised mm DICOM metaandmetest",
       "contrastUp": "Suurenda kontrasti",
       "contrastDown": "Vähenda kontrasti",
-      "measureHintScaled": "Ligikaudne kalibreering — Orthanci eelvaade muudetud (hinnangulised mm)"
+      "measureHintScaled": "Ligikaudne kalibreering — Orthanci eelvaade muudetud (hinnangulised mm)",
+      "measureCalibratedSource": "Kalibreeritud (mm · {source})",
+      "measureCalibratedScaled": "Ligikaudu kalibreeritud (mm)"
     },
     "admin": {
       "title": "PACS — järelevalve",
@@ -4402,6 +4406,14 @@
       "submit": "Saada",
       "empty": "Sellel uuringul pole veel kommentaare.",
       "error": "Kommentaari laadimine või saatmine ebaõnnestus."
+    },
+    "delete": {
+      "aria": "Kustuta uuring",
+      "title": "Kustutada pildiuuring?",
+      "body": "Kinnita „{name}“ lõplik kustutamine?",
+      "warn": "Pöördumatu: Orthanci fail ja looma seos (hard-delete).",
+      "confirm": "Kustuta lõplikult",
+      "error": "Uuringut ei õnnestunud kustutada. Proovi uuesti või käivita PACS."
     }
   },
   "research": {

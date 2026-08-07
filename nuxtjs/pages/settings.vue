@@ -66,6 +66,35 @@
       </p>
 
       <ProAccordionSection
+        v-if="canManagePractice"
+        :title="$t('headerLinks.title')"
+        :description="$t('headerLinks.settingsDescription')"
+        data-testid="settings-header-links-section"
+      >
+        <ProHeaderLinksSettings
+          v-if="headerLinksLoaded"
+          v-model="headerLinksPrefs"
+          :catalog="headerLinksCatalog"
+          :max-custom="headerLinksMaxCustom"
+        />
+        <p v-else-if="headerLinksError" class="pro-field-error" role="alert">{{ headerLinksError }}</p>
+        <p v-else class="text-muted">{{ $t('headerLinks.loading') }}</p>
+        <div class="pro-flex-row pro-mt-sm" style="gap: 0.75rem; align-items: center;">
+          <ProButton
+            type="button"
+            :loading="headerLinksSaving"
+            :disabled="!headerLinksLoaded || !profileLoaded"
+            data-testid="settings-header-links-save"
+            @click="saveHeaderLinks"
+          >
+            {{ $t('headerLinks.save') }}
+          </ProButton>
+          <p v-if="headerLinksSaved" class="text-muted" role="status">{{ $t('headerLinks.saved') }}</p>
+          <p v-if="headerLinksSaveError" class="pro-field-error" role="alert">{{ headerLinksSaveError }}</p>
+        </div>
+      </ProAccordionSection>
+
+      <ProAccordionSection
         v-if="canManagePractice && researchFlagOn"
         :title="$t('research.settings.title')"
         :description="$t('settings.sections.research.description')"
@@ -471,6 +500,7 @@
 <script setup lang="ts">
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
 import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
+import type { HeaderLinkCatalogRow, HeaderLinksPrefs } from '~/components/pro/HeaderLinksSettings.vue'
 import type { AppLocale } from '~/composables/useLocaleSync'
 import {
   DEFAULT_DESK_IDLE_MINUTES,
@@ -495,6 +525,20 @@ const researchStatusKnown = ref(false)
 const researchBusy = ref(false)
 const researchSaved = ref(false)
 const researchError = ref('')
+
+const headerLinksLoaded = ref(false)
+const headerLinksCatalog = ref<HeaderLinkCatalogRow[]>([])
+const headerLinksPrefs = ref<HeaderLinksPrefs>({
+  configured: false,
+  enabled: [],
+  order: [],
+  custom: [],
+})
+const headerLinksMaxCustom = ref(10)
+const headerLinksError = ref('')
+const headerLinksSaving = ref(false)
+const headerLinksSaved = ref(false)
+const headerLinksSaveError = ref('')
 
 const activeTab = ref('profile')
 const settingsTabs = computed(() => {
@@ -776,6 +820,22 @@ onMounted(async () => {
     } catch (e: any) {
       profileError.value = mapError(e) || t('settings.profileLoadFailed')
     }
+    try {
+      const hlRes: any = await $fetch('/api/vet/header-links')
+      const hl = hlRes.data ?? hlRes
+      headerLinksCatalog.value = Array.isArray(hl?.catalog) ? hl.catalog : []
+      const prefs = hl?.prefs || {}
+      headerLinksPrefs.value = {
+        configured: !!prefs.configured,
+        enabled: Array.isArray(prefs.enabled) ? prefs.enabled : [],
+        order: Array.isArray(prefs.order) ? prefs.order : [],
+        custom: Array.isArray(prefs.custom) ? prefs.custom : [],
+      }
+      headerLinksMaxCustom.value = Number(hl?.maxCustom) || 10
+      headerLinksLoaded.value = true
+    } catch (e: any) {
+      headerLinksError.value = mapError(e) || t('headerLinks.loadFailed')
+    }
     if (researchFlagOn.value) {
       try {
         const ro: any = await $fetch('/api/vet/practice/research-opt-in')
@@ -945,6 +1005,50 @@ async function removeVacation(id: string) {
     vacations.value = vacations.value.filter((v) => v.id !== id)
   } catch (e: any) {
     scheduleError.value = mapError(e)
+  }
+}
+
+async function saveHeaderLinks() {
+  headerLinksSaving.value = true
+  headerLinksSaved.value = false
+  headerLinksSaveError.value = ''
+  if (!profileLoaded.value) {
+    headerLinksSaveError.value = t('settings.profileLoadFailed')
+    headerLinksSaving.value = false
+    return
+  }
+  const durations = selectedDurations.value.map(Number).filter((n) => [15, 30, 60].includes(n))
+  if (!durations.length) {
+    headerLinksSaveError.value = t('settings.heartrate.hint')
+    headerLinksSaving.value = false
+    return
+  }
+  const idle = normalizeDeskIdleMinutes(deskIdleMinutes.value)
+  try {
+    await $fetch('/api/vet/profile', {
+      method: 'PUT',
+      body: {
+        ...profile.value,
+        heartrateDurationsSec: durations,
+        deskIdleMinutes: idle,
+        headerLinks: headerLinksPrefs.value,
+      },
+    })
+    const hlRes: any = await $fetch('/api/vet/header-links')
+    const hl = hlRes.data ?? hlRes
+    headerLinksCatalog.value = Array.isArray(hl?.catalog) ? hl.catalog : []
+    const prefs = hl?.prefs || {}
+    headerLinksPrefs.value = {
+      configured: !!prefs.configured,
+      enabled: Array.isArray(prefs.enabled) ? prefs.enabled : [],
+      order: Array.isArray(prefs.order) ? prefs.order : [],
+      custom: Array.isArray(prefs.custom) ? prefs.custom : [],
+    }
+    headerLinksSaved.value = true
+  } catch (e: any) {
+    headerLinksSaveError.value = mapError(e)
+  } finally {
+    headerLinksSaving.value = false
   }
 }
 

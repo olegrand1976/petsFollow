@@ -91,6 +91,9 @@
         :title="$t('dashboard.afscaTitle')"
         data-testid="dashboard-afsca"
       >
+        <p class="pro-dashboard-afsca-meta" data-testid="dashboard-afsca-source">
+          {{ $t('dashboard.afscaSourceNote') }}
+        </p>
         <ProEmptyState
           v-if="!afscaItems.length"
           :title="$t('dashboard.afscaEmptyTitle')"
@@ -113,17 +116,29 @@
             </a>
           </li>
         </ul>
-        <a
-          v-if="afscaSourceUrl"
-          :href="afscaSourceUrl"
-          class="pro-dashboard-afsca-more"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="dashboard-afsca-more"
-        >
-          {{ $t('dashboard.afscaViewAll') }}
-          <ProIcon name="open_in_new" :size="16" />
-        </a>
+        <div class="pro-dashboard-afsca-footer">
+          <a
+            v-if="afscaSourceUrl"
+            :href="afscaSourceUrl"
+            class="pro-dashboard-afsca-more"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="dashboard-afsca-more"
+          >
+            {{ $t('dashboard.afscaViewAll') }}
+            <ProIcon name="open_in_new" :size="16" />
+          </a>
+          <a
+            :href="afscaHomeUrl"
+            class="pro-dashboard-afsca-more"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="dashboard-afsca-site"
+          >
+            {{ $t('dashboard.afscaSiteLink') }}
+            <ProIcon name="open_in_new" :size="16" />
+          </a>
+        </div>
       </ProCard>
     </div>
   </div>
@@ -156,6 +171,9 @@ const showAfsca = ref(false)
 type AfscaItem = { date: string, title: string, label: string, url: string }
 const afscaItems = ref<AfscaItem[]>([])
 const afscaSourceUrl = ref('')
+const afscaHomeUrl = computed(() =>
+  locale.value === 'nl' ? 'https://favv-afsca.be/nl' : 'https://favv-afsca.be/fr',
+)
 const { fetchUser } = useProUser()
 const { formatTime, formatDay } = useFormatters()
 const { statusVariant } = useCalendarGrid()
@@ -403,11 +421,25 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
+.pro-dashboard-afsca-meta {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-dashboard-afsca-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
 .pro-dashboard-afsca-more {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.75rem;
+  margin-top: 0;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--pf-vet-accent);

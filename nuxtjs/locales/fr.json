@@ -1022,6 +1022,45 @@
       }
     }
   },
+  "headerLinks": {
+    "title": "Liens utiles",
+    "menuAria": "Liens utiles",
+    "settingsDescription": "Raccourcis affichés dans la barre supérieure pour toute l’équipe du cabinet.",
+    "settingsHint": "Activez les sites officiels de votre pays et ajoutez vos propres liens (labo, assureur, intranet…).",
+    "catalogTitle": "Catalogue (pays du cabinet)",
+    "customTitle": "Liens personnalisés",
+    "customLabel": "Libellé",
+    "customUrl": "URL (https)",
+    "addCustom": "Ajouter un lien",
+    "remove": "Supprimer",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "maxReached": "Nombre maximum de liens personnalisés atteint.",
+    "save": "Enregistrer les liens",
+    "saved": "Liens enregistrés.",
+    "loading": "Chargement…",
+    "loadFailed": "Impossible de charger les liens utiles.",
+    "catalog": {
+      "be_afsca": "AFSCA — vétérinaires",
+      "be_afsca_news": "AFSCA — newsletters",
+      "be_vetcompendium": "Vetcompendium",
+      "be_afmps": "AFMPS",
+      "be_sanitel_med": "Sanitel-Med",
+      "be_amcra": "AMCRA",
+      "be_ordre": "Ordre des vétérinaires",
+      "fr_ordre": "Ordre national des vétérinaires",
+      "fr_ircp": "Index RCP (ANMV)",
+      "fr_calypso": "CalypsoVet",
+      "fr_pharmacovigilance": "Pharmacovigilance ANMV",
+      "fr_icad": "I-CAD",
+      "fr_anses": "ANSES",
+      "es_cimavet": "CIMA Vet",
+      "es_aemps": "AEMPS — médicaments vétérinaires",
+      "es_presvet": "PRESVET",
+      "es_notificavet": "NotificaVET",
+      "es_ocv": "Organización Colegial Veterinaria"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "subtitle": "Regroupez vos réglages par thème — ouvrez un bloc pour le modifier.",
@@ -2097,7 +2136,9 @@
     "afscaTitle": "Actualités AFSCA",
     "afscaEmptyTitle": "Aucune newsletter récente",
     "afscaEmptyDescription": "Impossible de charger le fil pour le moment. Consultez le site AFSCA.",
-    "afscaViewAll": "Toutes les newsletters AFSCA"
+    "afscaSourceNote": "Source : AFSCA (Agence fédérale pour la sécurité de la chaîne alimentaire). Le fil petsFollow est rafraîchi au plus toutes les 6 heures.",
+    "afscaViewAll": "Toutes les newsletters AFSCA",
+    "afscaSiteLink": "Site officiel AFSCA"
   },
   "messages": {
     "title": "Messagerie",
@@ -4329,10 +4370,12 @@
       "measureCalibrated": "Calibré (mm)",
       "measureUncalibrated": "Sans calibrage (px)",
       "measureHintPx": "Sans calibrage fiable — mesure en pixels image",
-      "measureHintResized": "Aperçu Orthanc redimensionné vs DICOM — mesure en px (Cornerstone recommandé pour mm)",
+      "measureHintResized": "Aperçu Orthanc redimensionné — mesure en mm estimés via métadonnées DICOM",
       "contrastUp": "Augmenter le contraste",
       "contrastDown": "Diminuer le contraste",
-      "measureHintScaled": "Calibrage approximatif — aperçu Orthanc redimensionné (mm estimés)"
+      "measureHintScaled": "Calibrage approximatif — aperçu Orthanc redimensionné (mm estimés)",
+      "measureCalibratedSource": "Calibré (mm · {source})",
+      "measureCalibratedScaled": "Calibré approx. (mm)"
     },
     "admin": {
       "title": "PACS — supervision",
@@ -4402,6 +4445,14 @@
       "submit": "Envoyer",
       "empty": "Aucun commentaire pour cette étude.",
       "error": "Impossible de charger ou d’envoyer le commentaire."
+    },
+    "delete": {
+      "aria": "Supprimer l’étude",
+      "title": "Supprimer l’étude d’imagerie ?",
+      "body": "Confirmer la suppression définitive de « {name} » ?",
+      "warn": "Suppression irréversible : fichier Orthanc et lien animal (hard-delete).",
+      "confirm": "Supprimer définitivement",
+      "error": "Impossible de supprimer l’étude. Réessayez ou réactivez le PACS."
     }
   },
   "research": {

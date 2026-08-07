@@ -574,6 +574,9 @@ func TestPacsInstancePreviewFileFullFlow(t *testing.T) {
 	if len(sp) != 2 {
 		t.Fatalf("pixelSpacingMm %#v", md["pixelSpacingMm"])
 	}
+	if md["spacingSource"] != "PixelSpacing" {
+		t.Fatalf("spacingSource %#v", md["spacingSource"])
+	}
 
 	// Client must never reach PHI binary endpoints.
 	code, _, _ = doAuthBytes(t, api.handler, http.MethodGet,

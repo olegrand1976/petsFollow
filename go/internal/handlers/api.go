@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/afsca"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/headerlinks"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
 	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
@@ -373,6 +374,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/vet/availability", a.getAvailability)
 		pr.Get("/vet/overview", a.vetOverview)
 		pr.Get("/vet/afsca-newsletters", a.listAfscaNewsletters)
+		pr.Get("/vet/header-links", a.getVetHeaderLinks)
 		pr.Get("/vet/profile", a.getVetProfile)
 		pr.Put("/vet/profile", a.updateVetProfile)
 		pr.Post("/vet/prospects", a.vetCreateProspect)
@@ -1790,9 +1792,10 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var durationsProbe struct {
-		HeartRateDurationsSec *[]int  `json:"heartrateDurationsSec"`
-		DeskIdleMinutes       *int    `json:"deskIdleMinutes"`
-		AnimalScope           *string `json:"animalScope"`
+		HeartRateDurationsSec *[]int                `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int                  `json:"deskIdleMinutes"`
+		AnimalScope           *string               `json:"animalScope"`
+		HeaderLinks           *headerlinks.Prefs    `json:"headerLinks"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1850,8 +1853,18 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		v := *durationsProbe.DeskIdleMinutes
 		deskIdleUpdate = &v
 	}
+	var headerLinksUpdate *headerlinks.Prefs
+	if durationsProbe.HeaderLinks != nil {
+		normalized, err := headerlinks.NormalizeAndValidate(store.NormalizeCountryCode(req.CountryCode), *durationsProbe.HeaderLinks)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", err.Error())
+			return
+		}
+		headerLinksUpdate = &normalized
+		req.HeaderLinks = normalized
+	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate, animalScopeUpdate); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate, animalScopeUpdate, headerLinksUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

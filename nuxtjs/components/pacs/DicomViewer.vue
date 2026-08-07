@@ -37,12 +37,20 @@ const downloadBusy = ref(false)
 /** Spacing from Orthanc metadata (DICOM pixels). */
 const metaSpacing = ref<PacsSpacingMm | null>(null)
 const metaMatrix = ref<PacsMatrixSize | null>(null)
+/** DICOM tag source: PixelSpacing | ImagerPixelSpacing | … */
+const spacingSource = ref('')
 /** Spacing trusted for the currently loaded left preview bitmap (null → px). */
 const effectiveSpacing = ref<PacsSpacingMm | null>(null)
 /** True when mm come from scaled spacing (preview ≠ DICOM matrix). */
 const previewResized = ref(false)
 
 const measureCalibrated = computed(() => effectiveSpacing.value != null)
+const calibBadgeLabel = computed(() => {
+  if (!measureCalibrated.value) return t('pacs.tools.measureUncalibrated')
+  if (previewResized.value) return t('pacs.tools.measureCalibratedScaled')
+  if (spacingSource.value) return t('pacs.tools.measureCalibratedSource', { source: spacingSource.value })
+  return t('pacs.tools.measureCalibrated')
+})
 const measureHint = computed(() => {
   if (tool.value !== 'measure') return ''
   if (measureCalibrated.value && previewResized.value) return t('pacs.tools.measureHintScaled')
@@ -442,6 +450,7 @@ watch(() => props.leftInstanceId, async (id) => {
   maxFrame.value = null
   metaSpacing.value = null
   metaMatrix.value = null
+  spacingSource.value = ''
   effectiveSpacing.value = null
   previewResized.value = false
   left.measure = null
@@ -454,6 +463,7 @@ watch(() => props.leftInstanceId, async (id) => {
       if (Number.isFinite(n) && n > 0) maxFrame.value = n - 1
       metaSpacing.value = parsePixelSpacingMm(data.pixelSpacingMm)
       metaMatrix.value = parseMatrixSize(data.rows, data.columns)
+      spacingSource.value = typeof data.spacingSource === 'string' ? data.spacingSource : ''
       seedWlFromMetadata(data.windowCenter, data.windowWidth)
     } catch { /* optional */ }
   }
@@ -572,7 +582,7 @@ onBeforeUnmount(() => {
         :data-calibrated="measureCalibrated ? '1' : '0'"
         data-testid="dicom-calib-badge"
       >
-        {{ measureCalibrated ? t('pacs.tools.measureCalibrated') : t('pacs.tools.measureUncalibrated') }}
+        {{ calibBadgeLabel }}
       </span>
     </div>
     <p

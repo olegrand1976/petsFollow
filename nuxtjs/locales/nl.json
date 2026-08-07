@@ -1388,7 +1388,9 @@
     "afscaTitle": "FAVV-nieuws",
     "afscaEmptyTitle": "Geen recente nieuwsbrieven",
     "afscaEmptyDescription": "De feed kon nu niet worden geladen. Raadpleeg de FAVV-website.",
-    "afscaViewAll": "Alle FAVV-nieuwsbrieven"
+    "afscaSourceNote": "Bron: FAVV / AFSCA (Federaal Agentschap voor de veiligheid van de voedselketen). De petsFollow-feed wordt hoogstens elke 6 uur vernieuwd.",
+    "afscaViewAll": "Alle FAVV-nieuwsbrieven",
+    "afscaSiteLink": "Officiële FAVV-website"
   },
   "messages": {
     "title": "Berichten",
@@ -4329,10 +4331,12 @@
       "measureCalibrated": "Gecalibreerd (mm)",
       "measureUncalibrated": "Niet gecalibreerd (px)",
       "measureHintPx": "Geen betrouwbare calibratie — meting in beeldpixels",
-      "measureHintResized": "Orthanc-preview herschaald vs DICOM — alleen px (Cornerstone voor mm)",
+      "measureHintResized": "Orthanc-voorbeeld herschaald — geschatte mm via DICOM-metadata",
       "contrastUp": "Contrast verhogen",
       "contrastDown": "Contrast verlagen",
-      "measureHintScaled": "Benaderende kalibratie — Orthanc-preview herschaald (geschatte mm)"
+      "measureHintScaled": "Benaderende kalibratie — Orthanc-preview herschaald (geschatte mm)",
+      "measureCalibratedSource": "Gecalibreerd (mm · {source})",
+      "measureCalibratedScaled": "Bij benadering gecalibreerd (mm)"
     },
     "admin": {
       "title": "PACS — toezicht",
@@ -4402,6 +4406,14 @@
       "submit": "Verzenden",
       "empty": "Nog geen commentaren bij deze studie.",
       "error": "Commentaar laden of verzenden mislukt."
+    },
+    "delete": {
+      "aria": "Onderzoek verwijderen",
+      "title": "Beeldonderzoek verwijderen?",
+      "body": "Bevestig permanente verwijdering van “{name}”?",
+      "warn": "Onomkeerbaar: Orthanc-bestand en dierenkoppeling (hard-delete).",
+      "confirm": "Definitief verwijderen",
+      "error": "Onderzoek kon niet worden verwijderd. Probeer opnieuw of activeer PACS."
     }
   },
   "research": {

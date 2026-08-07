@@ -175,6 +175,39 @@
   min-width: 280px;
 }
 
+.pro-topbar__dropdown--links {
+  min-width: 280px;
+  max-width: min(92vw, 22rem);
+}
+
+.pro-topbar__links-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.pro-topbar__links-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--pf-vet-radius-md, 0.5rem);
+  color: var(--pf-vet-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pro-topbar__links-item:hover {
+  background: var(--pf-vet-bg);
+}
+
 .pro-topbar__profiles {
   display: flex;
   flex-direction: column;

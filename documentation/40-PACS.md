@@ -33,6 +33,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/pacs/status` | auth (véto…) — timeout Orthanc 2s + cache Redis |
 | `POST` | `/api/v1/pacs/wake` | auth — cold start |
 | `GET/POST` | `/api/v1/pets/{id}/pacs/studies` | practice perm + pet access |
+| `DELETE` | `/api/v1/pets/{petId}/pacs/studies/{studyId}` | hard-delete étude (Orthanc + `pet_studies`) — `pets.write_clinical` ; Orthanc fail → 502 sans half-delete DB |
 | `GET/POST` | `/api/v1/pets/{petId}/pacs/studies/{studyId}/comments` | commentaires étude (`studyId` = UUID `imaging.pet_studies.id`, append-only) ; UUID invalide / étude absente → 404 ; pet hors cabinet → 403 |
 | `GET` | `/api/v1/pacs/studies\|series\|instances/…` | proxy Orthanc |
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
@@ -93,7 +94,8 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
 - Pooling : `IndexConnectionsCount=4` ; max-instances Orthanc=10 → surveiller `max_connections` Cloud SQL.
 - Staging : `PACS_ENABLED` auto-on **uniquement** si `PACS_ORTHANC_URL` est défini (sinon offline UI évité).
-- Viewer V1 défaut = previews Orthanc PNG (canvas) : contraste ± (filtre CSS, pas vrai W/L DICOM), annotations en coords image (plein écran stable), mesure mm via metadata `PixelSpacing` → `ImagerPixelSpacing` → `NominalScannedPixelSpacing` (exact si preview = Rows×Columns, sinon spacing scalé) ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
+- Viewer V1 défaut = previews Orthanc PNG (canvas) : contraste ± (filtre CSS, pas vrai W/L DICOM), annotations en coords image (plein écran stable), mesure mm via metadata `PixelSpacing` → `ImagerPixelSpacing` (± `EstimatedRadiographicMagnificationFactor`) → `NominalScannedPixelSpacing` (champ API `spacingSource` ; exact si preview = Rows×Columns, sinon spacing scalé) ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
+- Hard-delete étude : bouton liste + modale confirmation → `DELETE …/pacs/studies/{uuid}` (Orthanc puis Postgres).
 - Commentaires d’étude : table `imaging.pet_study_comments` (auteur + `created_at`, pas d’édition/suppression UI V1) ; panneau sous le viewer.
 - Cold start : TTL cache `starting` = 90 s ; UI upload poll jusqu’à `ready`.
 - Upload compensatoire : delete **instance** Orthanc si insert DB échoue (jamais `DELETE /studies` si l’étude était déjà liée).
@@ -105,7 +107,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 ## UI
 
 - Fiche animal → onglet Imagerie → `PacsViewerContainer` (badge état, wake, upload, dual-pane).
-- Viewer canvas (preview Orthanc) : Zoom, Pan, contraste (drag + ±), mesure (mm/px), flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`, historique commentaires étude.
+- Viewer canvas (preview Orthanc) : Zoom, Pan, contraste (drag + ±), mesure (mm via métadonnées DICOM / px si absent), flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`, **suppression étude** (modale), historique commentaires étude.
 - Admin `/admin/pacs` : métriques + **playground** — picker **client seed** (`GET …/playground-clients`, `*@petsfollow.test`) → **animaux** (`playground-pets?ownerEmail=`) → viewer/import DICOM (`PacsViewerContainer`) + debug fetch + logs (poll 5s), bouton **wake**, badge `nav.tagDev`. Les routes cliniques PACS acceptent aussi le rôle `admin` (sans switch profil véto).
 
 ## Tests
@@ -134,7 +136,7 @@ Retirer le badge `nav.tagDev` **uniquement** quand tous les points ci-dessous so
 | G1 | Décision produit écrite (GA vs rester `dev`) | **Rester `dev`** (2026-07-31) — voir [`40-PACS-P2.md`](40-PACS-P2.md) § P2.4 |
 | G2 | Flag prod `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` opt-in documenté + smoke staging vert | Staging OK · prod **off** — runbook ci-dessous |
 | G3 | Viewer clinique : vrai Window/Level DICOM (HU) **ou** Cornerstone3D (WASM/CSP allowlist) | **Livré (P2.1)** — défaut canvas ; Cornerstone via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` |
-| G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | **Livré (P2.2)** — mm si spacing + gate bitmap ; sinon px |
+| G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | **Livré (P2.2)** — mm si `pixelSpacingMm` (+ `spacingSource`) ; preview scalée OK ; sinon px |
 | G5 | Multi-frame (scroll stack) + multi-série (picker) dans l’UI | **Livré (P1)** |
 | G6 | Download `.dcm` depuis l’UI (BFF `…/file` déjà dispo) | **Livré (P1)** |
 | G7 | Erreur preview visible + e2e upload/canvas non soft-skip Orthanc | Livré (tag `dev`) |

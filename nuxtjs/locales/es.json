@@ -1388,7 +1388,9 @@
     "afscaTitle": "Noticias AFSCA",
     "afscaEmptyTitle": "Sin boletines recientes",
     "afscaEmptyDescription": "No se pudo cargar el feed. Consulte el sitio de la AFSCA.",
-    "afscaViewAll": "Todos los boletines AFSCA"
+    "afscaSourceNote": "Fuente: AFSCA (Agencia Federal para la Seguridad de la Cadena Alimentaria). El feed de petsFollow se actualiza como máximo cada 6 horas.",
+    "afscaViewAll": "Todos los boletines AFSCA",
+    "afscaSiteLink": "Sitio oficial AFSCA"
   },
   "messages": {
     "title": "Mensajería",
@@ -4329,10 +4331,12 @@
       "measureCalibrated": "Calibrado (mm)",
       "measureUncalibrated": "Sin calibrar (px)",
       "measureHintPx": "Sin calibración fiable — medida en píxeles de imagen",
-      "measureHintResized": "Vista previa Orthanc redimensionada vs DICOM — solo px (Cornerstone para mm)",
+      "measureHintResized": "Vista previa Orthanc redimensionada — mm estimados desde metadatos DICOM",
       "contrastUp": "Aumentar contraste",
       "contrastDown": "Reducir contraste",
-      "measureHintScaled": "Calibración aproximada — vista previa Orthanc redimensionada (mm estimados)"
+      "measureHintScaled": "Calibración aproximada — vista previa Orthanc redimensionada (mm estimados)",
+      "measureCalibratedSource": "Calibrado (mm · {source})",
+      "measureCalibratedScaled": "Calibrado aprox. (mm)"
     },
     "admin": {
       "title": "PACS — supervisión",
@@ -4402,6 +4406,14 @@
       "submit": "Enviar",
       "empty": "Aún no hay comentarios en este estudio.",
       "error": "No se pudo cargar o enviar el comentario."
+    },
+    "delete": {
+      "aria": "Eliminar estudio",
+      "title": "¿Eliminar estudio de imagen?",
+      "body": "¿Confirmar la eliminación definitiva de « {name} »?",
+      "warn": "Irreversible: archivo Orthanc y vínculo del animal (hard-delete).",
+      "confirm": "Eliminar definitivamente",
+      "error": "No se pudo eliminar el estudio. Reintente o reactive el PACS."
     }
   },
   "research": {

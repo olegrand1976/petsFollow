@@ -132,7 +132,6 @@ func TestPurgeOrthancStudies(a *API, studyIDs []string) {
 	a.purgeOrthancStudies(context.Background(), studyIDs)
 }
 
-
 func sanitizePacsDetail(s string) string {
 	s = strings.TrimSpace(s)
 	if utf8.RuneCountInString(s) > 120 {
@@ -1027,16 +1026,16 @@ func (a *API) getPacsInstanceMetadata(w http.ResponseWriter, r *http.Request) {
 }
 
 type pacsInstanceMetadata struct {
-	InstanceID       string         `json:"instanceId"`
-	PixelSpacingMm   []float64      `json:"pixelSpacingMm,omitempty"`
-	SpacingSource    string         `json:"spacingSource,omitempty"`
-	WindowCenter     *float64       `json:"windowCenter,omitempty"`
-	WindowWidth      *float64       `json:"windowWidth,omitempty"`
-	NumberOfFrames   int            `json:"numberOfFrames,omitempty"`
-	Modality         string         `json:"modality,omitempty"`
-	Rows             int            `json:"rows,omitempty"`
-	Columns          int            `json:"columns,omitempty"`
-	Tags             map[string]any `json:"tags,omitempty"`
+	InstanceID     string         `json:"instanceId"`
+	PixelSpacingMm []float64      `json:"pixelSpacingMm,omitempty"`
+	SpacingSource  string         `json:"spacingSource,omitempty"`
+	WindowCenter   *float64       `json:"windowCenter,omitempty"`
+	WindowWidth    *float64       `json:"windowWidth,omitempty"`
+	NumberOfFrames int            `json:"numberOfFrames,omitempty"`
+	Modality       string         `json:"modality,omitempty"`
+	Rows           int            `json:"rows,omitempty"`
+	Columns        int            `json:"columns,omitempty"`
+	Tags           map[string]any `json:"tags,omitempty"`
 }
 
 func buildPacsInstanceMetadata(instanceID string, tags map[string]any) pacsInstanceMetadata {
