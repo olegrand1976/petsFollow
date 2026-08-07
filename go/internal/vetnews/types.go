@@ -16,12 +16,12 @@ const (
 
 // Category domain tags (orthogonal to importance).
 const (
-	CategoryEpidemio    = "epidemio"
-	CategoryRegulatory  = "regulatory"
-	CategoryClinical    = "clinical"
-	CategoryScience     = "science"
-	CategoryPractice    = "practice"
-	CategoryGeneral     = "general"
+	CategoryEpidemio   = "epidemio"
+	CategoryRegulatory = "regulatory"
+	CategoryClinical   = "clinical"
+	CategoryScience    = "science"
+	CategoryPractice   = "practice"
+	CategoryGeneral    = "general"
 )
 
 // RawItem is a provider-normalized article before classification / upsert.
@@ -60,22 +60,22 @@ type Provider interface {
 
 // SourceResult is per-provider ingest stats (CRON logs).
 type SourceResult struct {
-	SourceID  string `json:"sourceId"`
-	Fetched   int    `json:"fetched"`
-	Inserted  int    `json:"inserted"`
-	Updated   int    `json:"updated"`
-	Skipped   int    `json:"skipped"`
-	Error     string `json:"error,omitempty"`
+	SourceID string `json:"sourceId"`
+	Fetched  int    `json:"fetched"`
+	Inserted int    `json:"inserted"`
+	Updated  int    `json:"updated"`
+	Skipped  int    `json:"skipped"`
+	Error    string `json:"error,omitempty"`
 }
 
 // RunResult aggregates a full ingest pass.
 type RunResult struct {
-	Sources   []SourceResult `json:"sources"`
-	Inserted  int            `json:"inserted"`
-	Updated   int            `json:"updated"`
-	Skipped   int            `json:"skipped"`
-	StartedAt time.Time      `json:"startedAt"`
-	DurationMs int64         `json:"durationMs"`
+	Sources    []SourceResult `json:"sources"`
+	Inserted   int            `json:"inserted"`
+	Updated    int            `json:"updated"`
+	Skipped    int            `json:"skipped"`
+	StartedAt  time.Time      `json:"startedAt"`
+	DurationMs int64          `json:"durationMs"`
 }
 
 // ImportanceLegend is exposed to the UI for pastille colour help.

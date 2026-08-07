@@ -11,11 +11,11 @@ const (
 )
 
 var (
-	lpvBlockRe  = regexp.MustCompile(`(?is)<div class="row actu_horizontale">(.*?)</div>\s*</div>\s*</div>`)
-	lpvHrefRe   = regexp.MustCompile(`(?is)<h3>\s*<a href="(/actualites/actualites-professionnelles/[^"]+\.html)"[^>]*>([\s\S]*?)</a>`)
-	lpvChapoRe  = regexp.MustCompile(`(?is)<div class="chapo">\s*<a[^>]*>([\s\S]*?)</a>`)
-	lpvDateRe   = regexp.MustCompile(`(?is)<div class="infos">[\s\S]*?\|\s*(\d{2}\.\d{2}\.\d{4})`)
-	lpvImgRe    = regexp.MustCompile(`(?is)<img[^>]+src="([^"]+)"`)
+	lpvBlockRe = regexp.MustCompile(`(?is)<div class="row actu_horizontale">(.*?)</div>\s*</div>\s*</div>`)
+	lpvHrefRe  = regexp.MustCompile(`(?is)<h3>\s*<a href="(/actualites/actualites-professionnelles/[^"]+\.html)"[^>]*>([\s\S]*?)</a>`)
+	lpvChapoRe = regexp.MustCompile(`(?is)<div class="chapo">\s*<a[^>]*>([\s\S]*?)</a>`)
+	lpvDateRe  = regexp.MustCompile(`(?is)<div class="infos">[\s\S]*?\|\s*(\d{2}\.\d{2}\.\d{4})`)
+	lpvImgRe   = regexp.MustCompile(`(?is)<img[^>]+src="([^"]+)"`)
 )
 
 type pointVeterinaireProvider struct {
