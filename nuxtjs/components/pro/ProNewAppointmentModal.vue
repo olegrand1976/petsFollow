@@ -425,8 +425,8 @@ watch(
     time.value = '09:00'
     await loadMeta()
     durationMinutes.value = defaultDuration.value
-    const walkin = clients.value.find(c => c.isWalkinPlaceholder)
-    if (walkin) clientId.value = walkin.userId
+    // Do not auto-select walk-in: calendar "new appointment" is for real clients;
+    // Nouveau client remains available in the list (requires callback phone).
   },
 )
 

@@ -89,6 +89,9 @@ test.describe('calendar resources rooms + day view', { tag: '@p1' }, () => {
     for (let i = 0; i < clientCount; i++) {
       const val = await clientOpts.nth(i).getAttribute('value')
       if (!val) continue
+      const label = ((await clientOpts.nth(i).textContent()) || '').toLowerCase()
+      // Walk-in placeholder requires callback phone — not the path under test.
+      if (label.includes('walk') || label.includes('nouveau') || label.includes('placeholder')) continue
       await clientSelect.selectOption(val)
       try {
         await expect.poll(async () => petSelect.locator('option').count(), { timeout: 8000 }).toBeGreaterThan(1)
