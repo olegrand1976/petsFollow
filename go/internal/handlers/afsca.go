@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -111,6 +112,7 @@ func (a *API) loadAfscaFeed(ctx context.Context, locale string, limit int, pract
 
 	feed, err := client.Fetch(ctx, afscaLocale, afsca.FetchPool)
 	if err != nil {
+		log.Printf("afsca fetch locale=%s err=%v", afscaLocale, err)
 		empty := afsca.Feed{
 			Items:     []afsca.Item{},
 			SourceURL: client.IndexURL(afscaLocale),

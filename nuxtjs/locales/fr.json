@@ -2141,7 +2141,21 @@
     "afscaEmptyDescription": "Impossible de charger le fil pour le moment. Consultez le site AFSCA.",
     "afscaSourceNote": "Source : AFSCA (Agence fédérale pour la sécurité de la chaîne alimentaire). Le fil petsFollow est rafraîchi au plus toutes les 6 heures.",
     "afscaViewAll": "Toutes les newsletters AFSCA",
-    "afscaSiteLink": "Site officiel AFSCA"
+    "afscaSiteLink": "Site officiel AFSCA",
+    "afscaScope": {
+      "small": "Animaux de compagnie",
+      "large": "Gros animaux / élevage"
+    },
+    "vetNewsTitle": "Veille scientifique & sanitaire",
+    "vetNewsSourceNote": "Sources : Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH/OMSA. Ingestion quotidienne automatique.",
+    "vetNewsEmptyTitle": "Aucune actualité pour le moment",
+    "vetNewsEmptyDescription": "Le prochain passage du job de veille remplira cette liste.",
+    "vetNewsImportance": {
+      "critical": "Critique — alerte / foyer / urgence",
+      "high": "Élevée — réglementaire ou épidémio majeure",
+      "medium": "Moyenne — clinique / pratique",
+      "low": "Info — veille générale / EBM"
+    }
   },
   "messages": {
     "title": "Messagerie",

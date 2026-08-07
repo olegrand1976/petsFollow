@@ -108,3 +108,14 @@ func TestClientIndexURL(t *testing.T) {
 		t.Fatalf("custom base %q", c.IndexURL("fr"))
 	}
 }
+
+func TestResolveAbsoluteURL(t *testing.T) {
+	got := resolveAbsoluteURL("https://favv-afsca.be", "/fr/newsletters/x")
+	if got != "https://favv-afsca.be/fr/newsletters/x" {
+		t.Fatalf("%q", got)
+	}
+	got = resolveAbsoluteURL("https://favv-afsca.be/fr", "https://www.static.favv.be/a.asp")
+	if got != "https://www.static.favv.be/a.asp" {
+		t.Fatalf("%q", got)
+	}
+}

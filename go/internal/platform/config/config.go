@@ -120,6 +120,10 @@ type Config struct {
 	ResearchEtlSecret string
 	// ResearchAnonSalt salts practice_id_hash in research.anon_events (never exposed via API).
 	ResearchAnonSalt string
+	// VetNewsEnabled enables multi-source veterinary news ingest + dashboard widget — default off, tag dev.
+	VetNewsEnabled bool
+	// VetNewsSecret protects POST /internal/vet-news/run.
+	VetNewsSecret string
 	// ClientAIEnabled enables Flutter client AI (CR explain + triage 24/7) — default off, tag dev.
 	ClientAIEnabled bool
 	// SMSEnabled enables transactional client SMS via Telnyx (visit confirm/reminder/reschedule) — default off, tag dev.
@@ -249,6 +253,8 @@ func Load() Config {
 		ResearchEnabled:         envBool("RESEARCH_ENABLED"),
 		ResearchEtlSecret:       envOr("RESEARCH_ETL_SECRET", ""),
 		ResearchAnonSalt:        envOr("RESEARCH_ANON_SALT", ""),
+		VetNewsEnabled:          envBool("VET_NEWS_ENABLED"),
+		VetNewsSecret:           envOr("VET_NEWS_SECRET", ""),
 		ClientAIEnabled:         envBool("CLIENT_AI_ENABLED"),
 
 		// SMS transactionnel (Telnyx) : off par défaut ; dry-run tant que les creds live ne sont pas montés.

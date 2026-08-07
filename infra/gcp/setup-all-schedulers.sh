@@ -29,6 +29,7 @@ run setup-pharmacy-expiry-scheduler.sh
 run setup-sales-branches-scheduler.sh
 run setup-saas-invoices-scheduler.sh
 run setup-research-etl-scheduler.sh
+run setup-vet-news-scheduler.sh
 run setup-ai-module-friction-scheduler.sh
 run setup-visit-reminders-scheduler.sh
 

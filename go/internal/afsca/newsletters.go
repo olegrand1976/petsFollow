@@ -199,5 +199,40 @@ func (c *Client) Fetch(ctx context.Context, appLocale string, limit int) (Feed, 
 		return Feed{}, err
 	}
 	items := ParseIndexHTML(string(body), limit)
+	base := c.base()
+	for i := range items {
+		items[i].URL = resolveAbsoluteURL(base, items[i].URL)
+	}
 	return Feed{Items: items, SourceURL: source, Locale: locale}, nil
+}
+
+func resolveAbsoluteURL(base, href string) string {
+	href = strings.TrimSpace(href)
+	if href == "" {
+		return ""
+	}
+	if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
+		return href
+	}
+	base = strings.TrimRight(base, "/")
+	if strings.HasPrefix(href, "//") {
+		if strings.HasPrefix(base, "https:") {
+			return "https:" + href
+		}
+		return "http:" + href
+	}
+	if strings.HasPrefix(href, "/") {
+		schemeEnd := strings.Index(base, "://")
+		if schemeEnd < 0 {
+			return base + href
+		}
+		rest := base[schemeEnd+3:]
+		slash := strings.Index(rest, "/")
+		host := rest
+		if slash >= 0 {
+			host = rest[:slash]
+		}
+		return base[:schemeEnd+3] + host + href
+	}
+	return base + "/" + href
 }

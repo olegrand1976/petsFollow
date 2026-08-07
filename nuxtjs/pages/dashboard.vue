@@ -112,6 +112,12 @@
                 <strong>{{ item.title }}</strong>
                 <span>{{ formatAfscaDate(item.date) }} · {{ item.label }}</span>
               </span>
+              <ProBadge
+                v-if="item.scope && item.scope !== 'both'"
+                :variant="item.scope === 'large' ? 'warning' : 'neutral'"
+              >
+                {{ $t(`dashboard.afscaScope.${item.scope}`) }}
+              </ProBadge>
               <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
             </a>
           </li>
@@ -139,6 +145,54 @@
             <ProIcon name="open_in_new" :size="16" />
           </a>
         </div>
+      </ProCard>
+
+      <ProCard
+        v-if="showVetNews"
+        :title="$t('dashboard.vetNewsTitle')"
+        data-testid="dashboard-vet-news"
+      >
+        <div class="pro-dashboard-vet-news-head">
+          <ProBadge variant="warning" data-testid="dashboard-vet-news-dev-badge">
+            {{ $t('nav.tagDev') }}
+          </ProBadge>
+          <p class="pro-dashboard-afsca-meta">{{ $t('dashboard.vetNewsSourceNote') }}</p>
+        </div>
+        <ul class="pro-dashboard-vet-news-legend" data-testid="dashboard-vet-news-legend">
+          <li v-for="row in vetNewsLegendRows" :key="row.id">
+            <span class="pro-dashboard-importance" :data-importance="row.id" aria-hidden="true" />
+            {{ $t(`dashboard.vetNewsImportance.${row.id}`) }}
+          </li>
+        </ul>
+        <ProEmptyState
+          v-if="!vetNewsItems.length"
+          :title="$t('dashboard.vetNewsEmptyTitle')"
+          :description="$t('dashboard.vetNewsEmptyDescription')"
+        />
+        <ul v-else class="pro-dashboard-list">
+          <li v-for="item in vetNewsItems" :key="item.id || item.sourceUrl" class="pro-dashboard-list__item">
+            <a
+              :href="item.sourceUrl"
+              class="pro-dashboard-list__link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span
+                class="pro-dashboard-importance"
+                :data-importance="item.importance || 'low'"
+                :title="$t(`dashboard.vetNewsImportance.${item.importance || 'low'}`)"
+              />
+              <span class="pro-dashboard-list__main">
+                <strong>{{ item.title }}</strong>
+                <span>
+                  {{ item.sourceName }}
+                  <template v-if="item.publishedAt"> · {{ formatDay(item.publishedAt) }}</template>
+                </span>
+              </span>
+              <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
+            </a>
+          </li>
+        </ul>
       </ProCard>
     </div>
   </div>
@@ -168,12 +222,29 @@ const pendingVisitsRaw = ref(0)
 const unreadHeartrateRaw = ref(0)
 const practiceCountryCode = ref<string | null>(null)
 const showAfsca = ref(false)
-type AfscaItem = { date: string, title: string, label: string, url: string }
+type AfscaItem = { date: string, title: string, label: string, url: string, scope?: string }
 const afscaItems = ref<AfscaItem[]>([])
 const afscaSourceUrl = ref('')
 const afscaHomeUrl = computed(() =>
   locale.value === 'nl' ? 'https://favv-afsca.be/nl' : 'https://favv-afsca.be/fr',
 )
+const config = useRuntimeConfig()
+const showVetNews = computed(() => Boolean(config.public.vetNewsEnabled) && canReadClients.value)
+type VetNewsItem = {
+  id?: string
+  title: string
+  sourceName: string
+  sourceUrl: string
+  publishedAt?: string
+  importance?: string
+}
+const vetNewsItems = ref<VetNewsItem[]>([])
+const vetNewsLegendRows = [
+  { id: 'critical' },
+  { id: 'high' },
+  { id: 'medium' },
+  { id: 'low' },
+]
 const { fetchUser } = useProUser()
 const { formatTime, formatDay } = useFormatters()
 const { statusVariant } = useCalendarGrid()
@@ -336,6 +407,20 @@ async function loadAfscaNewsletters() {
   }
 }
 
+async function loadVetNews() {
+  if (!showVetNews.value) {
+    vetNewsItems.value = []
+    return
+  }
+  try {
+    const res: any = await $fetch('/api/vet/news', { query: { limit: 8 } })
+    const data = res.data ?? res
+    vetNewsItems.value = Array.isArray(data?.items) ? data.items : []
+  } catch {
+    vetNewsItems.value = []
+  }
+}
+
 onMounted(async () => {
   try {
     const me = await fetchUser()
@@ -369,7 +454,7 @@ onMounted(async () => {
     } catch { /* ignore */ }
   }
 
-  await Promise.all([loadCalendar(), loadUnreadThreads(), loadAfscaNewsletters()])
+  await Promise.all([loadCalendar(), loadUnreadThreads(), loadAfscaNewsletters(), loadVetNews()])
 })
 </script>
 
@@ -448,5 +533,53 @@ onMounted(async () => {
 
 .pro-dashboard-afsca-more:hover {
   text-decoration: underline;
+}
+
+.pro-dashboard-vet-news-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pro-dashboard-vet-news-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-dashboard-vet-news-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pro-dashboard-importance {
+  flex: none;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--pf-vet-text-muted);
+}
+
+.pro-dashboard-importance[data-importance='critical'] {
+  background: var(--pf-vet-alert);
+}
+
+.pro-dashboard-importance[data-importance='high'] {
+  background: #d97706;
+}
+
+.pro-dashboard-importance[data-importance='medium'] {
+  background: var(--pf-vet-accent);
+}
+
+.pro-dashboard-importance[data-importance='low'] {
+  background: var(--pf-vet-text-muted);
 }
 </style>

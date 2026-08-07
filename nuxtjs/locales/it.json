@@ -2097,7 +2097,21 @@
     "afscaEmptyDescription": "Impossibile caricare il feed. Consulta il sito AFSCA.",
     "afscaSourceNote": "Fonte: AFSCA (Agenzia federale per la sicurezza della catena alimentare). Il feed petsFollow è aggiornato al massimo ogni 6 ore.",
     "afscaViewAll": "Tutte le newsletter AFSCA",
-    "afscaSiteLink": "Sito ufficiale AFSCA"
+    "afscaSiteLink": "Sito ufficiale AFSCA",
+    "afscaScope": {
+      "small": "Animali da compagnia",
+      "large": "Grandi animali / allevamento"
+    },
+    "vetNewsTitle": "Vigilanza scientifica e sanitaria",
+    "vetNewsSourceNote": "Fonti: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Ingestione giornaliera automatica.",
+    "vetNewsEmptyTitle": "Nessuna notizia al momento",
+    "vetNewsEmptyDescription": "La prossima esecuzione del job riempirà l’elenco.",
+    "vetNewsImportance": {
+      "critical": "Critica — focolaio / urgenza",
+      "high": "Alta — normativa o epidemiologica",
+      "medium": "Media — clinica / pratica",
+      "low": "Info — vigilanza generale / EBM"
+    }
   },
   "messages": {
     "title": "Messaggistica",

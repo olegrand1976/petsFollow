@@ -1432,7 +1432,21 @@
     "afscaEmptyDescription": "Voogu ei õnnestunud laadida. Vaadake AFSCA veebisaiti.",
     "afscaSourceNote": "Allikas: AFSCA (Föderaalne toiduahela ohutuse amet). petsFollow voogu värskendatakse kõige rohkem iga 6 tunni järel.",
     "afscaViewAll": "Kõik AFSCA uudiskirjad",
-    "afscaSiteLink": "AFSCA ametlik veebisait"
+    "afscaSiteLink": "AFSCA ametlik veebisait",
+    "afscaScope": {
+      "small": "Lemmikloomad",
+      "large": "Suured loomad / karjakasvatus"
+    },
+    "vetNewsTitle": "Teaduslik ja sanitaarne seire",
+    "vetNewsSourceNote": "Allikad: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Igapäevane automaatne laadimine.",
+    "vetNewsEmptyTitle": "Uudiseid pole veel",
+    "vetNewsEmptyDescription": "Järgmine seiretöö täidab selle nimekirja.",
+    "vetNewsImportance": {
+      "critical": "Kriitiline — puhang / hädaolukord",
+      "high": "Kõrge — regulatiivne või epideemia",
+      "medium": "Keskmine — kliiniline / praktika",
+      "low": "Info — üldine seire / EBM"
+    }
   },
   "messages": {
     "title": "Sõnumid",

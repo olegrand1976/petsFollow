@@ -175,7 +175,7 @@ Compte : `vet.demo@petsfollow.test`
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) ; topbar **Liens utiles** (`GET /vet/header-links`, catalogue pays + customs) |
+| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) ; si `VET_NEWS_ENABLED` : carte Veille (tag `dev`, pastilles importance + légende, `GET /vet/news`) ; topbar **Liens utiles** (`GET /vet/header-links`, catalogue pays + customs) |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
 | C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) |
 | C2.4 | P0 | Dossier pet | Chart FR, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |

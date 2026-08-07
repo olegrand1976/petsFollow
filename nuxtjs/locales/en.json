@@ -1432,7 +1432,21 @@
     "afscaEmptyDescription": "Could not load the feed right now. Check the AFSCA website.",
     "afscaSourceNote": "Source: FASFC / AFSCA (Federal Agency for the Safety of the Food Chain). The petsFollow feed is refreshed at most every 6 hours.",
     "afscaViewAll": "All AFSCA newsletters",
-    "afscaSiteLink": "Official AFSCA website"
+    "afscaSiteLink": "Official AFSCA website",
+    "afscaScope": {
+      "small": "Companion animals",
+      "large": "Large animals / livestock"
+    },
+    "vetNewsTitle": "Scientific & sanitary watch",
+    "vetNewsSourceNote": "Sources: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Daily automatic ingest.",
+    "vetNewsEmptyTitle": "No news yet",
+    "vetNewsEmptyDescription": "The next watch job run will fill this list.",
+    "vetNewsImportance": {
+      "critical": "Critical — outbreak / emergency",
+      "high": "High — major regulatory or epi",
+      "medium": "Medium — clinical / practice",
+      "low": "Info — general watch / EBM"
+    }
   },
   "messages": {
     "title": "Messaging",

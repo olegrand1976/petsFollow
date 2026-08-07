@@ -1432,7 +1432,21 @@
     "afscaEmptyDescription": "De feed kon nu niet worden geladen. Raadpleeg de FAVV-website.",
     "afscaSourceNote": "Bron: FAVV / AFSCA (Federaal Agentschap voor de veiligheid van de voedselketen). De petsFollow-feed wordt hoogstens elke 6 uur vernieuwd.",
     "afscaViewAll": "Alle FAVV-nieuwsbrieven",
-    "afscaSiteLink": "Officiële FAVV-website"
+    "afscaSiteLink": "Officiële FAVV-website",
+    "afscaScope": {
+      "small": "Gezelschapsdieren",
+      "large": "Grote dieren / veeteelt"
+    },
+    "vetNewsTitle": "Wetenschappelijke & sanitaire monitoring",
+    "vetNewsSourceNote": "Bronnen: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Dagelijkse automatische import.",
+    "vetNewsEmptyTitle": "Nog geen nieuws",
+    "vetNewsEmptyDescription": "De volgende monitoring-job vult deze lijst.",
+    "vetNewsImportance": {
+      "critical": "Kritiek — uitbraak / nood",
+      "high": "Hoog — regelgeving of epi",
+      "medium": "Gemiddeld — kliniek / praktijk",
+      "low": "Info — algemene monitoring / EBM"
+    }
   },
   "messages": {
     "title": "Berichten",

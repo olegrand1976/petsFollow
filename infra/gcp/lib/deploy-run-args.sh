@@ -94,6 +94,7 @@ pf_write_api_env_file() {
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
     research_enabled="${RESEARCH_ENABLED:-true}"
+    vet_news_enabled="${VET_NEWS_ENABLED:-true}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
     sms_enabled="${SMS_ENABLED:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
@@ -122,6 +123,7 @@ pf_write_api_env_file() {
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
     pacs_enabled="${PACS_ENABLED:-false}"
     research_enabled="${RESEARCH_ENABLED:-false}"
+    vet_news_enabled="${VET_NEWS_ENABLED:-false}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-false}"
     sms_enabled="${SMS_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
@@ -171,6 +173,7 @@ BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 PACS_ENABLED: "${pacs_enabled}"
 RESEARCH_ENABLED: "${research_enabled}"
+VET_NEWS_ENABLED: "${vet_news_enabled}"
 CLIENT_AI_ENABLED: "${client_ai_enabled}"
 SMS_ENABLED: "${sms_enabled}"
 # Envoi SMS : dry-run FORCÉ (staging + prod) tant que TELNYX_API_KEY / la clé
@@ -228,7 +231,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub sites_pub
+  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub vet_news_pub sites_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -238,6 +241,7 @@ pf_write_frontend_env_file() {
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-true}"
+    vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-true}"
     sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-true}"
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-true}"
@@ -250,6 +254,7 @@ pf_write_frontend_env_file() {
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
     pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-}"
+    vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-}"
     sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-}"
   fi
   if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
@@ -270,6 +275,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$research_pub" == "true" || "$research_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_RESEARCH_ENABLED: \"true\"
+"
+  fi
+  if [[ "$vet_news_pub" == "true" || "$vet_news_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_VET_NEWS_ENABLED: \"true\"
 "
   fi
   if [[ "$sites_pub" == "true" || "$sites_pub" == "1" ]]; then
@@ -339,6 +348,7 @@ pf_api_secrets() {
   # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ETL_SECRET research-etl-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ANON_SALT research-anon-salt)"
+  secrets="${secrets}$(pf_api_mount_job_secret VET_NEWS_SECRET vet-news-secret)"
   # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
   # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.
   if gcloud secrets versions access latest \

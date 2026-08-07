@@ -234,6 +234,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
 	r.Post("/internal/research-etl/run", a.internalRunResearchETL)
 	r.Post("/internal/visit-reminders/run", a.internalRunVisitReminders)
+	r.Post("/internal/vet-news/run", a.internalRunVetNews)
 	a.registerPprofRoutes(r)
 
 	r.Group(func(pr chi.Router) {
@@ -395,6 +396,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/vet/availability", a.getAvailability)
 		pr.Get("/vet/overview", a.vetOverview)
 		pr.Get("/vet/afsca-newsletters", a.listAfscaNewsletters)
+		pr.Get("/vet/news", a.listVetNews)
 		pr.Get("/vet/header-links", a.getVetHeaderLinks)
 		pr.Get("/vet/profile", a.getVetProfile)
 		pr.Put("/vet/profile", a.updateVetProfile)
