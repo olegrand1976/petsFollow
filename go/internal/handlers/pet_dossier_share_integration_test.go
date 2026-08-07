@@ -167,7 +167,7 @@ func TestPetDossierShareDailyQuota(t *testing.T) {
 			`DELETE FROM pets.dossier_share_tokens WHERE recipient_email='quota@petsfollow.test'`)
 	})
 	// Saturer le quota du jour sans passer par SMTP.
-	for i := 0; i < store.MaxDossierSharesPerDay; i++ {
+	for i := range store.MaxDossierSharesPerDay {
 		if _, err := api.pool.Exec(ctx, `
 			INSERT INTO pets.dossier_share_tokens (id, token, pet_id, owner_user_id, recipient_email, expires_at)
 			VALUES ($1::uuid, $2, $3::uuid, $4::uuid, 'quota@petsfollow.test', NOW() + INTERVAL '1 day')`,
@@ -229,7 +229,7 @@ func TestPublicPetDossierIsRateLimited(t *testing.T) {
 	api := newTestAPI(t)
 
 	throttled := false
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		code, env := doJSON(t, api.handler, http.MethodGet, "/api/v1/public/pet-dossier/inconnu-"+uuid.NewString(), nil)
 		if code == http.StatusTooManyRequests {
 			throttled = true

@@ -41,8 +41,8 @@ func orthancPreviewOutOfRange(err error, frame int) bool {
 	if frame <= 0 {
 		return false
 	}
-	var se *orthancStatusError
-	if !errors.As(err, &se) {
+	se, ok := errors.AsType[*orthancStatusError](err)
+	if !ok {
 		return false
 	}
 	if se.Resource != "preview" {
@@ -53,8 +53,8 @@ func orthancPreviewOutOfRange(err error, frame int) bool {
 
 // orthancBlobUnavailable: instance indexed but DICOM bytes / preview unavailable (GCS cold miss, purged object).
 func orthancBlobUnavailable(err error) bool {
-	var se *orthancStatusError
-	if !errors.As(err, &se) {
+	se, ok := errors.AsType[*orthancStatusError](err)
+	if !ok {
 		return false
 	}
 	if se.Resource != "preview" && se.Resource != "file" && se.Resource != "tags" {

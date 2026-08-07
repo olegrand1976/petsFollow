@@ -631,7 +631,6 @@ func TestPacsInstancePreviewOutOfRangeIs404(t *testing.T) {
 	t.Setenv("PACS_ENABLED", "true")
 
 	for _, orthStatus := range []int{http.StatusNotFound, http.StatusBadRequest} {
-		orthStatus := orthStatus
 		t.Run(fmt.Sprintf("orthanc_%d", orthStatus), func(t *testing.T) {
 			api := newTestAPI(t)
 			fx := newPacsOrthancFixture()

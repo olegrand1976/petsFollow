@@ -24,17 +24,17 @@ type DAFPDFInput struct {
 }
 
 type DAFPDFLine struct {
-	Medication          string
-	CNK                 string
-	AMM                 string
-	Lot                 string
-	ExpiresOn           string
-	Qty                 string
-	Unit                string
-	Antibiotic          bool
-	WithdrawalMeatDays  *int
-	WithdrawalMilkDays  *int
-	WithdrawalEggsDays  *int
+	Medication         string
+	CNK                string
+	AMM                string
+	Lot                string
+	ExpiresOn          string
+	Qty                string
+	Unit               string
+	Antibiotic         bool
+	WithdrawalMeatDays *int
+	WithdrawalMilkDays *int
+	WithdrawalEggsDays *int
 }
 
 // BuildDAFPDF renders a simple AFMPS-oriented DAF PDF.

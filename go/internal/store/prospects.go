@@ -28,7 +28,7 @@ type Prospect struct {
 	StatusChangedAt    time.Time  `json:"statusChangedAt"`
 	DaysInStatus       int        `json:"daysInStatus"`
 	CreatedAt          time.Time  `json:"createdAt"`
-	UpdatedAt          time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAt          time.Time  `json:"updatedAt"`
 	FirstContactedAt   *time.Time `json:"firstContactedAt,omitempty"`
 	LastContactedAt    *time.Time `json:"lastContactedAt,omitempty"`
 	AppointmentAt      *time.Time `json:"appointmentAt,omitempty"`

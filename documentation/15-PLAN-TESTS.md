@@ -933,3 +933,30 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API
+
+### Go 1.26 — runtime, sécurité IP, bornes (anti-régression)
+
+Toolchain `go 1.26` / `toolchain go1.26.x` partout (`go/go.mod`, CI, `deploy/Dockerfile.api`). Green Tea GC est le défaut ; le reste est verrouillé par tests.
+
+```
+go test ./internal/platform/httpx/ -run 'TestClientIP|TestRateLimitNotBypassable' -count=1
+go test ./internal/handlers/ -run 'TestStripeWebhookDoesNotBuffer|TestVetProfileReject|TestJSONResponsesAreCompressed|TestPprof|TestIsSafeRedirectURL' -count=1 -p 1
+go test ./internal/headerlinks/ ./internal/platform/db/ ./internal/platform/healthbookpdf/ ./internal/app/ -count=1
+cd nuxtjs && npx vitest run tests/unit/trustedClientIP.spec.ts
+make bench-go   # chemins chauds (WriteData, JWT, i18n) — style b.Loop
+make go-vuln    # govulncheck (aussi job CI dédié)
+```
+
+| Cas | Attendu |
+|-----|---------|
+| Spoofing XFF / True-Client-IP / X-Real-IP | rate limit `/auth/*` **non** contournable (`TrustedProxyHops=1`, entrée XFF la plus à droite) |
+| BFF Pro → API | `X-PF-Client-IP` + `X-PF-Proxy-Secret` (`BFF_PROXY_SECRET` partagé) ; sans secret = pas de relay (clé = egress Nuxt) |
+| BFF `trustedClientIP` | dernière entrée XFF **validée** comme IP ; ne pose plus `X-Forwarded-For` amont |
+| Webhook Stripe > 1 Mio | handler lit ≤ ~1 Mio (`LimitReader`) → 400 |
+| `PUT /vet/profile` surdimensionné | 413 `payload_too_large` |
+| `Accept-Encoding: gzip` sur liste JSON | `Content-Encoding: gzip` + corps décodable |
+| Host ambigu (`host:80:80`, `::1` nu) | `invalid_custom_url` / redirect commercial refusé — même sous `GODEBUG=urlstrictcolons=0` |
+| JPEG carnet santé (encodeur 1.26) | décodable, côté long plafonné, **pas** d'assertion bit-à-bit |
+| Pool pgx | `MaxConns=20` par défaut ; `pool_max_conns` dans l'URL gagne |
+| pprof | routes absentes si `PPROF_SECRET` vide ; 401 sans header ; 200 + profil binaire avec secret |
+| Dockerfile / Cloud Run env | garde-fou `TestDockerfileAPIHardening` / `TestCloudRunAPIRuntimeEnv` (`-trimpath`, `GOMEMLIMIT=800MiB`, `golang:1.26`) |

@@ -25,7 +25,7 @@ func TestListConsultationsIncludesAgendaWithReport(t *testing.T) {
 
 	// Unique far-future slots (retry) to avoid slot_taken vs seed/other tests.
 	pickSlot := func(label string, start time.Time) (id string, ok bool) {
-		for i := 0; i < 24; i++ {
+		for i := range 24 {
 			slot := start.Add(time.Duration(i) * time.Hour).Format(time.RFC3339)
 			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
 				"scheduledAt":     slot,

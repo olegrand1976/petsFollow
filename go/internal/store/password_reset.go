@@ -11,10 +11,10 @@ import (
 )
 
 type PasswordResetResult struct {
-	Token   string
-	Email   string
+	Token    string
+	Email    string
 	FullName string
-	Locale  string
+	Locale   string
 }
 
 // RequestPasswordReset creates a reset token for password-auth users.

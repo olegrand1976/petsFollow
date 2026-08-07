@@ -38,7 +38,7 @@ type FiliationRow struct {
 	EffectiveCommercialID   string    `json:"effectiveCommercialId,omitempty"`
 	EffectiveCommercialName string    `json:"effectiveCommercialName,omitempty"`
 	EffectiveSource         string    `json:"effectiveSource"` // vet_assignment | client_referral | none
-	LinkedAt                time.Time `json:"linkedAt,omitempty"`
+	LinkedAt                time.Time `json:"linkedAt"`
 }
 
 // FiliationFilter scopes ListFiliation.
@@ -76,6 +76,7 @@ type FiliationPage struct {
 //   - part_b: latest practice_clients globally (= Resolve("", "")), practice column = that link's
 //     practice_id (not vet.practice_id, which can diverge if the vet moved); Accrue for another
 //     practice may differ — use Resolve(practiceID) / part_a for practice-scoped payee.
+//
 // Priority: assigned_commercial_id on the chosen link, else commercial_referrals, else none.
 func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) (FiliationPage, error) {
 	empty := FiliationPage{Items: []FiliationRow{}, Limit: DefaultFiliationLimit}
@@ -90,10 +91,7 @@ func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) (Filiation
 	if limit > MaxFiliationLimit {
 		limit = MaxFiliationLimit
 	}
-	offset := f.Offset
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(f.Offset, 0)
 	empty.Limit = limit
 	empty.Offset = offset
 

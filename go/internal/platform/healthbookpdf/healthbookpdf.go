@@ -126,10 +126,7 @@ func BuildPDF(images [][]byte) ([]byte, error) {
 }
 
 func assertImageMagic(raw []byte) error {
-	n := 512
-	if len(raw) < n {
-		n = len(raw)
-	}
+	n := min(len(raw), 512)
 	ct := http.DetectContentType(raw[:n])
 	switch ct {
 	case "image/jpeg", "image/png", "image/webp":

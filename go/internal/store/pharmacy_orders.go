@@ -625,8 +625,8 @@ func (s *Store) requireActiveMedicationTx(ctx context.Context, tx pgx.Tx, medica
 }
 
 func isUniqueViolationConstraint(err error, constraintSubstr string) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, constraintSubstr)
+	pgErr, ok := errors.AsType[*pgconn.PgError](err)
+	return ok && pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, constraintSubstr)
 }
 
 // receiveMedicationBatchTx mirrors ReceiveMedicationBatch inside an open transaction.

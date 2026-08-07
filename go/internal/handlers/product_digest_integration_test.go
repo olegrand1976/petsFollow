@@ -195,7 +195,7 @@ func TestProductDigestWeeklyRunEmptyAndSend(t *testing.T) {
 	api := newTestAPI(t)
 	st := store.New(api.pool)
 
-	weekDay := time.Date(2099, 4, 11, 0, 0, 0, 0, time.UTC) // Saturday
+	weekDay := time.Date(2099, 4, 11, 0, 0, 0, 0, time.UTC)  // Saturday
 	weekStart := time.Date(2099, 4, 6, 0, 0, 0, 0, time.UTC) // Monday
 	digestDate := time.Date(2099, 4, 10, 0, 0, 0, 0, time.UTC)
 	staffEmail := strings.Replace(uniqueEmail("weekly-digest"), "@petsfollow.test", "@example.com", 1)

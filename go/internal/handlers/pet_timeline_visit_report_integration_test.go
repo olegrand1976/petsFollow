@@ -357,7 +357,7 @@ func createConfirmedVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, b
 func createVisitWithOptionalReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration, markDone, markDoneViaAPI bool) string {
 	t.Helper()
 	var visitID string
-	for attempt := 0; attempt < 4; attempt++ {
+	for attempt := range 4 {
 		when := time.Now().UTC().Add(offset + time.Duration(attempt)*time.Hour).Truncate(time.Minute).Format(time.RFC3339)
 		code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
 			"scheduledAt":     when,

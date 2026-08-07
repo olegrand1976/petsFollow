@@ -39,7 +39,7 @@ func LiveEnabled(secretKey string, mockEnabled bool) bool {
 func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutRequest) (CheckoutSession, error) {
 	customerID := req.CustomerID
 	if customerID == "" && req.CustomerEmail != "" {
-		c, err := customer.New(&stripe.CustomerParams{Email: stripe.String(req.CustomerEmail)})
+		c, err := customer.New(&stripe.CustomerParams{Email: new(req.CustomerEmail)})
 		if err != nil {
 			return CheckoutSession{}, fmt.Errorf("stripe create customer: %w", err)
 		}
@@ -56,10 +56,10 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 			name = "petsFollow"
 		}
 		lineItem.PriceData = &stripe.CheckoutSessionLineItemPriceDataParams{
-			Currency:   stripe.String(currency),
-			UnitAmount: stripe.Int64(int64(req.UnitAmountCents)),
+			Currency:   new(currency),
+			UnitAmount: new(int64(req.UnitAmountCents)),
 			ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-				Name: stripe.String(name),
+				Name: new(name),
 			},
 		}
 		if req.Mode == "subscription" {
@@ -68,7 +68,7 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 				interval = string(stripe.PriceRecurringIntervalMonth)
 			}
 			recurring := &stripe.CheckoutSessionLineItemPriceDataRecurringParams{
-				Interval: stripe.String(interval),
+				Interval: new(interval),
 			}
 			if n := req.Metadata["interval_count"]; n == "3" {
 				recurring.IntervalCount = stripe.Int64(3)
@@ -76,12 +76,12 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 			lineItem.PriceData.Recurring = recurring
 		}
 	} else {
-		lineItem.Price = stripe.String(req.PriceID)
+		lineItem.Price = new(req.PriceID)
 	}
 	params := &stripe.CheckoutSessionParams{
-		Mode:       stripe.String(req.Mode),
-		SuccessURL: stripe.String(req.SuccessURL),
-		CancelURL:  stripe.String(req.CancelURL),
+		Mode:       new(req.Mode),
+		SuccessURL: new(req.SuccessURL),
+		CancelURL:  new(req.CancelURL),
 		LineItems:  []*stripe.CheckoutSessionLineItemParams{lineItem},
 		Metadata:   req.Metadata,
 	}
@@ -91,7 +91,7 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		}
 	}
 	if customerID != "" {
-		params.Customer = stripe.String(customerID)
+		params.Customer = new(customerID)
 	}
 	sess, err := checkoutsession.New(params)
 	if err != nil {
@@ -113,8 +113,8 @@ func (g *LiveGateway) CancelSubscription(_ context.Context, subscriptionID strin
 
 func (g *LiveGateway) CreatePortalSession(_ context.Context, customerID, returnURL string) (PortalSession, error) {
 	sess, err := billingportal.New(&stripe.BillingPortalSessionParams{
-		Customer:  stripe.String(customerID),
-		ReturnURL: stripe.String(returnURL),
+		Customer:  new(customerID),
+		ReturnURL: new(returnURL),
 	})
 	if err != nil {
 		return PortalSession{}, fmt.Errorf("stripe portal session: %w", err)

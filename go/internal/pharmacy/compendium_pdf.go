@@ -42,10 +42,7 @@ func ChunkPageRanges(start, end, size int) [][2]int {
 	}
 	var out [][2]int
 	for p := start; p <= end; p += size {
-		to := p + size - 1
-		if to > end {
-			to = end
-		}
+		to := min(p+size-1, end)
 		out = append(out, [2]int{p, to})
 	}
 	return out

@@ -4,12 +4,12 @@ import "testing"
 
 func TestLooksLikeEmail(t *testing.T) {
 	cases := map[string]bool{
-		"a@b.co":   true,
-		"bad":      false,
-		"@x.com":   false,
-		"a@b":      false,
-		"a@b.c":    true,
-		"":         false,
+		"a@b.co": true,
+		"bad":    false,
+		"@x.com": false,
+		"a@b":    false,
+		"a@b.c":  true,
+		"":       false,
 	}
 	for in, want := range cases {
 		if got := looksLikeEmail(in); got != want {

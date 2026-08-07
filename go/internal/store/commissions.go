@@ -129,7 +129,7 @@ func PrevPeriodYM(period string) (string, error) {
 
 func (s *Store) ResolveOpenPeriodYM(ctx context.Context, preferred string) (string, error) {
 	period := preferred
-	for i := 0; i < 24; i++ {
+	for range 24 {
 		var status string
 		err := s.pool.QueryRow(ctx, `SELECT status FROM billing.payout_runs WHERE period_ym=$1`, period).Scan(&status)
 		if errors.Is(err, pgx.ErrNoRows) {

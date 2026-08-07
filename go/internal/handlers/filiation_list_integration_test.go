@@ -189,7 +189,7 @@ func TestFiliationList_LimitTruncates(t *testing.T) {
 	adminTok := ensureAdminToken(t, api)
 	_, _, tok := createCommercial(t, api, adminTok, "fil-list-lim", "Limit Comm")
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", tok, map[string]any{
 			"email": uniqueEmail(fmt.Sprintf("fil-lim-%d", i)), "password": "ClientDemo123!", "fullName": fmt.Sprintf("Lim %d", i),
 		})

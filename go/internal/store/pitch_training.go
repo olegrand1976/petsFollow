@@ -15,10 +15,10 @@ import (
 const PitchMaxCallDuration = 8 * time.Minute
 
 var (
-	ErrPitchScriptNotFound = errors.New("pitch_script_not_found")
-	ErrPitchSimNotFound    = errors.New("pitch_sim_not_found")
-	ErrPitchFeedbackExists = errors.New("pitch_feedback_exists")
-	ErrPitchFeedbackLocked = errors.New("pitch_feedback_locked")
+	ErrPitchScriptNotFound  = errors.New("pitch_script_not_found")
+	ErrPitchSimNotFound     = errors.New("pitch_sim_not_found")
+	ErrPitchFeedbackExists  = errors.New("pitch_feedback_exists")
+	ErrPitchFeedbackLocked  = errors.New("pitch_feedback_locked")
 	ErrAgentPromptNotFound  = errors.New("agent_prompt_not_found")
 	ErrPitchScriptForbidden = errors.New("pitch_script_forbidden")
 )
@@ -81,29 +81,29 @@ type PitchSimulation struct {
 }
 
 type PitchSimFeedback struct {
-	ID                   string          `json:"id"`
-	SimulationID         string          `json:"simulationId"`
-	UserID               string          `json:"userId"`
-	VetRealism           int             `json:"vetRealism"`
-	CoachUsefulness      int             `json:"coachUsefulness"`
-	DifficultyFelt       string          `json:"difficultyFelt"`
-	Comment              string          `json:"comment"`
-	Flags                json.RawMessage `json:"flags"`
-	AnalyzerProcessedAt  *time.Time      `json:"analyzerProcessedAt,omitempty"`
-	CreatedAt            time.Time       `json:"createdAt"`
-	UpdatedAt            time.Time       `json:"updatedAt"`
+	ID                  string          `json:"id"`
+	SimulationID        string          `json:"simulationId"`
+	UserID              string          `json:"userId"`
+	VetRealism          int             `json:"vetRealism"`
+	CoachUsefulness     int             `json:"coachUsefulness"`
+	DifficultyFelt      string          `json:"difficultyFelt"`
+	Comment             string          `json:"comment"`
+	Flags               json.RawMessage `json:"flags"`
+	AnalyzerProcessedAt *time.Time      `json:"analyzerProcessedAt,omitempty"`
+	CreatedAt           time.Time       `json:"createdAt"`
+	UpdatedAt           time.Time       `json:"updatedAt"`
 }
 
 type PitchAnalyzerRun struct {
-	ID              string          `json:"id"`
-	StartedAt       time.Time       `json:"startedAt"`
-	FinishedAt      *time.Time      `json:"finishedAt,omitempty"`
-	FeedbackCount   int             `json:"feedbackCount"`
-	Status          string          `json:"status"`
+	ID               string          `json:"id"`
+	StartedAt        time.Time       `json:"startedAt"`
+	FinishedAt       *time.Time      `json:"finishedAt,omitempty"`
+	FeedbackCount    int             `json:"feedbackCount"`
+	Status           string          `json:"status"`
 	InputSummaryJSON json.RawMessage `json:"inputSummary"`
-	OutputJSON      json.RawMessage `json:"output"`
-	VetVersionID    *string         `json:"vetVersionId,omitempty"`
-	CoachVersionID  *string         `json:"coachVersionId,omitempty"`
+	OutputJSON       json.RawMessage `json:"output"`
+	VetVersionID     *string         `json:"vetVersionId,omitempty"`
+	CoachVersionID   *string         `json:"coachVersionId,omitempty"`
 }
 
 func scanPitchScript(row pgx.Row) (PitchScript, error) {

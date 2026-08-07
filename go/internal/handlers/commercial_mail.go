@@ -663,7 +663,10 @@ func isSafeRedirectURL(raw string) bool {
 	if u.Host == "" {
 		return false
 	}
-	return true
+	// Go 1.26 rejette « host:80:80 », mais GODEBUG=urlstrictcolons=0 le réaccepte :
+	// on revalide ici, la cible servant de redirection depuis un mail tracké.
+	host := u.Hostname()
+	return host != "" && (!strings.Contains(host, ":") || strings.HasPrefix(u.Host, "["))
 }
 
 func randomMailToken() (string, error) {

@@ -32,10 +32,10 @@ type testAPI struct {
 
 func loadDotEnv() {
 	dir, _ := os.Getwd()
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		envPath := filepath.Join(dir, ".env")
 		if data, err := os.ReadFile(envPath); err == nil {
-			for _, line := range strings.Split(string(data), "\n") {
+			for line := range strings.SplitSeq(string(data), "\n") {
 				line = strings.TrimSpace(line)
 				if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
 					continue
@@ -60,6 +60,13 @@ func loadDotEnv() {
 
 func newTestAPI(t *testing.T) *testAPI {
 	t.Helper()
+	return newTestAPIWithBilling(t, nil)
+}
+
+// newTestAPIWithPprof monte l'API avec les routes de profilage activées.
+func newTestAPIWithPprof(t *testing.T, secret string) *testAPI {
+	t.Helper()
+	t.Setenv("PPROF_SECRET", secret)
 	return newTestAPIWithBilling(t, nil)
 }
 
@@ -116,7 +123,10 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	}
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, nil, nil, nil)
 
-	r := httpx.NewBaseRouter()
+	r := httpx.NewBaseRouter(httpx.RouterOptions{
+		TrustedProxyHops: cfg.TrustedProxyHops,
+		BFFProxySecret:   cfg.BFFProxySecret,
+	})
 	r.Route("/api/v1", api.Routes)
 
 	t.Cleanup(func() { pool.Close() })

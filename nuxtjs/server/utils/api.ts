@@ -15,12 +15,37 @@ export function authHeaders(event: H3Event) {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+/**
+ * IP réellement observée par le hop Cloud Run devant la BFF : la *dernière*
+ * entrée de X-Forwarded-For. Les entrées de gauche sont fournies par le
+ * navigateur et peuvent être forgées.
+ */
+export function trustedClientIP(event: H3Event): string | undefined {
+  const forwarded = getRequestHeader(event, 'x-forwarded-for')
+  const last = forwarded?.split(',').pop()?.trim()
+  const candidate = last || getRequestIP(event) || undefined
+  if (!candidate || !isIPAddress(candidate)) return undefined
+  return candidate
+}
+
+function isIPAddress(value: string): boolean {
+  // IPv4 ou IPv6 (avec ou sans zone) — aligné sur ce que Go netip.ParseAddr accepte en pratique.
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(value)) return true
+  if (value.includes(':')) return /^[0-9a-fA-F:.%]+$/.test(value)
+  return false
+}
+
 export function localeHeaders(event: H3Event) {
   const locale = getCookie(event, 'pf_locale')
   const headers: Record<string, string> = locale ? { 'Accept-Language': locale } : {}
-  // Rate limit Go par IP réelle : sans ce header, tout le trafic web partagerait l'IP de la BFF.
-  const ip = getRequestIP(event, { xForwardedFor: true })
-  if (ip) headers['X-Forwarded-For'] = ip
+  // Rate limit Go par IP réelle : secret partagé obligatoire, sinon l'API
+  // prendrait l'IP d'egress Nuxt (hops=1) et tout le Pro partagerait une clé.
+  const ip = trustedClientIP(event)
+  const secret = (useRuntimeConfig().bffProxySecret as string | undefined) || ''
+  if (ip && secret) {
+    headers['X-PF-Client-IP'] = ip
+    headers['X-PF-Proxy-Secret'] = secret
+  }
   return headers
 }
 

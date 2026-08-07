@@ -4,9 +4,9 @@ import "testing"
 
 func TestDeriveBranchNameAndCode(t *testing.T) {
 	tests := []struct {
-		full       string
-		wantName   string
-		wantCode   string
+		full     string
+		wantName string
+		wantCode string
 	}{
 		{"Camille Dupont", "Dupont C", "DUPONTC"},
 		{"Jean-Pierre Martin", "Martin J", "MARTINJ"},

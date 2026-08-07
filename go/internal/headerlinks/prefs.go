@@ -227,6 +227,12 @@ func normalizeHTTPSURL(raw string) (string, error) {
 	if u.User != nil {
 		return "", fmt.Errorf("invalid_custom_url")
 	}
+	// Go 1.26 rejette déjà « host:80:80 », mais GODEBUG=urlstrictcolons=0 restaure
+	// l'ancien laxisme : on revalide nous-mêmes plutôt que de dépendre du réglage.
+	host := u.Hostname()
+	if host == "" || (strings.Contains(host, ":") && !strings.HasPrefix(u.Host, "[")) {
+		return "", fmt.Errorf("invalid_custom_url")
+	}
 	return u.String(), nil
 }
 

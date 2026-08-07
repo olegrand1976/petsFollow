@@ -33,10 +33,7 @@ func (c *client) Send(ctx context.Context, tokens []string, title, body string, 
 	const batchSize = 500
 	var invalid []string
 	for i := 0; i < len(tokens); i += batchSize {
-		end := i + batchSize
-		if end > len(tokens) {
-			end = len(tokens)
-		}
+		end := min(i+batchSize, len(tokens))
 		batch := tokens[i:end]
 		resp, err := c.msg.SendEachForMulticast(ctx, &messaging.MulticastMessage{
 			Tokens: batch,

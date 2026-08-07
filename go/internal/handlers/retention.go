@@ -58,18 +58,18 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"candidates":                     len(accounts),
-		"purgedClients":                  purgedClients,
-		"anonymizedPros":                 anonymizedPros,
-		"failed":                         failed,
-		"cutoff":                         cutoff,
-		"purgedDossierShares":            a.purgeExpiredDossierShares(r.Context(), ""),
-		"purgedConsultationShares":       a.purgeExpiredConsultationShares(r.Context(), ""),
-		"purgedWebhookEvents":            a.purgeOldInvoicingWebhooks(r.Context()),
-		"rejectedStaleSending":           a.rejectStaleInvoicingSending(r.Context()),
-		"cancelledStaleConsultations":    a.cancelStaleConsultationOrphans(r.Context()),
-		"purgedSmsLogs":                  a.purgeOldSmsLogs(r.Context()),
-		"purgedSmsInbound":               a.purgeOldSmsInbound(r.Context()),
+		"candidates":                  len(accounts),
+		"purgedClients":               purgedClients,
+		"anonymizedPros":              anonymizedPros,
+		"failed":                      failed,
+		"cutoff":                      cutoff,
+		"purgedDossierShares":         a.purgeExpiredDossierShares(r.Context(), ""),
+		"purgedConsultationShares":    a.purgeExpiredConsultationShares(r.Context(), ""),
+		"purgedWebhookEvents":         a.purgeOldInvoicingWebhooks(r.Context()),
+		"rejectedStaleSending":        a.rejectStaleInvoicingSending(r.Context()),
+		"cancelledStaleConsultations": a.cancelStaleConsultationOrphans(r.Context()),
+		"purgedSmsLogs":               a.purgeOldSmsLogs(r.Context()),
+		"purgedSmsInbound":            a.purgeOldSmsInbound(r.Context()),
 	})
 }
 

@@ -13,6 +13,7 @@ let fetchImpl: (url: string, options: any) => Promise<unknown> = async () => ({}
 vi.stubGlobal('useRuntimeConfig', () => ({ apiBase: 'http://api.test' }))
 vi.stubGlobal('getCookie', (_event: unknown, name: string) => cookies[name])
 vi.stubGlobal('getRequestIP', () => '203.0.113.9')
+vi.stubGlobal('getRequestHeader', () => undefined)
 vi.stubGlobal('$fetch', (url: string, options: any) => {
   fetchCalls.push({ url, options })
   return fetchImpl(url, options)

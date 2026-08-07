@@ -460,12 +460,12 @@ func (a *API) buildTriageEscalation(ctx context.Context, petID, practiceID strin
 		}
 	}
 	return map[string]any{
-		"petId":           petID,
-		"practiceId":      practiceID,
-		"practicePhone":   phone,
-		"practiceName":    practiceName,
-		"canMessage":      true, // always offer messaging (threads list if no pet)
-		"canBookVisit":    petID != "",
+		"petId":            petID,
+		"practiceId":       practiceID,
+		"practicePhone":    phone,
+		"practiceName":     practiceName,
+		"canMessage":       true, // always offer messaging (threads list if no pet)
+		"canBookVisit":     petID != "",
 		"hasPracticePhone": phone != "",
 	}
 }

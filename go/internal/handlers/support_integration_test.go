@@ -19,8 +19,8 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 		"subject": "Bouton cassé",
 		"message": "Le bouton valider ne répond plus sur /calendar",
 		"diagnostics": map[string]any{
-			"windowMinutes": 15,
-			"consoleErrors": []any{map[string]any{"message": "TypeError: x", "ts": "2026-07-26T10:00:00Z"}},
+			"windowMinutes":  15,
+			"consoleErrors":  []any{map[string]any{"message": "TypeError: x", "ts": "2026-07-26T10:00:00Z"}},
 			"networkEntries": []any{},
 		},
 		"appVersion": "web-dev",
@@ -44,9 +44,9 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 
 	// Spoof flutter_client must be ignored for vet (defaults to nuxt_pro unless flutter_pro_light).
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/support/tickets", vetTok, map[string]any{
-		"source":  "flutter_client",
-		"subject": "Spoof source",
-		"message": "should not stick as flutter_client",
+		"source":      "flutter_client",
+		"subject":     "Spoof source",
+		"message":     "should not stick as flutter_client",
 		"diagnostics": map[string]any{},
 	})
 	if code != http.StatusCreated {

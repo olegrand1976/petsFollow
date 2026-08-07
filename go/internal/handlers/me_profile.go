@@ -240,9 +240,9 @@ func (a *API) purgeMediaObjects(ctx context.Context, keys []string) {
 }
 
 type emailPrefsReq struct {
-	EmailOnMessage       bool `json:"emailOnMessage"`
-	EmailOnHeartRate     bool `json:"emailOnHeartrate"`
-	EmailOnVisitRequest  bool `json:"emailOnVisitRequest"`
+	EmailOnMessage      bool `json:"emailOnMessage"`
+	EmailOnHeartRate    bool `json:"emailOnHeartrate"`
+	EmailOnVisitRequest bool `json:"emailOnVisitRequest"`
 }
 
 func (a *API) getVetEmailPrefs(w http.ResponseWriter, r *http.Request) {

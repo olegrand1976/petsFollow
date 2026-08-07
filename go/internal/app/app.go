@@ -126,7 +126,10 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		}
 	}
 
-	r := httpx.NewBaseRouter()
+	r := httpx.NewBaseRouter(httpx.RouterOptions{
+		TrustedProxyHops: cfg.TrustedProxyHops,
+		BFFProxySecret:   cfg.BFFProxySecret,
+	})
 	r.Use(selectiveTimeout)
 	r.Use(corsMiddleware(corsAllowedOrigins(cfg)))
 	r.Use(securityHeaders)
@@ -163,7 +166,7 @@ func corsAllowedOrigins(cfg config.Config) map[string]bool {
 	if strings.TrimSpace(raw) == "" {
 		raw = cfg.ProPublicSiteURL
 	}
-	for _, o := range strings.Split(raw, ",") {
+	for o := range strings.SplitSeq(raw, ",") {
 		o = strings.TrimRight(strings.TrimSpace(o), "/")
 		if o != "" {
 			allowed[o] = true

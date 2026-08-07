@@ -20,12 +20,12 @@ var emblemPNG []byte
 
 // Brand colors — documentation/13-CHARTE-GRAPHIQUE.md
 var (
-	colorNavy    = [3]int{27, 58, 75}     // #1B3A4B
-	colorTeal    = [3]int{42, 157, 143}   // #2A9D8F
-	colorMuted   = [3]int{107, 114, 128}  // #6B7280
+	colorNavy    = [3]int{27, 58, 75}    // #1B3A4B
+	colorTeal    = [3]int{42, 157, 143}  // #2A9D8F
+	colorMuted   = [3]int{107, 114, 128} // #6B7280
 	colorBody    = [3]int{27, 58, 75}
-	colorBorder  = [3]int{226, 230, 237}  // #E2E6ED
-	colorSurface = [3]int{247, 249, 251}  // #F7F9FB
+	colorBorder  = [3]int{226, 230, 237} // #E2E6ED
+	colorSurface = [3]int{247, 249, 251} // #F7F9FB
 	colorWhite   = [3]int{255, 255, 255}
 )
 
@@ -473,4 +473,3 @@ func drawBrandBand(pdf *gofpdf.Fpdf, site string) {
 		pdf.CellFormat(0, 5, site, "", 1, "L", false, 0, site)
 	}
 }
-

@@ -535,7 +535,7 @@ func (s *Store) refreshAFMPSJobCounts(ctx context.Context, jobID string) error {
 func refreshAFMPSJobCountsTx(ctx context.Context, tx pgx.Tx, jobID string) error {
 	type staged struct {
 		id, cnk, name, atc, form, pack, amm string
-		ab                                 bool
+		ab                                  bool
 	}
 	rows, err := tx.Query(ctx, `
 		SELECT id::text, cnk, name, atc_code, pharmaceutical_form, pack_size, amm_number, is_antibiotic
@@ -654,8 +654,8 @@ func (s *Store) CommitAFMPSImport(ctx context.Context, id string, deactivateMiss
 	}
 	type readyRow struct {
 		id, cnk, name, atc, form, pack, amm string
-		ab                                 bool
-		meta                               []byte
+		ab                                  bool
+		meta                                []byte
 	}
 	var ready []readyRow
 	for rows.Next() {

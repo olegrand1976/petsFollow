@@ -428,7 +428,7 @@ func (s *Store) ManagerLeaderboard(ctx context.Context, managerUserID, periodYM 
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < len(team); i++ {
+	for i := range team {
 		for j := i + 1; j < len(team); j++ {
 			if team[j].MonthEarnedCents > team[i].MonthEarnedCents {
 				team[i], team[j] = team[j], team[i]

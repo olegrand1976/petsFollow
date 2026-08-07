@@ -135,6 +135,14 @@ pf_write_api_env_file() {
 HTTP_ADDR: ":8080"
 LOG_LEVEL: "info"
 APP_ENV: "${app_env}"
+# GC : sans limite connue, le runtime laisse le tas grossir jusqu'à l'OOM kill de
+# Cloud Run (--memory=1Gi). 800MiB garde ~200 Mo hors tas (stacks, buffers, tzdata)
+# et laisse le GC Green Tea de Go 1.26 arbitrer avant la mort du conteneur.
+GOMEMLIMIT: "${GOMEMLIMIT:-800MiB}"
+# Un seul hop (l'orchestrateur Cloud Run) devant le conteneur : seule la dernière
+# entrée de X-Forwarded-For n'est pas fournie par l'appelant. Voir httpx.ClientIP.
+# Trafic Pro (BFF) : IP client via X-PF-Client-IP + BFF_PROXY_SECRET (SM optionnel).
+TRUSTED_PROXY_HOPS: "${TRUSTED_PROXY_HOPS:-1}"
 MIGRATE_ON_BOOT: "false"
 DEV_SEED_ENABLED: "${seed_enabled}"
 ADMIN_STAGING_SEED_ENABLED: "${admin_staging_seed}"
@@ -280,6 +288,16 @@ NODE_OPTIONS: "--max-old-space-size=768"
 EOF
 }
 
+# Secret BFF→API (X-PF-Client-IP). Absent = Nuxt ne relaie pas l'IP client
+# (rate limit Pro tombe sur l'egress Nuxt — dégradé mais non spoofable).
+pf_nuxt_secrets() {
+  local secrets=""
+  secrets="${secrets}$(pf_api_mount_job_secret BFF_PROXY_SECRET bff-proxy-secret)"
+  # Trim leading comma if present
+  secrets="${secrets#,}"
+  printf '%s' "$secrets"
+}
+
 pf_api_secrets() {
   local db_secret jwt_secret
   db_secret="$(pf_sm_database_url)"
@@ -313,6 +331,7 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret AI_MODULE_FRICTION_SECRET ai-module-friction-secret)"
   # Sans ce secret, /internal/retention/run répond 401 : la purge RGPD ne tourne pas.
   secrets="${secrets}$(pf_api_mount_job_secret RETENTION_PURGE_SECRET retention-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret BFF_PROXY_SECRET bff-proxy-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret SALES_BRANCHES_AUTO_SECRET sales-branches-auto-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret SAAS_INVOICES_SECRET saas-invoices-secret)"
   # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.

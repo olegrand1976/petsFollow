@@ -1072,4 +1072,3 @@ func (s *Store) ClearProformaPublicToken(ctx context.Context, practiceID, docID 
 	}
 	return nil
 }
-

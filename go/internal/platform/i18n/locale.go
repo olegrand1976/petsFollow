@@ -52,7 +52,7 @@ func MatchSupported(raw string) (string, bool) {
 }
 
 func ParseAcceptLanguage(header string) string {
-	for _, part := range strings.Split(header, ",") {
+	for part := range strings.SplitSeq(header, ",") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue

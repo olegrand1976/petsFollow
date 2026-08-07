@@ -14,8 +14,8 @@ import (
 
 const (
 	DefaultLimit = 5
-	MaxLimit     = 20  // max items returned to a client
-	FetchPool    = 40  // tagged/cached pool before practice-scope filter
+	MaxLimit     = 20      // max items returned to a client
+	FetchPool    = 40      // tagged/cached pool before practice-scope filter
 	maxBodyBytes = 2 << 20 // 2 MiB
 	DefaultBase  = "https://favv-afsca.be"
 	userAgent    = "petsFollow/1.0 (+https://petsfollow.app; afsca-newsletters)"

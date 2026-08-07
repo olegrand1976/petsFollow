@@ -248,23 +248,23 @@ func (s *Store) RecordEmailSend(ctx context.Context, userID, stepKey, status str
 
 // JourneyClientSegment aggregates data needed for drip eligibility.
 type JourneyClientSegment struct {
-	UserID              string
-	Email               string
-	FullName            string
-	Locale              string
-	PetCount            int
-	HorseCount          int
-	ValidatedHRCount    int
-	DaysSinceLastHR     *int
-	HasPendingPayment   bool
-	PendingPaymentDays  int
-	HasPastDue          bool
-	HasAnnualPlan       bool
-	AnnualValidUntil    *time.Time
-	ActiveAddons        map[string]bool
-	DiscoveryPref       bool
-	BillingPref         bool
-	JourneyDays         int
+	UserID             string
+	Email              string
+	FullName           string
+	Locale             string
+	PetCount           int
+	HorseCount         int
+	ValidatedHRCount   int
+	DaysSinceLastHR    *int
+	HasPendingPayment  bool
+	PendingPaymentDays int
+	HasPastDue         bool
+	HasAnnualPlan      bool
+	AnnualValidUntil   *time.Time
+	ActiveAddons       map[string]bool
+	DiscoveryPref      bool
+	BillingPref        bool
+	JourneyDays        int
 }
 
 func (s *Store) LoadJourneyClientSegment(ctx context.Context, userID string, anchorAt time.Time, now time.Time) (JourneyClientSegment, error) {
@@ -358,10 +358,7 @@ func (s *Store) LoadJourneyClientSegment(ctx context.Context, userID string, anc
 	seg.DiscoveryPref = prefs.Discovery
 	seg.BillingPref = prefs.Billing
 
-	seg.JourneyDays = int(now.Sub(anchorAt).Hours() / 24)
-	if seg.JourneyDays < 0 {
-		seg.JourneyDays = 0
-	}
+	seg.JourneyDays = max(int(now.Sub(anchorAt).Hours()/24), 0)
 	return seg, nil
 }
 

@@ -25,9 +25,9 @@ func (a *API) internalRunSalesBranchesAuto(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"created": len(result.Created),
-		"skipped": len(result.Skipped),
-		"items":   result.Created,
+		"created":      len(result.Created),
+		"skipped":      len(result.Skipped),
+		"items":        result.Created,
 		"skippedItems": result.Skipped,
 	})
 }

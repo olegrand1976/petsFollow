@@ -291,7 +291,7 @@ func TestConsecutiveRefreshesKeepTheSessionAlive(t *testing.T) {
 	}
 	refresh, _ := dataMap(t, env)["refreshToken"].(string)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
 			map[string]any{"refreshToken": refresh})
 		if code != http.StatusOK {
@@ -431,7 +431,7 @@ func TestAuthRefreshIsRateLimited(t *testing.T) {
 	t.Setenv("AUTH_RATE_LIMIT_PER_MIN", "3")
 	api := newTestAPI(t)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
 			map[string]any{"refreshToken": "forged." + uuid.NewString()})
 		if code == http.StatusTooManyRequests {
@@ -465,7 +465,7 @@ func TestPublicAppInviteIsRateLimited(t *testing.T) {
 	api := newTestAPI(t)
 
 	throttled := false
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		code, env := doJSON(t, api.handler, http.MethodGet, "/api/v1/public/app-invite/ZZZZZZZZ", nil)
 		if code == http.StatusTooManyRequests {
 			throttled = true

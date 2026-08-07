@@ -112,7 +112,7 @@ func (s *Store) EnsureAppInviteCode(ctx context.Context, userID string) (AppInvi
 		practicePtr = nil
 	}
 
-	for attempt := 0; attempt < 8; attempt++ {
+	for range 8 {
 		code, genErr := generateInviteCode()
 		if genErr != nil {
 			return AppInvite{}, genErr

@@ -33,14 +33,14 @@ func TestVetProfileHeartRateDurationsPersistAndOmit(t *testing.T) {
 	}
 
 	profileBody := map[string]any{
-		"vetFullName":            "Dr HR",
-		"practiceName":           "Cabinet HR",
-		"contactEmail":           email,
-		"phone":                  "+32123456789",
-		"addressLine1":           "Rue Test 1",
-		"city":                   "Bruxelles",
-		"postalCode":             "1000",
-		"heartrateDurationsSec":  []int{15, 30},
+		"vetFullName":           "Dr HR",
+		"practiceName":          "Cabinet HR",
+		"contactEmail":          email,
+		"phone":                 "+32123456789",
+		"addressLine1":          "Rue Test 1",
+		"city":                  "Bruxelles",
+		"postalCode":            "1000",
+		"heartrateDurationsSec": []int{15, 30},
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/profile", access, profileBody)
 	if code != http.StatusOK {
@@ -117,14 +117,14 @@ func TestVetProfileDeskIdleMinutesPersistAndOmit(t *testing.T) {
 	}
 
 	profileBody := map[string]any{
-		"vetFullName":      "Dr Desk",
-		"practiceName":     "Cabinet Desk",
-		"contactEmail":     email,
-		"phone":            "+32123456789",
-		"addressLine1":     "Rue Test 1",
-		"city":             "Bruxelles",
-		"postalCode":       "1000",
-		"deskIdleMinutes":  5,
+		"vetFullName":     "Dr Desk",
+		"practiceName":    "Cabinet Desk",
+		"contactEmail":    email,
+		"phone":           "+32123456789",
+		"addressLine1":    "Rue Test 1",
+		"city":            "Bruxelles",
+		"postalCode":      "1000",
+		"deskIdleMinutes": 5,
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/profile", access, profileBody)
 	if code != http.StatusOK {

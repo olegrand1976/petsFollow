@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -107,7 +108,7 @@ func (t *TokenIssuer) IssueMFA(userID, email string, role kernel.Role, practiceI
 }
 
 func (t *TokenIssuer) ParseMFA(tokenStr string) (Identity, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (any, error) {
 		return t.secret, nil
 	})
 	if err != nil {
@@ -148,7 +149,7 @@ func (t *TokenIssuer) ParseRefresh(tokenStr string) (Identity, error) {
 }
 
 func (t *TokenIssuer) parseTyped(tokenStr, typ string) (Identity, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (any, error) {
 		return t.secret, nil
 	})
 	if err != nil {
@@ -177,10 +178,8 @@ func FromContext(ctx context.Context) (Identity, error) {
 }
 
 func RequireRole(id Identity, roles ...kernel.Role) error {
-	for _, r := range roles {
-		if id.Role == r {
-			return nil
-		}
+	if slices.Contains(roles, id.Role) {
+		return nil
 	}
 	return fmt.Errorf("%w: forbidden", ErrUnauthorized)
 }

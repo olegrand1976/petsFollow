@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	ErrInvalidLabPanel   = errors.New("invalid lab panel")
-	ErrUnknownAnalyte    = errors.New("unknown analyte")
-	ErrDuplicateAnalyte  = errors.New("duplicate analyte")
+	ErrInvalidLabPanel  = errors.New("invalid lab panel")
+	ErrUnknownAnalyte   = errors.New("unknown analyte")
+	ErrDuplicateAnalyte = errors.New("duplicate analyte")
 )
 
 // LabAnalyteCatalog — codes V1 stables (labels i18n côté clients).
@@ -52,18 +52,18 @@ type LabPanelResult struct {
 }
 
 type LabPanel struct {
-	ID           string           `json:"id"`
-	PetID        string           `json:"petId"`
-	PracticeID   string           `json:"practiceId"`
-	AuthorUserID string           `json:"authorUserId"`
-	CollectedAt  time.Time        `json:"collectedAt"`
-	LabName      string           `json:"labName"`
-	Notes        string           `json:"notes"`
-	DocumentID   *string          `json:"documentId,omitempty"`
-	CreatedAt    time.Time        `json:"createdAt"`
-	UpdatedAt    time.Time        `json:"updatedAt"`
-	Results      []LabPanelResult `json:"results,omitempty"`
-	AbnormalCount int             `json:"abnormalCount,omitempty"`
+	ID            string           `json:"id"`
+	PetID         string           `json:"petId"`
+	PracticeID    string           `json:"practiceId"`
+	AuthorUserID  string           `json:"authorUserId"`
+	CollectedAt   time.Time        `json:"collectedAt"`
+	LabName       string           `json:"labName"`
+	Notes         string           `json:"notes"`
+	DocumentID    *string          `json:"documentId,omitempty"`
+	CreatedAt     time.Time        `json:"createdAt"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
+	Results       []LabPanelResult `json:"results,omitempty"`
+	AbnormalCount int              `json:"abnormalCount,omitempty"`
 }
 
 type LabPanelResultInput struct {

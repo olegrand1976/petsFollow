@@ -20,14 +20,14 @@ import (
 const MaxHeartRateCommentLen = 500
 
 var (
-	ErrNotFound             = errors.New("not found")
-	ErrValidation           = errors.New("validation")
-	ErrForbidden            = errors.New("forbidden")
-	ErrConflict             = errors.New("conflict")
-	ErrInventoryIncomplete  = errors.New("inventory_incomplete")
-	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
-	ErrSelfReferral         = errors.New("self referral")
-	ErrAdvisoryLockBusy     = errors.New("advisory lock busy")
+	ErrNotFound            = errors.New("not found")
+	ErrValidation          = errors.New("validation")
+	ErrForbidden           = errors.New("forbidden")
+	ErrConflict            = errors.New("conflict")
+	ErrInventoryIncomplete = errors.New("inventory_incomplete")
+	ErrDiagnosticsTooLarge = errors.New("diagnostics too large")
+	ErrSelfReferral        = errors.New("self referral")
+	ErrAdvisoryLockBusy    = errors.New("advisory lock busy")
 )
 
 // StagingSeedLockKey is the session advisory lock for admin/CLI staging re-seed.
@@ -62,33 +62,33 @@ type Practice struct {
 }
 
 type Pet struct {
-	ID            string    `json:"id"`
-	PracticeID    string    `json:"practiceId"`
-	OwnerUserID   string    `json:"ownerUserId"`
-	Name          string    `json:"name"`
-	Species       string    `json:"species"`
-	Breed         string    `json:"breed"`
-	BirthDate     *time.Time `json:"birthDate,omitempty"`
-	WeightKg      *float64  `json:"weightKg,omitempty"`
-	PhotoURL      string    `json:"photoUrl"`
-	PaymentStatus string    `json:"paymentStatus"`
-	LitterTag     string    `json:"litterTag,omitempty"`
-	MicrochipNumber        string `json:"microchipNumber,omitempty"`
-	HealthBookNumber       string `json:"healthBookNumber,omitempty"`
-	HealthBookPDFURL       string `json:"healthBookPdfUrl,omitempty"` // legacy; never a public media URL
-	HealthBookPDFAttached  bool   `json:"healthBookPdfAttached,omitempty"`
-	HealthBookPDFObjectKey string `json:"-"`
+	ID                     string     `json:"id"`
+	PracticeID             string     `json:"practiceId"`
+	OwnerUserID            string     `json:"ownerUserId"`
+	Name                   string     `json:"name"`
+	Species                string     `json:"species"`
+	Breed                  string     `json:"breed"`
+	BirthDate              *time.Time `json:"birthDate,omitempty"`
+	WeightKg               *float64   `json:"weightKg,omitempty"`
+	PhotoURL               string     `json:"photoUrl"`
+	PaymentStatus          string     `json:"paymentStatus"`
+	LitterTag              string     `json:"litterTag,omitempty"`
+	MicrochipNumber        string     `json:"microchipNumber,omitempty"`
+	HealthBookNumber       string     `json:"healthBookNumber,omitempty"`
+	HealthBookPDFURL       string     `json:"healthBookPdfUrl,omitempty"` // legacy; never a public media URL
+	HealthBookPDFAttached  bool       `json:"healthBookPdfAttached,omitempty"`
+	HealthBookPDFObjectKey string     `json:"-"`
 	// FoodChainStatus: companion | food_producing | excluded_from_food_chain (DAF / médicaments).
 	FoodChainStatus string `json:"foodChainStatus,omitempty"`
 	// DomicileLocation: écurie / lieu de détention (équidés, rente, camélidés).
 	DomicileLocation string `json:"domicileLocation,omitempty"`
 	// Lifecycle status dates (adopted / sold / deceased) — DATE, all species.
-	AdoptedAt  *time.Time `json:"adoptedAt,omitempty"`
-	SoldAt     *time.Time `json:"soldAt,omitempty"`
-	DeceasedAt *time.Time `json:"deceasedAt,omitempty"`
-	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	Entitlement   *Entitlement `json:"entitlement,omitempty"`
+	AdoptedAt             *time.Time   `json:"adoptedAt,omitempty"`
+	SoldAt                *time.Time   `json:"soldAt,omitempty"`
+	DeceasedAt            *time.Time   `json:"deceasedAt,omitempty"`
+	HeartrateDurationsSec []int        `json:"heartrateDurationsSec,omitempty"`
+	CreatedAt             time.Time    `json:"createdAt"`
+	Entitlement           *Entitlement `json:"entitlement,omitempty"`
 	// Permission is set on list responses for care_pro / shared client access (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 	// IsWalkinPlaceholder: system "Nouvel animal" slot for the practice (immutable).

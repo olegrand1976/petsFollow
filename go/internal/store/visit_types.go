@@ -14,13 +14,13 @@ import (
 var hexColorRE = regexp.MustCompile(`(?i)^#[0-9a-f]{6}$`)
 
 type VisitType struct {
-	ID               string `json:"id"`
-	PracticeID       string `json:"practiceId"`
-	Name             string `json:"name"`
-	DurationMinutes  int    `json:"durationMinutes"`
-	Color            string `json:"color"`
-	IsActive         bool   `json:"isActive"`
-	SortOrder        int    `json:"sortOrder"`
+	ID              string `json:"id"`
+	PracticeID      string `json:"practiceId"`
+	Name            string `json:"name"`
+	DurationMinutes int    `json:"durationMinutes"`
+	Color           string `json:"color"`
+	IsActive        bool   `json:"isActive"`
+	SortOrder       int    `json:"sortOrder"`
 }
 
 type VisitTypeInput struct {

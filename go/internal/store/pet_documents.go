@@ -11,19 +11,19 @@ import (
 )
 
 type PetDocument struct {
-	ID               string    `json:"id"`
-	PetID            string    `json:"petId"`
-	UploadedByUserID string    `json:"uploadedByUserId"`
-	UploaderName     string    `json:"uploaderName,omitempty"`
-	Title            string    `json:"title"`
-	FileName         string    `json:"fileName"`
-	ContentType      string    `json:"contentType"`
+	ID               string `json:"id"`
+	PetID            string `json:"petId"`
+	UploadedByUserID string `json:"uploadedByUserId"`
+	UploaderName     string `json:"uploaderName,omitempty"`
+	Title            string `json:"title"`
+	FileName         string `json:"fileName"`
+	ContentType      string `json:"contentType"`
 	// FileURL: legacy public storage URL, kept for the rotation job only.
 	// Documents are PHI — clients download through the authenticated endpoint.
-	FileURL   string `json:"-"`
-	ObjectKey string `json:"-"`
-	SizeBytes        int64     `json:"sizeBytes"`
-	CreatedAt        time.Time `json:"createdAt"`
+	FileURL   string    `json:"-"`
+	ObjectKey string    `json:"-"`
+	SizeBytes int64     `json:"sizeBytes"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type CreatePetDocumentInput struct {

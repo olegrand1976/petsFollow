@@ -195,7 +195,7 @@ func tokenDice(a, b string) float64 {
 
 func uniqueTokens(s string) map[string]bool {
 	m := make(map[string]bool)
-	for _, p := range strings.Fields(s) {
+	for p := range strings.FieldsSeq(s) {
 		if p != "" {
 			m[p] = true
 		}

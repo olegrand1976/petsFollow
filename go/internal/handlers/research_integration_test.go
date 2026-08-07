@@ -185,7 +185,7 @@ func TestResearchHeatmapDistinctPractices(t *testing.T) {
 	week := store.ResearchIsoWeekMonday(time.Now())
 	postal := "99119"
 	// Many events from a single practice must not unlock the cell.
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		_, err := api.pool.Exec(ctx, `
 			INSERT INTO research.anon_events (
 				id, event_week, postal_code, city, country_code, species, age_band,
@@ -212,7 +212,7 @@ func TestResearchHeatmapDistinctPractices(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < store.ResearchKAnonymity; i++ {
+	for range store.ResearchKAnonymity {
 		_, err := api.pool.Exec(ctx, `
 			INSERT INTO research.anon_events (
 				id, event_week, postal_code, city, country_code, species, age_band,

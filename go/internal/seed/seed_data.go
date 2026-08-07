@@ -94,22 +94,22 @@ type visitDef struct {
 }
 
 type petDef struct {
-	name          string
-	species       string
-	breed         string
-	weightKg      float64
-	paymentStatus string
-	plan          billing.PlanCode
-	billingMode   billing.BillingMode
-	entitlement   billing.EntitlementStatus
-	messages      []messageDef
-	heartRates      []heartRateDef
-	weights         []weightReadingDef
-	bloodPressures  []bloodPressureDef
-	labPanels       []labPanelDef
-	dossierEvents   []dossierEventDef
-	careReminders   []careReminderDef
-	visits          []visitDef
+	name           string
+	species        string
+	breed          string
+	weightKg       float64
+	paymentStatus  string
+	plan           billing.PlanCode
+	billingMode    billing.BillingMode
+	entitlement    billing.EntitlementStatus
+	messages       []messageDef
+	heartRates     []heartRateDef
+	weights        []weightReadingDef
+	bloodPressures []bloodPressureDef
+	labPanels      []labPanelDef
+	dossierEvents  []dossierEventDef
+	careReminders  []careReminderDef
+	visits         []visitDef
 }
 
 type clientDef struct {
@@ -122,20 +122,20 @@ type clientDef struct {
 }
 
 type practiceDef struct {
-	name              string
-	vetEmail          string
-	vetName           string
-	phone             string
-	address           string
-	addressLine2      string
-	city              string
-	postalCode        string
-	website           string
-	availability      kernel.AvailabilityStatus
-	autoReply         string
-	clients           []clientDef
-	notifyOnMessage   bool
-	notifyOnHeartRate bool
+	name               string
+	vetEmail           string
+	vetName            string
+	phone              string
+	address            string
+	addressLine2       string
+	city               string
+	postalCode         string
+	website            string
+	availability       kernel.AvailabilityStatus
+	autoReply          string
+	clients            []clientDef
+	notifyOnMessage    bool
+	notifyOnHeartRate  bool
 	incompleteProfile  bool // profil cabinet non complété (onboarding)
 	pendingEmailVerify bool // email non confirmé + token démo
 	seedPasswordReset  bool // token démo reset password
@@ -205,7 +205,7 @@ var demoPractices = []practiceDef{
 								notes:   "Contrôle rénal post-op",
 								age:     -12 * 24 * time.Hour,
 								results: []labResultDef{
-									{code: "crea", value: 2.4, unit: "mg/dL", refLow: f64ptr(0.5), refHigh: f64ptr(1.5)},
+									{code: "crea", value: 2.4, unit: "mg/dL", refLow: new(0.5), refHigh: new(1.5)},
 									{code: "alat", value: 45, unit: "U/L", refLow: f64ptr(10), refHigh: f64ptr(100)},
 									{code: "urea", value: 45, unit: "mg/dL", refLow: f64ptr(15), refHigh: f64ptr(50)},
 								},
@@ -215,7 +215,7 @@ var demoPractices = []practiceDef{
 								notes:   "Suivi 3 mois",
 								age:     -3 * 24 * time.Hour,
 								results: []labResultDef{
-									{code: "crea", value: 1.8, unit: "mg/dL", refLow: f64ptr(0.5), refHigh: f64ptr(1.5)},
+									{code: "crea", value: 1.8, unit: "mg/dL", refLow: new(0.5), refHigh: new(1.5)},
 									{code: "alat", value: 38, unit: "U/L", refLow: f64ptr(10), refHigh: f64ptr(100)},
 								},
 							},
@@ -482,18 +482,18 @@ var demoPractices = []practiceDef{
 		},
 	},
 	{
-		name:               "Cabinet Onboarding Demo",
-		vetEmail:           "vet.onboarding@petsfollow.test",
-		vetName:            "Dr Emma Nouveau",
-		phone:              "",
-		address:            "",
-		city:               "",
-		postalCode:         "",
-		website:            "",
-		availability:       kernel.AvailabilityAvailable,
-		notifyOnMessage:    true,
-		notifyOnHeartRate:  true,
-		incompleteProfile:  true,
+		name:              "Cabinet Onboarding Demo",
+		vetEmail:          "vet.onboarding@petsfollow.test",
+		vetName:           "Dr Emma Nouveau",
+		phone:             "",
+		address:           "",
+		city:              "",
+		postalCode:        "",
+		website:           "",
+		availability:      kernel.AvailabilityAvailable,
+		notifyOnMessage:   true,
+		notifyOnHeartRate: true,
+		incompleteProfile: true,
 	},
 	{
 		name:               "Cabinet Email Pending",
@@ -526,4 +526,5 @@ var demoPractices = []practiceDef{
 	},
 }
 
-func f64ptr(v float64) *float64 { return &v }
+//go:fix inline
+func f64ptr(v float64) *float64 { return new(v) }

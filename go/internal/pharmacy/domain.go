@@ -50,8 +50,7 @@ func StockErrForMed(medicationID string, err error) error {
 
 // StockMedID extracts the medication id from a StockMedError chain, if any.
 func StockMedID(err error) string {
-	var sm *StockMedError
-	if errors.As(err, &sm) && sm != nil {
+	if sm, ok := errors.AsType[*StockMedError](err); ok && sm != nil {
 		return sm.MedicationID
 	}
 	return ""
@@ -71,11 +70,11 @@ func BrusselsToday(now time.Time) time.Time {
 type ExpiryBand string
 
 const (
-	BandOK        ExpiryBand = "ok"
-	BandSoon      ExpiryBand = "soon"      // ≤ soon, > return
-	BandReturn    ExpiryBand = "return"    // ≤ return, > critical
-	BandCritical  ExpiryBand = "critical"  // ≤ critical, ≥ today
-	BandExpired   ExpiryBand = "expired"   // < today
+	BandOK         ExpiryBand = "ok"
+	BandSoon       ExpiryBand = "soon"     // ≤ soon, > return
+	BandReturn     ExpiryBand = "return"   // ≤ return, > critical
+	BandCritical   ExpiryBand = "critical" // ≤ critical, ≥ today
+	BandExpired    ExpiryBand = "expired"  // < today
 	BandQuarantine ExpiryBand = "quarantine"
 )
 

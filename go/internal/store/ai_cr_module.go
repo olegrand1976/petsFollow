@@ -55,33 +55,27 @@ const (
 )
 
 type AiCrROI struct {
-	Unlocked           bool    `json:"unlocked"`
-	DaysSinceActivation int    `json:"daysSinceActivation"`
-	CrsIA              int     `json:"crsIa"`
-	BaselineMinutes    int     `json:"baselineMinutes"`
-	AiMinutesAssumed   int     `json:"aiMinutesAssumed"`
-	MinutesSaved       int     `json:"minutesSaved"`
-	HoursSaved         float64 `json:"hoursSaved"`
-	EuroEquivCents     int     `json:"euroEquivCents"`
-	ModuleCostCents    int     `json:"moduleCostCents"`
-	NetEuroCents       int     `json:"netEuroCents"`
-	Disclaimer         string  `json:"disclaimer"`
+	Unlocked            bool    `json:"unlocked"`
+	DaysSinceActivation int     `json:"daysSinceActivation"`
+	CrsIA               int     `json:"crsIa"`
+	BaselineMinutes     int     `json:"baselineMinutes"`
+	AiMinutesAssumed    int     `json:"aiMinutesAssumed"`
+	MinutesSaved        int     `json:"minutesSaved"`
+	HoursSaved          float64 `json:"hoursSaved"`
+	EuroEquivCents      int     `json:"euroEquivCents"`
+	ModuleCostCents     int     `json:"moduleCostCents"`
+	NetEuroCents        int     `json:"netEuroCents"`
+	Disclaimer          string  `json:"disclaimer"`
 }
 
 func (m *AiCrModule) refreshDerived(now time.Time) {
 	if m.ActivatedAt.IsZero() {
 		return
 	}
-	days := int(now.Sub(m.ActivatedAt).Hours() / 24)
-	if days < 0 {
-		days = 0
-	}
+	days := max(int(now.Sub(m.ActivatedAt).Hours()/24), 0)
 	m.DaysSinceActivation = days
 	m.RoiUnlocked = days >= AiCrROIDay
-	remain := int(m.TrialEndsAt.Sub(now).Hours() / 24)
-	if remain < 0 {
-		remain = 0
-	}
+	remain := max(int(m.TrialEndsAt.Sub(now).Hours()/24), 0)
 	m.DaysRemainingTrial = remain
 	m.Allowed = m.isAllowedAt(now)
 }
@@ -452,10 +446,7 @@ func (s *Store) ComputeAiCrROI(ctx context.Context, practiceID string) (AiCrROI,
 		return AiCrROI{}, err
 	}
 	roi.CrsIA = crs
-	per := m.BaselineMinutesPerCR - AiCrDefaultAIMinutes
-	if per < 0 {
-		per = 0
-	}
+	per := max(m.BaselineMinutesPerCR-AiCrDefaultAIMinutes, 0)
 	roi.MinutesSaved = crs * per
 	roi.HoursSaved = float64(roi.MinutesSaved) / 60.0
 	roi.EuroEquivCents = int(roi.HoursSaved * float64(m.HourlyCostCents))
@@ -521,13 +512,13 @@ func (s *Store) InsertFrictionAlert(ctx context.Context, practiceID, commercialU
 }
 
 type AiCrFrictionCandidate struct {
-	PracticeID        string
-	PracticeName      string
-	Status            string
-	ActivatedAt       time.Time
-	CommercialUserID  string
-	CommercialEmail   string
-	CommercialName    string
+	PracticeID       string
+	PracticeName     string
+	Status           string
+	ActivatedAt      time.Time
+	CommercialUserID string
+	CommercialEmail  string
+	CommercialName   string
 }
 
 func (s *Store) ListAiCrFrictionCandidates(ctx context.Context) ([]AiCrFrictionCandidate, error) {

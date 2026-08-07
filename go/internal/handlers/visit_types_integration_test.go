@@ -63,7 +63,7 @@ func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 	// donne un slot_taken selon l'ordre d'exécution.
 	book := func(label string, start time.Time, body map[string]any) (map[string]any, time.Time) {
 		t.Helper()
-		for i := 0; i < 24; i++ {
+		for i := range 24 {
 			at := start.Add(time.Duration(i) * time.Hour)
 			body["scheduledAt"] = at.Format(time.RFC3339)
 			body["notes"] = label

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -97,13 +98,7 @@ func (a *API) managerListFiliation(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
 			return
 		}
-		allowed := false
-		for _, sid := range scope {
-			if sid == raw {
-				allowed = true
-				break
-			}
-		}
+		allowed := slices.Contains(scope, raw)
 		if !allowed {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
@@ -136,13 +131,7 @@ func (a *API) managerListFiliationEvents(w http.ResponseWriter, r *http.Request)
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
 			return
 		}
-		allowed := false
-		for _, sid := range scope {
-			if sid == raw {
-				allowed = true
-				break
-			}
-		}
+		allowed := slices.Contains(scope, raw)
 		if !allowed {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return

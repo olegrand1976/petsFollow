@@ -440,8 +440,7 @@ func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 	}
 	prospect, err := a.store.CreateProspect(r.Context(), id.UserID, in)
 	if err != nil {
-		var owned *store.ErrProspectOwned
-		if errors.As(err, &owned) {
+		if owned, ok := errors.AsType[*store.ErrProspectOwned](err); ok {
 			writeProspectOwned(w, r, owned)
 			return
 		}
@@ -458,8 +457,7 @@ func (a *API) commercialClaimProspect(w http.ResponseWriter, r *http.Request) {
 	}
 	prospect, err := a.store.ClaimProspect(r.Context(), chi.URLParam(r, "id"), id.UserID)
 	if err != nil {
-		var owned *store.ErrProspectOwned
-		if errors.As(err, &owned) {
+		if owned, ok := errors.AsType[*store.ErrProspectOwned](err); ok {
 			writeProspectOwned(w, r, owned)
 			return
 		}
@@ -517,8 +515,7 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 	}
 	prospect, err := a.store.UpdateProspect(r.Context(), id.UserID, prospectID, in)
 	if err != nil {
-		var owned *store.ErrProspectOwned
-		if errors.As(err, &owned) {
+		if owned, ok := errors.AsType[*store.ErrProspectOwned](err); ok {
 			writeProspectOwned(w, r, owned)
 			return
 		}

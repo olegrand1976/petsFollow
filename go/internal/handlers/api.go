@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/afsca"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
@@ -33,6 +35,10 @@ import (
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// maxVetProfileBytes — le profil cabinet contient au plus quelques Ko de texte
+// et de préférences ; la borne protège un handler qui bufferise tout le corps.
+const maxVetProfileBytes = 256 << 10
 
 type API struct {
 	store       *store.Store
@@ -166,7 +172,21 @@ func (a *API) TestSetVisitRemindersSecret(secret string) { a.cfg.VisitRemindersS
 // TestSetTelnyxPublicKey sets TELNYX_PUBLIC_KEY (integration tests only).
 func (a *API) TestSetTelnyxPublicKey(key string) { a.cfg.TelnyxPublicKey = key }
 
+func jsonCompressExceptPprof(next http.Handler) http.Handler {
+	compressed := middleware.Compress(5, "application/json")(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "/internal/debug/pprof") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		compressed.ServeHTTP(w, r)
+	})
+}
+
 func (a *API) Routes(r chi.Router) {
+	// application/json uniquement : médias, PDF et audio sont déjà compressés ;
+	// pprof binaire et WebSocket/SSE ne doivent pas passer sous gzip.
+	r.Use(jsonCompressExceptPprof)
 	r.Use(httpx.LocaleMiddleware)
 	// Anti brute-force / spam sur les endpoints auth publics (par IP).
 	authRL := httpx.NewRateLimiter(a.cfg.AuthRateLimitPerMin, time.Minute)
@@ -214,6 +234,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
 	r.Post("/internal/research-etl/run", a.internalRunResearchETL)
 	r.Post("/internal/visit-reminders/run", a.internalRunVisitReminders)
+	a.registerPprofRoutes(r)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -514,7 +535,6 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteData(w, http.StatusOK, client)
 }
-
 
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
@@ -1052,13 +1072,7 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 		// Default to the longest duration enabled by the vet (practice settings).
 		durationSec = normalized[len(normalized)-1]
 	}
-	ok := false
-	for _, d := range normalized {
-		if d == durationSec {
-			ok = true
-			break
-		}
-	}
+	ok := slices.Contains(normalized, durationSec)
 	if !ok {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_duration")
 		return
@@ -1781,9 +1795,11 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	raw, err := io.ReadAll(r.Body)
+	// Le profil est relu deux fois (struct + sonde des champs optionnels), donc
+	// bufferisé : sans borne, un corps arbitraire tiendrait entier en mémoire.
+	raw, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxVetProfileBytes))
 	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		writeErr(w, r, http.StatusRequestEntityTooLarge, "bad_request", "payload_too_large")
 		return
 	}
 	var req store.PracticeProfile
@@ -1792,10 +1808,10 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var durationsProbe struct {
-		HeartRateDurationsSec *[]int                `json:"heartrateDurationsSec"`
-		DeskIdleMinutes       *int                  `json:"deskIdleMinutes"`
-		AnimalScope           *string               `json:"animalScope"`
-		HeaderLinks           *headerlinks.Prefs    `json:"headerLinks"`
+		HeartRateDurationsSec *[]int             `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int               `json:"deskIdleMinutes"`
+		AnimalScope           *string            `json:"animalScope"`
+		HeaderLinks           *headerlinks.Prefs `json:"headerLinks"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")

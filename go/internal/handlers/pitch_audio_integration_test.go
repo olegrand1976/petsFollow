@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"slices"
 	"testing"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
@@ -152,20 +153,16 @@ func jsonHasAnyKey(t *testing.T, payload string, keys ...string) bool {
 		switch n := node.(type) {
 		case map[string]any:
 			for k, child := range n {
-				for _, want := range keys {
-					if k == want {
-						return true
-					}
+				if slices.Contains(keys, k) {
+					return true
 				}
 				if walk(child) {
 					return true
 				}
 			}
 		case []any:
-			for _, child := range n {
-				if walk(child) {
-					return true
-				}
+			if slices.ContainsFunc(n, walk) {
+				return true
 			}
 		}
 		return false

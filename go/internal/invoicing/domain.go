@@ -22,7 +22,7 @@ type DocStatus string
 
 const (
 	StatusDraft     DocStatus = "draft"
-	StatusIssued    DocStatus = "issued" // proforma: emailed, awaiting client accept
+	StatusIssued    DocStatus = "issued"   // proforma: emailed, awaiting client accept
 	StatusAccepted  DocStatus = "accepted" // proforma: client validated → invoice created
 	StatusSending   DocStatus = "sending"
 	StatusDelivered DocStatus = "delivered"
@@ -36,23 +36,23 @@ const ProformaClientTokenTTL = 14 * 24 * time.Hour
 type ConnectionStatus string
 
 const (
-	ConnDisconnected         ConnectionStatus = "disconnected"
-	ConnPendingRegistration  ConnectionStatus = "pending_registration"
-	ConnPendingKYC           ConnectionStatus = "pending_kyc"
-	ConnActive               ConnectionStatus = "active"
-	ConnSuspended            ConnectionStatus = "suspended"
-	ConnError                ConnectionStatus = "error"
+	ConnDisconnected        ConnectionStatus = "disconnected"
+	ConnPendingRegistration ConnectionStatus = "pending_registration"
+	ConnPendingKYC          ConnectionStatus = "pending_kyc"
+	ConnActive              ConnectionStatus = "active"
+	ConnSuspended           ConnectionStatus = "suspended"
+	ConnError               ConnectionStatus = "error"
 )
 
 type Counterparty struct {
 	Name               string `json:"name"`
 	VATNumber          string `json:"vatNumber,omitempty"`
-	CompanyNumber      string `json:"companyNumber,omitempty"` // BE BCE (optional)
-	SIRET              string `json:"siret,omitempty"`         // FR
-	SIREN              string `json:"siren,omitempty"`         // FR
+	CompanyNumber      string `json:"companyNumber,omitempty"`      // BE BCE (optional)
+	SIRET              string `json:"siret,omitempty"`              // FR
+	SIREN              string `json:"siren,omitempty"`              // FR
 	CodiceDestinatario string `json:"codiceDestinatario,omitempty"` // IT SDI (7 chars)
-	PEC                string `json:"pec,omitempty"`                 // IT certified email
-	TaxID              string `json:"taxId,omitempty"`               // ES NIF/CIF
+	PEC                string `json:"pec,omitempty"`                // IT certified email
+	TaxID              string `json:"taxId,omitempty"`              // ES NIF/CIF
 	Email              string `json:"email,omitempty"`
 	Street             string `json:"street,omitempty"`
 	City               string `json:"city,omitempty"`
@@ -136,14 +136,14 @@ type SaasDocSummary struct {
 
 // SaasTarget is a practice eligible for Flux A (active BE cabinet with complete fiscal profile).
 type SaasTarget struct {
-	PracticeID          string          `json:"practiceId"`
-	PracticeName        string          `json:"practiceName,omitempty"`
-	ContactEmail        string          `json:"contactEmail,omitempty"`
-	VATNumber           string          `json:"vatNumber,omitempty"`
-	HasBillitConnect    bool            `json:"hasBillitConnect"`
-	SaasBillingEnabled  bool            `json:"saasBillingEnabled"`
-	SaasDraftEnabled    bool            `json:"saasDraftEnabled,omitempty"`
-	SaasDocument        *SaasDocSummary `json:"saasDocument,omitempty"`
+	PracticeID         string          `json:"practiceId"`
+	PracticeName       string          `json:"practiceName,omitempty"`
+	ContactEmail       string          `json:"contactEmail,omitempty"`
+	VATNumber          string          `json:"vatNumber,omitempty"`
+	HasBillitConnect   bool            `json:"hasBillitConnect"`
+	SaasBillingEnabled bool            `json:"saasBillingEnabled"`
+	SaasDraftEnabled   bool            `json:"saasDraftEnabled,omitempty"`
+	SaasDocument       *SaasDocSummary `json:"saasDocument,omitempty"`
 }
 
 // SaasDraftRunResult summarizes a C1 cron pass (draft only).

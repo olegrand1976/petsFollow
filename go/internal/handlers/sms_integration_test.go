@@ -121,7 +121,7 @@ func countSmsLog(t *testing.T, api *testAPI, visitID, kind string) int {
 // silentConfirm=false pour déclencher les hooks de notification.
 func createConfirmedVisit(t *testing.T, api *testAPI, staffTok, petID string) string {
 	t.Helper()
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		slot := time.Now().UTC().Add(time.Duration(26+i*3)*time.Hour + 13*time.Minute).Truncate(time.Minute).Format(time.RFC3339)
 		code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", staffTok, map[string]any{
 			"scheduledAt":     slot,
@@ -247,7 +247,7 @@ func TestVisitRescheduleDirectSendsSMS(t *testing.T) {
 	visitID := createConfirmedVisit(t, api, vetTok, petID)
 
 	var moved bool
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		next := time.Now().UTC().Add(time.Duration(60+i*3)*time.Hour + 21*time.Minute).Truncate(time.Minute).Format(time.RFC3339)
 		code, _ := doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
 			"action":              "reschedule_direct",

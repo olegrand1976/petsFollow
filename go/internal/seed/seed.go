@@ -123,6 +123,14 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	return nil
 }
 
+// isUndefinedTable — schéma incomplet (migration partielle sur un env ancien) :
+// le seed saute la section plutôt que d'échouer. errors.AsType (Go 1.26) évite
+// la variable intermédiaire de errors.As.
+func isUndefinedTable(err error) bool {
+	pgErr, ok := errors.AsType[*pgconn.PgError](err)
+	return ok && pgErr.Code == "42P01"
+}
+
 func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
 	medIDs := make(map[string]string, 2)
 	for _, row := range []store.RefMedicationUpsert{
@@ -132,8 +140,7 @@ func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
 		id, err := st.UpsertRefMedication(ctx, row)
 		if err != nil {
 			// Schema absent (migrate incomplete) — non-fatal for legacy envs.
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			if isUndefinedTable(err) {
 				log.Printf("seed pharmacy meds skipped (undefined table): %v", err)
 				return nil
 			}
@@ -166,8 +173,7 @@ func seedPharmacyDemoStock(ctx context.Context, st *store.Store, medIDs map[stri
 		  AND u.email IN ('vet.demo@petsfollow.test', 'vet.parc@petsfollow.test')
 		ORDER BY u.email`)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+		if isUndefinedTable(err) {
 			return nil
 		}
 		return err
@@ -188,8 +194,7 @@ func seedPharmacyDemoStock(ctx context.Context, st *store.Store, medIDs map[stri
 					SELECT 1 FROM pharmacy.medication_batches
 					WHERE practice_id = $1::uuid AND medication_id = $2::uuid AND lot_number = $3
 				)`, practiceID, medID, lot).Scan(&exists); err != nil {
-				var pgErr *pgconn.PgError
-				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				if isUndefinedTable(err) {
 					return nil
 				}
 				return err
@@ -207,8 +212,7 @@ func seedPharmacyDemoStock(ctx context.Context, st *store.Store, medIDs map[stri
 				CreatedBy:    vetID,
 			}, settings, time.Now())
 			if err != nil {
-				var pgErr *pgconn.PgError
-				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				if isUndefinedTable(err) {
 					return nil
 				}
 				return fmt.Errorf("seed batch %s practice %s: %w", cnk, practiceID, err)
@@ -230,8 +234,7 @@ func seedPharmacyDemoProtocols(ctx context.Context, st *store.Store, medIDs map[
 		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
 		LIMIT 1`)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+		if isUndefinedTable(err) {
 			return nil
 		}
 		return err
@@ -267,8 +270,7 @@ func seedPharmacyDemoProtocols(ctx context.Context, st *store.Store, medIDs map[
 	}
 	for _, p := range protocols {
 		if _, err := st.UpsertClinicalProtocol(ctx, practiceID, p.name, p.desc, p.lines, p.sort); err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			if isUndefinedTable(err) {
 				return nil
 			}
 			return fmt.Errorf("protocol %s: %w", p.name, err)
@@ -287,8 +289,7 @@ func seedPharmacyDemoPrices(ctx context.Context, st *store.Store, medIDs map[str
 		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
 		LIMIT 1`)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+		if isUndefinedTable(err) {
 			return nil
 		}
 		return err
@@ -303,8 +304,7 @@ func seedPharmacyDemoPrices(ctx context.Context, st *store.Store, medIDs map[str
 	}
 	for _, medID := range medIDs {
 		if _, err := st.UpsertMedicationPrice(ctx, practiceID, medID, vetID, 800, 2200, 21); err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			if isUndefinedTable(err) {
 				return nil
 			}
 			return fmt.Errorf("seed price %s: %w", medID, err)
@@ -1047,7 +1047,7 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 	}
 	week := store.ResearchIsoWeekMonday(time.Now())
 	// Distinct practice_id_hash (≥ k) — wiped on re-seed TRUNCATE; not tied to VetPlus opt-out.
-	for i := 0; i < store.ResearchKAnonymity; i++ {
+	for i := range store.ResearchKAnonymity {
 		hash := fmt.Sprintf("seed-dataroom-practice-%d", i)
 		_, err := pool.Exec(ctx, `
 			INSERT INTO research.anon_events (

@@ -27,10 +27,10 @@ func TestMain(m *testing.M) {
 
 func loadDotEnv() {
 	dir, _ := os.Getwd()
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		envPath := filepath.Join(dir, ".env")
 		if data, err := os.ReadFile(envPath); err == nil {
-			for _, line := range strings.Split(string(data), "\n") {
+			for line := range strings.SplitSeq(string(data), "\n") {
 				line = strings.TrimSpace(line)
 				if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
 					continue

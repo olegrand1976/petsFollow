@@ -62,7 +62,7 @@ func (c *Client) Set(ctx context.Context, k, v string, ttl time.Duration) error 
 	return c.rdb.Set(ctx, c.key(k), v, ttl).Err()
 }
 
-func (c *Client) LPush(ctx context.Context, k string, values ...interface{}) error {
+func (c *Client) LPush(ctx context.Context, k string, values ...any) error {
 	if c == nil || c.rdb == nil {
 		return nil
 	}

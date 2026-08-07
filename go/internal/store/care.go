@@ -11,17 +11,17 @@ import (
 )
 
 type CareReminder struct {
-	ID              string    `json:"id"`
-	PetID           string    `json:"petId"`
-	PracticeID      string    `json:"practiceId"`
-	Type            string    `json:"type"`
-	Title           string    `json:"title"`
-	DueAt           time.Time `json:"dueAt"`
-	Status          string    `json:"status"`
-	Notes           string    `json:"notes,omitempty"`
-	RecurrenceDays  *int      `json:"recurrenceDays,omitempty"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID             string    `json:"id"`
+	PetID          string    `json:"petId"`
+	PracticeID     string    `json:"practiceId"`
+	Type           string    `json:"type"`
+	Title          string    `json:"title"`
+	DueAt          time.Time `json:"dueAt"`
+	Status         string    `json:"status"`
+	Notes          string    `json:"notes,omitempty"`
+	RecurrenceDays *int      `json:"recurrenceDays,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
 type careReminderTemplate struct {

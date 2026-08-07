@@ -24,9 +24,15 @@ type envelope struct {
 	Error *APIError `json:"error,omitempty"`
 }
 
-func NewBaseRouter() chi.Router {
+// NewBaseRouter monte les middlewares communs (voir RouterOptions / ClientIP).
+func NewBaseRouter(opts RouterOptions) chi.Router {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer)
+	r.Use(
+		middleware.RequestID,
+		clientIPMiddleware(opts.TrustedProxyHops),
+		bffClientIPMiddleware(opts.BFFProxySecret),
+		middleware.Recoverer,
+	)
 	return r
 }
 

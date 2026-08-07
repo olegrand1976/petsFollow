@@ -88,8 +88,8 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 
 	raw = bytes.TrimPrefix(raw, []byte{0xEF, 0xBB, 0xBF})
 	firstLine := raw
-	if i := bytes.IndexByte(raw, '\n'); i >= 0 {
-		firstLine = raw[:i]
+	if before, _, ok := bytes.Cut(raw, []byte{'\n'}); ok {
+		firstLine = before
 	}
 	comma := ','
 	if bytes.Count(firstLine, []byte(";")) > bytes.Count(firstLine, []byte(",")) {
@@ -181,10 +181,7 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 		rep.CommercializedPct = float64(commercialized) * 100 / float64(rep.UniqueCNK)
 		rep.HardErrorPct = float64(rep.ErrorCount) * 100 / float64(rep.UniqueCNK)
 	}
-	sampleN := 20
-	if sampleN > len(out) {
-		sampleN = len(out)
-	}
+	sampleN := min(20, len(out))
 	for i := 0; i < sampleN; i++ {
 		if out[i].Status == "ready" {
 			rep.Sample = append(rep.Sample, out[i])

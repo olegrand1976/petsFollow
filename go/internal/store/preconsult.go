@@ -200,8 +200,8 @@ func IsPreconsultValidation(err error) (string, bool) {
 		return "", false
 	}
 	msg := err.Error()
-	if strings.HasPrefix(msg, "validation:") {
-		return strings.TrimPrefix(msg, "validation:"), true
+	if after, ok := strings.CutPrefix(msg, "validation:"); ok {
+		return after, true
 	}
 	return "", false
 }

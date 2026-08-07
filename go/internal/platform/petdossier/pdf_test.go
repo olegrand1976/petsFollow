@@ -9,7 +9,7 @@ import (
 
 func TestTimelineLineHasNoReportFields(t *testing.T) {
 	// Public dossier PDF must never grow hasReport / visitId on timeline rows.
-	rt := reflect.TypeOf(TimelineLine{})
+	rt := reflect.TypeFor[TimelineLine]()
 	if rt.NumField() != 3 {
 		t.Fatalf("TimelineLine fields want 3 (When/Title/Body), got %d", rt.NumField())
 	}
@@ -75,13 +75,6 @@ func TestBuildPDFAndZip(t *testing.T) {
 	if !bytes.HasPrefix(en, []byte("%PDF")) {
 		t.Fatal("en PDF magic")
 	}
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 // TestBuildPDFCyrillic couvre les locales cyrilliques : libellés uk/ru ET

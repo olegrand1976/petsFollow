@@ -236,13 +236,13 @@ func RunMassWithOptions(ctx context.Context, pool *pgxpool.Pool, opts MassOption
 		for j := 1; j <= opts.ClientsPerPractice; j++ {
 			clientIdx := (i-1)*opts.ClientsPerPractice + j
 			clientID, petIDs, err := insertMassClient(ctx, tx, massClientInsert{
-				index:       clientIdx,
-				email:       fmt.Sprintf("mass.client.%03d@petsfollow.test", clientIdx),
-				practiceID:  practiceID,
-				vetID:       vetID,
-				clientHash:  string(clientHash),
+				index:        clientIdx,
+				email:        fmt.Sprintf("mass.client.%03d@petsfollow.test", clientIdx),
+				practiceID:   practiceID,
+				vetID:        vetID,
+				clientHash:   string(clientHash),
 				linkPractice: true,
-				config:      massClientConfig(clientIdx),
+				config:       massClientConfig(clientIdx),
 			})
 			if err != nil {
 				return fmt.Errorf("mass client %d: %w", clientIdx, err)

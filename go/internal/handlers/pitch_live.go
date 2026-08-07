@@ -328,10 +328,7 @@ func mergeTranscriptChunk(current, incoming string) string {
 	if strings.HasPrefix(current, incoming) {
 		return current
 	}
-	max := len(current)
-	if len(incoming) < max {
-		max = len(incoming)
-	}
+	max := min(len(incoming), len(current))
 	for n := max; n > 0; n-- {
 		if strings.HasSuffix(current, incoming[:n]) {
 			return current + incoming[n:]

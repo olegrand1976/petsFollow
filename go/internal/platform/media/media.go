@@ -43,13 +43,13 @@ var allowedMessageMediaTypes = map[string]string{
 }
 
 var allowedPitchAudioTypes = map[string]string{
-	"audio/webm":       ".webm",
-	"audio/ogg":        ".ogg",
-	"audio/mpeg":       ".mp3",
-	"audio/mp4":        ".m4a",
-	"audio/wav":        ".wav",
-	"audio/x-wav":      ".wav",
-	"video/webm":       ".webm",
+	"audio/webm":  ".webm",
+	"audio/ogg":   ".ogg",
+	"audio/mpeg":  ".mp3",
+	"audio/mp4":   ".m4a",
+	"audio/wav":   ".wav",
+	"audio/x-wav": ".wav",
+	"video/webm":  ".webm",
 }
 
 var allowedDocumentTypes = map[string]string{
@@ -279,13 +279,12 @@ func ObjectKeyFromURL(cfg config.Config, raw string) string {
 	}
 	if cfg.GCSMediaBucket != "" {
 		prefix := fmt.Sprintf("https://storage.googleapis.com/%s/", cfg.GCSMediaBucket)
-		if strings.HasPrefix(raw, prefix) {
-			return strings.TrimPrefix(raw, prefix)
+		if after, ok := strings.CutPrefix(raw, prefix); ok {
+			return after
 		}
 	}
-	if i := strings.Index(raw, "/media/"); i >= 0 {
-		return raw[i+len("/media/"):]
+	if _, after, ok := strings.Cut(raw, "/media/"); ok {
+		return after
 	}
 	return ""
 }
-

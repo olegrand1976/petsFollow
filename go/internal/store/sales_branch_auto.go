@@ -129,7 +129,7 @@ func nextUniqueBranchCodeTx(ctx context.Context, tx pgx.Tx, codeBase string) (st
 	if codeBase == "" {
 		return "", ErrValidation
 	}
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		code := codeBase
 		if i > 0 {
 			code = fmt.Sprintf("%s%d", codeBase, i+1)
@@ -200,7 +200,7 @@ func (s *Store) EnsureAutoSalesBranchForUser(ctx context.Context, userID string)
 	}
 
 	var branch SalesBranch
-	for attempt := 0; attempt < 100; attempt++ {
+	for range 100 {
 		code, err := nextUniqueBranchCodeTx(ctx, tx, codeBase)
 		if err != nil {
 			return AutoBranchResult{}, err

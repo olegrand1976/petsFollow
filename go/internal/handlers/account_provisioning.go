@@ -30,16 +30,16 @@ type createClientReq struct {
 }
 
 type createVetAdminReq struct {
-	Email                 string `json:"email"`
-	Password              string `json:"password"`
-	FullName              string `json:"fullName"`
-	PracticeName          string `json:"practiceName"`
-	Phone                 string `json:"phone"`
-	City                  string `json:"city"`
-	PostalCode            string `json:"postalCode"`
-	AddressLine1          string `json:"addressLine1"`
-	ContactEmail          string `json:"contactEmail"`
-	AssignedCommercialID  string `json:"assignedCommercialId"`
+	Email                string `json:"email"`
+	Password             string `json:"password"`
+	FullName             string `json:"fullName"`
+	PracticeName         string `json:"practiceName"`
+	Phone                string `json:"phone"`
+	City                 string `json:"city"`
+	PostalCode           string `json:"postalCode"`
+	AddressLine1         string `json:"addressLine1"`
+	ContactEmail         string `json:"contactEmail"`
+	AssignedCommercialID string `json:"assignedCommercialId"`
 }
 
 func (a *API) createVetClient(w http.ResponseWriter, r *http.Request) {

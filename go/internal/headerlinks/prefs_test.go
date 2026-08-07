@@ -50,6 +50,41 @@ func TestNormalizeAndValidate_CustomHTTPSOnly(t *testing.T) {
 	}
 }
 
+// Go 1.26 a rendu net/url.Parse strict sur les colons dans le host, et le
+// GODEBUG urlstrictcolons=0 restaure l'ancien laxisme. Ces URLs de véto doivent
+// être refusées indépendamment de ce réglage : elles finissent en href dans le
+// header Pro, où un host ambigu est exploitable.
+func TestNormalizeAndValidate_RejectsAmbiguousHost(t *testing.T) {
+	rejected := []string{
+		"https://host:80:80/",
+		"https://::1/",
+		"https://exemple.be:notaport/",
+		"https://user:pass@exemple.be/",
+		"https:///path-sans-host",
+	}
+	for _, raw := range rejected {
+		t.Run(raw, func(t *testing.T) {
+			_, err := NormalizeAndValidate("BE", Prefs{
+				Custom: []CustomLink{{Label: "Lab", URL: raw}},
+			})
+			if err == nil || err.Error() != "invalid_custom_url" {
+				t.Fatalf("want invalid_custom_url for %q, got %v", raw, err)
+			}
+		})
+	}
+
+	// Une IPv6 entre crochets reste une URL légitime.
+	p, err := NormalizeAndValidate("BE", Prefs{
+		Custom: []CustomLink{{Label: "Lab", URL: "https://[::1]:8443/labo"}},
+	})
+	if err != nil {
+		t.Fatalf("bracketed IPv6 rejected: %v", err)
+	}
+	if len(p.Custom) != 1 || p.Custom[0].URL != "https://[::1]:8443/labo" {
+		t.Fatalf("custom %#v", p.Custom)
+	}
+}
+
 func TestNormalizeAndValidate_MaxCustom(t *testing.T) {
 	customs := make([]CustomLink, MaxCustomLinks+1)
 	for i := range customs {

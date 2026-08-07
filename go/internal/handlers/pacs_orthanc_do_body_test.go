@@ -22,10 +22,7 @@ func TestOrthancClientDoKeepsContextAliveUntilBodyClose(t *testing.T) {
 		flusher, _ := w.(http.Flusher)
 		const chunkSize = 4096
 		for off := 0; off < len(payload); off += chunkSize {
-			end := off + chunkSize
-			if end > len(payload) {
-				end = len(payload)
-			}
+			end := min(off+chunkSize, len(payload))
 			if _, err := w.Write([]byte(payload[off:end])); err != nil {
 				return
 			}

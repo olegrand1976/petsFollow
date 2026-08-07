@@ -130,7 +130,6 @@ func TestVisitReportSectionTitleMapsParity(t *testing.T) {
 		t.Fatalf("vet map size %d want %d", len(vetSectionsByLocale), len(visitReportSupportedLocales))
 	}
 	for _, loc := range visitReportSupportedLocales {
-		loc := loc
 		t.Run("vet/"+loc, func(t *testing.T) {
 			v, ok := vetSectionsByLocale[loc]
 			if !ok {
@@ -143,7 +142,6 @@ func TestVisitReportSectionTitleMapsParity(t *testing.T) {
 			}
 		})
 		for _, sm := range specialtyMaps {
-			sm := sm
 			t.Run(sm.name+"/"+loc, func(t *testing.T) {
 				titles, ok := sm.m[loc]
 				if !ok {

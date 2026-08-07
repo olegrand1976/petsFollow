@@ -70,7 +70,6 @@ func TestParseConsignesSuggestJSONFenced(t *testing.T) {
 	}
 }
 
-
 func TestParseConsignesSuggestJSONTruncatesMedFields(t *testing.T) {
 	long := strings.Repeat("x", 600)
 	raw := `{"medications":[{"name":"` + long + `","dosage":"` + long + `"}],"careAdvice":"ok","notes":""}`

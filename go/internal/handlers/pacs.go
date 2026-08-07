@@ -898,8 +898,7 @@ func (a *API) getPacsStudy(w http.ResponseWriter, r *http.Request) {
 	}
 	meta, err := client.getStudy(r.Context(), studyID)
 	if err != nil {
-		var se *orthancStatusError
-		if errors.As(err, &se) && se.Status == http.StatusNotFound {
+		if se, ok := errors.AsType[*orthancStatusError](err); ok && se.Status == http.StatusNotFound {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
@@ -1014,8 +1013,7 @@ func (a *API) getPacsInstanceMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 	tags, err := client.getInstanceSimplifiedTags(r.Context(), instanceID)
 	if err != nil {
-		var se *orthancStatusError
-		if errors.As(err, &se) && (se.Status == http.StatusNotFound || se.Status == http.StatusBadRequest) {
+		if se, ok := errors.AsType[*orthancStatusError](err); ok && (se.Status == http.StatusNotFound || se.Status == http.StatusBadRequest) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}

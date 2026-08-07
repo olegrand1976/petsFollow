@@ -17,7 +17,7 @@ const (
 )
 
 type ParsedSheet struct {
-	Format     string              // csv | xlsx
+	Format     string // csv | xlsx
 	Headers    []string
 	Rows       []map[string]string // header -> value
 	SampleRows []map[string]string
@@ -71,8 +71,8 @@ func parseCSV(data []byte) (*ParsedSheet, error) {
 
 func detectCSVSeparator(data []byte) rune {
 	line := data
-	if i := bytes.IndexByte(data, '\n'); i >= 0 {
-		line = data[:i]
+	if before, _, ok := bytes.Cut(data, []byte{'\n'}); ok {
+		line = before
 	}
 	semi := bytes.Count(line, []byte{';'})
 	comma := bytes.Count(line, []byte{','})
@@ -130,10 +130,7 @@ func sheetFromRecords(records [][]string, format string) (*ParsedSheet, error) {
 	if len(out) == 0 {
 		return nil, fmt.Errorf("no_data_rows")
 	}
-	sampleN := SampleRows
-	if sampleN > len(out) {
-		sampleN = len(out)
-	}
+	sampleN := min(SampleRows, len(out))
 	return &ParsedSheet{
 		Format:     format,
 		Headers:    headers,

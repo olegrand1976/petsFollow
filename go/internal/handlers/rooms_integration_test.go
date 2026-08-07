@@ -106,7 +106,7 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	if code != http.StatusOK && code != http.StatusCreated {
 		// Slot may collide with seed — try +1h a few times
 		ok := false
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			start = start.Add(time.Hour)
 			body["scheduledAt"] = start.Format(time.RFC3339)
 			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
@@ -183,7 +183,7 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	})
 	if code != http.StatusOK && code != http.StatusCreated {
 		ok := false
-		for i := 0; i < 6; i++ {
+		for range 6 {
 			unassignedStart = unassignedStart.Add(time.Hour)
 			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
 				"scheduledAt":     unassignedStart.Format(time.RFC3339),
@@ -286,7 +286,7 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	})
 	if code != http.StatusOK && code != http.StatusCreated {
 		ok := false
-		for i := 0; i < 6; i++ {
+		for range 6 {
 			parallelSlot = parallelSlot.Add(time.Hour)
 			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
 				"scheduledAt":     parallelSlot.Format(time.RFC3339),
@@ -304,7 +304,7 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 		}
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
-		"action":             "reschedule_direct",
+		"action":              "reschedule_direct",
 		"proposedScheduledAt": parallelSlot.Format(time.RFC3339),
 	})
 	if code != http.StatusOK {

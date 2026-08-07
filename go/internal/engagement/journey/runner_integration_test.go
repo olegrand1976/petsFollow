@@ -18,8 +18,8 @@ import (
 )
 
 type mockMailer struct {
-	mu    sync.Mutex
-	byTo  map[string][]string // email → step keys
+	mu   sync.Mutex
+	byTo map[string][]string // email → step keys
 }
 
 func (m *mockMailer) SendJourneyStep(to, _, _, stepKey, _, _ string, _ map[string]string) error {
@@ -46,10 +46,10 @@ func (m *mockMailer) countTo(to, step string) int {
 
 func loadDotEnv() {
 	dir, _ := os.Getwd()
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		envPath := filepath.Join(dir, ".env")
 		if data, err := os.ReadFile(envPath); err == nil {
-			for _, line := range strings.Split(string(data), "\n") {
+			for line := range strings.SplitSeq(string(data), "\n") {
 				line = strings.TrimSpace(line)
 				if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
 					continue

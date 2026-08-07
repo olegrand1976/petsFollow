@@ -30,10 +30,10 @@ const (
 
 // Soft limits for draft payloads (anti-abuse).
 const (
-	MaxMedications      = 50
-	MaxNotesRunes       = 4000
-	MaxCareAdviceRunes  = 4000
-	MaxMedFieldRunes    = 500
+	MaxMedications     = 50
+	MaxNotesRunes      = 4000
+	MaxCareAdviceRunes = 4000
+	MaxMedFieldRunes   = 500
 )
 
 // Medication is one line in the prescriptions.medications JSONB array.

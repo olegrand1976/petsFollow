@@ -90,10 +90,10 @@ func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword,
 // ClientAccountArtifacts — références externes à purger après l'effacement DB (RGPD art. 17) :
 // objets média (avatar, photos, documents, médias messages, audio CR) et abonnements Stripe.
 type ClientAccountArtifacts struct {
-	MediaURLs        []string
-	MediaObjectKeys  []string
-	SubscriptionIDs  []string
-	OrthancStudyIDs  []string
+	MediaURLs       []string
+	MediaObjectKeys []string
+	SubscriptionIDs []string
+	OrthancStudyIDs []string
 }
 
 func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string) (ClientAccountArtifacts, error) {

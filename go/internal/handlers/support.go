@@ -49,8 +49,7 @@ func (a *API) createSupportTicket(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxSupportTicketBodyBytes)
 	var req createSupportTicketReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		var maxErr *http.MaxBytesError
-		if errors.As(err, &maxErr) || strings.Contains(err.Error(), "http: request body too large") {
+		if _, ok := errors.AsType[*http.MaxBytesError](err); ok || strings.Contains(err.Error(), "http: request body too large") {
 			writeErr(w, r, http.StatusRequestEntityTooLarge, "payload_too_large", "payload_too_large")
 			return
 		}

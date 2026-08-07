@@ -130,7 +130,7 @@ func TestVisitOverlapIsPerSite(t *testing.T) {
 	// Far-future slots with retry — unassigned queue conflicts with seed/other tests.
 	base := time.Now().UTC().Add(90 * 24 * time.Hour).Truncate(time.Hour)
 	var visitAID, visitBID string
-	for i := 0; i < 24; i++ {
+	for i := range 24 {
 		slot := base.Add(time.Duration(i) * time.Hour)
 		body := map[string]any{
 			"confirmDirect":   true,

@@ -260,11 +260,11 @@ func TestClientIdentityCreateWithoutPasswordAndPatch(t *testing.T) {
 	email := fmt.Sprintf("client.identity.%s@petsfollow.test", uuid.NewString()[:8])
 
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
-		"email": email,
-		"firstName": "Alice",
-		"lastName": "Dupont",
-		"contactPhone": "0470 55 66 77",
-		"address": "12 rue des Lilas, 1000 Bruxelles",
+		"email":                  email,
+		"firstName":              "Alice",
+		"lastName":               "Dupont",
+		"contactPhone":           "0470 55 66 77",
+		"address":                "12 rue des Lilas, 1000 Bruxelles",
 		"nationalRegistryNumber": "85.07.30-123.45",
 	})
 	if code != http.StatusCreated {
@@ -297,11 +297,11 @@ func TestClientIdentityCreateWithoutPasswordAndPatch(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
-		"firstName": "Alicia",
-		"lastName": "Martin",
-		"address": "1 av. Louise",
+		"firstName":              "Alicia",
+		"lastName":               "Martin",
+		"address":                "1 av. Louise",
 		"nationalRegistryNumber": "90010112345",
-		"contactPhone": "0499 11 22 33",
+		"contactPhone":           "0499 11 22 33",
 	})
 	if code != http.StatusOK {
 		t.Fatalf("patch identity %d %#v", code, env)
@@ -315,9 +315,9 @@ func TestClientIdentityCreateWithoutPasswordAndPatch(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
-		"email": fmt.Sprintf("client.badniss.%s@petsfollow.test", uuid.NewString()[:8]),
-		"firstName": "Bad",
-		"lastName": "Niss",
+		"email":                  fmt.Sprintf("client.badniss.%s@petsfollow.test", uuid.NewString()[:8]),
+		"firstName":              "Bad",
+		"lastName":               "Niss",
 		"nationalRegistryNumber": "abc",
 	})
 	if code != http.StatusBadRequest || errorMsgKey(env) != "national_registry_invalid" {
@@ -332,16 +332,16 @@ func TestClientBillingPatchAndExport(t *testing.T) {
 	password := "ClientDemo123!"
 
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
-		"email":                  email,
-		"password":               password,
-		"firstName":              "Billie",
-		"lastName":               "Ng",
-		"billingVatNumber":       "BE1000000021",
-		"billingCompanyNumber":   "1000000021",
-		"billingStreet":          "1 rue Peppol",
-		"billingCity":            "Liège",
-		"billingPostal":          "4000",
-		"billingCountry":         "be",
+		"email":                email,
+		"password":             password,
+		"firstName":            "Billie",
+		"lastName":             "Ng",
+		"billingVatNumber":     "BE1000000021",
+		"billingCompanyNumber": "1000000021",
+		"billingStreet":        "1 rue Peppol",
+		"billingCity":          "Liège",
+		"billingPostal":        "4000",
+		"billingCountry":       "be",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create with billing %d %#v", code, env)

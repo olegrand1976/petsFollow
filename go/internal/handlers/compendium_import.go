@@ -281,10 +281,7 @@ func (a *API) runCompendiumExtract(jobID string) {
 	}
 	// Budget: media HTTP timeout is 5 min/chunk — keep headroom for trim + CNK match + persist.
 	// Max UI range is 200 pages → ≤34 chunks → ~3 h worst case.
-	timeout := 10*time.Minute + time.Duration(len(chunks))*5*time.Minute
-	if timeout > 3*time.Hour {
-		timeout = 3 * time.Hour
-	}
+	timeout := min(10*time.Minute+time.Duration(len(chunks))*5*time.Minute, 3*time.Hour)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	// Persist failure even if the run ctx already timed out / cancelled.

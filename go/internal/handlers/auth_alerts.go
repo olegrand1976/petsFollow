@@ -97,7 +97,7 @@ func (a *API) notifyAuthAlert(ctx context.Context, kind, fingerprint, detail str
 	diag, _ := json.Marshal(map[string]any{
 		"kind":        kind,
 		"fingerprint": fingerprint,
-		"severity":     "ALERT/URGENT",
+		"severity":    "ALERT/URGENT",
 	})
 
 	ticket, err := a.store.CreateSupportTicket(ctx, store.CreateSupportTicketInput{

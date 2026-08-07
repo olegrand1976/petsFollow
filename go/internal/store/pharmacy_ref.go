@@ -15,21 +15,21 @@ import (
 
 // RefMedication is a national dictionary entry (CNK / AFMPS).
 type RefMedication struct {
-	ID                  string          `json:"id"`
-	CNK                 string          `json:"cnk"`
-	Name                string          `json:"name"`
-	ATCCode             string          `json:"atcCode,omitempty"`
-	PharmaceuticalForm  string          `json:"pharmaceuticalForm,omitempty"`
-	PackSize            string          `json:"packSize,omitempty"`
-	AMMNumber           string          `json:"ammNumber,omitempty"`
-	IsAntibiotic        bool            `json:"isAntibiotic"`
-	IsActive            bool            `json:"isActive"`
-	WithdrawalMeatDays  *int            `json:"withdrawalMeatDays,omitempty"`
-	WithdrawalMilkDays  *int            `json:"withdrawalMilkDays,omitempty"`
-	WithdrawalEggsDays  *int            `json:"withdrawalEggsDays,omitempty"`
-	FoodChainBanned     bool            `json:"foodChainBanned,omitempty"`
-	AFMPSMeta           json.RawMessage `json:"afmpsMeta,omitempty"`
-	UpdatedAt           string          `json:"updatedAt,omitempty"`
+	ID                 string          `json:"id"`
+	CNK                string          `json:"cnk"`
+	Name               string          `json:"name"`
+	ATCCode            string          `json:"atcCode,omitempty"`
+	PharmaceuticalForm string          `json:"pharmaceuticalForm,omitempty"`
+	PackSize           string          `json:"packSize,omitempty"`
+	AMMNumber          string          `json:"ammNumber,omitempty"`
+	IsAntibiotic       bool            `json:"isAntibiotic"`
+	IsActive           bool            `json:"isActive"`
+	WithdrawalMeatDays *int            `json:"withdrawalMeatDays,omitempty"`
+	WithdrawalMilkDays *int            `json:"withdrawalMilkDays,omitempty"`
+	WithdrawalEggsDays *int            `json:"withdrawalEggsDays,omitempty"`
+	FoodChainBanned    bool            `json:"foodChainBanned,omitempty"`
+	AFMPSMeta          json.RawMessage `json:"afmpsMeta,omitempty"`
+	UpdatedAt          string          `json:"updatedAt,omitempty"`
 }
 
 // RefMedicationUpsert is one row for ImportCNK / UpsertRefMedication.

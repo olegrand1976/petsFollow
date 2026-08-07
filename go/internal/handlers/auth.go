@@ -5,20 +5,21 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/go-chi/chi/v5"
-	"github.com/pquerna/otp/totp"
-	"github.com/skip2/go-qrcode"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
+	"github.com/pquerna/otp/totp"
+	"github.com/skip2/go-qrcode"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 func (a *API) registerAuthRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
@@ -210,10 +211,10 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 }
 
 var (
-	errGoogleProOnly          = errors.New("google pro only")
-	errGoogleClientOnly       = errors.New("google client only")
-	errGoogleAccountMismatch  = errors.New("google account mismatch")
-	errGoogleConsentRequired  = errors.New("google consent required")
+	errGoogleProOnly         = errors.New("google pro only")
+	errGoogleClientOnly      = errors.New("google client only")
+	errGoogleAccountMismatch = errors.New("google account mismatch")
+	errGoogleConsentRequired = errors.New("google consent required")
 )
 
 func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
@@ -268,9 +269,7 @@ func (a *API) issueLoginResponseWithExtra(w http.ResponseWriter, r *http.Request
 			"mfaToken":    mfa.MFAToken,
 			"expiresIn":   mfa.ExpiresIn,
 		}
-		for k, v := range extra {
-			out[k] = v
-		}
+		maps.Copy(out, extra)
 		httpx.WriteData(w, http.StatusOK, out)
 		return
 	}
@@ -289,9 +288,7 @@ func (a *API) issueLoginResponseWithExtra(w http.ResponseWriter, r *http.Request
 		"refreshToken": pair.RefreshToken,
 		"expiresIn":    pair.ExpiresIn,
 	}
-	for k, v := range extra {
-		out[k] = v
-	}
+	maps.Copy(out, extra)
 	httpx.WriteData(w, http.StatusOK, out)
 }
 
@@ -420,8 +417,8 @@ func (a *API) twoFactorSetup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"secret":       key.Secret(),
-		"otpauthUrl":   key.URL(),
+		"secret":        key.Secret(),
+		"otpauthUrl":    key.URL(),
 		"qrCodeDataUrl": "data:image/png;base64," + base64.StdEncoding.EncodeToString(png),
 	})
 }

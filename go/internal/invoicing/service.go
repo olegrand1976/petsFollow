@@ -672,10 +672,10 @@ func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error
 }
 
 const (
-	defaultSaasCronLimit   = 50
-	maxSaasCronLimit       = 100
-	maxSaasCronErrors      = 20
-	maxSaasCronBatches     = 40 // 40×50 = 2000 practices max per cron call
+	defaultSaasCronLimit = 50
+	maxSaasCronLimit     = 100
+	maxSaasCronErrors    = 20
+	maxSaasCronBatches   = 40 // 40×50 = 2000 practices max per cron call
 )
 
 func (s *Service) saasAllowlist() []string {
@@ -765,7 +765,7 @@ func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int, a
 	}
 
 	off := offset
-	for i := 0; i < maxSaasCronBatches; i++ {
+	for range maxSaasCronBatches {
 		batch, err := runBatch(off)
 		if err != nil {
 			return out, err
@@ -938,7 +938,7 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 	}
 	if !claimed {
 		// Another request holds creating_order — wait briefly for billit_order_id.
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			d, err := s.store.GetDocument(ctx, practiceID, saved.ID)
 			if err != nil {
 				return Document{}, err
@@ -1047,7 +1047,7 @@ func (s *Service) ensureSaasBillitOrder(ctx context.Context, practiceID, docID, 
 		return err
 	}
 	if !claimed {
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			d, err := s.store.GetDocument(ctx, practiceID, docID)
 			if err != nil {
 				return err

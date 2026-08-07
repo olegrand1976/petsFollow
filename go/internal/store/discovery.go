@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -48,10 +49,8 @@ func (s *Store) CompleteDiscoveryCard(ctx context.Context, userID, cardKey strin
 	if err != nil {
 		return DiscoveryProgress{}, err
 	}
-	for _, c := range existing.CompletedCards {
-		if c == cardKey {
-			return existing, nil
-		}
+	if slices.Contains(existing.CompletedCards, cardKey) {
+		return existing, nil
 	}
 	existing.CompletedCards = append(existing.CompletedCards, cardKey)
 	cardsJSON, err := json.Marshal(existing.CompletedCards)

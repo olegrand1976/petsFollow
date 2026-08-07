@@ -24,7 +24,7 @@ type PharmacySettings struct {
 	ExpiryDigestEnabled     bool      `json:"expiryDigestEnabled"`
 	ExpiryDigestWeekday     int       `json:"expiryDigestWeekday"`
 	NotifyOnAutoQuarantine  bool      `json:"notifyOnAutoQuarantine"`
-	UpdatedAt               time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt               time.Time `json:"updatedAt"`
 }
 
 type MedicationDeposit struct {
@@ -36,23 +36,23 @@ type MedicationDeposit struct {
 }
 
 type MedicationBatch struct {
-	ID                 string     `json:"id"`
-	PracticeID         string     `json:"practiceId"`
-	DepositID          string     `json:"depositId"`
-	DepositCode        string     `json:"depositCode,omitempty"`
-	DepositName        string     `json:"depositName,omitempty"`
-	MedicationID       string     `json:"medicationId"`
-	MedicationCNK      string     `json:"medicationCnk,omitempty"`
-	MedicationName     string     `json:"medicationName,omitempty"`
-	LotNumber          string     `json:"lotNumber"`
-	ExpiresOn          string     `json:"expiresOn"` // YYYY-MM-DD
-	QtyOnHand          float64    `json:"qtyOnHand"`
-	Unit               string     `json:"unit"`
-	Status             string     `json:"status"`
-	ExpiryBand         string     `json:"expiryBand,omitempty"`
-	IsAntibiotic       bool       `json:"isAntibiotic,omitempty"`
-	QuarantineReason   string     `json:"quarantineReason,omitempty"`
-	WasteReason        string     `json:"wasteReason,omitempty"`
+	ID               string  `json:"id"`
+	PracticeID       string  `json:"practiceId"`
+	DepositID        string  `json:"depositId"`
+	DepositCode      string  `json:"depositCode,omitempty"`
+	DepositName      string  `json:"depositName,omitempty"`
+	MedicationID     string  `json:"medicationId"`
+	MedicationCNK    string  `json:"medicationCnk,omitempty"`
+	MedicationName   string  `json:"medicationName,omitempty"`
+	LotNumber        string  `json:"lotNumber"`
+	ExpiresOn        string  `json:"expiresOn"` // YYYY-MM-DD
+	QtyOnHand        float64 `json:"qtyOnHand"`
+	Unit             string  `json:"unit"`
+	Status           string  `json:"status"`
+	ExpiryBand       string  `json:"expiryBand,omitempty"`
+	IsAntibiotic     bool    `json:"isAntibiotic,omitempty"`
+	QuarantineReason string  `json:"quarantineReason,omitempty"`
+	WasteReason      string  `json:"wasteReason,omitempty"`
 }
 
 type StockMovement struct {

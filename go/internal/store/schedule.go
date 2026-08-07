@@ -15,7 +15,7 @@ const defaultScheduleTZ = "Europe/Brussels"
 
 type ScheduleSlot struct {
 	ID        string `json:"id,omitempty"`
-	Weekday   int    `json:"weekday"` // 0=Sunday … 6=Saturday (Go time.Weekday)
+	Weekday   int    `json:"weekday"`   // 0=Sunday … 6=Saturday (Go time.Weekday)
 	StartTime string `json:"startTime"` // HH:MM
 	EndTime   string `json:"endTime"`   // HH:MM
 }

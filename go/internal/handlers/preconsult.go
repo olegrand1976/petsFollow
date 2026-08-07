@@ -153,8 +153,8 @@ func (a *API) getPublicBrandAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"qrAndroid": brandAssetPublicDTO(android),
-		"qrIos":     brandAssetPublicDTO(ios),
+		"qrAndroid":   brandAssetPublicDTO(android),
+		"qrIos":       brandAssetPublicDTO(ios),
 		"downloadUrl": strings.TrimSpace(a.cfg.PetsAppDownloadURL),
 	})
 }
@@ -256,7 +256,7 @@ func (a *API) postPublicPreconsult(w http.ResponseWriter, r *http.Request) {
 	a.enrichPublicPreconsultLinks(r.Context(), &ctxData)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"intake":        in,
+		"intake":       in,
 		"petName":      ctxData.PetName,
 		"practiceName": ctxData.PracticeName,
 		"inviteUrl":    ctxData.InviteURL,

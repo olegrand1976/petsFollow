@@ -48,7 +48,7 @@ func TestSecretaryDeskVisitNotesAndRescheduleDirect(t *testing.T) {
 	}
 
 	var moved bool
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		next := time.Now().UTC().Add(time.Duration(50+i*3)*time.Hour + 17*time.Minute).Truncate(time.Minute).Format(time.RFC3339)
 		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, secTok, map[string]any{
 			"action":              "reschedule_direct",

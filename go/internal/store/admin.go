@@ -36,18 +36,18 @@ type AdminUserRow struct {
 }
 
 type AdminPaymentRow struct {
-	ID                string     `json:"id"`
-	CreatedAt         time.Time  `json:"createdAt"`
-	ClientEmail       string     `json:"clientEmail"`
-	ClientName        string     `json:"clientName"`
-	PetName           string     `json:"petName"`
-	PlanCode          string     `json:"planCode"`
-	BillingMode       string     `json:"billingMode"`
-	AmountCents       int        `json:"amountCents"`
-	Status            string     `json:"status"`
-	StripeSessionID   string     `json:"stripeSessionId,omitempty"`
-	StripeSubID       string     `json:"stripeSubscriptionId,omitempty"`
-	ValidUntil        *time.Time `json:"validUntil,omitempty"`
+	ID              string     `json:"id"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	ClientEmail     string     `json:"clientEmail"`
+	ClientName      string     `json:"clientName"`
+	PetName         string     `json:"petName"`
+	PlanCode        string     `json:"planCode"`
+	BillingMode     string     `json:"billingMode"`
+	AmountCents     int        `json:"amountCents"`
+	Status          string     `json:"status"`
+	StripeSessionID string     `json:"stripeSessionId,omitempty"`
+	StripeSubID     string     `json:"stripeSubscriptionId,omitempty"`
+	ValidUntil      *time.Time `json:"validUntil,omitempty"`
 }
 
 func (s *Store) AdminMetricsOverview(ctx context.Context, from, to time.Time) (AdminMetrics, error) {

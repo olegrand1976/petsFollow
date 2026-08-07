@@ -378,7 +378,7 @@ func TestFinalizeBookedVisitAutoDoneForClientTimeline(t *testing.T) {
 	petID, _ := pets[0].(map[string]any)["id"].(string)
 	// Booked visit (not walk-in): historically stayed confirmed after finalize.
 	var visitID string
-	for attempt := 0; attempt < 4; attempt++ {
+	for attempt := range 4 {
 		slot := time.Now().UTC().Add(-2*time.Hour - time.Duration(attempt)*time.Hour).Truncate(time.Minute).Format(time.RFC3339)
 		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
 			"scheduledAt":     slot,
@@ -912,4 +912,3 @@ func TestVisitReportAudioForbiddenForSecretary(t *testing.T) {
 		t.Fatalf("secretary audio want 403 got %d %#v", code, env)
 	}
 }
-

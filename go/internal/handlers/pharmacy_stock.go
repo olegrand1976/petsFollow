@@ -482,10 +482,10 @@ func (a *API) internalPharmacyExpiryRun(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"practices":         len(practices),
+		"practices":          len(practices),
 		"quarantinedBatches": quarantinedTotal,
-		"notifyEmails":      notifySent,
-		"digestEmails":      digestsSent,
+		"notifyEmails":       notifySent,
+		"digestEmails":       digestsSent,
 	})
 }
 

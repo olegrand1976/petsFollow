@@ -350,7 +350,7 @@ func TestCommercialDirectoryProspectsPagination(t *testing.T) {
 	commTok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
 
 	marker := "BCE-DIR-" + uuid.NewString()[:8]
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		_, err := api.pool.Exec(ctx, `
 			INSERT INTO sales.prospects (
 				id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone,
@@ -542,7 +542,7 @@ func TestCommercialBonusMixAndMarkPaid(t *testing.T) {
 
 	now := time.Now().UTC()
 	until := now.Add(1095 * 24 * time.Hour)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		petID := uuid.NewString()
 		if _, err := api.pool.Exec(ctx, `
 			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, payment_status)

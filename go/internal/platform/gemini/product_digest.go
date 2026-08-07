@@ -17,10 +17,10 @@ type ProductDigestCommit struct {
 
 // ProductDigestSummary is the multilingual functional summary produced by Gemini.
 type ProductDigestSummary struct {
-	Empty    bool                       `json:"empty"`
-	Headline map[string]string          `json:"headline"` // fr/en/nl/es/et/it/uk/ru
-	Body     map[string]string          `json:"body"`     // plain-text bullets per locale
-	Reason   string                     `json:"reason,omitempty"`
+	Empty    bool              `json:"empty"`
+	Headline map[string]string `json:"headline"` // fr/en/nl/es/et/it/uk/ru
+	Body     map[string]string `json:"body"`     // plain-text bullets per locale
+	Reason   string            `json:"reason,omitempty"`
 }
 
 const productDigestSystem = `Tu es le rédacteur produit de petsFollow (continuité de soins vétérinaire ; relevé respiratoire = feature ; faces Pro Nuxt + Pro Light + app pets Flutter + API).

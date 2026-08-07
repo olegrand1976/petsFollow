@@ -639,7 +639,7 @@ func (s *Store) commercialBonusProgress(ctx context.Context, commercialUserID, m
 
 func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred string) (string, error) {
 	period := preferred
-	for i := 0; i < 24; i++ {
+	for range 24 {
 		var status string
 		err := s.pool.QueryRow(ctx, `SELECT status FROM billing.commercial_payout_runs WHERE period_ym=$1`, period).Scan(&status)
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -664,7 +664,7 @@ func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred str
 // Callers must hold tx until ledger insert commits so close cannot race mid-accrual.
 func (s *Store) lockOpenCommercialPeriodYM(ctx context.Context, tx pgx.Tx, preferred string) (string, error) {
 	period := preferred
-	for i := 0; i < 24; i++ {
+	for range 24 {
 		var status string
 		err := tx.QueryRow(ctx, `
 			SELECT status FROM billing.commercial_payout_runs WHERE period_ym=$1 FOR UPDATE`, period).Scan(&status)

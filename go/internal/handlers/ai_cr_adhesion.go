@@ -166,10 +166,7 @@ func (a *API) aiCrAdhesionVars(ctx context.Context, c store.AiCrAdhesionCandidat
 	tr, _ := a.store.CountAiCrEvents(ctx, c.PracticeID, store.AiCrUsageTranscribe, c.ActivatedAt)
 	im, _ := a.store.CountAiCrEvents(ctx, c.PracticeID, store.AiCrUsageImprove, c.ActivatedAt)
 	fi, _ := a.store.CountAiCrEvents(ctx, c.PracticeID, store.AiCrUsageFinalize, c.ActivatedAt)
-	left := int(time.Until(c.TrialEndsAt).Hours() / 24)
-	if left < 0 {
-		left = 0
-	}
+	left := max(int(time.Until(c.TrialEndsAt).Hours()/24), 0)
 	vars := map[string]string{
 		"practiceName": c.PracticeName,
 		"days":         fmt.Sprintf("%d", days),

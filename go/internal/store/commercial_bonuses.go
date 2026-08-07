@@ -391,7 +391,7 @@ func (s *Store) commercialBonusTrend(
 ) ([]CommercialBonusTrendPoint, error) {
 	periods := make([]string, 0, months)
 	p := endPeriod
-	for i := 0; i < months; i++ {
+	for range months {
 		periods = append(periods, p)
 		prev, err := PrevPeriodYM(p)
 		if err != nil {
@@ -465,7 +465,7 @@ func (s *Store) commercialBonusPeriodOptions(ctx context.Context, current string
 	}
 	// Always offer a rolling 12-month window ending at current.
 	p := current
-	for i := 0; i < 12; i++ {
+	for range 12 {
 		seen[p] = struct{}{}
 		prev, err := PrevPeriodYM(p)
 		if err != nil {

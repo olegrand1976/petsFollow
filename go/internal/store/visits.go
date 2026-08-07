@@ -13,14 +13,14 @@ import (
 )
 
 type Visit struct {
-	ID                  string     `json:"id"`
-	PetID               string     `json:"petId"`
-	PracticeID          string     `json:"practiceId"`
-	SiteID              string     `json:"siteId,omitempty"`
-	SiteName            string     `json:"siteName,omitempty"`
-	ScheduledAt         *time.Time `json:"scheduledAt,omitempty"`
-	Status              string     `json:"status"`
-	Notes               string     `json:"notes"`
+	ID          string     `json:"id"`
+	PetID       string     `json:"petId"`
+	PracticeID  string     `json:"practiceId"`
+	SiteID      string     `json:"siteId,omitempty"`
+	SiteName    string     `json:"siteName,omitempty"`
+	ScheduledAt *time.Time `json:"scheduledAt,omitempty"`
+	Status      string     `json:"status"`
+	Notes       string     `json:"notes"`
 	// CallbackPhone: temporary contact for walk-in / Nouveau client bookings (not on the immutable slot user).
 	CallbackPhone       string     `json:"callbackPhone,omitempty"`
 	Source              string     `json:"source"`
@@ -64,17 +64,17 @@ type Visit struct {
 }
 
 type CreateVisitInput struct {
-	PetID             string
-	PracticeID        string
-	SiteID            string // empty → primary site
-	Source            string // client | vet | care_pro
-	Notes             string
-	CallbackPhone     string // required when pet is walk-in placeholder
-	ScheduledAt       *time.Time
-	DurationMinutes   *int
-	VisitTypeID       *string
-	AssigneeUserID    string // optional staff user id
-	RoomID            string // optional room under site
+	PetID           string
+	PracticeID      string
+	SiteID          string // empty → primary site
+	Source          string // client | vet | care_pro
+	Notes           string
+	CallbackPhone   string // required when pet is walk-in placeholder
+	ScheduledAt     *time.Time
+	DurationMinutes *int
+	VisitTypeID     *string
+	AssigneeUserID  string // optional staff user id
+	RoomID          string // optional room under site
 	// ConfirmDirect: vet/care_pro creates already confirmed (skip client approval).
 	ConfirmDirect bool
 	// RequestPreconsult: when confirmed, send public preconsult questionnaire.
@@ -159,10 +159,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 	if limit <= 0 || limit > 200 {
 		limit = 200
 	}
-	offset := f.Offset
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(f.Offset, 0)
 
 	args := []any{practiceID}
 	where := []string{

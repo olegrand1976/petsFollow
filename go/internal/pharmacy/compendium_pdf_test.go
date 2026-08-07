@@ -77,7 +77,7 @@ func TestRemapSourcePages(t *testing.T) {
 func buildMultipagePDF(t *testing.T, pages int) []byte {
 	t.Helper()
 	pdf := gofpdf.New("P", "mm", "A4", "")
-	for i := 0; i < pages; i++ {
+	for i := range pages {
 		pdf.AddPage()
 		pdf.SetFont("Arial", "", 12)
 		pdf.Cell(40, 10, fmt.Sprintf("Page %d", i+1))

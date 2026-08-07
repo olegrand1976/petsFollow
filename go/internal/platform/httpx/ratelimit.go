@@ -61,10 +61,12 @@ func (rl *RateLimiter) Allow(key string) bool {
 	return rl.allow(key)
 }
 
-// Middleware limite par IP (middleware.RealIP est appliqué en amont sur le routeur de base).
+// Middleware limite par IP appelante de confiance (cf. ClientIP) : la clé ne doit
+// pas dépendre d'un en-tête que l'appelant choisit, sinon le quota se contourne
+// en faisant tourner X-Forwarded-For à chaque requête.
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !rl.allow(r.RemoteAddr) {
+		if !rl.allow(ClientIP(r)) {
 			WriteError(w, http.StatusTooManyRequests, "rate_limited", "too many requests")
 			return
 		}

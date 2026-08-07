@@ -40,14 +40,14 @@ type SiteSummary struct {
 }
 
 type CreateSiteInput struct {
-	Name         string
-	Phone        string
-	AddressLine1 string
-	AddressLine2 string
-	City         string
-	PostalCode   string
-	CountryCode  string
-	Timezone     string
+	Name                   string
+	Phone                  string
+	AddressLine1           string
+	AddressLine2           string
+	City                   string
+	PostalCode             string
+	CountryCode            string
+	Timezone               string
 	CopyScheduleFromSiteID string // optional template; empty = empty schedule
 }
 
@@ -387,7 +387,7 @@ func copyScheduleSlotsTx(ctx context.Context, tx pgx.Tx, practiceID, fromSiteID,
 		return err
 	}
 	type slotRow struct {
-		wd       int
+		wd         int
 		start, end string
 	}
 	var slots []slotRow

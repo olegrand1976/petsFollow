@@ -26,18 +26,18 @@ type UnassignedVetRow struct {
 
 // CommercialSuggestion is a scored commercial candidate for assigning a vet.
 type CommercialSuggestion struct {
-	UserID       string   `json:"userId"`
-	FullName     string   `json:"fullName"`
-	Email        string   `json:"email"`
-	City         string   `json:"city,omitempty"`
-	PostalCode   string   `json:"postalCode,omitempty"`
-	Score        int      `json:"score"`
-	ZoneScore    int      `json:"zoneScore"`
-	ActivityScore int     `json:"activityScore"`
-	Reasons      []string `json:"reasons"`
-	Note         string   `json:"note"`
-	DistanceKm   *float64 `json:"distanceKm,omitempty"`
-	AssignedVets int      `json:"assignedVets"`
+	UserID        string   `json:"userId"`
+	FullName      string   `json:"fullName"`
+	Email         string   `json:"email"`
+	City          string   `json:"city,omitempty"`
+	PostalCode    string   `json:"postalCode,omitempty"`
+	Score         int      `json:"score"`
+	ZoneScore     int      `json:"zoneScore"`
+	ActivityScore int      `json:"activityScore"`
+	Reasons       []string `json:"reasons"`
+	Note          string   `json:"note"`
+	DistanceKm    *float64 `json:"distanceKm,omitempty"`
+	AssignedVets  int      `json:"assignedVets"`
 }
 
 // ListUnassignedVets returns vets with no assigned commercial.
@@ -93,17 +93,17 @@ func (s *Store) UnassignVetFromCommercial(ctx context.Context, vetUserID string)
 }
 
 type commercialScoreSeed struct {
-	UserID         string
-	FullName       string
-	Email          string
-	City           string
-	PostalCode     string
-	BaseLat        *float64
-	BaseLng        *float64
-	LastLoginAt    *time.Time
-	AssignedVets   int
-	Contacts30d    int
-	StaleCount     int
+	UserID       string
+	FullName     string
+	Email        string
+	City         string
+	PostalCode   string
+	BaseLat      *float64
+	BaseLng      *float64
+	LastLoginAt  *time.Time
+	AssignedVets int
+	Contacts30d  int
+	StaleCount   int
 }
 
 // SuggestCommercialsForVet returns top 5 commercials by deterministic zone+activity score.
@@ -235,26 +235,17 @@ func scoreCommercialForVet(c commercialScoreSeed, vetDigits, vetPrefix string, p
 			reasons = append(reasons, "login_month")
 		}
 	}
-	contactPts := c.Contacts30d * 3
-	if contactPts > 15 {
-		contactPts = 15
-	}
+	contactPts := min(c.Contacts30d*3, 15)
 	if contactPts > 0 {
 		activity += contactPts
 		reasons = append(reasons, "contacts_30d")
 	}
-	stalePts := 15 - c.StaleCount*3
-	if stalePts < 0 {
-		stalePts = 0
-	}
+	stalePts := max(15-c.StaleCount*3, 0)
 	if c.StaleCount == 0 {
 		reasons = append(reasons, "low_stale")
 	}
 	activity += stalePts
-	loadPenalty := c.AssignedVets * 2
-	if loadPenalty > 10 {
-		loadPenalty = 10
-	}
+	loadPenalty := min(c.AssignedVets*2, 10)
 	activity -= loadPenalty
 	if loadPenalty == 0 {
 		reasons = append(reasons, "load_light")

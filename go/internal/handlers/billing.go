@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"io"
@@ -230,9 +231,18 @@ func (a *API) getPetEntitlement(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, ent)
 }
 
+// maxStripeWebhookBytes — un event Stripe pèse quelques Ko ; la borne évite
+// qu'un POST anonyme sur cet endpoint public fasse gonfler le tas.
+const maxStripeWebhookBytes = 1 << 20
+
 func (a *API) stripeWebhook(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxStripeWebhookBytes)
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
+		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+			writeErr(w, r, http.StatusRequestEntityTooLarge, "bad_request", "payload_too_large")
+			return
+		}
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_body")
 		return
 	}

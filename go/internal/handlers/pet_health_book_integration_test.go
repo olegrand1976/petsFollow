@@ -20,8 +20,8 @@ import (
 func solidPNGBytes(t *testing.T, w, h int) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
+	for y := range h {
+		for x := range w {
 			img.Set(x, y, color.RGBA{R: 10, G: 80, B: 160, A: 255})
 		}
 	}

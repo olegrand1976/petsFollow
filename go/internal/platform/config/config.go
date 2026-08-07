@@ -64,10 +64,18 @@ type Config struct {
 	CareProPublicRegister bool
 	// AuthRateLimitPerMin limite les endpoints auth publics par IP/minute (0 = désactivé).
 	AuthRateLimitPerMin int
+	// TrustedProxyHops — nombre de reverse proxies devant l'API (1 sur Cloud Run, 0 sans proxy).
+	// Détermine quelle entrée de X-Forwarded-For sert de clé de rate limit (clients directs).
+	TrustedProxyHops int
+	// BFFProxySecret — secret partagé avec la BFF Nuxt (X-PF-Proxy-Secret). Vide = ignore X-PF-Client-IP.
+	BFFProxySecret string
 	// CORSAllowedOrigins — origines autorisées (séparées par des virgules). Défaut : site Pro public.
 	CORSAllowedOrigins string
 	// RetentionPurgeSecret protège POST /internal/retention/run (purge 3 ans d'inactivité RGPD).
 	RetentionPurgeSecret string
+	// PprofSecret protège /internal/debug/pprof/* (profils tas/goroutines/CPU).
+	// Vide = routes non montées.
+	PprofSecret string
 	// SalesBranchesAutoSecret protège POST /internal/sales-branches-auto/run.
 	SalesBranchesAutoSecret string
 	// AiModuleFrictionSecret protège POST /internal/ai-module-friction/run.
@@ -101,7 +109,7 @@ type Config struct {
 	// PacsEnabled enables Orthanc PACS orchestration (status/wake/viewer proxy) — default off.
 	PacsEnabled bool
 	// PacsOrthancURL is the Orthanc Cloud Run / local base URL (no trailing slash).
-	PacsOrthancURL string
+	PacsOrthancURL      string
 	PacsOrthancUser     string
 	PacsOrthancPassword string
 	// PacsOrthancUseIDToken sends a Google identity token (Cloud Run IAM invoker).
@@ -212,8 +220,11 @@ func Load() Config {
 		VertexLocation:          envOr("VERTEX_LOCATION", "europe-west9"),
 		CareProPublicRegister:   envBool("CARE_PRO_PUBLIC_REGISTER"),
 		AuthRateLimitPerMin:     envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
+		TrustedProxyHops:        envInt("TRUSTED_PROXY_HOPS", 1),
+		BFFProxySecret:          envOr("BFF_PROXY_SECRET", ""),
 		CORSAllowedOrigins:      envOr("CORS_ALLOWED_ORIGINS", ""),
 		RetentionPurgeSecret:    envOr("RETENTION_PURGE_SECRET", ""),
+		PprofSecret:             envOr("PPROF_SECRET", ""),
 		SalesBranchesAutoSecret: envOr("SALES_BRANCHES_AUTO_SECRET", ""),
 		AiModuleFrictionSecret:  envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:          envOr("OPS_NOTIFY_EMAIL", ""),

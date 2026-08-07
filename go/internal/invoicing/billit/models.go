@@ -42,15 +42,15 @@ type OrderLine struct {
 
 // OrderDTO is the Billit POST /v1/orders body.
 type OrderDTO struct {
-	OrderType           string      `json:"OrderType"`
-	OrderDirection      string      `json:"OrderDirection"`
-	OrderNumber         string      `json:"OrderNumber,omitempty"`
-	OrderDate           string      `json:"OrderDate"`
-	ExpiryDate          string      `json:"ExpiryDate,omitempty"`
-	Currency            string      `json:"Currency,omitempty"`
-	AboutInvoiceNumber  string      `json:"AboutInvoiceNumber,omitempty"`
-	Customer            CustomerDTO `json:"Customer"`
-	OrderLines          []OrderLine `json:"OrderLines"`
+	OrderType          string      `json:"OrderType"`
+	OrderDirection     string      `json:"OrderDirection"`
+	OrderNumber        string      `json:"OrderNumber,omitempty"`
+	OrderDate          string      `json:"OrderDate"`
+	ExpiryDate         string      `json:"ExpiryDate,omitempty"`
+	Currency           string      `json:"Currency,omitempty"`
+	AboutInvoiceNumber string      `json:"AboutInvoiceNumber,omitempty"`
+	Customer           CustomerDTO `json:"Customer"`
+	OrderLines         []OrderLine `json:"OrderLines"`
 }
 
 // SendCommand is the body for POST /v1/orders/commands/send (shape may vary by Billit version).
@@ -64,20 +64,20 @@ type SendCommand struct {
 // Supports flat Order callbacks and Access Point Message/U payloads
 // (EntityDetail.OrderMessage + EInvoiceFlowState).
 type WebhookPayload struct {
-	EventID             string `json:"EventID"`
-	EventId             string `json:"eventId"`
-	EventType           string `json:"EventType"`
-	Event               string `json:"event"`
-	Type                string `json:"type"`
-	OrderID             any    `json:"OrderID"`
-	OrderId             any    `json:"orderId"`
-	ExternalID          string `json:"ExternalID"`
-	Status              string `json:"Status"`
-	PeppolStatus        string `json:"PeppolStatus"`
-	DeliveryStatus      string `json:"DeliveryStatus"`
-	UpdatedEntityType   string `json:"UpdatedEntityType"`
-	WebhookUpdateTypeTC string `json:"WebhookUpdateTypeTC"`
-	UpdatedEntityID     any    `json:"UpdatedEntityID"`
+	EventID             string               `json:"EventID"`
+	EventId             string               `json:"eventId"`
+	EventType           string               `json:"EventType"`
+	Event               string               `json:"event"`
+	Type                string               `json:"type"`
+	OrderID             any                  `json:"OrderID"`
+	OrderId             any                  `json:"orderId"`
+	ExternalID          string               `json:"ExternalID"`
+	Status              string               `json:"Status"`
+	PeppolStatus        string               `json:"PeppolStatus"`
+	DeliveryStatus      string               `json:"DeliveryStatus"`
+	UpdatedEntityType   string               `json:"UpdatedEntityType"`
+	WebhookUpdateTypeTC string               `json:"WebhookUpdateTypeTC"`
+	UpdatedEntityID     any                  `json:"UpdatedEntityID"`
 	EntityDetail        *WebhookEntityDetail `json:"EntityDetail"`
 }
 
@@ -102,6 +102,6 @@ type WebhookOrderMessage struct {
 
 // WebhookFlowInfo holds Peppol / e-invoice network state.
 type WebhookFlowInfo struct {
-	EInvoiceFlowState             string `json:"EInvoiceFlowState"`
+	EInvoiceFlowState              string `json:"EInvoiceFlowState"`
 	AdditionalFlowStateInformation string `json:"AdditionalFlowStateInformation"`
 }

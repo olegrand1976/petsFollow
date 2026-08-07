@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"image"
 	"image/color"
+	_ "image/jpeg"
 	"image/png"
 	"testing"
 )
 
 func solidPNG(w, h int) []byte {
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
+	for y := range h {
+		for x := range w {
 			img.Set(x, y, color.RGBA{R: 40, G: 120, B: 200, A: 255})
 		}
 	}
@@ -52,6 +53,39 @@ func TestBuildPDF_TooMany(t *testing.T) {
 func TestBuildPDF_Invalid(t *testing.T) {
 	if _, err := BuildPDF([][]byte{[]byte("not-an-image")}); err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+// Go 1.26 a remplacé l'encodeur image/jpeg : la sortie n'est plus identique
+// octet pour octet. Le carnet ne doit donc jamais s'appuyer sur des octets
+// attendus, seulement sur des propriétés — décodable, dimensions plafonnées,
+// poids raisonnable.
+func TestEncodeResizedJPEG_PropertiesNotBytes(t *testing.T) {
+	src, err := png.Decode(bytes.NewReader(solidPNG(MaxSidePx*2, MaxSidePx)))
+	if err != nil {
+		t.Fatalf("decode source: %v", err)
+	}
+
+	out, err := encodeResizedJPEG(src)
+	if err != nil {
+		t.Fatalf("encodeResizedJPEG: %v", err)
+	}
+
+	cfg, format, err := image.DecodeConfig(bytes.NewReader(out))
+	if err != nil {
+		t.Fatalf("re-decode: %v", err)
+	}
+	if format != "jpeg" {
+		t.Fatalf("format = %q, want jpeg", format)
+	}
+	if cfg.Width != MaxSidePx {
+		t.Fatalf("width = %d, want %d (côté long plafonné)", cfg.Width, MaxSidePx)
+	}
+	if cfg.Height != MaxSidePx/2 {
+		t.Fatalf("height = %d, want %d (ratio conservé)", cfg.Height, MaxSidePx/2)
+	}
+	if len(out) == 0 || int64(len(out)) > MaxImageBytes {
+		t.Fatalf("taille encodée %d hors bornes (max %d)", len(out), MaxImageBytes)
 	}
 }
 

@@ -3,6 +3,7 @@ package i18n
 import (
 	"embed"
 	"encoding/json"
+	"maps"
 	"strings"
 )
 
@@ -37,9 +38,7 @@ func flatten(prefix string, nested map[string]any) map[string]string {
 		case string:
 			out[key] = val
 		case map[string]any:
-			for fk, fv := range flatten(key, val) {
-				out[fk] = fv
-			}
+			maps.Copy(out, flatten(key, val))
 		}
 	}
 	return out

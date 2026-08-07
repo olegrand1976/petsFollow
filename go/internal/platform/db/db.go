@@ -4,8 +4,10 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,8 +15,76 @@ import (
 //go:embed migrations/*.sql
 var migrationFS embed.FS
 
+// PoolOptions dimensionne le pool. Les zéros prennent les valeurs par défaut,
+// et une valeur déjà présente dans la chaîne de connexion (pool_max_conns…)
+// gagne : on ne surcharge que ce que l'URL ne fixe pas.
+type PoolOptions struct {
+	MaxConns          int32
+	MinConns          int32
+	MaxConnLifetime   time.Duration
+	MaxConnIdleTime   time.Duration
+	HealthCheckPeriod time.Duration
+}
+
+// DefaultPoolOptions — pgx dérive sinon MaxConns de runtime.NumCPU(), ce qui sur
+// Cloud Run (1 vCPU, concurrency 80) plafonne le pool à 4 connexions et
+// sérialise les requêtes bien avant que le CPU ne sature.
+func DefaultPoolOptions() PoolOptions {
+	return PoolOptions{
+		MaxConns:          20,
+		MinConns:          2,
+		MaxConnLifetime:   time.Hour,
+		MaxConnIdleTime:   30 * time.Minute,
+		HealthCheckPeriod: time.Minute,
+	}
+}
+
+// BuildPoolConfig applique opts par-dessus la chaîne de connexion.
+func BuildPoolConfig(databaseURL string, opts PoolOptions) (*pgxpool.Config, error) {
+	cfg, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		return nil, err
+	}
+	q := poolQuery(databaseURL)
+	if opts.MaxConns > 0 && q.Get("pool_max_conns") == "" {
+		cfg.MaxConns = opts.MaxConns
+	}
+	if opts.MinConns > 0 && q.Get("pool_min_conns") == "" {
+		cfg.MinConns = opts.MinConns
+	}
+	if opts.MaxConnLifetime > 0 && q.Get("pool_max_conn_lifetime") == "" {
+		cfg.MaxConnLifetime = opts.MaxConnLifetime
+	}
+	if opts.MaxConnIdleTime > 0 && q.Get("pool_max_conn_idle_time") == "" {
+		cfg.MaxConnIdleTime = opts.MaxConnIdleTime
+	}
+	if opts.HealthCheckPeriod > 0 && q.Get("pool_health_check_period") == "" {
+		cfg.HealthCheckPeriod = opts.HealthCheckPeriod
+	}
+	if cfg.MinConns > cfg.MaxConns {
+		cfg.MinConns = cfg.MaxConns
+	}
+	return cfg, nil
+}
+
+func poolQuery(databaseURL string) url.Values {
+	u, err := url.Parse(databaseURL)
+	if err != nil {
+		return url.Values{}
+	}
+	return u.Query()
+}
+
 func Connect(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.New(ctx, databaseURL)
+	return ConnectWithOptions(ctx, databaseURL, DefaultPoolOptions())
+}
+
+func ConnectWithOptions(ctx context.Context, databaseURL string, opts PoolOptions) (*pgxpool.Pool, error) {
+	cfg, err := BuildPoolConfig(databaseURL, opts)
+	if err != nil {
+		return nil, err
+	}
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}

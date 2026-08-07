@@ -11,43 +11,43 @@ import (
 )
 
 type ManagerTeamMember struct {
-	UserID              string `json:"userId"`
-	FullName            string `json:"fullName"`
-	Email               string `json:"email"`
-	AssignedVets        int    `json:"assignedVets"`
-	ProspectsTotal      int    `json:"prospectsTotal"`
-	ProspectsNew        int    `json:"prospectsNew"`
-	ProspectsContacted  int    `json:"prospectsContacted"`
-	ProspectsQualified  int    `json:"prospectsQualified"`
-	ProspectsConverted  int    `json:"prospectsConverted"`
-	ProspectsLost       int    `json:"prospectsLost"`
-	Contacts30d         int    `json:"contacts30d"`
-	AppointmentsUpcoming int   `json:"appointmentsUpcoming"`
-	AppointmentsDone    int    `json:"appointmentsDone"`
-	AppointmentsNoShow  int    `json:"appointmentsNoShow"`
-	StaleInPipeline     int    `json:"staleInPipeline"`
-	MonthEarnedCents    int    `json:"monthEarnedCents"`
-	LifetimeEarnedCents int    `json:"lifetimeEarnedCents"`
+	UserID               string `json:"userId"`
+	FullName             string `json:"fullName"`
+	Email                string `json:"email"`
+	AssignedVets         int    `json:"assignedVets"`
+	ProspectsTotal       int    `json:"prospectsTotal"`
+	ProspectsNew         int    `json:"prospectsNew"`
+	ProspectsContacted   int    `json:"prospectsContacted"`
+	ProspectsQualified   int    `json:"prospectsQualified"`
+	ProspectsConverted   int    `json:"prospectsConverted"`
+	ProspectsLost        int    `json:"prospectsLost"`
+	Contacts30d          int    `json:"contacts30d"`
+	AppointmentsUpcoming int    `json:"appointmentsUpcoming"`
+	AppointmentsDone     int    `json:"appointmentsDone"`
+	AppointmentsNoShow   int    `json:"appointmentsNoShow"`
+	StaleInPipeline      int    `json:"staleInPipeline"`
+	MonthEarnedCents     int    `json:"monthEarnedCents"`
+	LifetimeEarnedCents  int    `json:"lifetimeEarnedCents"`
 }
 
 type ManagerOverview struct {
-	Team                  []ManagerTeamMember `json:"team"`
-	TeamProspectsTotal    int                 `json:"teamProspectsTotal"`
-	TeamProspectsNew      int                 `json:"teamProspectsNew"`
-	TeamProspectsContacted int                `json:"teamProspectsContacted"`
-	TeamProspectsQualified int                `json:"teamProspectsQualified"`
-	TeamProspectsConverted int                `json:"teamProspectsConverted"`
-	TeamProspectsLost     int                 `json:"teamProspectsLost"`
-	TeamContacts30d       int                 `json:"teamContacts30d"`
-	TeamAppointmentsUpcoming int              `json:"teamAppointmentsUpcoming"`
-	TeamAppointmentsDone  int                 `json:"teamAppointmentsDone"`
-	TeamAppointmentsNoShow int                `json:"teamAppointmentsNoShow"`
-	TeamStaleInPipeline   int                 `json:"teamStaleInPipeline"`
-	TeamMonthEarnedCents  int                 `json:"teamMonthEarnedCents"`
-	TeamLifetimeEarnedCents int              `json:"teamLifetimeEarnedCents"`
-	DirectoryTotal        int                 `json:"directoryTotal"`
-	ConversionRateBps     int                 `json:"conversionRateBps"`
-	Self                  map[string]any      `json:"self"`
+	Team                     []ManagerTeamMember `json:"team"`
+	TeamProspectsTotal       int                 `json:"teamProspectsTotal"`
+	TeamProspectsNew         int                 `json:"teamProspectsNew"`
+	TeamProspectsContacted   int                 `json:"teamProspectsContacted"`
+	TeamProspectsQualified   int                 `json:"teamProspectsQualified"`
+	TeamProspectsConverted   int                 `json:"teamProspectsConverted"`
+	TeamProspectsLost        int                 `json:"teamProspectsLost"`
+	TeamContacts30d          int                 `json:"teamContacts30d"`
+	TeamAppointmentsUpcoming int                 `json:"teamAppointmentsUpcoming"`
+	TeamAppointmentsDone     int                 `json:"teamAppointmentsDone"`
+	TeamAppointmentsNoShow   int                 `json:"teamAppointmentsNoShow"`
+	TeamStaleInPipeline      int                 `json:"teamStaleInPipeline"`
+	TeamMonthEarnedCents     int                 `json:"teamMonthEarnedCents"`
+	TeamLifetimeEarnedCents  int                 `json:"teamLifetimeEarnedCents"`
+	DirectoryTotal           int                 `json:"directoryTotal"`
+	ConversionRateBps        int                 `json:"conversionRateBps"`
+	Self                     map[string]any      `json:"self"`
 }
 
 func (s *Store) CreateCommercialManagerUser(ctx context.Context, email, password, fullName string) (string, error) {

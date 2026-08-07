@@ -1,14 +1,11 @@
 package kernel
 
+import "slices"
+
 var AllowedHeartRateDurations = []int{15, 30, 60}
 
 func IsAllowedHeartRateDuration(sec int) bool {
-	for _, d := range AllowedHeartRateDurations {
-		if d == sec {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllowedHeartRateDurations, sec)
 }
 
 func NormalizeHeartRateDurations(durations []int) []int {

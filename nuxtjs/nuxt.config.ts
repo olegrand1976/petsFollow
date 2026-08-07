@@ -32,6 +32,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/fonts.css', '~/assets/css/tokens.css', '~/assets/css/main.css'],
   runtimeConfig: {
     apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291',
+    /** Secret partagé BFF→API pour X-PF-Client-IP (jamais public). */
+    bffProxySecret: process.env.BFF_PROXY_SECRET || process.env.NUXT_BFF_PROXY_SECRET || '',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291',
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',

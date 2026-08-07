@@ -120,7 +120,7 @@ func TestResearchGroupsAndDataRoom(t *testing.T) {
 	}
 
 	week := store.ResearchIsoWeekMonday(time.Now())
-	for i := 0; i < store.ResearchKAnonymity; i++ {
+	for range store.ResearchKAnonymity {
 		_, err := api.pool.Exec(ctx, `
 			INSERT INTO research.anon_events (
 				id, event_week, postal_code, city, country_code, species, age_band,

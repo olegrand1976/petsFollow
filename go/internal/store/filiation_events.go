@@ -131,10 +131,7 @@ func (s *Store) ListFiliationEvents(ctx context.Context, f FiliationEventFilter)
 	if limit > MaxFiliationEventLimit {
 		limit = MaxFiliationEventLimit
 	}
-	offset := f.Offset
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(f.Offset, 0)
 	empty.Limit = limit
 	empty.Offset = offset
 

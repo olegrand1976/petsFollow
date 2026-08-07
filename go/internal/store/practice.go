@@ -36,19 +36,19 @@ type PracticeProfile struct {
 	// DeskIdleMinutes: shared-desk auto-lock delay (1|2|5|10|15|30). Default 2.
 	DeskIdleMinutes int `json:"deskIdleMinutes"`
 	// Company / payout (for commission sheets) — not required for onboarding.
-	CompanyLegalName       string `json:"companyLegalName"`
-	VATNumber              string `json:"vatNumber"`
-	CompanyNumber          string `json:"companyNumber"`
-	LegalForm              string `json:"legalForm"`
-	BillingSameAsPractice  bool   `json:"billingSameAsPractice"`
-	BillingAddressLine1    string `json:"billingAddressLine1"`
-	BillingAddressLine2    string `json:"billingAddressLine2"`
-	BillingPostalCode      string `json:"billingPostalCode"`
-	BillingCity            string `json:"billingCity"`
-	PayoutIBAN             string `json:"payoutIban"`
-	PayoutBIC              string `json:"payoutBic"`
-	PayoutAccountHolder    string `json:"payoutAccountHolder"`
-	PayoutProfileComplete  bool   `json:"payoutProfileComplete"`
+	CompanyLegalName      string `json:"companyLegalName"`
+	VATNumber             string `json:"vatNumber"`
+	CompanyNumber         string `json:"companyNumber"`
+	LegalForm             string `json:"legalForm"`
+	BillingSameAsPractice bool   `json:"billingSameAsPractice"`
+	BillingAddressLine1   string `json:"billingAddressLine1"`
+	BillingAddressLine2   string `json:"billingAddressLine2"`
+	BillingPostalCode     string `json:"billingPostalCode"`
+	BillingCity           string `json:"billingCity"`
+	PayoutIBAN            string `json:"payoutIban"`
+	PayoutBIC             string `json:"payoutBic"`
+	PayoutAccountHolder   string `json:"payoutAccountHolder"`
+	PayoutProfileComplete bool   `json:"payoutProfileComplete"`
 	// HeaderLinks: catalog toggles + custom URLs for the Pro topbar.
 	HeaderLinks headerlinks.Prefs `json:"headerLinks"`
 }
