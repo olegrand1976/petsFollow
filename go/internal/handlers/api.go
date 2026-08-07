@@ -225,6 +225,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPacsRoutes(pr)
 		a.registerResearchRoutes(pr)
 		a.registerSpeciesRoutes(pr)
+		a.registerProductDigestAuthedRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)
@@ -338,6 +339,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
 		pr.Delete("/visits/{id}", a.softDeleteVisit)
+		pr.Post("/visits/{visitID}/identify-client", a.identifyVisitClient)
 		pr.Patch("/visits/{visitID}/notes", a.updateVisitNotes)
 		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
 		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
@@ -389,6 +391,10 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	u, err := a.store.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		a.noteAuthSignal(store.AuthAlertLoginFailSpike, authSpikeLoginFail, "login unauthorized (email inconnu ou erreur)")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
+		return
+	}
+	if u.IsWalkinPlaceholder || store.IsWalkinPlaceholderEmail(u.Email) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
@@ -843,6 +849,10 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
+	if existing.IsWalkinPlaceholder {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "walkin_immutable")
+		return
+	}
 	if existing.OwnerUserID != id.UserID {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
@@ -919,6 +929,9 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		p.DeceasedAt = t
 	}
 	if err := a.store.UpdatePet(r.Context(), p); err != nil {
+		if a.writeWalkinErr(w, r, err) {
+			return
+		}
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}

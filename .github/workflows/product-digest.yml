@@ -2,6 +2,7 @@ name: Product digest ingest
 
 # Collects today's commits and posts them to the API for Gemini functional summarization.
 # Cloud Scheduler (18:00 Europe/Brussels) then triggers /internal/product-digest/run to send emails.
+# Matrix: staging (branch staging) + production (branch main) when prod secrets are set.
 
 on:
   schedule:
@@ -18,35 +19,50 @@ on:
         required: false
         default: ""
       branch:
-        description: "Git branch to summarize (default staging)"
+        description: "Git branch override (empty = matrix default)"
         required: false
-        default: "staging"
+        default: ""
       environment:
-        description: "Environment label in the email (default staging)"
+        description: "Environment label override (empty = matrix default)"
         required: false
-        default: "staging"
+        default: ""
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: staging
+            branch: staging
+            environment: staging
+            api_secret: PRODUCT_DIGEST_API_URL
+            digest_secret: PRODUCT_DIGEST_SECRET
+          - target: production
+            branch: main
+            environment: production
+            api_secret: PRODUCT_DIGEST_API_URL_PROD
+            digest_secret: PRODUCT_DIGEST_SECRET_PROD
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.branch || 'staging' }}
+          ref: ${{ github.event.inputs.branch || matrix.branch }}
 
-      - name: Build commit payload and ingest
+      - name: Build commit payload and ingest (${{ matrix.target }})
         env:
-          API_URL: ${{ secrets.PRODUCT_DIGEST_API_URL }}
-          DIGEST_SECRET: ${{ secrets.PRODUCT_DIGEST_SECRET }}
+          API_URL: ${{ secrets[matrix.api_secret] }}
+          DIGEST_SECRET: ${{ secrets[matrix.digest_secret] }}
           SINCE_HOURS: ${{ github.event.inputs.since_hours || '24' }}
           DIGEST_DATE: ${{ github.event.inputs.date || '' }}
-          DIGEST_BRANCH: ${{ github.event.inputs.branch || 'staging' }}
-          DIGEST_ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+          DIGEST_BRANCH: ${{ github.event.inputs.branch || matrix.branch }}
+          DIGEST_ENVIRONMENT: ${{ github.event.inputs.environment || matrix.environment }}
+          TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
           if [[ -z "${API_URL:-}" || -z "${DIGEST_SECRET:-}" ]]; then
-            echo "Missing PRODUCT_DIGEST_API_URL or PRODUCT_DIGEST_SECRET secrets — skip."
+            echo "Missing ${TARGET} digest secrets (${{ matrix.api_secret }} / ${{ matrix.digest_secret }}) — skip."
             exit 0
           fi
 
@@ -118,5 +134,5 @@ jobs:
           )
           with urllib.request.urlopen(req, timeout=120) as resp:
               print(resp.read().decode())
-          print(f"Ingested {len(commits)} commit(s) from branch={branch} env={environment}")
+          print(f"Ingested {len(commits)} commit(s) from branch={branch} env={environment} target={os.environ.get('TARGET')}")
           PY

@@ -135,6 +135,13 @@ func (a *API) validateDAFLinks(w http.ResponseWriter, r *http.Request, practiceI
 		if petID == "" {
 			petID = visit.PetID
 		}
+		if err := a.store.AssertVisitIdentified(r.Context(), visitID); err != nil {
+			if a.writeWalkinErr(w, r, err) {
+				return false
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
 	}
 	if petID != "" {
 		pet, err := a.store.GetPet(r.Context(), petID)
@@ -146,6 +153,10 @@ func (a *API) validateDAFLinks(w http.ResponseWriter, r *http.Request, practiceI
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return false
 		}
+		if pet.IsWalkinPlaceholder {
+			writeErr(w, r, http.StatusConflict, "conflict", "walkin_identify_required")
+			return false
+		}
 		if pet.PracticeID != practiceID {
 			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
 			return false
@@ -155,12 +166,17 @@ func (a *API) validateDAFLinks(w http.ResponseWriter, r *http.Request, practiceI
 			return false
 		}
 	} else if clientUserID != "" {
-		if _, err := a.store.GetClientByPractice(r.Context(), practiceID, clientUserID); err != nil {
+		client, err := a.store.GetClientByPractice(r.Context(), practiceID, clientUserID)
+		if err != nil {
 			if errors.Is(err, store.ErrNotFound) {
 				writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
 				return false
 			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
+		if client.IsWalkinPlaceholder {
+			writeErr(w, r, http.StatusConflict, "conflict", "walkin_identify_required")
 			return false
 		}
 	}

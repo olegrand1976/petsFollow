@@ -20,6 +20,7 @@ type VetPetListItem struct {
 	LastHeartRateAt      *time.Time `json:"lastHeartRateAt,omitempty"`
 	LastHeartRateBpm     *int       `json:"lastHeartRateBpm,omitempty"`
 	UnreadHeartrateCount int        `json:"unreadHeartrateCount"`
+	IsWalkinPlaceholder  bool       `json:"isWalkinPlaceholder,omitempty"`
 }
 
 func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]VetPetListItem, error) {
@@ -39,7 +40,8 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			lv.last_visit_at,
 			lhs.last_hr_at,
 			lhs.last_hr_bpm,
-			COALESCE(ur.unread_count, 0)
+			COALESCE(ur.unread_count, 0),
+			COALESCE(p.is_walkin_placeholder, false)
 		FROM pets.pets p
 		JOIN identity.users u ON u.id = p.owner_user_id
 		LEFT JOIN LATERAL (
@@ -78,7 +80,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			  AND s.vet_seen_at IS NULL
 		) ur ON TRUE
 		WHERE p.practice_id = $1
-		ORDER BY p.name`
+		ORDER BY COALESCE(p.is_walkin_placeholder, false) DESC, p.name`
 	rows, err := s.pool.Query(ctx, q, practiceID)
 	if err != nil {
 		return nil, err
@@ -102,6 +104,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			&item.LastHeartRateAt,
 			&item.LastHeartRateBpm,
 			&item.UnreadHeartrateCount,
+			&item.IsWalkinPlaceholder,
 		); err != nil {
 			return nil, err
 		}

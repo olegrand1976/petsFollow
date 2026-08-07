@@ -9,6 +9,7 @@ export type ConsultationPet = {
   id: string
   name: string
   species?: string
+  isWalkinPlaceholder?: boolean
 }
 
 export type StartConsultationInput = {
@@ -16,6 +17,7 @@ export type StartConsultationInput = {
   petId: string
   notes?: string
   durationMinutes?: number
+  callbackPhone?: string
 }
 
 function isConsultationHasReportError(e: any): boolean {
@@ -101,6 +103,7 @@ export function useConsultationFlow() {
           scheduledAt: scheduledAtIso,
           durationMinutes: duration,
           notes: input.notes?.trim() || undefined,
+          callbackPhone: input.callbackPhone?.trim() || undefined,
           siteId: concreteSiteId.value || undefined,
         },
       })
@@ -199,6 +202,7 @@ export function useConsultationFlow() {
       id: String(p.id),
       name: String(p.name || ''),
       species: p.species ? String(p.species) : undefined,
+      isWalkinPlaceholder: !!p.isWalkinPlaceholder,
     }))
   }
 

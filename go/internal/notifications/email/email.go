@@ -685,7 +685,7 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 }
 
 // SendProductDigest sends the daily functional platform changelog to internal staff.
-// branch is the git branch / environment label (e.g. staging).
+// branch is the git branch / environment label (e.g. staging — environnement de TEST).
 func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, branch, headline, bodyText string) error {
 	locale = i18n.NormalizeLocale(locale)
 	branch = strings.TrimSpace(branch)
@@ -719,6 +719,43 @@ func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, branch, he
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
 	// Hard-fail (sauf isDevSMTP) : le runner efface l'idempotence pour retry SMTP.
+	return n.SendCritical(to, subject, body)
+}
+
+// SendProductDigestWeekly sends the Saturday functional weekly rollup (staff + reference vets).
+func (n *Notifier) SendProductDigestWeekly(to, locale, fullName, weekLabel, rangeLabel, branch, headline, bodyText string) error {
+	locale = i18n.NormalizeLocale(locale)
+	branch = strings.TrimSpace(branch)
+	if branch == "" {
+		branch = "local"
+	}
+	vars := map[string]string{
+		"fullName": fullName,
+		"week":     weekLabel,
+		"range":    rangeLabel,
+		"branch":   branch,
+		"headline": headline,
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = mustT(locale, "emails.product_digest_weekly_fallback_name")
+	}
+	subject := mustT(locale, "emails.product_digest_weekly_subject", vars)
+	intro := mustT(locale, "emails.product_digest_weekly_intro", vars)
+	if headline != "" {
+		intro = mustT(locale, "emails.product_digest_weekly_intro_with_headline", vars)
+	}
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.product_digest_weekly_tagline"),
+		Greeting:        mustT(locale, "emails.product_digest_weekly_greeting", vars),
+		Intro:           intro,
+		Detail:          bodyText,
+		Disclaimer:      mustT(locale, "emails.product_digest_weekly_disclaimer"),
+		Preheader:       mustT(locale, "emails.product_digest_weekly_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
 	return n.SendCritical(to, subject, body)
 }
 

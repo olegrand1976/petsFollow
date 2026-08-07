@@ -92,6 +92,10 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		a.writeGoogleAuthError(w, r, err)
 		return
 	}
+	if u.IsWalkinPlaceholder || store.IsWalkinPlaceholderEmail(u.Email) {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
+		return
+	}
 	if normalizeGoogleAudience(req.Audience) == "client" {
 		inviteStatus := a.tryClaimInvite(r, u.ID, req.InviteCode)
 		if store.NormalizeInviteCode(req.InviteCode) == "" {

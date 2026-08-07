@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -279,6 +280,10 @@ func (s *Store) CreateVetAsAdmin(ctx context.Context, in EncodeVetInput, assigne
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
+	}
+	if _, err := s.EnsureWalkinPlaceholders(ctx, practiceID); err != nil {
+		// Non-fatal for vet create — placeholders are also ensured lazily on list clients.
+		fmt.Printf("EnsureWalkinPlaceholders after CreateVetAsAdmin: %v\n", err)
 	}
 	if assignedCommercialID != "" {
 		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{

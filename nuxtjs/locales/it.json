@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "Email / Template",
     "commercialEmails": "Email inviate",
     "commercialAgenda": "Agenda",
-    "managerAgenda": "Agenda team"
+    "managerAgenda": "Agenda team",
+    "nouveautes": "Novità"
   },
   "training": {
     "title": "Allenamento AI",
@@ -1604,6 +1605,29 @@
       "street": "Via",
       "postal": "CAP",
       "city": "Città"
+    },
+    "walkin": {
+      "badge": "Da identificare",
+      "identifyTitle": "Identificare il cliente",
+      "identifyHint": "Questo appuntamento usa lo slot « Nuovo cliente ». Identificare il cliente prima del referto.",
+      "modeCreate": "Crea cliente",
+      "modeExisting": "Cliente noto",
+      "emailOptional": "Email (opzionale)",
+      "petName": "Nome animale",
+      "petSpecies": "Specie",
+      "speciesDog": "Cane",
+      "speciesCat": "Gatto",
+      "speciesHorse": "Cavallo",
+      "speciesOther": "Altro",
+      "confirmExisting": "Confermo che è questo cliente",
+      "createNewPet": "Nuovo animale",
+      "petCount": "{n} animal(i)",
+      "submit": "Conferma identità",
+      "identifyFailed": "Identificazione non riuscita",
+      "readonlyHint": "Slot di sistema non modificabile — usarlo per prenotazioni rapide, poi identificare in consultazione.",
+      "callbackPhone": "Telefono di richiamo",
+      "callbackPhonePlaceholder": "Numero di telefono",
+      "callbackPhoneHint": "Obbligatorio per richiamare il cliente in caso di problema (lo slot Nuovo cliente resta invariato)."
     }
   },
   "consultations": {
@@ -3958,6 +3982,10 @@
       }
     },
     "columnDefaultSite": "Sede predefinita",
+    "columnIncludeInCalendar": "Calendario",
+    "includeInCalendar": "Mostra nel calendario",
+    "includeInCalendarTip": "Se selezionato, la persona compare come colonna e nell’elenco di assegnazione dell’agenda.",
+    "includeInCalendarErr": "Impossibile aggiornare la visibilità nel calendario.",
     "defaultSite": "Sede predefinita",
     "defaultSiteNone": "Nessuna",
     "defaultSiteUpdated": "Sede predefinita aggiornata."
@@ -4762,5 +4790,13 @@
     "expired": "Questo link è scaduto.",
     "invalid": "Link non valido o già utilizzato.",
     "errorGeneric": "Impossibile validare il preventivo."
+  },
+  "nouveautes": {
+    "title": "Novità",
+    "subtitle": "Evoluzioni funzionali recenti della piattaforma",
+    "loading": "Caricamento…",
+    "emptyTitle": "Nessuna novità al momento",
+    "emptyBody": "Le sintesi funzionali compariranno qui con le consegne.",
+    "loadError": "Impossibile caricare le novità."
   }
 }

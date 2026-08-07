@@ -11,7 +11,7 @@
     >
       <template #actions>
         <ProButton
-          v-if="canWriteClients"
+          v-if="canWriteClients && client && !client.isWalkinPlaceholder"
           variant="secondary"
           class="pro-btn--icon"
           test-id="client-app-invite-open"
@@ -21,7 +21,7 @@
           <ProIcon name="qr_code_2" :size="22" />
         </ProButton>
         <ProButton
-          v-if="client && canWriteClients"
+          v-if="client && canWriteClients && !client.isWalkinPlaceholder"
           :disabled="sendingAppLink"
           :loading="sendingAppLink"
           data-testid="send-app-link"
@@ -195,7 +195,17 @@
           <div class="client-identity__fields">
             <p class="text-muted">{{ client.email }}</p>
             <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
-            <template v-if="canWriteClients">
+            <ProBadge
+              v-if="client.isWalkinPlaceholder"
+              variant="warning"
+              data-testid="walkin-client-badge"
+            >
+              {{ $t('clients.walkin.badge') }}
+            </ProBadge>
+            <p v-if="client.isWalkinPlaceholder" class="pro-hint" data-testid="walkin-readonly-hint">
+              {{ $t('clients.walkin.readonlyHint') }}
+            </p>
+            <template v-if="canWriteClients && !client.isWalkinPlaceholder">
               <form class="client-identity-edit pro-form" data-testid="client-identity-form" @submit.prevent="saveIdentity">
                 <ProInput v-model="identityDraft.firstName" test-id="client-first-name" :label="$t('clients.detail.firstName')" />
                 <ProInput v-model="identityDraft.lastName" test-id="client-last-name" :label="$t('clients.detail.lastName')" />
@@ -309,6 +319,7 @@ type ClientRow = {
   billingCity?: string
   billingPostal?: string
   billingCountry?: string
+  isWalkinPlaceholder?: boolean
 }
 
 type ClientOverview = {

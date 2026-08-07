@@ -28,6 +28,8 @@ export type CalendarVisit = {
   assigneeName?: string
   roomId?: string
   roomName?: string
+  isWalkinPlaceholder?: boolean
+  callbackPhone?: string
 }
 
 /**
@@ -53,18 +55,27 @@ export function visitConsultationCta(
   return v.clientId ? 'start' : null
 }
 
-/** Native tooltip for calendar chip tags (preconsult / waiting room). */
+/** Native tooltip for calendar chip tags (preconsult / waiting room / callback phone). */
 export function calendarChipTooltip(
   v: CalendarVisit,
   t: (key: string) => string,
 ): string {
   const parts: string[] = []
   if (v.siteName) parts.push(v.siteName)
+  const phone = v.callbackPhone?.trim()
+  if (phone) parts.push(phone)
   if (v.waitingRoomAt) parts.push(t('calendar.waitingRoomTooltip'))
   if (v.preconsultAlert === 'urgent') parts.push(t('calendar.preconsultUrgentTooltip'))
   else if (v.preconsultStatus === 'submitted') parts.push(t('calendar.preconsultAnsweredTooltip'))
   else if (v.preconsultStatus === 'pending') parts.push(t('calendar.preconsultSentTooltip'))
   return parts.join(' — ')
+}
+
+/** tel: from a chip (avoid nesting <a> inside <button>). */
+export function dialCallbackPhone(phone: string) {
+  const p = phone.trim()
+  if (!p || typeof window === 'undefined') return
+  window.location.href = `tel:${p}`
 }
 
 export type CalendarVacation = {

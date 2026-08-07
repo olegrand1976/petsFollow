@@ -204,6 +204,9 @@ func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
 			return
 		}
+		if a.writeWalkinErr(w, r, err) {
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

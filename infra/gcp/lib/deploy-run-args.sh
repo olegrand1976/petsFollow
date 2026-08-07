@@ -13,11 +13,30 @@ pf_sm_billit_secrets_key() { printf '%s' "${PF_SM_BILLIT_SECRETS_KEY:-petsfollow
 pf_sm_billit_webhook_secret() { printf '%s' "${PF_SM_BILLIT_WEBHOOK_SECRET:-petsfollow-billit-webhook-secret}"; }
 pf_sm_billit_master_api_key() { printf '%s' "${PF_SM_BILLIT_MASTER_API_KEY:-petsfollow-billit-master-api-key}"; }
 
-# True if Secret Manager has at least one version for the named secret.
+# Job secrets : staging petsfollow-<name> ; prod petsfollow-prod-<name>
+pf_sm_job_secret() {
+  local name="$1"
+  if [[ "${PETSFOLLOW_GCP_ENV:-}" == "prod" ]]; then
+    printf 'petsfollow-prod-%s' "$name"
+  else
+    printf 'petsfollow-%s' "$name"
+  fi
+}
+
 pf_sm_has_secret() {
   local name="$1"
-  gcloud secrets versions access latest \
-    --secret="$name" --project="$GCP_PROJECT_ID" >/dev/null 2>&1
+  gcloud secrets versions access latest --secret="$name" --project="$GCP_PROJECT_ID" >/dev/null 2>&1
+}
+
+pf_api_mount_job_secret() {
+  # $1 = env var name (PRODUCT_DIGEST_SECRET), $2 = SM short name (product-digest-secret)
+  local env_name="$1"
+  local short="$2"
+  local sm
+  sm="$(pf_sm_job_secret "$short")"
+  if pf_sm_has_secret "$sm"; then
+    printf ',%s=%s:latest' "$env_name" "$sm"
+  fi
 }
 
 pf_resolve_redis_addr() {
@@ -270,10 +289,8 @@ pf_api_secrets() {
     --secret=petsfollow-smtp-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},SMTP_PASS=petsfollow-smtp-password:latest"
   fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-auth-health-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},AUTH_HEALTH_SECRET=petsfollow-auth-health-secret:latest"
-  fi
+  # Job secrets : préfixe petsfollow- / petsfollow-prod- selon PETSFOLLOW_GCP_ENV.
+  secrets="${secrets}$(pf_api_mount_job_secret AUTH_HEALTH_SECRET auth-health-secret)"
   # SMS Telnyx : clé API d'envoi, clé publique de vérification des webhooks,
   # secret du cron rappel J-1. Chacun optionnel — absent = fonctionnalité inactive
   # (pas d'envoi live, webhooks rejetés, cron 401) plutôt qu'un déploiement cassé.
@@ -285,54 +302,24 @@ pf_api_secrets() {
     --secret=petsfollow-telnyx-public-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},TELNYX_PUBLIC_KEY=petsfollow-telnyx-public-key:latest"
   fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-visit-reminders-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},VISIT_REMINDERS_SECRET=petsfollow-visit-reminders-secret:latest"
-  fi
+  secrets="${secrets}$(pf_api_mount_job_secret VISIT_REMINDERS_SECRET visit-reminders-secret)"
   # Import clients admin — mapping colonnes (Secret Manager).
   if gcloud secrets versions access latest \
     --secret=petsfollow-gemini-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},GEMINI_API_KEY=petsfollow-gemini-api-key:latest"
   fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-product-digest-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},PRODUCT_DIGEST_SECRET=petsfollow-product-digest-secret:latest"
-  fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-pitch-analyzer-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},PITCH_ANALYZER_SECRET=petsfollow-pitch-analyzer-secret:latest"
-  fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-ai-module-friction-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},AI_MODULE_FRICTION_SECRET=petsfollow-ai-module-friction-secret:latest"
-  fi
+  secrets="${secrets}$(pf_api_mount_job_secret PRODUCT_DIGEST_SECRET product-digest-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret PITCH_ANALYZER_SECRET pitch-analyzer-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret AI_MODULE_FRICTION_SECRET ai-module-friction-secret)"
   # Sans ce secret, /internal/retention/run répond 401 : la purge RGPD ne tourne pas.
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-retention-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},RETENTION_PURGE_SECRET=petsfollow-retention-secret:latest"
-  fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-sales-branches-auto-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},SALES_BRANCHES_AUTO_SECRET=petsfollow-sales-branches-auto-secret:latest"
-  fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-saas-invoices-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},SAAS_INVOICES_SECRET=petsfollow-saas-invoices-secret:latest"
-  fi
+  secrets="${secrets}$(pf_api_mount_job_secret RETENTION_PURGE_SECRET retention-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret SALES_BRANCHES_AUTO_SECRET sales-branches-auto-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret SAAS_INVOICES_SECRET saas-invoices-secret)"
   # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
-  fi
+  secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_EXPIRY_SECRET pharmacy-expiry-secret)"
   # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-research-etl-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},RESEARCH_ETL_SECRET=petsfollow-research-etl-secret:latest"
-  fi
-  if gcloud secrets versions access latest \
-    --secret=petsfollow-research-anon-salt --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},RESEARCH_ANON_SALT=petsfollow-research-anon-salt:latest"
-  fi
+  secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ETL_SECRET research-etl-secret)"
+  secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ANON_SALT research-anon-salt)"
   # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
   # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.
   if gcloud secrets versions access latest \

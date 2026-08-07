@@ -334,6 +334,13 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 }
 
 func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
+	walkin, err := s.IsWalkinPlaceholderUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if walkin {
+		return ErrWalkinImmutable
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -346,7 +353,9 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
-	tag, err := tx.Exec(ctx, `DELETE FROM identity.users WHERE id = $1 AND role = 'client'`, userID)
+	tag, err := tx.Exec(ctx, `
+		DELETE FROM identity.users
+		WHERE id = $1 AND role = 'client' AND COALESCE(is_walkin_placeholder, false) = false`, userID)
 	if err != nil {
 		return err
 	}

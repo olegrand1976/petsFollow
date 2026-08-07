@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} vous a envoyé un devis à valider.",
     "proforma_validate_detail": "Montant TTC : {amount}\n\nEn validant, vous acceptez le devis : une facture électronique sera émise automatiquement.",
     "proforma_validate_cta": "Valider le devis",
-    "proforma_validate_disclaimer": "Si vous n'attendiez pas cet email, ignorez-le. Le lien expire après 14 jours."
+    "proforma_validate_disclaimer": "Si vous n'attendiez pas cet email, ignorez-le. Le lien expire après 14 jours.",
+    "product_digest_test_env_tag": "environnement de TEST",
+    "product_digest_weekly_subject": "petsFollow — Nouveautés de la semaine du {week} [{branch}]",
+    "product_digest_weekly_tagline": "Synthèse produit hebdomadaire",
+    "product_digest_weekly_preheader": "Les évolutions fonctionnelles petsFollow ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Bonjour {fullName},",
+    "product_digest_weekly_intro": "Voici le récapitulatif fonctionnel des nouveautés petsFollow pour la semaine du {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Récapitulatif de la semaine du {week} ({branch}) : {headline}",
+    "product_digest_weekly_disclaimer": "Email automatique — synthèse non technique des livraisons de la semaine. Consultez aussi Nouveautés dans petsFollow Pro.",
+    "product_digest_weekly_fallback_name": "équipe"
   },
   "push": {
     "new_message_title": "Nouveau message",

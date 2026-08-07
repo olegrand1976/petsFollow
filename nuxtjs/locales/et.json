@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "E-kirjad / Mallid",
     "commercialEmails": "Saadetud e-kirjad",
     "commercialAgenda": "Kalender",
-    "managerAgenda": "Meeskonna kalender"
+    "managerAgenda": "Meeskonna kalender",
+    "nouveautes": "Uudised"
   },
   "auth": {
     "login": {
@@ -939,6 +940,29 @@
       "street": "Tänav",
       "postal": "Postiindeks",
       "city": "Linn"
+    },
+    "walkin": {
+      "badge": "Tuvastamata",
+      "identifyTitle": "Tuvasta klient",
+      "identifyHint": "See aeg kasutab « Uus klient » kohta. Tuvastage klient enne aruannet.",
+      "modeCreate": "Loo klient",
+      "modeExisting": "Tuntud klient",
+      "emailOptional": "E-post (valikuline)",
+      "petName": "Looma nimi",
+      "petSpecies": "Liik",
+      "speciesDog": "Koer",
+      "speciesCat": "Kass",
+      "speciesHorse": "Hobune",
+      "speciesOther": "Muu",
+      "confirmExisting": "Kinnitan, et see on õige klient",
+      "createNewPet": "Uus loom",
+      "petCount": "{n} loom(a)",
+      "submit": "Kinnita identiteet",
+      "identifyFailed": "Tuvastamine ebaõnnestus",
+      "readonlyHint": "Süsteemikoht — muutmata. Kasutage kiireks broneeringuks, tuvastage konsultatsioonis.",
+      "callbackPhone": "Tagasihelistamise number",
+      "callbackPhonePlaceholder": "Telefoninumber",
+      "callbackPhoneHint": "Kohustuslik kliendi tagasihelistamiseks (Uus klient koht jääb muutmata)."
     }
   },
   "consultations": {
@@ -3958,6 +3982,10 @@
       }
     },
     "columnDefaultSite": "Vaikimisi asukoht",
+    "columnIncludeInCalendar": "Kalender",
+    "includeInCalendar": "Näita kalendris",
+    "includeInCalendarTip": "Kui märgitud, kuvatakse isik kalendri veeruna ja määramise loendis.",
+    "includeInCalendarErr": "Kalendri nähtavust ei saanud uuendada.",
     "defaultSite": "Vaikimisi asukoht",
     "defaultSiteNone": "Puudub",
     "defaultSiteUpdated": "Vaikimisi asukoht uuendatud."
@@ -4762,5 +4790,13 @@
     "expired": "See link on aegunud.",
     "invalid": "Kehtetu või juba kasutatud link.",
     "errorGeneric": "Pakkumist ei õnnestunud kinnitada."
+  },
+  "nouveautes": {
+    "title": "Uudised",
+    "subtitle": "Platvormi hiljutised funktsionaalsed uuendused",
+    "loading": "Laadimine…",
+    "emptyTitle": "Uudiseid pole veel",
+    "emptyBody": "Funktsionaalsed kokkuvõtted ilmuvad siia koos uuendustega.",
+    "loadError": "Uudiste laadimine ebaõnnestus."
   }
 }

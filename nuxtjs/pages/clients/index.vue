@@ -226,9 +226,16 @@
               >
                 <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
                 {{ c.fullName }}
+                <ProBadge
+                  v-if="c.isWalkinPlaceholder"
+                  variant="warning"
+                  data-testid="walkin-client-badge"
+                >
+                  {{ $t('clients.walkin.badge') }}
+                </ProBadge>
               </NuxtLink>
             </td>
-            <td>{{ c.email }}</td>
+            <td>{{ c.isWalkinPlaceholder ? '—' : c.email }}</td>
             <td>{{ c.contactPhone || '—' }}</td>
             <td>{{ c.petCount }}</td>
             <td>
@@ -241,7 +248,7 @@
                   @click="openConsultation(c.userId)"
                 />
                 <ProIconAction
-                  v-if="canWriteClients"
+                  v-if="canWriteClients && !c.isWalkinPlaceholder"
                   icon="send"
                   :label="sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink')"
                   :disabled="sendingId === c.userId"
@@ -307,6 +314,7 @@ type ClientRow = {
   avatarUrl?: string
   contactPhone?: string
   petCount: number
+  isWalkinPlaceholder?: boolean
 }
 
 const route = useRoute()
@@ -546,9 +554,19 @@ const filtered = computed(() => {
   if (petFilter.value === 'none') list = list.filter((c) => c.petCount === 0)
   if (petFilter.value === 'with') list = list.filter((c) => c.petCount > 0)
   if (sortBy.value === 'name') {
-    list.sort((a, b) => compareStrings(a.fullName || '', b.fullName || ''))
+    list.sort((a, b) => {
+      const aw = a.isWalkinPlaceholder ? 1 : 0
+      const bw = b.isWalkinPlaceholder ? 1 : 0
+      if (aw !== bw) return bw - aw
+      return compareStrings(a.fullName || '', b.fullName || '')
+    })
   } else {
-    list.sort((a, b) => (b.petCount || 0) - (a.petCount || 0))
+    list.sort((a, b) => {
+      const aw = a.isWalkinPlaceholder ? 1 : 0
+      const bw = b.isWalkinPlaceholder ? 1 : 0
+      if (aw !== bw) return bw - aw
+      return (b.petCount || 0) - (a.petCount || 0)
+    })
   }
   return list
 })

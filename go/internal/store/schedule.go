@@ -259,6 +259,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteI
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng,
 			COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false),
+			COALESCE(v.callback_phone,''),
 			COALESCE(v.visit_type_id::text, ''),
 			COALESCE(vt.name, ''),
 			COALESCE(vt.color, ''),
@@ -292,7 +294,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID, siteI
 			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.IsWalkinPlaceholder, &v.CallbackPhone,
 			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor, &v.WaitingRoomAt,
 			&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName,
 		); err != nil {

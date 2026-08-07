@@ -83,6 +83,9 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 	if err != nil {
 		return ClientSummary{}, err
 	}
+	if cur.IsWalkinPlaceholder {
+		return ClientSummary{}, ErrWalkinImmutable
+	}
 	phone := cur.ContactPhone
 	first := cur.FirstName
 	last := cur.LastName

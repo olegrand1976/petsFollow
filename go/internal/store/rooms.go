@@ -196,8 +196,13 @@ func (s *Store) ValidateVisitRoom(ctx context.Context, practiceID, siteID, roomI
 	return nil
 }
 
-// ValidateVisitAssignee ensures user is an active team member of the practice.
+// ValidateVisitAssignee ensures user is an active team member included in the calendar.
 func (s *Store) ValidateVisitAssignee(ctx context.Context, practiceID, userID string) error {
+	return s.validateVisitAssignee(ctx, practiceID, userID, true)
+}
+
+// validateVisitAssignee checks active membership; when requireInCalendar, also include_in_calendar.
+func (s *Store) validateVisitAssignee(ctx context.Context, practiceID, userID string, requireInCalendar bool) error {
 	userID = strings.TrimSpace(userID)
 	if userID == "" {
 		return nil
@@ -207,7 +212,8 @@ func (s *Store) ValidateVisitAssignee(ctx context.Context, practiceID, userID st
 		SELECT EXISTS(
 			SELECT 1 FROM practice.team_members
 			WHERE practice_id = $1 AND user_id = $2 AND status = 'active'
-		)`, practiceID, userID).Scan(&ok)
+			  AND ($3 OR COALESCE(include_in_calendar, true))
+		)`, practiceID, userID, !requireInCalendar).Scan(&ok)
 	if err != nil {
 		return err
 	}

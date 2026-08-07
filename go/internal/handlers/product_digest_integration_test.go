@@ -93,8 +93,8 @@ func TestProductDigestIngestAndRunWithBranch(t *testing.T) {
 		t.Fatalf("run %d %#v", code, env)
 	}
 	data := dataMap(t, env)
-	if data["branch"] != "staging" {
-		t.Fatalf("branch %#v want staging", data["branch"])
+	if branch, _ := data["branch"].(string); !strings.Contains(branch, "staging") || !strings.Contains(branch, "TEST") {
+		t.Fatalf("branch %#v want staging + TEST tag", data["branch"])
 	}
 
 	if !mailhogUp {
@@ -119,7 +119,7 @@ func TestProductDigestIngestAndRunWithBranch(t *testing.T) {
 			body, _ := io.ReadAll(resp.Body)
 			_ = resp.Body.Close()
 			raw := string(body)
-			if strings.Contains(raw, "[staging]") || strings.Contains(raw, "Branche / environnement : staging") {
+			if strings.Contains(raw, "environnement de TEST") || strings.Contains(raw, "[staging") {
 				found = true
 				break
 			}
@@ -128,6 +128,151 @@ func TestProductDigestIngestAndRunWithBranch(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("MailHog: no message mentioning staging branch")
+	}
+}
+
+func TestProductDigestListRequiresAuthAndRole(t *testing.T) {
+	t.Setenv("PRODUCT_DIGEST_SECRET", "test-product-digest-secret")
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+
+	digestDate := time.Date(2099, 3, 10, 0, 0, 0, 0, time.UTC)
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM ops.product_digests WHERE digest_date = $1::date`, digestDate)
+	})
+	now := time.Now().UTC()
+	meta, _ := json.Marshal(map[string]any{"environment": "staging"})
+	if err := st.UpsertProductDigest(context.Background(), store.ProductDigest{
+		DigestDate:       digestDate,
+		Headline:         "Liste test",
+		BodyText:         "• Item",
+		HeadlineByLocale: map[string]string{"fr": "Liste test"},
+		BodyByLocale:     map[string]string{"fr": "• Item"},
+		CommitsJSON:      []byte(`[]`),
+		Status:           "ready",
+		GeneratedAt:      &now,
+		Meta:             meta,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	code, _ := doJSON(t, api.handler, http.MethodGet, "/api/v1/product-digests", nil)
+	if code != http.StatusUnauthorized {
+		t.Fatalf("want 401 got %d", code)
+	}
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login", map[string]any{
+		"email": "vet.demo@petsfollow.test", "password": "VetDemo123!",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("login %d %#v", code, env)
+	}
+	tok, _ := dataMap(t, env)["accessToken"].(string)
+	code, env = doJSONWithHeaders(t, api.handler, http.MethodGet, "/api/v1/product-digests?limit=5", nil, map[string]string{
+		"Authorization": "Bearer " + tok,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("list %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	items, _ := data["items"].([]any)
+	if len(items) < 1 {
+		t.Fatalf("expected items, got %#v", data)
+	}
+}
+
+func TestProductDigestWeeklyRunEmptyAndSend(t *testing.T) {
+	t.Setenv("PRODUCT_DIGEST_SECRET", "test-product-digest-secret")
+	t.Setenv("APP_ENV", "staging")
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+
+	weekDay := time.Date(2099, 4, 11, 0, 0, 0, 0, time.UTC) // Saturday
+	weekStart := time.Date(2099, 4, 6, 0, 0, 0, 0, time.UTC) // Monday
+	digestDate := time.Date(2099, 4, 10, 0, 0, 0, 0, time.UTC)
+	staffEmail := strings.Replace(uniqueEmail("weekly-digest"), "@petsfollow.test", "@example.com", 1)
+
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM ops.product_digest_weekly_sends WHERE week_start = $1::date`, weekStart)
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM ops.product_digests WHERE digest_date = $1::date`, digestDate)
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM identity.users WHERE email = $1`, staffEmail)
+	})
+
+	code, env := doJSONWithHeaders(t, api.handler, http.MethodPost, "/api/v1/internal/product-digest/weekly-run", map[string]any{
+		"date": weekDay.Format("2006-01-02"),
+	}, map[string]string{
+		"X-Product-Digest-Secret": "test-product-digest-secret",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("empty week %d %#v", code, env)
+	}
+	if dataMap(t, env)["reason"] != "empty_week" {
+		t.Fatalf("want empty_week got %#v", env)
+	}
+
+	now := time.Now().UTC()
+	meta, _ := json.Marshal(map[string]any{"environment": "staging", "branch": "staging"})
+	if err := st.UpsertProductDigest(context.Background(), store.ProductDigest{
+		DigestDate:       digestDate,
+		Headline:         "Hebdo item",
+		BodyText:         "• Point A",
+		HeadlineByLocale: map[string]string{"fr": "Hebdo item"},
+		BodyByLocale:     map[string]string{"fr": "• Point A"},
+		CommitsJSON:      []byte(`[]`),
+		Status:           "ready",
+		GeneratedAt:      &now,
+		Meta:             meta,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	staffID := insertVerifiedUser(t, api, "admin", staffEmail, "AdminDemo123!", "Weekly Staff", nil)
+
+	smtpHost, smtpPort, _ := resolveMailhog(t)
+	if smtpPort > 0 {
+		api.api.TestReplaceNotifier(email.NewNotifier(
+			smtpHost, smtpPort, "digest@petsfollow.test",
+			"http://localhost:3002", "https://ll-it-sc.be",
+		))
+	} else {
+		api.api.TestReplaceNotifier(email.NewNotifierAuth(
+			"smtp.invalid.petsfollow", 587, "digest@petsfollow.test",
+			"smtp-user", "", "http://localhost:3002", "https://ll-it-sc.be",
+		))
+	}
+
+	code, env = doJSONWithHeaders(t, api.handler, http.MethodPost, "/api/v1/internal/product-digest/weekly-run", map[string]any{
+		"date": weekDay.Format("2006-01-02"),
+	}, map[string]string{
+		"X-Product-Digest-Secret": "test-product-digest-secret",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("weekly run %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	if data["weekStart"] != weekStart.Format("2006-01-02") {
+		t.Fatalf("weekStart %#v", data["weekStart"])
+	}
+	branch, _ := data["branch"].(string)
+	if !strings.Contains(branch, "TEST") {
+		t.Fatalf("branch want TEST tag got %#v", branch)
+	}
+	if smtpPort == 0 {
+		if data["status"] != "failed" {
+			t.Fatalf("without MailHog want failed got %#v", data)
+		}
+		return
+	}
+	if data["status"] != "sent" && data["status"] != "partial" {
+		t.Fatalf("status %#v", data)
+	}
+	sent, _ := data["sent"].(float64)
+	if sent < 1 {
+		t.Fatalf("expected send to staff %s, got %#v", staffID, data)
 	}
 }
 

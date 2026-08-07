@@ -19,7 +19,7 @@ Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon lo
 
 **Parcours découverte / fidélisation client** (drip 12 mois) : scheduler in-process + tables `discovery.email_*` — détail [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md). Respecte `client_preferences.discovery` / `.billing`. Désabonnement : `GET/POST /api/v1/public/journey/unsubscribe?token=…`.
 
-**Digest produit quotidien** (interne) : synthèse fonctionnelle des évolutions du jour → emails aux rôles `admin` / `commercial` / `commercial_manager` à 18:00 Europe/Brussels. Détail [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md).
+**Digest produit** : synthèse fonctionnelle quotidienne (18:00 Brussels, staff) + hebdo samedi 08:00 (staff + responsables cabinet) + fiche Pro `/nouveautes`. Staging : tag « environnement de TEST » dans les mails. Détail [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md).
 
 **Mail CRM commercial** (B2B prospects) : catalogue `sales.email_templates` (seed séquence intro / RDV / nurture / post / réactivation), envoi depuis fiche prospect (`POST /commercial/prospects/{id}/emails`), historique + tracking pixel / clics (`/public/commercial-mail/o|c/{token}`), désinscription soft (`email_opt_out`). UI : `/commercial/email-templates`, `/commercial/emails`. Envoi manuel V1 (pas de séquence auto planifiée).
 

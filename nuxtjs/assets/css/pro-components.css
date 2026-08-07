@@ -505,6 +505,22 @@ a.pro-kpi-card:focus-visible {
   color: var(--pf-vet-accent);
   flex-shrink: 0;
 }
+.cal-chip__phone {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--pf-vet-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.cal-chip--row .cal-chip__phone {
+  font-size: 0.65rem;
+  max-width: 100%;
+}
 .cal-chip--focus {
   outline: 2px solid var(--pf-vet-accent);
   outline-offset: 1px;

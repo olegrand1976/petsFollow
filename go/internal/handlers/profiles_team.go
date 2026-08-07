@@ -291,15 +291,16 @@ func (a *API) patchVetTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	memberID := chi.URLParam(r, "id")
 	var req struct {
-		TeamRole      *store.TeamRole `json:"teamRole"`
-		Permissions   map[string]bool `json:"permissions"`
-		DefaultSiteID *string         `json:"defaultSiteId"`
+		TeamRole          *store.TeamRole `json:"teamRole"`
+		Permissions       map[string]bool `json:"permissions"`
+		DefaultSiteID     *string         `json:"defaultSiteId"`
+		IncludeInCalendar *bool           `json:"includeInCalendar"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "validation", "validation")
 		return
 	}
-	m, err := a.store.UpdateTeamMember(r.Context(), id.PracticeID, id.UserID, memberID, req.TeamRole, req.Permissions, req.DefaultSiteID)
+	m, err := a.store.UpdateTeamMember(r.Context(), id.PracticeID, id.UserID, memberID, req.TeamRole, req.Permissions, req.DefaultSiteID, req.IncludeInCalendar)
 	switch {
 	case errors.Is(err, store.ErrForbidden):
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")

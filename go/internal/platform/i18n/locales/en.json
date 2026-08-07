@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} sent you a quote to approve.",
     "proforma_validate_detail": "Amount incl. VAT: {amount}\n\nBy approving, you accept the quote and an e-invoice will be issued automatically.",
     "proforma_validate_cta": "Approve quote",
-    "proforma_validate_disclaimer": "If you did not expect this email, ignore it. The link expires after 14 days."
+    "proforma_validate_disclaimer": "If you did not expect this email, ignore it. The link expires after 14 days.",
+    "product_digest_test_env_tag": "TEST environment",
+    "product_digest_weekly_subject": "petsFollow — Weekly updates from {week} [{branch}]",
+    "product_digest_weekly_tagline": "Weekly product digest",
+    "product_digest_weekly_preheader": "petsFollow functional updates ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Hello {fullName},",
+    "product_digest_weekly_intro": "Here is the functional summary of petsFollow updates for the week of {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Week of {week} summary ({branch}): {headline}",
+    "product_digest_weekly_disclaimer": "Automated email — non-technical weekly delivery summary. You can also browse Nouveautés in petsFollow Pro.",
+    "product_digest_weekly_fallback_name": "team"
   },
   "push": {
     "new_message_title": "New message",

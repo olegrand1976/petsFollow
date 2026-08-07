@@ -186,7 +186,7 @@
         :day="anchorDate"
         :visits="visits"
         :columns="dayColumns"
-        :resource-mode="showResourceToggle ? resourceMode : null"
+        :resource-mode="dayResourceMode"
         :focus-visit-id="focusVisitId"
         @select-visit="openVisitDetail"
       />
@@ -219,6 +219,20 @@
             {{ selectedVisit.clientName }}
           </NuxtLink>
           <span v-else>{{ selectedVisit.clientName }}</span>
+          <ProBadge
+            v-if="selectedVisit.isWalkinPlaceholder"
+            variant="warning"
+            data-testid="walkin-visit-badge"
+          >
+            {{ $t('clients.walkin.badge') }}
+          </ProBadge>
+        </p>
+        <p
+          v-if="selectedVisit.callbackPhone"
+          data-testid="visit-callback-phone"
+        >
+          <strong>{{ $t('clients.walkin.callbackPhone') }} :</strong>
+          <a :href="`tel:${selectedVisit.callbackPhone}`">{{ selectedVisit.callbackPhone }}</a>
         </p>
         <p>
           <strong>{{ $t('calendar.columnPet') }} :</strong> {{ selectedVisit.petName }}
@@ -227,7 +241,7 @@
           <strong>{{ $t('calendar.columnSite') }} :</strong> {{ selectedVisit.siteName }}
         </p>
         <div
-          v-if="sitesUiEnabled && canEditVisitResources"
+          v-if="canEditVisitResources"
           class="visit-resources pro-mb-md"
           data-testid="visit-resources"
         >
@@ -243,7 +257,7 @@
               <option v-for="m in detailAssigneeOptions" :key="m.id" :value="m.id">{{ m.fullName }}</option>
             </select>
           </div>
-          <div class="pro-field">
+          <div v-if="sitesUiEnabled" class="pro-field">
             <label class="pro-label" for="visit-room">{{ $t('calendar.room') }}</label>
             <select
               id="visit-room"
@@ -265,11 +279,11 @@
             {{ $t('calendar.saveResources') }}
           </ProButton>
         </div>
-        <template v-else-if="sitesUiEnabled">
+        <template v-else>
           <p v-if="selectedVisit.assigneeName" data-testid="visit-assignee-label">
             <strong>{{ $t('calendar.assignee') }} :</strong> {{ selectedVisit.assigneeName }}
           </p>
-          <p v-if="selectedVisit.roomName" data-testid="visit-room-label">
+          <p v-if="sitesUiEnabled && selectedVisit.roomName" data-testid="visit-room-label">
             <strong>{{ $t('calendar.room') }} :</strong> {{ selectedVisit.roomName }}
           </p>
         </template>
@@ -592,6 +606,11 @@
 import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
 import { visitConsultationCta } from '~/composables/useCalendarGrid'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
+import {
+  extractTeamMembersList,
+  mapTeamMembersForCalendar,
+  type CalendarTeamMember,
+} from '~/utils/calendarTeam'
 
 // Client-only: date grids + view toggle are click-dead during SSR hydration races
 // (Playwright / fast clicks hit static HTML before Vue binds @click).
@@ -603,7 +622,7 @@ definePageMeta({
 
 type CalendarViewMode = 'day' | 'week' | 'month'
 type ResourceMode = 'people' | 'rooms'
-type TeamMemberRow = { id: string; fullName: string; defaultSiteId?: string }
+type TeamMemberRow = CalendarTeamMember
 type RoomRow = { id: string; name: string; active?: boolean }
 
 const route = useRoute()
@@ -700,8 +719,27 @@ const detailRoomOptions = computed(() => {
   return opts
 })
 
+/** People columns in day view even when sites UI is off; rooms toggle only with sites. */
+const showDayPeopleResources = computed(
+  () => viewMode.value === 'day' && !isAggregatedView.value,
+)
 const showResourceToggle = computed(
-  () => viewMode.value === 'day' && sitesUiEnabled.value && !isAggregatedView.value,
+  () => showDayPeopleResources.value && sitesUiEnabled.value,
+)
+const dayResourceMode = computed<ResourceMode | null>(() => {
+  if (!showDayPeopleResources.value) return null
+  if (!sitesUiEnabled.value) return 'people'
+  return resourceMode.value
+})
+
+watch(
+  [sitesUiEnabled, showDayPeopleResources],
+  () => {
+    if (!sitesUiEnabled.value && resourceMode.value === 'rooms') {
+      resourceMode.value = 'people'
+    }
+  },
+  { immediate: true },
 )
 
 const detailOpen = ref(false)
@@ -911,7 +949,7 @@ const canEditVisitResources = computed(() => {
 })
 
 const dayColumns = computed(() => {
-  if (!showResourceToggle.value) {
+  if (!showDayPeopleResources.value) {
     return [{ id: '', label: periodLabel.value }]
   }
   const dayKeyNow = dayKey(startOfDay(anchorDate.value))
@@ -919,7 +957,7 @@ const dayColumns = computed(() => {
     const at = visitDisplayAt(v)
     return !!at && dayKey(at) === dayKeyNow
   })
-  if (resourceMode.value === 'rooms') {
+  if (dayResourceMode.value === 'rooms') {
     const cols: { id: string; label: string }[] = [
       { id: '', label: t('calendar.noRoom') },
       ...detailRooms.value.map((r) => ({ id: r.id, label: r.name })),
@@ -1024,40 +1062,32 @@ function rangeForView() {
 }
 
 async function loadDayResources() {
-  if (!sitesUiEnabled.value || isAggregatedView.value) {
+  if (isAggregatedView.value) {
     teamMembers.value = []
     siteRooms.value = []
     return
   }
   const siteId = concreteSiteId.value
-  if (!siteId) return
   try {
-    const [teamRes, roomsRes]: any[] = await Promise.all([
-      $fetch('/api/vet/team'),
-      $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`),
-    ])
-    const teamPayload = Array.isArray(teamRes) ? teamRes : (teamRes?.data ?? [])
-    const members = Array.isArray(teamPayload)
-      ? teamPayload
-      : (Array.isArray(teamPayload?.members) ? teamPayload.members : [])
-    teamMembers.value = members
-      .filter((m: any) => m?.userId)
-      .map((m: any) => ({
-        id: String(m.userId),
-        fullName: String(m.fullName || m.email || m.userId),
-        defaultSiteId: m.defaultSiteId ? String(m.defaultSiteId) : '',
-      }))
-      .filter((m: { id: string; defaultSiteId: string }) =>
-        !m.defaultSiteId || m.defaultSiteId === siteId,
-      )
-    const roomsList = roomsRes?.data ?? roomsRes ?? []
-    siteRooms.value = (Array.isArray(roomsList) ? roomsList : [])
-      .filter((r: any) => r?.id)
-      .map((r: any) => ({
-        id: String(r.id),
-        name: String(r.name || r.id),
-        active: r.active !== false,
-      }))
+    const teamRes: any = await $fetch('/api/vet/team')
+    teamMembers.value = mapTeamMembersForCalendar(
+      extractTeamMembersList(teamRes),
+      sitesUiEnabled.value ? siteId : '',
+    )
+    if (sitesUiEnabled.value && siteId) {
+      const roomsRes: any = await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`)
+      const roomsList = roomsRes?.data ?? roomsRes ?? []
+      siteRooms.value = (Array.isArray(roomsList) ? roomsList : [])
+        .filter((r: any) => r?.id)
+        .map((r: any) => ({
+          id: String(r.id),
+          name: String(r.name || r.id),
+          active: r.active !== false,
+        }))
+    }
+    else {
+      siteRooms.value = []
+    }
   } catch {
     teamMembers.value = []
     siteRooms.value = []
@@ -1079,7 +1109,7 @@ async function load() {
       $fetch(withSiteQuery('/api/vet/schedule', concreteSiteId.value)),
       $fetch(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`)),
     ]
-    if (viewMode.value === 'day' && sitesUiEnabled.value && !isAggregatedView.value) {
+    if (viewMode.value === 'day' && !isAggregatedView.value) {
       fetches.push(loadDayResources())
     }
     const [calRes, schedRes, todayRes] = await Promise.all(fetches)
@@ -1157,33 +1187,21 @@ function openVisitDetail(v: CalendarVisit) {
   focusVisitId.value = v.id
   detailOpen.value = true
   void loadVisitPreconsult(v.id)
-  if (sitesUiEnabled.value) {
-    void ensureResourcesForDetail(v.siteId || concreteSiteId.value)
-  }
+  void ensureResourcesForDetail(v.siteId || concreteSiteId.value)
 }
 
 async function ensureResourcesForDetail(siteId: string) {
-  if (!siteId) return
-  if (!teamMembers.value.length || !siteRooms.value.length || siteId !== concreteSiteId.value) {
-    try {
-      const [teamRes, roomsRes]: any[] = await Promise.all([
-        $fetch('/api/vet/team'),
-        $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`),
-      ])
-      const teamPayload = Array.isArray(teamRes) ? teamRes : (teamRes?.data ?? [])
-      const members = Array.isArray(teamPayload)
-        ? teamPayload
-        : (Array.isArray(teamPayload?.members) ? teamPayload.members : [])
-      teamMembers.value = members
-        .filter((m: any) => m?.userId)
-        .map((m: any) => ({
-          id: String(m.userId),
-          fullName: String(m.fullName || m.email || m.userId),
-          defaultSiteId: m.defaultSiteId ? String(m.defaultSiteId) : '',
-        }))
-        .filter((m: { id: string; defaultSiteId: string }) =>
-          !m.defaultSiteId || m.defaultSiteId === siteId,
-        )
+  const needTeam = !teamMembers.value.length
+  const needRooms = sitesUiEnabled.value && (!siteRooms.value.length || (siteId && siteId !== concreteSiteId.value))
+  if (!needTeam && !needRooms) return
+  try {
+    const teamRes: any = await $fetch('/api/vet/team')
+    teamMembers.value = mapTeamMembersForCalendar(
+      extractTeamMembersList(teamRes),
+      sitesUiEnabled.value ? siteId : '',
+    )
+    if (sitesUiEnabled.value && siteId) {
+      const roomsRes: any = await $fetch(`/api/vet/sites/${encodeURIComponent(siteId)}/rooms`)
       const roomsList = roomsRes?.data ?? roomsRes ?? []
       siteRooms.value = (Array.isArray(roomsList) ? roomsList : [])
         .filter((r: any) => r?.id)
@@ -1192,8 +1210,8 @@ async function ensureResourcesForDetail(siteId: string) {
           name: String(r.name || r.id),
           active: r.active !== false,
         }))
-    } catch { /* keep previous */ }
-  }
+    }
+  } catch { /* keep previous */ }
 }
 
 async function saveVisitResources() {

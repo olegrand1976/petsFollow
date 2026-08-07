@@ -152,6 +152,13 @@ func (a *API) invoicingCreateDocument(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
 			return
 		}
+		if err := a.store.AssertVisitIdentified(r.Context(), req.VisitID); err != nil {
+			if a.writeWalkinErr(w, r, err) {
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
 	}
 	req.DAFID = strings.TrimSpace(req.DAFID)
 	if req.DAFID != "" {

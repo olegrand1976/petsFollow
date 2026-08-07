@@ -56,7 +56,7 @@
             >
               <option value="">{{ $t('calendar.selectClient') }}</option>
               <option v-for="c in clients" :key="c.userId" :value="c.userId">
-                {{ c.displayName || c.email || c.userId }}
+                {{ clientLabel(c) }}
               </option>
             </select>
           </div>
@@ -72,8 +72,27 @@
               data-testid="new-appt-pet"
             >
               <option value="">{{ $t('calendar.selectPet') }}</option>
-              <option v-for="p in pets" :key="p.id" :value="p.id">{{ p.name }}</option>
+              <option v-for="p in pets" :key="p.id" :value="p.id">{{ petLabel(p) }}</option>
             </select>
+          </div>
+
+          <div
+            v-if="selectedClientIsWalkin"
+            class="pro-field"
+            data-testid="new-appt-callback-phone-field"
+          >
+            <label class="pro-label" for="new-appt-callback-phone">{{ $t('clients.walkin.callbackPhone') }}</label>
+            <input
+              id="new-appt-callback-phone"
+              v-model="callbackPhone"
+              type="tel"
+              class="pro-input"
+              required
+              maxlength="40"
+              :placeholder="$t('clients.walkin.callbackPhonePlaceholder')"
+              data-testid="new-appt-callback-phone"
+            >
+            <p class="pro-settings-hint">{{ $t('clients.walkin.callbackPhoneHint') }}</p>
           </div>
 
           <div class="pro-field">
@@ -102,19 +121,20 @@
           </label>
           <p class="pro-settings-hint">{{ $t('calendar.newAppt.preconsultHint') }}</p>
 
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-assignee">{{ $t('calendar.assignee') }}</label>
+            <select
+              id="new-appt-assignee"
+              v-model="assigneeUserId"
+              class="pro-select"
+              data-testid="new-appt-assignee"
+            >
+              <option value="">{{ $t('calendar.unassigned') }}</option>
+              <option v-for="m in teamMembers" :key="m.id" :value="m.id">{{ m.fullName }}</option>
+            </select>
+          </div>
+
           <template v-if="sitesUiEnabled">
-            <div class="pro-field">
-              <label class="pro-label" for="new-appt-assignee">{{ $t('calendar.assignee') }}</label>
-              <select
-                id="new-appt-assignee"
-                v-model="assigneeUserId"
-                class="pro-select"
-                data-testid="new-appt-assignee"
-              >
-                <option value="">{{ $t('calendar.unassigned') }}</option>
-                <option v-for="m in teamMembers" :key="m.id" :value="m.id">{{ m.fullName }}</option>
-              </select>
-            </div>
             <div class="pro-field">
               <label class="pro-label" for="new-appt-room">{{ $t('calendar.room') }}</label>
               <select
@@ -229,11 +249,16 @@
 
 <script setup lang="ts">
 import type { CalendarVisit } from '~/composables/useCalendarGrid'
+import {
+  extractTeamMembersList,
+  mapTeamMembersForCalendar,
+  type CalendarTeamMember,
+} from '~/utils/calendarTeam'
 
-type ClientRow = { userId: string; displayName?: string; email?: string }
-type PetRow = { id: string; name: string }
+type ClientRow = { userId: string; displayName?: string; email?: string; isWalkinPlaceholder?: boolean }
+type PetRow = { id: string; name: string; isWalkinPlaceholder?: boolean }
 type VisitTypeRow = { id: string; name: string; durationMinutes: number; color: string }
-type TeamMemberRow = { id: string; fullName: string }
+type TeamMemberRow = CalendarTeamMember
 type RoomRow = { id: string; name: string }
 
 const props = defineProps<{
@@ -287,10 +312,20 @@ const day = ref('')
 const time = ref('09:00')
 const durationMinutes = ref(30)
 const notes = ref('')
+const callbackPhone = ref('')
 const requestPreconsult = ref(false)
 const defaultDuration = ref(30)
 
-const canSubmit = computed(() => !!clientId.value && !!petId.value && !!day.value && !!time.value && (!showSitePicker.value || !!targetSiteId.value))
+const selectedClientIsWalkin = computed(() =>
+  !!clients.value.find(c => c.userId === clientId.value)?.isWalkinPlaceholder,
+)
+
+const canSubmit = computed(() => {
+  if (!clientId.value || !petId.value || !day.value || !time.value) return false
+  if (showSitePicker.value && !targetSiteId.value) return false
+  if (selectedClientIsWalkin.value && !callbackPhone.value.trim()) return false
+  return true
+})
 
 const dayVisits = computed(() => {
   if (!day.value) return [] as CalendarVisit[]
@@ -360,7 +395,11 @@ watch(clientId, async (id) => {
     pets.value = (Array.isArray(list) ? list : []).map((p: any) => ({
       id: p.id,
       name: p.name || p.id,
+      isWalkinPlaceholder: !!p.isWalkinPlaceholder,
     }))
+    const walkinPet = pets.value.find(p => p.isWalkinPlaceholder)
+    if (walkinPet) petId.value = walkinPet.id
+    else if (pets.value.length === 1) petId.value = pets.value[0].id
   } catch {
     pets.value = []
   } finally {
@@ -374,6 +413,7 @@ watch(
     if (!isOpen) return
     error.value = ''
     notes.value = ''
+    callbackPhone.value = ''
     requestPreconsult.value = false
     visitTypeId.value = ''
     clientId.value = ''
@@ -385,6 +425,8 @@ watch(
     time.value = '09:00'
     await loadMeta()
     durationMinutes.value = defaultDuration.value
+    const walkin = clients.value.find(c => c.isWalkinPlaceholder)
+    if (walkin) clientId.value = walkin.userId
   },
 )
 
@@ -426,10 +468,8 @@ async function loadMeta() {
       $fetch('/api/clients'),
       $fetch('/api/vet/visit-types?active=1'),
       $fetch(withSiteQuery('/api/vet/schedule', siteQ)),
+      $fetch('/api/vet/team'),
     ]
-    if (sitesUiEnabled.value) {
-      fetches.push($fetch('/api/vet/team'))
-    }
     const [clientsRes, typesRes, schedRes, teamRes] = await Promise.all(fetches)
     const cl = clientsRes.data ?? clientsRes ?? []
     clients.value = (Array.isArray(cl) ? cl : [])
@@ -438,7 +478,9 @@ async function loadMeta() {
         userId: c.userId,
         displayName: c.displayName || c.fullName || '',
         email: c.email || '',
+        isWalkinPlaceholder: !!c.isWalkinPlaceholder,
       }))
+      .sort((a: ClientRow, b: ClientRow) => Number(!!b.isWalkinPlaceholder) - Number(!!a.isWalkinPlaceholder))
     const types = typesRes.data ?? typesRes ?? []
     visitTypes.value = (Array.isArray(types) ? types : [])
       .filter((vt: any) => vt?.id && vt.isActive !== false)
@@ -450,23 +492,10 @@ async function loadMeta() {
       }))
     const sched = schedRes.data ?? schedRes
     defaultDuration.value = sched?.slotDurationMinutes || 30
-    if (teamRes) {
-      const teamPayload = Array.isArray(teamRes) ? teamRes : (teamRes?.data ?? [])
-      const members = Array.isArray(teamPayload)
-        ? teamPayload
-        : (Array.isArray(teamPayload?.members) ? teamPayload.members : [])
-      teamMembers.value = members
-        .filter((m: any) => m?.userId)
-        .map((m: any) => ({
-          id: String(m.userId),
-          fullName: String(m.fullName || m.email || m.userId),
-          defaultSiteId: m.defaultSiteId ? String(m.defaultSiteId) : '',
-        }))
-        .filter((m: { id: string; defaultSiteId: string }) => {
-          const sid = targetSiteId.value
-          return !sid || !m.defaultSiteId || m.defaultSiteId === sid
-        })
-    }
+    teamMembers.value = mapTeamMembersForCalendar(
+      extractTeamMembersList(teamRes),
+      sitesUiEnabled.value ? targetSiteId.value : '',
+    )
     if (sitesUiEnabled.value) {
       await loadRooms(siteQ)
     }
@@ -492,6 +521,9 @@ async function submit(confirmDirect: boolean) {
       scheduledAt: scheduledAt.toISOString(),
       siteId: targetSiteId.value || undefined,
     }
+    if (selectedClientIsWalkin.value) {
+      body.callbackPhone = callbackPhone.value.trim()
+    }
     if (visitTypeId.value) {
       body.visitTypeId = visitTypeId.value
     } else {
@@ -509,6 +541,15 @@ async function submit(confirmDirect: boolean) {
   } finally {
     busy.value = false
   }
+}
+
+function clientLabel(c: ClientRow) {
+  const base = c.displayName || c.email || c.userId
+  return c.isWalkinPlaceholder ? `${base} (${t('clients.walkin.badge')})` : base
+}
+
+function petLabel(p: PetRow) {
+  return p.isWalkinPlaceholder ? `${p.name} (${t('clients.walkin.badge')})` : p.name
 }
 </script>
 

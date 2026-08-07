@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "E-mails / Templates",
     "commercialEmails": "Verzonden e-mails",
     "commercialAgenda": "Agenda",
-    "managerAgenda": "Teamagenda"
+    "managerAgenda": "Teamagenda",
+    "nouveautes": "Nieuwigheden"
   },
   "auth": {
     "login": {
@@ -939,6 +940,29 @@
       "street": "Straat",
       "postal": "Postcode",
       "city": "Stad"
+    },
+    "walkin": {
+      "badge": "Te identificeren",
+      "identifyTitle": "Klant identificeren",
+      "identifyHint": "Deze afspraak gebruikt het slot « Nieuwe klant ». Identificeer de klant vóór het verslag.",
+      "modeCreate": "Klant aanmaken",
+      "modeExisting": "Bekende klant",
+      "emailOptional": "E-mail (optioneel)",
+      "petName": "Naam dier",
+      "petSpecies": "Soort",
+      "speciesDog": "Hond",
+      "speciesCat": "Kat",
+      "speciesHorse": "Paard",
+      "speciesOther": "Andere",
+      "confirmExisting": "Ik bevestig dat dit de juiste klant is",
+      "createNewPet": "Nieuw dier",
+      "petCount": "{n} dier(en)",
+      "submit": "Identiteit bevestigen",
+      "identifyFailed": "Identificatie mislukt",
+      "readonlyHint": "Systeemslot — niet bewerkbaar. Gebruik voor snelle afspraken, identificeer daarna in de consultatie.",
+      "callbackPhone": "Terugbelnummer",
+      "callbackPhonePlaceholder": "Telefoonnummer",
+      "callbackPhoneHint": "Verplicht om de klant terug te bellen bij problemen (het slot Nieuwe klant blijft ongewijzigd)."
     }
   },
   "consultations": {
@@ -3958,6 +3982,10 @@
       }
     },
     "columnDefaultSite": "Standaardsite",
+    "columnIncludeInCalendar": "Agenda",
+    "includeInCalendar": "Tonen in agenda",
+    "includeInCalendarTip": "Indien aangevinkt verschijnt deze persoon als kolom en in de toewijzingslijst van de agenda.",
+    "includeInCalendarErr": "Agendaweergave kon niet worden bijgewerkt.",
     "defaultSite": "Standaardsite",
     "defaultSiteNone": "Geen",
     "defaultSiteUpdated": "Standaardsite bijgewerkt."
@@ -4762,5 +4790,13 @@
     "expired": "Deze link is verlopen.",
     "invalid": "Ongeldige of reeds gebruikte link.",
     "errorGeneric": "Offerte kon niet worden goedgekeurd."
+  },
+  "nouveautes": {
+    "title": "Nieuwigheden",
+    "subtitle": "Recente functionele updates van het platform",
+    "loading": "Laden…",
+    "emptyTitle": "Nog geen nieuwigheden",
+    "emptyBody": "Functionele samenvattingen verschijnen hier na elke oplevering.",
+    "loadError": "Kon nieuwigheden niet laden."
   }
 }

@@ -612,7 +612,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		notifications.client_preferences, notifications.device_tokens,
 		discovery.email_sends, discovery.email_journey, discovery.progress,
 		ops.auth_alerts,
-		ops.product_digest_sends, ops.product_digests,
+		ops.product_digest_weekly_sends, ops.product_digest_sends, ops.product_digests,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.weight_readings, pets.dossier_events, pets.pets,
@@ -1334,6 +1334,9 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 	// Visits require site_id NOT NULL (000150) — create primary before any visit insert.
 	if _, err := store.EnsurePrimarySiteTx(ctx, tx, practiceID); err != nil {
 		return fmt.Errorf("primary site: %w", err)
+	}
+	if _, err := store.EnsureWalkinPlaceholdersTx(ctx, tx, practiceID); err != nil {
+		return fmt.Errorf("walkin placeholders: %w", err)
 	}
 
 	registry := &ids{

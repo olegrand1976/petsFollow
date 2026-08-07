@@ -306,6 +306,13 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 	if !a.canManageVisit(w, r, id, visit) {
 		return
 	}
+	if err := a.store.AssertVisitIdentified(r.Context(), visitID); err != nil {
+		if a.writeWalkinErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	report, err := a.store.EnsureVisitReport(r.Context(), visitID, id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

@@ -513,6 +513,7 @@ type createVisitReq struct {
 	ScheduledAt       *string `json:"scheduledAt"`
 	SiteID            string  `json:"siteId"`
 	Notes             string  `json:"notes"`
+	CallbackPhone     string  `json:"callbackPhone"`
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
 	VisitTypeID       *string `json:"visitTypeId"`
@@ -702,6 +703,17 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		VisitTypeID:         visitTypeID,
 		ConfirmDirect:       confirmDirect,
 		ConsultationSession: consultationSession,
+	}
+	if pet.IsWalkinPlaceholder {
+		phone, code := normalizeContactPhone(req.CallbackPhone, true)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		in.CallbackPhone = phone
+	} else if phone := strings.TrimSpace(req.CallbackPhone); phone != "" {
+		// Ignore callback phone on identified pets (identity lives on the client).
+		in.CallbackPhone = ""
 	}
 	if actsAsPro {
 		// Assignee/room are calendar.manage only (not care_pro terrain).

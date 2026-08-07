@@ -472,6 +472,7 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''),
 			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''),
 			p.adopted_at, p.sold_at, p.deceased_at, p.created_at,
+			COALESCE(p.is_walkin_placeholder, false),
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -512,6 +513,7 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
 			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
 			&p.FoodChainStatus, &p.DomicileLocation, &p.AdoptedAt, &p.SoldAt, &p.DeceasedAt, &p.CreatedAt,
+			&p.IsWalkinPlaceholder,
 			&p.Permission,
 		); err != nil {
 			return nil, err

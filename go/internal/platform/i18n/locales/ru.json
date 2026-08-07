@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} отправил вам проформу на подтверждение.",
     "proforma_validate_detail": "Сумма с НДС: {amount}\n\nПодтверждая, вы принимаете проформу: электронный счёт будет выставлен автоматически.",
     "proforma_validate_cta": "Подтвердить проформу",
-    "proforma_validate_disclaimer": "Если вы не ожидали это письмо, проигнорируйте его. Ссылка действует 14 дней."
+    "proforma_validate_disclaimer": "Если вы не ожидали это письмо, проигнорируйте его. Ссылка действует 14 дней.",
+    "product_digest_test_env_tag": "среда TEST",
+    "product_digest_weekly_subject": "petsFollow — новости недели от {week} [{branch}]",
+    "product_digest_weekly_tagline": "Еженедельный продуктовый дайджест",
+    "product_digest_weekly_preheader": "Функциональные обновления petsFollow ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Здравствуйте, {fullName}!",
+    "product_digest_weekly_intro": "Краткий функциональный обзор обновлений petsFollow за неделю от {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Обзор недели от {week} ({branch}): {headline}",
+    "product_digest_weekly_disclaimer": "Автоматическое письмо — нетехнический недельный обзор. Также смотрите «Новинки» в petsFollow Pro.",
+    "product_digest_weekly_fallback_name": "команда"
   },
   "push": {
     "new_message_title": "Новое сообщение",

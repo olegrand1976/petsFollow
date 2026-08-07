@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} le ha enviado un presupuesto para validar.",
     "proforma_validate_detail": "Importe IVA incl.: {amount}\n\nAl validar, acepta el presupuesto y se emitirá automáticamente una factura electrónica.",
     "proforma_validate_cta": "Validar presupuesto",
-    "proforma_validate_disclaimer": "Si no esperaba este correo, ignórelo. El enlace caduca a los 14 días."
+    "proforma_validate_disclaimer": "Si no esperaba este correo, ignórelo. El enlace caduca a los 14 días.",
+    "product_digest_test_env_tag": "entorno de TEST",
+    "product_digest_weekly_subject": "petsFollow — Novedades de la semana del {week} [{branch}]",
+    "product_digest_weekly_tagline": "Resumen de producto semanal",
+    "product_digest_weekly_preheader": "Evoluciones funcionales de petsFollow ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Hola {fullName},",
+    "product_digest_weekly_intro": "Aquí tienes el resumen funcional de las novedades petsFollow de la semana del {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Resumen de la semana del {week} ({branch}): {headline}",
+    "product_digest_weekly_disclaimer": "Email automático — resumen no técnico de las entregas de la semana. Consulta también Novedades en petsFollow Pro.",
+    "product_digest_weekly_fallback_name": "equipo"
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

@@ -77,6 +77,16 @@
             :title="$t('calendar.preconsultSentTooltip')"
           >{{ $t('calendar.preconsultSentTag') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }}</span>
+          <span
+            v-if="v.callbackPhone"
+            class="cal-chip__phone"
+            data-testid="calendar-chip-phone"
+            role="link"
+            tabindex="0"
+            :title="v.callbackPhone"
+            @click.stop="dialCallbackPhone(v.callbackPhone!)"
+            @keydown.enter.stop="dialCallbackPhone(v.callbackPhone!)"
+          >{{ v.callbackPhone }}</span>
           <span v-if="v.addressText" class="cal-chip__place" :title="v.addressText">{{ $t('calendar.placeBadge') }}</span>
         </button>
         <button
@@ -93,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { calendarChipTooltip, type CalendarVacation, type CalendarVisit } from '~/composables/useCalendarGrid'
+import { calendarChipTooltip, dialCallbackPhone, type CalendarVacation, type CalendarVisit } from '~/composables/useCalendarGrid'
 
 const props = withDefaults(
   defineProps<{

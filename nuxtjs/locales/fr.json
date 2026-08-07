@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "Emails / Templates",
     "commercialEmails": "Emails envoyés",
     "commercialAgenda": "Agenda",
-    "managerAgenda": "Agenda équipe"
+    "managerAgenda": "Agenda équipe",
+    "nouveautes": "Nouveautés"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1648,6 +1649,29 @@
       "street": "Rue",
       "postal": "Code postal",
       "city": "Ville"
+    },
+    "walkin": {
+      "badge": "À identifier",
+      "identifyTitle": "Identifier le client",
+      "identifyHint": "Ce rendez-vous utilise le créneau « Nouveau client ». Identifiez le client avant le compte-rendu.",
+      "modeCreate": "Créer le client",
+      "modeExisting": "Client connu",
+      "emailOptional": "Email (optionnel)",
+      "petName": "Nom de l'animal",
+      "petSpecies": "Espèce",
+      "speciesDog": "Chien",
+      "speciesCat": "Chat",
+      "speciesHorse": "Cheval",
+      "speciesOther": "Autre",
+      "confirmExisting": "Je confirme qu'il s'agit bien de ce client",
+      "createNewPet": "Nouvel animal",
+      "petCount": "{n} animal(aux)",
+      "submit": "Valider l'identité",
+      "identifyFailed": "Identification impossible",
+      "readonlyHint": "Créneau système non modifiable — utilisez-le pour les RDV rapides, puis identifiez le client en consultation.",
+      "callbackPhone": "Téléphone de rappel",
+      "callbackPhonePlaceholder": "04xx xx xx xx",
+      "callbackPhoneHint": "Obligatoire pour rappeler le client en cas de problème (le créneau Nouveau client reste inchangé)."
     }
   },
   "consultations": {
@@ -3908,6 +3932,10 @@
     "columnEmail": "Email",
     "columnRole": "Rôle",
     "columnRights": "Droits",
+    "columnIncludeInCalendar": "Calendrier",
+    "includeInCalendar": "Afficher dans le calendrier",
+    "includeInCalendarTip": "Si coché, la personne apparaît en colonne et dans la liste d’assignation de l’agenda.",
+    "includeInCalendarErr": "Impossible de mettre à jour l’affichage calendrier.",
     "columnDefaultSite": "Site par défaut",
     "defaultSite": "Site par défaut",
     "defaultSiteNone": "Aucun",
@@ -4762,5 +4790,13 @@
     "expired": "Ce lien a expiré.",
     "invalid": "Lien invalide ou déjà utilisé.",
     "errorGeneric": "Impossible de valider le devis."
+  },
+  "nouveautes": {
+    "title": "Nouveautés",
+    "subtitle": "Évolutions fonctionnelles récentes de la plateforme",
+    "loading": "Chargement…",
+    "emptyTitle": "Aucune nouveauté pour le moment",
+    "emptyBody": "Les synthèses fonctionnelles apparaîtront ici au fil des livraisons.",
+    "loadError": "Impossible de charger les nouveautés."
   }
 }

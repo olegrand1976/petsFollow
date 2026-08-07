@@ -22,6 +22,7 @@
     </ProCard>
 
     <ProCard>
+      <p v-if="calendarMsg" class="pro-hint pro-mb-md" role="status">{{ calendarMsg }}</p>
       <ProTable :empty="!members.length" :empty-title="$t('team.empty')">
         <thead>
           <tr>
@@ -29,6 +30,7 @@
             <th>{{ $t('team.columnEmail') }}</th>
             <th>{{ $t('team.columnRole') }}</th>
             <th>{{ $t('team.columnRights') }}</th>
+            <th>{{ $t('team.columnIncludeInCalendar') }}</th>
             <th v-if="sitesUiEnabled">{{ $t('team.columnDefaultSite') }}</th>
             <th v-if="canManageTeam" />
           </tr>
@@ -59,6 +61,21 @@
                 </label>
               </div>
               <span v-else class="pro-hint">{{ $t('team.defaults') }}</span>
+            </td>
+            <td>
+              <label
+                class="team-calendar-toggle"
+                :title="$t('team.includeInCalendarTip')"
+              >
+                <input
+                  type="checkbox"
+                  :checked="m.includeInCalendar !== false"
+                  :disabled="!canManageTeam || calendarSavingId === m.id"
+                  :data-testid="`team-include-calendar-${m.id}`"
+                  @change="setIncludeInCalendar(m, ($event.target as HTMLInputElement).checked)"
+                >
+                <span class="visually-hidden">{{ $t('team.includeInCalendar') }}</span>
+              </label>
             </td>
             <td v-if="sitesUiEnabled">
               <select
@@ -143,6 +160,7 @@ type TeamMember = {
   teamRole: string
   permissions: Record<string, boolean>
   defaultSiteId?: string
+  includeInCalendar?: boolean
 }
 
 type PracticeSite = { id: string; name: string }
@@ -155,7 +173,9 @@ const canManageTeam = computed(() => canPractice('team.manage'))
 const members = ref<TeamMember[]>([])
 const practiceSites = ref<PracticeSite[]>([])
 const saving = ref(false)
+const calendarSavingId = ref('')
 const inviteMsg = ref('')
+const calendarMsg = ref('')
 const form = reactive({
   email: '',
   fullName: '',
@@ -250,6 +270,23 @@ async function setDefaultSite(m: TeamMember, siteId: string) {
   await load()
 }
 
+async function setIncludeInCalendar(m: TeamMember, checked: boolean) {
+  if (!canManageTeam.value || calendarSavingId.value) return
+  calendarSavingId.value = m.id
+  calendarMsg.value = ''
+  try {
+    await $fetch(`/api/vet/team/${m.id}`, {
+      method: 'PATCH',
+      body: { includeInCalendar: checked },
+    })
+  } catch {
+    calendarMsg.value = t('team.includeInCalendarErr')
+  } finally {
+    await load()
+    calendarSavingId.value = ''
+  }
+}
+
 async function revoke(id: string) {
   if (!window.confirm(t('team.revokeConfirm'))) return
   await $fetch(`/api/vet/team/${id}`, { method: 'DELETE' })
@@ -276,6 +313,15 @@ onMounted(load)
 .team-perm--denied {
   opacity: 0.45;
   cursor: not-allowed;
+}
+.team-calendar-toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.team-calendar-toggle:has(input:disabled) {
+  cursor: default;
+  opacity: 0.7;
 }
 .visually-hidden {
   position: absolute;

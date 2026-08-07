@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "Emails / Templates",
     "commercialEmails": "Sent emails",
     "commercialAgenda": "Agenda",
-    "managerAgenda": "Team agenda"
+    "managerAgenda": "Team agenda",
+    "nouveautes": "What's new"
   },
   "auth": {
     "login": {
@@ -939,6 +940,29 @@
       "street": "Street",
       "postal": "Postal code",
       "city": "City"
+    },
+    "walkin": {
+      "badge": "To identify",
+      "identifyTitle": "Identify the client",
+      "identifyHint": "This appointment uses the “New client” slot. Identify the client before the clinical report.",
+      "modeCreate": "Create client",
+      "modeExisting": "Known client",
+      "emailOptional": "Email (optional)",
+      "petName": "Pet name",
+      "petSpecies": "Species",
+      "speciesDog": "Dog",
+      "speciesCat": "Cat",
+      "speciesHorse": "Horse",
+      "speciesOther": "Other",
+      "confirmExisting": "I confirm this is the correct client",
+      "createNewPet": "New pet",
+      "petCount": "{n} pet(s)",
+      "submit": "Confirm identity",
+      "identifyFailed": "Identification failed",
+      "readonlyHint": "System slot — not editable. Use it for quick bookings, then identify the client at consultation.",
+      "callbackPhone": "Callback phone",
+      "callbackPhonePlaceholder": "Phone number",
+      "callbackPhoneHint": "Required to call the client back if needed (the New client slot stays unchanged)."
     }
   },
   "consultations": {
@@ -3958,6 +3982,10 @@
       }
     },
     "columnDefaultSite": "Default site",
+    "columnIncludeInCalendar": "Calendar",
+    "includeInCalendar": "Show in calendar",
+    "includeInCalendarTip": "When checked, this person appears as a calendar column and in the assignment list.",
+    "includeInCalendarErr": "Could not update calendar visibility.",
     "defaultSite": "Default site",
     "defaultSiteNone": "None",
     "defaultSiteUpdated": "Default site updated."
@@ -4762,5 +4790,13 @@
     "expired": "This link has expired.",
     "invalid": "Invalid or already used link.",
     "errorGeneric": "Could not approve the quote."
+  },
+  "nouveautes": {
+    "title": "What's new",
+    "subtitle": "Recent functional updates on the platform",
+    "loading": "Loading…",
+    "emptyTitle": "No updates yet",
+    "emptyBody": "Functional summaries will appear here as releases ship.",
+    "loadError": "Could not load updates."
   }
 }

@@ -83,7 +83,20 @@
             data-testid="calendar-chip-preconsult-sent"
             :title="$t('calendar.preconsultSentTooltip')"
           >{{ $t('calendar.preconsultSentTag') }}</span>
-          <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
+          <span class="cal-chip__title">
+            {{ v.petName || '—' }} · {{ v.clientName || '—' }}
+            <span v-if="v.isWalkinPlaceholder" class="cal-chip__walkin" data-testid="calendar-chip-walkin">!</span>
+          </span>
+          <span
+            v-if="v.callbackPhone"
+            class="cal-chip__phone"
+            data-testid="calendar-chip-phone"
+            role="link"
+            tabindex="0"
+            :title="$t('clients.walkin.callbackPhone')"
+            @click.stop="dialCallbackPhone(v.callbackPhone!)"
+            @keydown.enter.stop="dialCallbackPhone(v.callbackPhone!)"
+          >{{ v.callbackPhone }}</span>
           <span v-if="v.addressText" class="cal-chip__place">{{ v.addressText }}</span>
         </button>
         <p v-if="!cell.visits.length" class="cal-week__empty">—</p>
@@ -93,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { calendarChipTooltip, type CalendarVacation, type CalendarVisit } from '~/composables/useCalendarGrid'
+import { calendarChipTooltip, dialCallbackPhone, type CalendarVacation, type CalendarVisit } from '~/composables/useCalendarGrid'
 
 const props = defineProps<{
   weekStart: Date
@@ -253,5 +266,11 @@ function chipTime(v: CalendarVisit) {
   .cal-week--stack .cal-week__col {
     min-height: 0;
   }
+}
+.cal-chip__walkin {
+  display: inline-block;
+  margin-left: 0.2rem;
+  color: var(--pf-vet-alert);
+  font-weight: 700;
 }
 </style>

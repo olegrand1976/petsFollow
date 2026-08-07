@@ -162,11 +162,13 @@ Compte : `vet.demo@petsfollow.test`
 | C1.6 | P2 | Prefs email véto | Notifs message / FR / visit | Toggle persist |
 | C1.7 | P2 | Client booking | Activer/désactiver booking client | Flutter BookVisit reflète l’état |
 
-### Digest produit quotidien (interne)
+### Digest produit (interne + Nouveautés)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| Z-DIGEST | P1 | Email évolutions du jour | GH Action ingest (branche `staging`) → `POST /internal/product-digest/run` 18:00 Brussels | Destinataires `admin` / `commercial` / `commercial_manager` ; sujet/corps avec `[staging]` ; Go `TestProductDigest*` ; MailHog local |
+| Z-DIGEST | P1 | Email évolutions du jour | GH Action ingest (branche `staging`) → `POST /internal/product-digest/run` 18:00 Brussels | Destinataires `admin` / `commercial` / `commercial_manager` ; sujet/corps avec tag TEST staging ; Go `TestProductDigest*` ; MailHog local |
+| Z-DIGEST-W | P1 | Email hebdo samedi | Digests `ready`/`sent` sur 7 j → `POST /internal/product-digest/weekly-run` 08:00 samedi | Destinataires staff + `reference_vet` (skip `*.petsfollow.test`) ; tag TEST staging ; Go `TestProductDigestWeekly*` |
+| Z-DIGEST-UI | P1 | Page Pro Nouveautés | Login vet/admin/commercial → `/nouveautes` | Liste digests via `GET /product-digests` ; nav « Nouveautés » |
 
 ### C2 — Dashboard, clients, pets
 
@@ -195,6 +197,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.20 | P1 | CR transcription → versions | hint-transcribe / edit notes → improve → restore | v0 transcript · v1 IA · restore cible pane ; re-improve écrase v1 |
 | C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
 | C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
+| C2.23 | P1 | Nouveau client / identification | Placeholder système par cabinet ; RDV/walk-in sur « Nouveau client » + « Nouvel animal » ; **téléphone de rappel** obligatoire sur la visite (`callbackPhone`) ; gate Identifier avant CR ; create ou existing+confirm | Go `TestWalkin*` (refus sans tél.) ; placeholders immuables (PATCH/login 403/401) ; finalize/DAF/facture bloqués tant que non identifié ; UC-VP-12 |
 
 ### C3 — Calendrier & RDV
 
@@ -207,7 +210,8 @@ Compte : `vet.demo@petsfollow.test`
 | C3.5 | P1 | Annuler / done | Actions visite | Statuts cohérents |
 | C3.6 | P2 | Deep-link visite | `/calendar?visit={id}` (email) | Focus bonne visite |
 | C3.7 | P2 | GPS / adresse | Saisir adresse visite | Lien Maps si présent |
-| C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm |
+| C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm ; **pré-sélection** Nouveau client / Nouvel animal (badge À identifier) ; champ tél. rappel obligatoire si walk-in |
+| C3.18 | P1 | RDV non identifié | Chip agenda `!` + détail badge ; ouvrir consultation | Gate Identifier (create/existing) puis CR ; placeholder réutilisable |
 | C3.9 | P1 | Pré-consult urgente | Opt-in pré-consult → client soumet `urgency=high` | Badge Urgent calendrier ; détail + IA informatif ; email véto immédiat (alerte clinique) |
 | C3.10 | P1 | Desk secrétaire RDV | `/calendar` en `secretary.demo` → détail RDV | Pas de CR/dictée ; note + save ; send pré-consult si absente ; change heure propose/direct ; cancel confirm ; salle d’attente (tag + notif topbar clinique) ; tags pré-C tooltip ; e2e `13-team-staff-smoke` B2c |
 | C3.12 | P1 | SMS confirmation (dry-run) | `api-dev` (SMS_ENABLED=true, SMS_DRY_RUN=true) → confirmer un RDV d'un client avec téléphone | Ligne `notifications.sms_log` kind `visit_confirmed`, status `dry_run`, `to_phone` en E.164 ; aucun envoi réel |
@@ -591,6 +595,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
 | L10 | P0 | `consultations.history.read` | Cap distinct de `calendar.manage` ; secrétaire OFF par défaut (nav + `/consultations` + `GET /vet/consultations` 403) ; soft-delete = history.read ∧ write_clinical ∧ (**walk-in** ∨ **done/cancelled**+CR) ; ASV/véto ON ; tip Équipe Agenda ≠ historique ; e2e `13-team-staff-smoke` B2b |
 | L11 | P1 | Agenda desk secrétaire | Sans `pets.write_clinical` : modal détail sans CR ; `PATCH …/notes`, `send_preconsult`, `reschedule_direct`, `mark_waiting_room` ; tags chips + `GET /vet/desk-alerts` ; e2e B2c + Go `TestSecretaryDesk*` |
+| L12 | P1 | `includeInCalendar` | Toggle `/team` → `PATCH /vet/team/{id}` ; défaut `true` ; false = hors colonnes/assignation (UI + `ValidateVisitAssignee`) ; assignee déjà posé conservable ; Go `TestTeamIncludeInCalendar` + Vitest `calendarTeam.spec.ts` |
 
 ## M — Concurrence commerciale
 

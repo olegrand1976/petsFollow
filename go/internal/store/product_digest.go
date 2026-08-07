@@ -146,3 +146,124 @@ func (s *Store) ClearProductDigestSend(ctx context.Context, digestDate time.Time
 		WHERE digest_date = $1::date AND user_id = $2::uuid`, digestDate, userID)
 	return err
 }
+
+func scanProductDigestRows(rows pgx.Rows) ([]ProductDigest, error) {
+	defer rows.Close()
+	var out []ProductDigest
+	for rows.Next() {
+		var d ProductDigest
+		var headlineLocale, bodyLocale []byte
+		if err := rows.Scan(
+			&d.DigestDate, &d.Headline, &d.BodyText, &headlineLocale, &bodyLocale, &d.CommitsJSON, &d.Status,
+			&d.GeneratedAt, &d.SentAt, &d.Meta,
+		); err != nil {
+			return nil, err
+		}
+		d.HeadlineByLocale = map[string]string{}
+		d.BodyByLocale = map[string]string{}
+		if len(headlineLocale) > 0 {
+			_ = json.Unmarshal(headlineLocale, &d.HeadlineByLocale)
+		}
+		if len(bodyLocale) > 0 {
+			_ = json.Unmarshal(bodyLocale, &d.BodyByLocale)
+		}
+		out = append(out, d)
+	}
+	return out, rows.Err()
+}
+
+// ListProductDigests returns ready/sent digests newest-first (optional limit; 0 = no limit).
+func (s *Store) ListProductDigests(ctx context.Context, limit int) ([]ProductDigest, error) {
+	if limit <= 0 {
+		limit = 30
+	}
+	if limit > 90 {
+		limit = 90
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT digest_date, headline, body_text, headline_by_locale, body_by_locale, commits_json, status,
+			generated_at, sent_at, meta
+		FROM ops.product_digests
+		WHERE status IN ('ready', 'sent')
+		ORDER BY digest_date DESC
+		LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	return scanProductDigestRows(rows)
+}
+
+// ListProductDigestsSince returns ready/sent digests with digest_date >= since (ascending).
+func (s *Store) ListProductDigestsSince(ctx context.Context, since time.Time) ([]ProductDigest, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT digest_date, headline, body_text, headline_by_locale, body_by_locale, commits_json, status,
+			generated_at, sent_at, meta
+		FROM ops.product_digests
+		WHERE status IN ('ready', 'sent') AND digest_date >= $1::date
+		ORDER BY digest_date ASC`, since)
+	if err != nil {
+		return nil, err
+	}
+	return scanProductDigestRows(rows)
+}
+
+func scanDigestRecipients(rows pgx.Rows) ([]DigestRecipient, error) {
+	defer rows.Close()
+	var out []DigestRecipient
+	for rows.Next() {
+		var r DigestRecipient
+		if err := rows.Scan(&r.ID, &r.Email, &r.FullName, &r.PreferredLocale, &r.Role); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// ListWeeklyDigestRecipients returns daily staff plus active practice reference vets.
+// Skips *.petsfollow.test demo emails.
+func (s *Store) ListWeeklyDigestRecipients(ctx context.Context) ([]DigestRecipient, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, email, COALESCE(full_name,''), COALESCE(preferred_locale,'fr'), role
+		FROM (
+			SELECT u.id, u.email, u.full_name, u.preferred_locale, u.role
+			FROM identity.users u
+			WHERE u.role IN ('admin', 'commercial', 'commercial_manager')
+			  AND u.email IS NOT NULL AND TRIM(u.email) <> ''
+			  AND LOWER(u.email) NOT LIKE '%@petsfollow.test'
+
+			UNION
+
+			SELECT u.id, u.email, u.full_name, u.preferred_locale, u.role
+			FROM practice.practices p
+			JOIN identity.users u ON u.id = p.reference_vet_user_id
+			WHERE p.reference_vet_user_id IS NOT NULL
+			  AND u.email IS NOT NULL AND TRIM(u.email) <> ''
+			  AND LOWER(u.email) NOT LIKE '%@petsfollow.test'
+		) r
+		ORDER BY role, email`)
+	if err != nil {
+		return nil, err
+	}
+	return scanDigestRecipients(rows)
+}
+
+// RecordProductDigestWeeklySend inserts an idempotent weekly send row. Returns true if newly inserted.
+func (s *Store) RecordProductDigestWeeklySend(ctx context.Context, weekStart time.Time, userID string) (bool, error) {
+	tag, err := s.pool.Exec(ctx, `
+		INSERT INTO ops.product_digest_weekly_sends (week_start, user_id)
+		VALUES ($1::date, $2::uuid)
+		ON CONFLICT DO NOTHING`, weekStart, userID)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+// ClearProductDigestWeeklySend removes a weekly send row so a later run can retry after SMTP failure.
+func (s *Store) ClearProductDigestWeeklySend(ctx context.Context, weekStart time.Time, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM ops.product_digest_weekly_sends
+		WHERE week_start = $1::date AND user_id = $2::uuid`, weekStart, userID)
+	return err
+}

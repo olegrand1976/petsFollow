@@ -95,7 +95,8 @@
     "commercialEmailTemplates": "Emails / Plantillas",
     "commercialEmails": "Emails enviados",
     "commercialAgenda": "Agenda",
-    "managerAgenda": "Agenda del equipo"
+    "managerAgenda": "Agenda del equipo",
+    "nouveautes": "Novedades"
   },
   "auth": {
     "login": {
@@ -939,6 +940,29 @@
       "street": "Calle",
       "postal": "Código postal",
       "city": "Ciudad"
+    },
+    "walkin": {
+      "badge": "Por identificar",
+      "identifyTitle": "Identificar al cliente",
+      "identifyHint": "Esta cita usa el hueco « Nuevo cliente ». Identifique al cliente antes del informe.",
+      "modeCreate": "Crear cliente",
+      "modeExisting": "Cliente conocido",
+      "emailOptional": "Email (opcional)",
+      "petName": "Nombre del animal",
+      "petSpecies": "Especie",
+      "speciesDog": "Perro",
+      "speciesCat": "Gato",
+      "speciesHorse": "Caballo",
+      "speciesOther": "Otro",
+      "confirmExisting": "Confirmo que es este cliente",
+      "createNewPet": "Nuevo animal",
+      "petCount": "{n} animal(es)",
+      "submit": "Validar identidad",
+      "identifyFailed": "Identificación imposible",
+      "readonlyHint": "Hueco de sistema no editable — úselo para citas rápidas y luego identifique en consulta.",
+      "callbackPhone": "Teléfono de contacto",
+      "callbackPhonePlaceholder": "Número de teléfono",
+      "callbackPhoneHint": "Obligatorio para llamar al cliente si hay un problema (el hueco Nuevo cliente no cambia)."
     }
   },
   "consultations": {
@@ -3958,6 +3982,10 @@
       }
     },
     "columnDefaultSite": "Sede predeterminada",
+    "columnIncludeInCalendar": "Calendario",
+    "includeInCalendar": "Mostrar en el calendario",
+    "includeInCalendarTip": "Si está marcado, la persona aparece como columna y en la lista de asignación de la agenda.",
+    "includeInCalendarErr": "No se pudo actualizar la visibilidad en el calendario.",
     "defaultSite": "Sede predeterminada",
     "defaultSiteNone": "Ninguna",
     "defaultSiteUpdated": "Sede predeterminada actualizada."
@@ -4762,5 +4790,13 @@
     "expired": "Este enlace ha caducado.",
     "invalid": "Enlace no válido o ya utilizado.",
     "errorGeneric": "No se pudo validar el presupuesto."
+  },
+  "nouveautes": {
+    "title": "Novedades",
+    "subtitle": "Evoluciones funcionales recientes de la plataforma",
+    "loading": "Cargando…",
+    "emptyTitle": "Aún no hay novedades",
+    "emptyBody": "Los resúmenes funcionales aparecerán aquí con cada entrega.",
+    "loadError": "No se pudieron cargar las novedades."
   }
 }

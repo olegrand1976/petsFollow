@@ -119,6 +119,7 @@ const navItems = computed<ProNavItem[]>(() => {
   }
 
   items.push({ to: '/produits', label: t('nav.products'), icon: 'description', section: offer })
+  items.push({ to: '/nouveautes', label: t('nav.nouveautes'), icon: 'newspaper', section: offer })
   if (canPractice('clients.write')) {
     items.push({ to: '/recommend', label: t('nav.recommend'), icon: 'recommend', section: offer })
   }

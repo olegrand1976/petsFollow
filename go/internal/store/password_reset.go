@@ -24,7 +24,7 @@ func (s *Store) RequestPasswordReset(ctx context.Context, email string) (Passwor
 	if err != nil {
 		return PasswordResetResult{}, err
 	}
-	if u.PasswordHash == "" {
+	if u.IsWalkinPlaceholder || IsWalkinPlaceholderEmail(u.Email) || u.PasswordHash == "" {
 		return PasswordResetResult{}, ErrNotFound
 	}
 

@@ -37,7 +37,33 @@
         :label="$t('clients.consultation.notes')"
         test-id="consultation-notes"
       />
+      <div
+        v-if="selectedPetIsWalkin"
+        class="pro-field"
+        data-testid="consultation-callback-phone-field"
+      >
+        <label class="pro-label" for="consultation-callback-phone">{{ $t('clients.walkin.callbackPhone') }}</label>
+        <input
+          id="consultation-callback-phone"
+          v-model="callbackPhone"
+          type="tel"
+          class="pro-input"
+          required
+          maxlength="40"
+          :placeholder="$t('clients.walkin.callbackPhonePlaceholder')"
+          data-testid="consultation-callback-phone"
+        >
+        <p class="pro-hint">{{ $t('clients.walkin.callbackPhoneHint') }}</p>
+      </div>
     </div>
+
+    <!-- Gate identité (Nouveau client / Nouvel animal) -->
+    <ProIdentifyClientGate
+      v-else-if="needsIdentify && visitId"
+      :visit-id="visitId"
+      :initial-phone="callbackPhone || resumeCallbackPhone"
+      @identified="onIdentified"
+    />
 
     <!-- Étape B/C : workspace CR + hub (même coque partout) -->
     <div
@@ -73,10 +99,15 @@
       <ProButton
         test-id="consultation-start"
         :loading="starting"
-        :disabled="!selectedPetId || starting || petsLoading"
+        :disabled="!selectedPetId || starting || petsLoading || (selectedPetIsWalkin && !callbackPhone.trim())"
         @click="start"
       >
         {{ $t('clients.consultation.start') }}
+      </ProButton>
+    </template>
+    <template v-else-if="needsIdentify" #footer>
+      <ProButton variant="ghost" test-id="identify-cancel" @click="close">
+        {{ $t('common.cancel') }}
       </ProButton>
     </template>
   </ProModal>
@@ -90,6 +121,8 @@ type WorkspaceExpose = {
   requestLeave: () => void
   isBusy: () => boolean
 }
+
+type ConsultationPetFlag = ConsultationPet & { isWalkinPlaceholder?: boolean }
 
 const props = defineProps<{
   open: boolean
@@ -122,29 +155,37 @@ const {
   loadClientPets,
 } = useConsultationFlow()
 
-const pets = ref<ConsultationPet[]>([])
+const pets = ref<ConsultationPetFlag[]>([])
 const petsLoading = ref(false)
 const loadError = ref('')
 const selectedPetId = ref('')
 const notes = ref('')
+const callbackPhone = ref('')
+const resumeCallbackPhone = ref('')
 const closing = ref(false)
 const leavePromptBlocking = ref(false)
 const workspaceBusy = ref(false)
 const stage = ref<'report' | 'hub'>('report')
 const modalExpanded = ref(false)
 const workspaceRef = ref<WorkspaceExpose | null>(null)
+const needsIdentify = ref(false)
 
 const readonly = computed(() => !canPractice('pets.write_clinical'))
+
+const selectedPetIsWalkin = computed(() =>
+  !!pets.value.find(p => p.id === selectedPetId.value)?.isWalkinPlaceholder,
+)
 
 const workspaceClientId = computed(() => flowClientId.value || props.clientId)
 const workspacePetId = computed(() => petId.value || selectedPetId.value || props.resumePetId || '')
 
 /** CR (après start ou reprise) = toujours coque full + bouton plein écran. */
-const hasVisitShell = computed(() => Boolean(visitId.value || props.resumeVisitId))
+const hasVisitShell = computed(() => Boolean(visitId.value || props.resumeVisitId) && !needsIdentify.value)
 const modalSize = computed<'md' | 'full'>(() => (hasVisitShell.value ? 'full' : 'md'))
 const modalExpandable = computed(() => hasVisitShell.value)
 
 const modalTitle = computed(() => {
+  if (needsIdentify.value) return t('clients.walkin.identifyTitle')
   if (!hasVisitShell.value) return t('clients.consultation.title')
   if (stage.value === 'hub') return t('clients.consultation.nextStepsTitle')
   return t('consultations.detailTitle')
@@ -155,7 +196,11 @@ async function loadPets() {
   petsLoading.value = true
   loadError.value = ''
   try {
-    pets.value = await loadClientPets(props.clientId)
+    const list = await loadClientPets(props.clientId)
+    pets.value = list.map((p: any) => ({
+      ...p,
+      isWalkinPlaceholder: !!p.isWalkinPlaceholder,
+    }))
     if (props.resumePetId) {
       selectedPetId.value = props.resumePetId
     }
@@ -169,6 +214,41 @@ async function loadPets() {
   }
   finally {
     petsLoading.value = false
+  }
+}
+
+function petNeedsIdentify(petHint: string) {
+  const p = pets.value.find(x => x.id === petHint)
+  return !!p?.isWalkinPlaceholder
+}
+
+async function detectResumeNeedsIdentify(visitHint: string, petHint: string) {
+  needsIdentify.value = false
+  resumeCallbackPhone.value = ''
+  if (petHint && pets.value.length) {
+    needsIdentify.value = petNeedsIdentify(petHint)
+  }
+  try {
+    if (petHint) {
+      const res: any = await $fetch(`/api/pets/${petHint}/visits`)
+      const list = Array.isArray(res?.data ?? res) ? (res.data ?? res) : []
+      const visit = list.find((v: any) => v?.id === visitHint)
+      if (visit?.callbackPhone) {
+        resumeCallbackPhone.value = String(visit.callbackPhone)
+        callbackPhone.value = resumeCallbackPhone.value
+      }
+      if (visit?.isWalkinPlaceholder) {
+        needsIdentify.value = true
+        return
+      }
+    }
+    if (needsIdentify.value) return
+    const clientRes: any = await $fetch(`/api/clients/${props.clientId}`)
+    const client = clientRes?.data ?? clientRes
+    if (client?.isWalkinPlaceholder) needsIdentify.value = true
+  }
+  catch {
+    /* best-effort */
   }
 }
 
@@ -187,6 +267,10 @@ function applyResume() {
     keepVisit: preserveVisit.value,
   })
   void hydrateResumeSchedule(props.resumeVisitId, props.resumePetId || '')
+  void (async () => {
+    await loadPets()
+    await detectResumeNeedsIdentify(props.resumeVisitId!, props.resumePetId || '')
+  })()
 }
 
 /** No GET /visits/:id — resolve date via pet visit list when possible. */
@@ -211,11 +295,14 @@ watch(
     reset()
     selectedPetId.value = ''
     notes.value = ''
+    callbackPhone.value = ''
+    resumeCallbackPhone.value = ''
     closing.value = false
     leavePromptBlocking.value = false
     workspaceBusy.value = false
     stage.value = 'report'
     modalExpanded.value = false
+    needsIdentify.value = false
     if (props.resumeVisitId) {
       applyResume()
     }
@@ -280,11 +367,12 @@ async function onWorkspaceClosed() {
 function onOpenUpdate(v: boolean) {
   if (!v) {
     if (starting.value || closing.value || workspaceBusy.value || leavePromptBlocking.value) return
-    if (visitId.value) {
+    if (visitId.value && !needsIdentify.value) {
       workspaceRef.value?.requestLeave()
       return
     }
     reset()
+    needsIdentify.value = false
     active.syncActiveVisit(null)
     emit('update:open', false)
     emit('closed')
@@ -300,14 +388,17 @@ function close() {
 
 async function start() {
   if (!selectedPetId.value || !props.clientId) return
+  if (selectedPetIsWalkin.value && !callbackPhone.value.trim()) return
   try {
     const id = await startConsultation({
       clientId: props.clientId,
       petId: selectedPetId.value,
       notes: notes.value,
+      callbackPhone: selectedPetIsWalkin.value ? callbackPhone.value.trim() : undefined,
     })
     if (!id) return
     preserveVisit.value = false
+    needsIdentify.value = petNeedsIdentify(selectedPetId.value)
     active.syncActiveVisit({
       visitId: id,
       clientId: props.clientId,
@@ -319,6 +410,23 @@ async function start() {
   catch {
     // error already on flowError
   }
+}
+
+function onIdentified(payload: { clientId: string, petId: string }) {
+  needsIdentify.value = false
+  flowClientId.value = payload.clientId
+  petId.value = payload.petId
+  selectedPetId.value = payload.petId
+  active.clientId.value = payload.clientId
+  if (visitId.value) {
+    active.syncActiveVisit({
+      visitId: visitId.value,
+      clientId: payload.clientId,
+      petId: payload.petId,
+      keepVisit: preserveVisit.value,
+    })
+  }
+  stage.value = 'report'
 }
 </script>
 

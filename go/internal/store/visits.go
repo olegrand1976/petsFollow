@@ -21,6 +21,8 @@ type Visit struct {
 	ScheduledAt         *time.Time `json:"scheduledAt,omitempty"`
 	Status              string     `json:"status"`
 	Notes               string     `json:"notes"`
+	// CallbackPhone: temporary contact for walk-in / Nouveau client bookings (not on the immutable slot user).
+	CallbackPhone       string     `json:"callbackPhone,omitempty"`
 	Source              string     `json:"source"`
 	CreatedAt           time.Time  `json:"createdAt"`
 	PetName             string     `json:"petName,omitempty"`
@@ -44,6 +46,8 @@ type Visit struct {
 	RequestPreconsult bool `json:"requestPreconsult,omitempty"`
 	// ConsultationSession: walk-in CR flow — excluded from agenda overlap / slot busy.
 	ConsultationSession bool `json:"consultationSession,omitempty"`
+	// IsWalkinPlaceholder: visit still on system "Nouvel animal" — needs identify before CR finalize.
+	IsWalkinPlaceholder bool `json:"isWalkinPlaceholder,omitempty"`
 	// WaitingRoomAt: desk marked client as arrived / in waiting room.
 	WaitingRoomAt *time.Time `json:"waitingRoomAt,omitempty"`
 	// HasFinalReport: at least one visit_reports row with status=final (client list enrichment).
@@ -65,6 +69,7 @@ type CreateVisitInput struct {
 	SiteID            string // empty → primary site
 	Source            string // client | vet | care_pro
 	Notes             string
+	CallbackPhone     string // required when pet is walk-in placeholder
 	ScheduledAt       *time.Time
 	DurationMinutes   *int
 	VisitTypeID       *string
@@ -88,9 +93,11 @@ func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
 			v.scheduled_at, v.status, COALESCE(v.notes,''), v.source, v.created_at,
 			'', '', '',
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false), COALESCE(v.callback_phone,'')
 		FROM visits.visits v
 		LEFT JOIN practice.sites si ON si.id = v.site_id
+		LEFT JOIN pets.pets p ON p.id = v.pet_id
 		WHERE v.pet_id = $1 AND v.deleted_at IS NULL
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC`, petID)
 	if err != nil {
@@ -107,7 +114,8 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false), COALESCE(v.callback_phone,'')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -224,6 +232,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false), COALESCE(v.callback_phone,''),
 			EXISTS (
 				SELECT 1 FROM visits.visit_reports r
 				WHERE r.visit_id = v.id AND %s
@@ -274,7 +283,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.IsWalkinPlaceholder, &v.CallbackPhone,
 			&item.HasReport, &item.HasAudio, &item.AudioDurationSec, &item.ReportStatus,
 		); err != nil {
 			return nil, err
@@ -305,7 +314,8 @@ func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID, s
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false), COALESCE(v.callback_phone,'')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -331,7 +341,7 @@ func scanVisitsFull(rows pgx.Rows) ([]Visit, error) {
 			&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.IsWalkinPlaceholder, &v.CallbackPhone,
 		); err != nil {
 			return nil, err
 		}
@@ -512,16 +522,16 @@ func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, er
 	}
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id, callback_phone)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
-			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,'')`,
+			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,''), COALESCE(callback_phone,'')`,
 		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
-		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID),
+		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID), strings.TrimSpace(in.CallbackPhone),
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID,
-		&v.AssigneeUserID, &v.RoomID)
+		&v.AssigneeUserID, &v.RoomID, &v.CallbackPhone)
 	if err != nil {
 		return Visit{}, err
 	}
@@ -629,16 +639,16 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	id := uuid.NewString()
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id, assignee_user_id, room_id, callback_phone)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		RETURNING id::text, pet_id::text, practice_id::text, site_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
-			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,'')`,
+			COALESCE(visit_type_id::text,''), COALESCE(assignee_user_id::text,''), COALESCE(room_id::text,''), COALESCE(callback_phone,'')`,
 		id, in.PetID, in.PracticeID, in.SiteID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
-		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID),
+		nullUUIDArg(in.AssigneeUserID), nullUUIDArg(in.RoomID), strings.TrimSpace(in.CallbackPhone),
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID,
-		&v.AssigneeUserID, &v.RoomID)
+		&v.AssigneeUserID, &v.RoomID, &v.CallbackPhone)
 	if err != nil {
 		return Visit{}, err
 	}
@@ -657,16 +667,19 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.request_preconsult,false), COALESCE(v.consultation_session,false),
 			v.waiting_room_at,
 			COALESCE(v.assignee_user_id::text,''), COALESCE(au.full_name,''),
-			COALESCE(v.room_id::text,''), COALESCE(rm.name,'')
+			COALESCE(v.room_id::text,''), COALESCE(rm.name,''),
+			COALESCE(v.callback_phone,''), COALESCE(p.is_walkin_placeholder, false)
 		FROM visits.visits v
 		LEFT JOIN practice.sites si ON si.id = v.site_id
 		LEFT JOIN identity.users au ON au.id = v.assignee_user_id
 		LEFT JOIN practice.rooms rm ON rm.id = v.room_id
+		LEFT JOIN pets.pets p ON p.id = v.pet_id
 		WHERE v.id = $1 AND v.deleted_at IS NULL`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt,
-		&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName)
+		&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName,
+		&v.CallbackPhone, &v.IsWalkinPlaceholder)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}
@@ -682,7 +695,8 @@ func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false)
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			COALESCE(p.is_walkin_placeholder, false), COALESCE(v.callback_phone,'')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -694,7 +708,7 @@ func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string
 		&v.Notes, &v.Source, &v.CreatedAt,
 		&v.PetName, &v.ClientName, &v.ClientID,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-		&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+		&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.IsWalkinPlaceholder, &v.CallbackPhone,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
@@ -703,12 +717,25 @@ func (s *Store) GetPracticeVisit(ctx context.Context, practiceID, visitID string
 }
 
 // UpdateVisitNotes sets agenda / desk notes (calendar.manage — not clinical CR).
-func (s *Store) UpdateVisitNotes(ctx context.Context, id, notes string) (Visit, error) {
+// If callbackPhone is non-nil, also updates the walk-in callback number (empty clears).
+func (s *Store) UpdateVisitNotes(ctx context.Context, id, notes string, callbackPhone *string) (Visit, error) {
 	if len(notes) > 1000 {
 		notes = notes[:1000]
 	}
-	tag, err := s.pool.Exec(ctx, `
-		UPDATE visits.visits SET notes = $2 WHERE id = $1 AND deleted_at IS NULL`, id, notes)
+	var tag pgconn.CommandTag
+	var err error
+	if callbackPhone != nil {
+		phone := strings.TrimSpace(*callbackPhone)
+		if len(phone) > 40 {
+			phone = phone[:40]
+		}
+		tag, err = s.pool.Exec(ctx, `
+			UPDATE visits.visits SET notes = $2, callback_phone = $3 WHERE id = $1 AND deleted_at IS NULL`,
+			id, notes, phone)
+	} else {
+		tag, err = s.pool.Exec(ctx, `
+			UPDATE visits.visits SET notes = $2 WHERE id = $1 AND deleted_at IS NULL`, id, notes)
+	}
 	if err != nil {
 		return Visit{}, err
 	}
@@ -819,7 +846,9 @@ func (s *Store) SetVisitResources(ctx context.Context, id string, assigneeUserID
 	if roomID != nil {
 		nextRoom = strings.TrimSpace(*roomID)
 	}
-	if err := s.ValidateVisitAssignee(ctx, cur.PracticeID, nextAssignee); err != nil {
+	// New assignee must be on the calendar; keeping an existing (possibly hidden) assignee is allowed.
+	requireInCalendar := nextAssignee != "" && nextAssignee != cur.AssigneeUserID
+	if err := s.validateVisitAssignee(ctx, cur.PracticeID, nextAssignee, requireInCalendar); err != nil {
 		return Visit{}, err
 	}
 	if err := s.ValidateVisitRoom(ctx, cur.PracticeID, cur.SiteID, nextRoom); err != nil {

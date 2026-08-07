@@ -81,7 +81,20 @@
               class="cal-chip__preconsult cal-chip__preconsult--sent"
               data-testid="calendar-chip-preconsult-sent"
             >{{ $t('calendar.preconsultSentTag') }}</span>
-            <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
+            <span class="cal-chip__title">
+              {{ v.petName || '—' }} · {{ v.clientName || '—' }}
+              <span v-if="v.isWalkinPlaceholder" class="cal-chip__walkin" data-testid="calendar-chip-walkin">!</span>
+            </span>
+            <span
+              v-if="v.callbackPhone"
+              class="cal-chip__phone"
+              data-testid="calendar-chip-phone"
+              role="link"
+              tabindex="0"
+              :title="$t('clients.walkin.callbackPhone')"
+              @click.stop="dialCallbackPhone(v.callbackPhone!)"
+              @keydown.enter.stop="dialCallbackPhone(v.callbackPhone!)"
+            >{{ v.callbackPhone }}</span>
           </button>
         </div>
       </div>
@@ -90,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { calendarChipTooltip, type CalendarVisit } from '~/composables/useCalendarGrid'
+import { calendarChipTooltip, dialCallbackPhone, type CalendarVisit } from '~/composables/useCalendarGrid'
 
 export type CalendarDayColumn = { id: string; label: string }
 export type CalendarResourceMode = 'people' | 'rooms'
@@ -232,5 +245,11 @@ function chipTime(v: CalendarVisit) {
   flex-direction: column;
   gap: 0.25rem;
   background: var(--pf-vet-surface);
+}
+.cal-chip__walkin {
+  display: inline-block;
+  margin-left: 0.2rem;
+  color: var(--pf-vet-alert);
+  font-weight: 700;
 }
 </style>

@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} stuurde u een offerte ter goedkeuring.",
     "proforma_validate_detail": "Bedrag incl. btw: {amount}\n\nDoor te valideren aanvaardt u de offerte: er wordt automatisch een e-factuur aangemaakt.",
     "proforma_validate_cta": "Offerte goedkeuren",
-    "proforma_validate_disclaimer": "Als u deze e-mail niet verwachtte, negeer hem. De link verloopt na 14 dagen."
+    "proforma_validate_disclaimer": "Als u deze e-mail niet verwachtte, negeer hem. De link verloopt na 14 dagen.",
+    "product_digest_test_env_tag": "TEST-omgeving",
+    "product_digest_weekly_subject": "petsFollow — Wekelijkse updates vanaf {week} [{branch}]",
+    "product_digest_weekly_tagline": "Wekelijkse productsamenvatting",
+    "product_digest_weekly_preheader": "Functionele petsFollow-updates ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Hallo {fullName},",
+    "product_digest_weekly_intro": "Hier is de functionele samenvatting van petsFollow-updates voor de week van {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Samenvatting week van {week} ({branch}): {headline}",
+    "product_digest_weekly_disclaimer": "Automatische e-mail — niet-technische wekelijkse samenvatting. Bekijk ook Nouveautés in petsFollow Pro.",
+    "product_digest_weekly_fallback_name": "team"
   },
   "push": {
     "new_message_title": "Nieuw bericht",

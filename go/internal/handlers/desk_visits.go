@@ -15,7 +15,8 @@ import (
 )
 
 type updateVisitNotesReq struct {
-	Notes string `json:"notes"`
+	Notes         string  `json:"notes"`
+	CallbackPhone *string `json:"callbackPhone"`
 }
 
 // updateVisitNotes PATCH /visits/{visitID}/notes — agenda desk note (calendar.manage).
@@ -46,7 +47,16 @@ func (a *API) updateVisitNotes(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	updated, err := a.store.UpdateVisitNotes(r.Context(), visit.ID, strings.TrimSpace(req.Notes))
+	var phonePtr *string
+	if req.CallbackPhone != nil {
+		phone, code := normalizeContactPhone(*req.CallbackPhone, false)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		phonePtr = &phone
+	}
+	updated, err := a.store.UpdateVisitNotes(r.Context(), visit.ID, strings.TrimSpace(req.Notes), phonePtr)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")

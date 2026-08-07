@@ -21,7 +21,8 @@
         "UC-VP-03",
         "UC-VP-04",
         "UC-VP-05",
-        "UC-VP-06"
+        "UC-VP-06",
+        "UC-VP-12"
       ]
     },
     {
@@ -345,6 +346,37 @@
         "Page /sites accessible et opérationnelle.",
         "Création / rename / désactivation de sites et salles sans erreur.",
         "Switcher topbar visible en multi-sites ; agenda filtré correctement."
+      ],
+      "checklist": []
+    },
+    "UC-VP-12": {
+      "id": "UC-VP-12",
+      "folderId": "vetpro",
+      "slug": "UC-VP-12-rdv-rapide-nouveau-client",
+      "title": "RDV rapide Nouveau client puis identification",
+      "duration": "",
+      "priority": "",
+      "surface": "",
+      "destructive": false,
+      "objective": "Prendre un rendez-vous (ou démarrer une consultation) sans connaître encore le client, grâce au créneau système Nouveau client / Nouvel animal, puis identifier l’identité réelle avant le compte-rendu.",
+      "actors": [],
+      "prerequisites": [
+        "Compte véto seed (vet.demo@petsfollow.test / VetDemo123!)",
+        "Cabinet avec le couple placeholder (créé automatiquement à la création du cabinet / au listage clients)"
+      ],
+      "steps": [
+        "Ouvrir Agenda → Nouveau RDV.",
+        "Constater que Nouveau client (badge « À identifier ») et Nouvel animal sont pré-sélectionnés.",
+        "Saisir le téléphone de rappel (obligatoire) + créneau + type de visite → créer le RDV.",
+        "Ouvrir le détail du RDV → pastille « À identifier » + téléphone cliquable → Nouvelle consultation.",
+        "L’écran Identifier le client s’affiche (pas le CR) :",
+        "Valider → le workspace CR s’ouvre sur l’identité réelle.",
+        "Les placeholders Nouveau client / Nouvel animal restent disponibles pour le prochain cas (non modifiés)."
+      ],
+      "expected": [
+        "RDV bookable en quelques secondes sans encoder une fausse identité.",
+        "Impossible de finaliser un CR / DAF / facture tant que la visite pointe encore sur le placeholder.",
+        "Après identification, la visite est rattachée au vrai animal ; le créneau système est réutilisable."
       ],
       "checklist": []
     },

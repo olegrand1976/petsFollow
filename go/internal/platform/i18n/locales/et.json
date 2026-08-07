@@ -651,7 +651,16 @@
     "proforma_validate_intro": "{practiceName} saatis teile kinnitamiseks pakkumise.",
     "proforma_validate_detail": "Summa koos käibemaksuga: {amount}\n\nKinnitamisel nõustute pakkumisega ning e-arve koostatakse automaatselt.",
     "proforma_validate_cta": "Kinnita pakkumine",
-    "proforma_validate_disclaimer": "Kui te ei oodanud seda e-kirja, ignoreerige seda. Link aegub 14 päeva pärast."
+    "proforma_validate_disclaimer": "Kui te ei oodanud seda e-kirja, ignoreerige seda. Link aegub 14 päeva pärast.",
+    "product_digest_test_env_tag": "TEST-keskkond",
+    "product_digest_weekly_subject": "petsFollow — Nädala uudised alates {week} [{branch}]",
+    "product_digest_weekly_tagline": "Iganädalane tootetutvustus",
+    "product_digest_weekly_preheader": "petsFollow funktsionaalsed uuendused ({range}) — {branch}.",
+    "product_digest_weekly_greeting": "Tere {fullName},",
+    "product_digest_weekly_intro": "Siin on petsFollow funktsionaalsete uudiste kokkuvõte nädala kohta alates {week} ({range}, {branch}).",
+    "product_digest_weekly_intro_with_headline": "Nädala {week} kokkuvõte ({branch}): {headline}",
+    "product_digest_weekly_disclaimer": "Automaatne e-kiri — mittetehniline nädalakokkuvõte. Vaata ka Nouveautés petsFollow Pro-s.",
+    "product_digest_weekly_fallback_name": "meeskond"
   },
   "push": {
     "new_message_title": "Uus sõnum",

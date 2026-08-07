@@ -4,32 +4,67 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func (a *API) registerProductDigestRoutes(r chi.Router) {
 	r.Post("/internal/product-digest/ingest", a.internalIngestProductDigest)
 	r.Post("/internal/product-digest/run", a.internalRunProductDigest)
+	r.Post("/internal/product-digest/weekly-run", a.internalRunProductDigestWeekly)
+}
+
+func (a *API) registerProductDigestAuthedRoutes(r chi.Router) {
+	r.Get("/product-digests", a.listProductDigests)
 }
 
 func (a *API) productDigestAuthorized(r *http.Request) bool {
 	return secretHeaderOK(r, "X-Product-Digest-Secret", a.cfg.ProductDigestSecret)
 }
 
-func brusselsDate(t time.Time) time.Time {
+func canViewProductDigests(role kernel.Role) bool {
+	switch role {
+	case kernel.RoleVet, kernel.RoleVetAssistant, kernel.RoleSecretary,
+		kernel.RoleAdmin, kernel.RoleDev,
+		kernel.RoleCommercial, kernel.RoleCommercialManager:
+		return true
+	default:
+		return false
+	}
+}
+
+func brusselsLocation() *time.Location {
 	loc, err := time.LoadLocation("Europe/Brussels")
 	if err != nil {
-		loc = time.FixedZone("CET", 3600)
+		return time.FixedZone("CET", 3600)
 	}
-	local := t.In(loc)
+	return loc
+}
+
+func brusselsDate(t time.Time) time.Time {
+	local := t.In(brusselsLocation())
 	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+// isoWeekStartMonday returns the Monday (UTC date-only) of the ISO week containing t.
+func isoWeekStartMonday(t time.Time) time.Time {
+	local := t.In(brusselsLocation())
+	day := brusselsDate(local)
+	// Go Weekday: Sunday=0 … Saturday=6. ISO Monday=1.
+	wd := int(local.Weekday())
+	if wd == 0 {
+		wd = 7
+	}
+	return day.AddDate(0, 0, -(wd - 1))
 }
 
 func parseDigestDate(raw string) (time.Time, error) {
@@ -85,6 +120,31 @@ func digestDisplayLabel(branch, environment, appEnvFallback string) string {
 	return "local"
 }
 
+func isTestDigestEnv(label string) bool {
+	switch strings.ToLower(strings.TrimSpace(label)) {
+	case "staging", "development", "dev", "local", "test":
+		return true
+	default:
+		return false
+	}
+}
+
+// digestAudienceLabel appends the localized TEST-environment tag for non-prod labels.
+func digestAudienceLabel(rawLabel, locale string) string {
+	label := strings.TrimSpace(rawLabel)
+	if label == "" {
+		label = "local"
+	}
+	if !isTestDigestEnv(label) {
+		return label
+	}
+	tag := strings.TrimSpace(i18n.T(locale, "emails.product_digest_test_env_tag", nil))
+	if tag == "" {
+		tag = "environnement de TEST"
+	}
+	return label + " — " + tag
+}
+
 func digestMetaBranch(meta json.RawMessage, appEnvFallback string) string {
 	if len(meta) == 0 {
 		return digestDisplayLabel("", "", appEnvFallback)
@@ -96,6 +156,52 @@ func digestMetaBranch(meta json.RawMessage, appEnvFallback string) string {
 	branch, _ := m["branch"].(string)
 	env, _ := m["environment"].(string)
 	return digestDisplayLabel(branch, env, appEnvFallback)
+}
+
+func (a *API) listProductDigests(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if !canViewProductDigests(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	limit := 30
+	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil {
+			limit = n
+		}
+	}
+	items, err := a.store.ListProductDigests(r.Context(), limit)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	locale := i18n.NormalizeLocale(r.Header.Get("Accept-Language"))
+	if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil {
+		locale = i18n.NormalizeLocale(u.PreferredLocale)
+	}
+	out := make([]map[string]any, 0, len(items))
+	for _, d := range items {
+		headline := d.Headline
+		if h := strings.TrimSpace(d.HeadlineByLocale[locale]); h != "" {
+			headline = h
+		}
+		bodyText := d.BodyText
+		if b := strings.TrimSpace(d.BodyByLocale[locale]); b != "" {
+			bodyText = b
+		}
+		out = append(out, map[string]any{
+			"date":     d.DigestDate.Format("2006-01-02"),
+			"headline": headline,
+			"body":     bodyText,
+			"status":   d.Status,
+			"branch":   digestAudienceLabel(digestMetaBranch(d.Meta, os.Getenv("APP_ENV")), locale),
+		})
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"items": out})
 }
 
 func (a *API) internalIngestProductDigest(w http.ResponseWriter, r *http.Request) {
@@ -260,12 +366,15 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dateLabel := digestDate.Format("02/01/2006")
-	branchLabel := digestMetaBranch(digest.Meta, os.Getenv("APP_ENV"))
+	rawBranch := digestMetaBranch(digest.Meta, os.Getenv("APP_ENV"))
 	sent := 0
 	skipped := 0
 	failed := 0
+	var lastAudience string
 	for _, recip := range recipients {
 		locale := i18n.NormalizeLocale(recip.PreferredLocale)
+		audience := digestAudienceLabel(rawBranch, locale)
+		lastAudience = audience
 		headline := digest.Headline
 		if h := strings.TrimSpace(digest.HeadlineByLocale[locale]); h != "" {
 			headline = h
@@ -284,7 +393,7 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 			skipped++
 			continue
 		}
-		if err := a.notifier.SendProductDigest(recip.Email, locale, recip.FullName, dateLabel, branchLabel, headline, bodyText); err != nil {
+		if err := a.notifier.SendProductDigest(recip.Email, locale, recip.FullName, dateLabel, audience, headline, bodyText); err != nil {
 			_ = a.store.ClearProductDigestSend(r.Context(), digestDate, recip.ID)
 			failed++
 			continue
@@ -307,6 +416,10 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 		_ = a.store.MarkProductDigestSent(r.Context(), digestDate)
 	}
 
+	if lastAudience == "" {
+		lastAudience = digestAudienceLabel(rawBranch, "fr")
+	}
+
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"status":   status,
 		"date":     digestDate.Format("2006-01-02"),
@@ -314,6 +427,158 @@ func (a *API) internalRunProductDigest(w http.ResponseWriter, r *http.Request) {
 		"skipped":  skipped,
 		"failed":   failed,
 		"headline": digest.Headline,
-		"branch":   branchLabel,
+		"branch":   lastAudience,
+	})
+}
+
+func localizeDigestDay(d store.ProductDigest, locale string) (headline, body string) {
+	headline = d.Headline
+	if h := strings.TrimSpace(d.HeadlineByLocale[locale]); h != "" {
+		headline = h
+	}
+	body = d.BodyText
+	if b := strings.TrimSpace(d.BodyByLocale[locale]); b != "" {
+		body = b
+	}
+	return headline, body
+}
+
+func buildWeeklyRollup(digests []store.ProductDigest, locale string) (headline, body string) {
+	var parts []string
+	for _, d := range digests {
+		h, b := localizeDigestDay(d, locale)
+		dayLabel := d.DigestDate.Format("02/01/2006")
+		block := "• " + dayLabel
+		if h != "" {
+			block += " — " + h
+		}
+		if b != "" {
+			block += "\n" + b
+		}
+		parts = append(parts, block)
+	}
+	body = strings.Join(parts, "\n\n")
+	if len(digests) == 1 {
+		h, _ := localizeDigestDay(digests[0], locale)
+		headline = h
+	} else {
+		headline = ""
+	}
+	return headline, body
+}
+
+func (a *API) internalRunProductDigestWeekly(w http.ResponseWriter, r *http.Request) {
+	if !a.productDigestAuthorized(r) {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
+		return
+	}
+
+	today := brusselsDate(time.Now())
+	var body struct {
+		Date string `json:"date"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	if raw := strings.TrimSpace(r.URL.Query().Get("date")); raw != "" {
+		body.Date = raw
+	}
+	if body.Date != "" {
+		if d, err := parseDigestDate(body.Date); err == nil {
+			today = d
+		} else {
+			writeErr(w, r, http.StatusBadRequest, "invalid_date", "invalid_date")
+			return
+		}
+	}
+
+	weekStart := isoWeekStartMonday(today)
+	since := today.AddDate(0, 0, -6)
+
+	digests, err := a.store.ListProductDigestsSince(r.Context(), since)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if len(digests) == 0 {
+		httpx.WriteData(w, http.StatusOK, map[string]any{
+			"status":    "noop",
+			"weekStart": weekStart.Format("2006-01-02"),
+			"reason":    "empty_week",
+		})
+		return
+	}
+
+	recipients, err := a.store.ListWeeklyDigestRecipients(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if len(recipients) == 0 {
+		httpx.WriteData(w, http.StatusOK, map[string]any{
+			"status":    "noop",
+			"weekStart": weekStart.Format("2006-01-02"),
+			"reason":    "no_recipients",
+			"days":      len(digests),
+		})
+		return
+	}
+
+	rawBranch := digestDisplayLabel("", "", os.Getenv("APP_ENV"))
+	if len(digests) > 0 {
+		rawBranch = digestMetaBranch(digests[len(digests)-1].Meta, os.Getenv("APP_ENV"))
+	}
+	weekLabel := weekStart.Format("02/01/2006")
+	rangeLabel := since.Format("02/01/2006") + " – " + today.Format("02/01/2006")
+
+	sent := 0
+	skipped := 0
+	failed := 0
+	var lastAudience string
+	for _, recip := range recipients {
+		locale := i18n.NormalizeLocale(recip.PreferredLocale)
+		audience := digestAudienceLabel(rawBranch, locale)
+		lastAudience = audience
+		headline, bodyText := buildWeeklyRollup(digests, locale)
+		inserted, err := a.store.RecordProductDigestWeeklySend(r.Context(), weekStart, recip.ID)
+		if err != nil {
+			failed++
+			continue
+		}
+		if !inserted {
+			skipped++
+			continue
+		}
+		if err := a.notifier.SendProductDigestWeekly(
+			recip.Email, locale, recip.FullName, weekLabel, rangeLabel, audience, headline, bodyText,
+		); err != nil {
+			_ = a.store.ClearProductDigestWeeklySend(r.Context(), weekStart, recip.ID)
+			failed++
+			continue
+		}
+		sent++
+	}
+
+	status := "partial"
+	if sent > 0 && failed == 0 {
+		status = "sent"
+	} else if sent == 0 && failed > 0 {
+		status = "failed"
+	} else if sent == 0 && skipped > 0 && failed == 0 {
+		status = "sent"
+	}
+
+	if lastAudience == "" {
+		lastAudience = digestAudienceLabel(rawBranch, "fr")
+	}
+
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"status":    status,
+		"weekStart": weekStart.Format("2006-01-02"),
+		"from":      since.Format("2006-01-02"),
+		"to":        today.Format("2006-01-02"),
+		"days":      len(digests),
+		"sent":      sent,
+		"skipped":   skipped,
+		"failed":    failed,
+		"branch":    lastAudience,
 	})
 }

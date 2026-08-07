@@ -39,6 +39,19 @@ describe('calendarChipTooltip', () => {
     expect(tip.startsWith('Antenne Liège')).toBe(true)
     expect(tip).toContain('calendar.waitingRoomTooltip')
   })
+
+  it('includes walk-in callback phone when present', () => {
+    const v: CalendarVisit = {
+      id: '1',
+      status: 'confirmed',
+      siteName: 'Primary',
+      callbackPhone: '0470 99 88 77',
+      isWalkinPlaceholder: true,
+    }
+    const tip = calendarChipTooltip(v, t)
+    expect(tip).toContain('0470 99 88 77')
+    expect(tip.startsWith('Primary')).toBe(true)
+  })
 })
 
 describe('visitConsultationCta', () => {
