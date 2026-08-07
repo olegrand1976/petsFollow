@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Nettoie les documents de test Billit (practice) sur une DB seedable.
 # Usage :
-#   DATABASE_URL=… ./scripts/cleanup-staging-invoicing.sh
+#   PF_CLEANUP_TARGET=staging DATABASE_URL=… ./scripts/cleanup-staging-invoicing.sh
+#   DATABASE_URL=…premedica-db-staging… ./scripts/cleanup-staging-invoicing.sh
 #   DATABASE_URL=… ./scripts/cleanup-staging-invoicing.sh --connections
 #   DATABASE_URL=… ./scripts/cleanup-staging-invoicing.sh --dry-run
 #
 # Cible : cabinets liés à des users *@petsfollow.test
 # Ne touche pas aux docs source=saas_master.
+# Localhost : exiger PF_CLEANUP_TARGET=staging (éviter footgun proxy→prod).
 set -euo pipefail
 
 DRY_RUN=false
@@ -16,42 +18,22 @@ for arg in "$@"; do
     --dry-run) DRY_RUN=true ;;
     --connections) RESET_CONNECTIONS=true ;;
     -h|--help)
-      sed -n '2,12p' "$0"
+      sed -n '2,14p' "$0"
       exit 0
       ;;
   esac
 done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/pf-staging-cleanup-guard.sh
+source "$ROOT/scripts/lib/pf-staging-cleanup-guard.sh"
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
   echo "DATABASE_URL required" >&2
   exit 1
 fi
 
-# Safety: allowlist staging Cloud SQL instance / local proxy only.
-# Do NOT match GCP project ids like premedica-prod-2025 (substring -prod).
-# Override (ops only): PF_ALLOW_PROD_INVOICING_CLEANUP=1
-pf_invoicing_cleanup_url_allowed() {
-  local u="$1"
-  # Explicit prod instance → never allow without override (checked by caller).
-  if [[ "$u" == *"petsfollow-db-prod"* ]]; then
-    return 1
-  fi
-  # Staging Cloud SQL instance name (socket or DSN).
-  if [[ "$u" == *"premedica-db-staging"* ]]; then
-    return 0
-  fi
-  # cloud-sql-proxy / local rewrite (no instance name in URL).
-  if [[ "$u" == *"@127.0.0.1:"* || "$u" == *"@localhost:"* ]]; then
-    return 0
-  fi
-  return 1
-}
-
-if [[ "${PF_ALLOW_PROD_INVOICING_CLEANUP:-}" != "1" ]] && ! pf_invoicing_cleanup_url_allowed "$DATABASE_URL"; then
-  echo "Refusing DATABASE_URL outside staging allowlist (premedica-db-staging | localhost/127.0.0.1)." >&2
-  echo "Override only if intentional: PF_ALLOW_PROD_INVOICING_CLEANUP=1" >&2
-  exit 1
-fi
+pf_assert_staging_cleanup_url "$DATABASE_URL" "PF_ALLOW_PROD_INVOICING_CLEANUP"
 
 run_sql() {
   local sql="$1"
@@ -63,7 +45,7 @@ run_sql() {
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "$sql"
 }
 
-echo "== invoicing cleanup (seed *@petsfollow.test) dry_run=$DRY_RUN connections=$RESET_CONNECTIONS =="
+echo "== invoicing cleanup (seed *@petsfollow.test) dry_run=$DRY_RUN connections=$RESET_CONNECTIONS target=${PF_CLEANUP_TARGET:-unset} =="
 
 COUNT_SQL=$(cat <<'SQL'
 SELECT COUNT(*) AS practice_docs_to_purge

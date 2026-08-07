@@ -98,3 +98,32 @@ jobs:
           # Suite web Pro hors @flaky. @pharmacy exclu tant que PHARMACY_ENABLED+seed CNK absents sur Cloud Run (S6).
           echo "PLAYWRIGHT_BASE_URL=${FE_URL} PETSFOLLOW_API_URL=${PETSFOLLOW_API_URL}"
           PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert '@flaky|@pharmacy'
+
+  cleanup-quality:
+    name: Purge artefacts smoke/e2e (staging DB)
+    # Après deploy OK (smoke postdeploy mutatif) — même si Playwright cancelled/skipped.
+    needs: [deploy, playwright]
+    if: always() && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      - name: Install psql
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Cleanup staging quality data
+        run: |
+          chmod +x infra/gcp/cleanup-staging-quality.sh \
+            scripts/cleanup-staging-quality.sh \
+            scripts/cleanup-staging-invoicing.sh \
+            scripts/lib/pf-staging-cleanup-guard.sh
+          bash infra/gcp/cleanup-staging-quality.sh

@@ -68,6 +68,17 @@ bash infra/gcp/postdeploy.sh --seed   # reset CLI (+ email si SEED_NOTIFY_STAFF)
 # gcloud run jobs execute petsfollow-seed --region=europe-west9 --args=seed-notify --wait
 ```
 
+### Cleanup artefacts quality (post Playwright)
+
+Après chaque suite Playwright staging, le job `cleanup-quality` purge les écritures smoke/e2e (messages, BP/labs, prospects CRM timestampés, users `smoke*@petsfollow.test`, docs factu draft) — aussi si Playwright est cancelled (smoke postdeploy déjà mutatif). Manuel :
+
+```bash
+make gcp-staging-quality-cleanup
+# local Docker / proxy TCP :
+PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup
+# dry-run : CLEANUP_ARGS='--dry-run' make gcp-staging-quality-cleanup
+```
+
 Stripe Live : voir checklist [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md) + `./infra/gcp/setup-stripe-secrets.sh`.
 
 ## DNS OVH (zone `ll-it-sc.be`)
@@ -129,7 +140,7 @@ Fichiers :
 
 | Fichier | Rôle |
 |---------|------|
-| [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer |
+| [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer ; **smoke post-deploy** (`SMOKE_PROFILE=prod`) — pas de suite CI complète (filet = PR + staging) |
 | [`infra/gcp/cloudbuild-prod.yaml`](../infra/gcp/cloudbuild-prod.yaml) | Build + deploy `APP_ENV=production`, seed off, modules tag-dev off ; refuse SQL staging |
 | [`infra/gcp/setup-gcp-prod.sh`](../infra/gcp/setup-gcp-prod.sh) | Bootstrap SQL / secrets / bucket |
 | [`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh) | Overrides domaines / services `*-prod` / Redis |
@@ -163,7 +174,7 @@ curl -fsS https://api.petsfollow.app/health
 1. `make gcp-setup-prod` (une fois) — vérifier instance `petsfollow-db-prod` RUNNABLE.
 2. DNS OVH ci-dessus.
 3. `make gcp-deploy-prod` puis `make gcp-domain-prod`.
-4. Smoke `https://api.petsfollow.app/health` + register/login **réels** (pas de seed).
+4. Smoke `make smoke-prod` (ou workflow job `smoke`) — health/ready/plans **sans** comptes seed ni écritures.
 5. Flutter : `make play-android-bundle-prod` → Internal puis Production.
 6. (Plus tard) décommenter `push: main` dans `deploy-gcp-prod.yml`.
 7. Privacy / listing : garder `petsfollow.ll-it-sc.be/legal/*` tant que `/legal` n’est pas servi sur `petsfollow.app` ; ensuite aligner `LegalUrls` Flutter + Play Console.

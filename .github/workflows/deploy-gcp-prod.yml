@@ -2,6 +2,9 @@ name: Deploy GCP production
 
 # Déployer manuellement tant que le cutover n’est pas validé.
 # Pour activer le push main, décommenter le bloc push ci-dessous.
+#
+# Quality : smoke post-deploy uniquement (SMOKE_PROFILE=prod).
+# La suite complète (Go/Nuxt/Flutter/Playwright) tourne sur PR + staging.
 on:
   workflow_dispatch:
   # push:
@@ -24,12 +27,8 @@ env:
   GCP_SERVICE_ACCOUNT: github-petsfollow-deploy@premedica-prod-2025.iam.gserviceaccount.com
 
 jobs:
-  quality:
-    uses: ./.github/workflows/ci.yml
-
   deploy:
     name: Cloud Build → petsFollow API + Nuxt (prod)
-    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -63,3 +62,30 @@ jobs:
             echo "| API Run | ${API_URL} |"
             echo "| Frontend Run | ${FE_URL} |"
           } >> "${GITHUB_STEP_SUMMARY}"
+
+  smoke:
+    name: Smoke prod (non-mutatif)
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      - name: Smoke API prod
+        env:
+          SMOKE_PROFILE: prod
+        run: |
+          API_URL="${PETSFOLLOW_API_PUBLIC_URL}"
+          if ! curl -fsS --max-time 10 "${API_URL}/health" >/dev/null 2>&1; then
+            API_URL="$(gcloud run services describe petsfollow-api-prod \
+              --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" \
+              --format='value(status.url)')"
+            echo "→ Domaine custom pas prêt — smoke via Cloud Run URL"
+          fi
+          PETSFOLLOW_API_URL="${API_URL}" bash scripts/smoke-test.sh

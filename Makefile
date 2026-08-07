@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -28,7 +28,10 @@ help:
 	@echo "  make test-e2e-p0    Playwright @p0 (API+Nuxt locaux)"
 	@echo "  make test-e2e       Playwright suite complète"
 	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
-	@echo "  make smoke          smoke API MVP"
+	@echo "  make smoke          smoke API MVP (SMOKE_PROFILE=full)"
+	@echo "  make smoke-prod     smoke API prod non-mutatif (health/ready/plans)"
+	@echo "  make staging-quality-cleanup  purge smoke/e2e (PF_CLEANUP_TARGET=staging DATABASE_URL=…)"
+	@echo "  make gcp-staging-quality-cleanup  idem via Cloud SQL staging (gcloud + proxy)"
 	@echo "  make gcp-setup      Bootstrap staging (SQL/secrets/bucket)"
 	@echo "  make gcp-setup-prod Bootstrap prod (SQL petsfollow-db-prod + secrets *-prod)"
 	@echo "  make gcp-deploy     Cloud Build staging"
@@ -176,16 +179,30 @@ test: test-go test-nuxt test-flutter
 smoke:
 	@bash scripts/smoke-test.sh
 
+smoke-prod:
+	SMOKE_PROFILE=prod PETSFOLLOW_API_URL=$${PETSFOLLOW_API_URL:-https://api.petsfollow.app} bash scripts/smoke-test.sh
+
 # Gates Billit live (doc 34). Refuse si MOCK=true. Optionnel: BILLIT_SMOKE_PARTY_ID + BILLIT_SMOKE_API_KEY.
 billit-sandbox-smoke:
 	@bash scripts/smoke-billit-sandbox.sh
 
 # Purge docs practice draft/rejected/sending des cabinets *@petsfollow.test.
-# DATABASE_URL=… make invoicing-staging-cleanup
+# PF_CLEANUP_TARGET=staging DATABASE_URL=… make invoicing-staging-cleanup
 # Options : CLEANUP_ARGS='--connections' ou CLEANUP_ARGS='--dry-run'
 invoicing-staging-cleanup:
 	@test -n "$${DATABASE_URL:-}" || (echo "DATABASE_URL required" >&2; exit 1)
 	@bash scripts/cleanup-staging-invoicing.sh $${CLEANUP_ARGS:-}
+
+# Purge artefacts smoke/e2e staging (messages, BP/labs, prospects, users smoke*, factu draft).
+# PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup
+# Options : CLEANUP_ARGS='--dry-run' ou CLEANUP_ARGS='--skip-invoicing'
+# Via Cloud SQL staging (WIF/gcloud) : make gcp-staging-quality-cleanup
+staging-quality-cleanup:
+	@test -n "$${DATABASE_URL:-}" || (echo "DATABASE_URL required" >&2; exit 1)
+	@bash scripts/cleanup-staging-quality.sh $${CLEANUP_ARGS:-}
+
+gcp-staging-quality-cleanup:
+	@bash infra/gcp/cleanup-staging-quality.sh $${CLEANUP_ARGS:-}
 
 # Flux A live : 1 cabinet draft master (+ send si BILLIT_SMOKE_SAAS_SEND=1).
 billit-saas-master-smoke:

@@ -3,11 +3,32 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [ -f "$ROOT/.env" ]; then set -a && source "$ROOT/.env" && set +a; fi
 API="${PETSFOLLOW_API_URL:-http://localhost:${PETSFOLLOW_API_PORT:-8291}}"
+# full (défaut) : staging/local — mutations smoke sur comptes seed.
+# prod : post-deploy main — health/ready + GET publics uniquement (pas de seed, pas d'écritures).
+SMOKE_PROFILE="${SMOKE_PROFILE:-full}"
 
-echo "== petsFollow smoke ($API) =="
+echo "== petsFollow smoke ($API) profile=$SMOKE_PROFILE =="
 
 curl -sf "$API/health" | grep -q ok
 curl -sf "$API/ready" | grep -q ready
+
+if [ "$SMOKE_PROFILE" = "prod" ]; then
+  # Catalogue public (pas d'auth) — prouve le routeur API + billing domain.
+  curl -sf "$API/api/v1/billing/plans" >/dev/null
+  # Surface publique dossier : token inconnu → 404 (route montée, pas d'énumération OK).
+  DOSSIER=$(curl -s -o /tmp/pf-smoke-dossier.json -w '%{http_code}' \
+    "$API/api/v1/public/pet-dossier/smoke-inconnu-$(date +%s)")
+  test "$DOSSIER" = "404"
+  MEDIA_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$API/media/visit-reports/smoke-forbidden.m4a")
+  test "$MEDIA_CODE" = "403" -o "$MEDIA_CODE" = "404"
+  echo "OK — smoke prod (health/ready/plans/dossier/media) passed"
+  exit 0
+fi
+
+if [ "$SMOKE_PROFILE" != "full" ]; then
+  echo "Unknown SMOKE_PROFILE=$SMOKE_PROFILE (expected full|prod)" >&2
+  exit 1
+fi
 
 VET=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"vet.demo@petsfollow.test","password":"VetDemo123!"}')

@@ -634,7 +634,9 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 ### API (smoke)
 
-`make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404.
+`make smoke` — profile `full` (défaut) : health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404. Les écritures smoke sont purgées ensuite sur staging (`make staging-quality-cleanup` / job `cleanup-quality`).
+
+`make smoke-prod` — profile `prod` (post-deploy main) : **aucune écriture** — health/ready + `GET /billing/plans` + dossier public 404 + media visit-reports deny.
 
 ### SMS transactionnel Telnyx (Go — C3.12→C3.15, F4.9)
 
@@ -852,7 +854,9 @@ Prérequis : API `:8291` + Nuxt `:3002` + seed (`AUTH_RATE_LIMIT_PER_MIN=1000` v
 
 CI PR : job `playwright` — stack Postgres + API + Nuxt preview, exécute `--grep @p0`.
 
-Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt.
+Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt → **puis** job `cleanup-quality` (si deploy OK) qui purge les artefacts smoke/e2e (`infra/gcp/cleanup-staging-quality.sh`). Manuel : `make gcp-staging-quality-cleanup` ou `PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup`.
+
+Prod (`deploy-gcp-prod.yml`) : **pas** de suite CI complète (déjà validée sur PR + staging) — deploy puis smoke **non mutatif** (`SMOKE_PROFILE=prod`). Local : `make smoke-prod`.
 
 **Rollback staging** si Playwright / smoke post-deploy rouge : workflow en échec (pas de rollback auto). Revenir à la révision Cloud Run précédente :
 
