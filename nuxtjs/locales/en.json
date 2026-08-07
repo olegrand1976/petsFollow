@@ -1384,7 +1384,11 @@
     "queueEmptyTitle": "All clear",
     "queueEmptyDescription": "No pending visits, messages or invitations.",
     "queueLinkRequests": "1 client invitation",
-    "queueLinkRequestsPlural": "{count} client invitations"
+    "queueLinkRequestsPlural": "{count} client invitations",
+    "afscaTitle": "AFSCA news",
+    "afscaEmptyTitle": "No recent newsletters",
+    "afscaEmptyDescription": "Could not load the feed right now. Check the AFSCA website.",
+    "afscaViewAll": "All AFSCA newsletters"
   },
   "messages": {
     "title": "Messaging",
@@ -2647,6 +2651,11 @@
       "payoutBic": "BIC (optional)",
       "payoutAccountHolder": "Account holder",
       "countryCode": "Practice country",
+      "animalScope": "Clinical focus",
+      "animalScopeBoth": "Small and large animals",
+      "animalScopeSmall": "Small animals (companions)",
+      "animalScopeLarge": "Large animals / equines",
+      "animalScopeHint": "Filters AFSCA newsletters shown on the dashboard.",
       "countries": {
         "BE": "Belgium",
         "FR": "France",

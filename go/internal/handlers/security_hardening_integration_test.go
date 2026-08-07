@@ -1,16 +1,366 @@
 package handlers_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
+
+// Les documents animaux (analyses, radios) sont du PHI. Ils ont été servis via
+// une URL publique GCS : plus aucune URL ne doit sortir de l'API, et le flux
+// authentifié doit refuser un véto étranger au dossier.
+func TestPetDocumentIsPrivateAndAuthenticated(t *testing.T) {
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://127.0.0.1:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	strangerTok := loginToken(t, api.handler, "vet.lyon@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+
+	pdf := []byte("%PDF-1.4\n% analyse sanguine\n")
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	part, err := w.CreateFormFile("file", "analyse.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := part.Write(pdf); err != nil {
+		t.Fatal(err)
+	}
+	_ = w.WriteField("title", "Analyse sécurité")
+	_ = w.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/pets/"+petID+"/documents", &body)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+vetTok)
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	var envelope map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &envelope)
+	if rec.Code != http.StatusCreated && rec.Code != http.StatusOK {
+		t.Fatalf("upload document %d %#v", rec.Code, envelope)
+	}
+	doc := dataMap(t, envelope)
+	docID, _ := doc["id"].(string)
+	if docID == "" {
+		t.Fatalf("missing document id: %#v", doc)
+	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/pets/documents/"+docID, vetTok, nil)
+	})
+	if _, ok := doc["fileUrl"]; ok {
+		t.Fatalf("upload response must not carry a storage URL: %#v", doc)
+	}
+
+	// La colonne file_url reste vide : rien à fuiter même en cas de dump.
+	var fileURL string
+	if err := api.pool.QueryRow(context.Background(),
+		`SELECT COALESCE(file_url,'') FROM pets.documents WHERE id=$1`, docID).Scan(&fileURL); err != nil {
+		t.Fatal(err)
+	}
+	if fileURL != "" {
+		t.Fatalf("file_url must stay empty, got %q", fileURL)
+	}
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/documents", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list documents %d %#v", code, env)
+	}
+	if raw, _ := json.Marshal(env); strings.Contains(string(raw), "fileUrl") {
+		t.Fatalf("listing must not expose fileUrl: %s", raw)
+	}
+
+	dl := "/api/v1/pets/" + petID + "/documents/" + docID + "/download"
+	for _, tok := range []string{clientTok, vetTok} {
+		req = httptest.NewRequest(http.MethodGet, dl, nil)
+		req.Header.Set("Authorization", "Bearer "+tok)
+		rec = httptest.NewRecorder()
+		api.handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("download %d body=%s", rec.Code, rec.Body.String())
+		}
+		got, _ := io.ReadAll(rec.Body)
+		if !bytes.Equal(got, pdf) {
+			t.Fatalf("unexpected document body (%d bytes)", len(got))
+		}
+	}
+
+	for _, tc := range []struct{ name, token string }{
+		{"anonymous", ""},
+		{"vet of another practice", strangerTok},
+	} {
+		req = httptest.NewRequest(http.MethodGet, dl, nil)
+		if tc.token != "" {
+			req.Header.Set("Authorization", "Bearer "+tc.token)
+		}
+		rec = httptest.NewRecorder()
+		api.handler.ServeHTTP(rec, req)
+		if rec.Code == http.StatusOK {
+			t.Fatalf("%s must not download PHI (got 200)", tc.name)
+		}
+	}
+}
+
+// Un commercial ne doit pas pouvoir se greffer un profil pro sur un compte hors
+// de son portefeuille : ce serait une escalade vers le dossier patients d'un
+// cabinet arbitraire.
+func TestCommercialAttachProfileRefusesOutsidePortfolio(t *testing.T) {
+	api := newTestAPI(t)
+
+	commEmail := uniqueEmail("atc-comm")
+	commID := insertVerifiedUser(t, api, "commercial", commEmail, "CommercialDemo123!", "Attach Rep", nil)
+	outsider := insertVerifiedUser(t, api, "client", uniqueEmail("atc-out"), "ClientDemo123!", "Out Of Reach", nil)
+	owned := insertVerifiedUser(t, api, "client", uniqueEmail("atc-own"), "ClientDemo123!", "In Portfolio",
+		map[string]any{"assigned_commercial_id": commID})
+
+	tok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/commercial/users/"+outsider+"/profiles", tok,
+		map[string]any{"role": "care_pro", "specialty": "farrier"})
+	if code != http.StatusForbidden && code != http.StatusNotFound {
+		t.Fatalf("attaching outside the portfolio must be refused, got %d %#v", code, env)
+	}
+
+	// Même dans le portefeuille, les rôles cabinet restent réservés à l'admin.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/commercial/users/"+owned+"/profiles", tok,
+		map[string]any{"role": "vet", "practiceId": uuid.NewString()})
+	if code != http.StatusForbidden {
+		t.Fatalf("a commercial must not attach a vet profile, got %d %#v", code, env)
+	}
+}
+
+// Les callbacks mock de facturation sont atteints par redirection navigateur,
+// donc sans bearer : la signature HMAC est le seul contrôle.
+func TestBillingMockCompleteRequiresSignature(t *testing.T) {
+	api := newTestAPI(t)
+
+	code, env := doJSON(t, api.handler, http.MethodGet,
+		"/api/v1/billing/dev/mock-complete?pet_id="+uuid.NewString()+
+			"&owner_user_id="+uuid.NewString()+"&plan_code=triennial&billing_mode=subscription", nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("forged mock checkout must be rejected, got %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodGet,
+		"/api/v1/billing/dev/mock-portal?customer=cus_mock_"+uuid.NewString(), nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("forged mock portal must be rejected, got %d %#v", code, env)
+	}
+}
+
+// Contrepartie du test précédent : une URL réellement émise par l'API doit
+// continuer à passer. Sans ce cas, un mock-complete qui refuserait tout le
+// monde satisferait quand même le test « forgé → 403 ».
+func TestBillingMockCompleteAcceptsSignedURL(t *testing.T) {
+	api := newTestAPI(t)
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", clientTok, map[string]any{
+		"name": "Signature Probe", "species": "dog", "breed": "test",
+		"plan": "triennial", "billingMode": "subscription",
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create pet %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	pet, _ := data["pet"].(map[string]any)
+	if pet == nil {
+		pet = data
+	}
+	petID, _ := pet["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/pets/"+petID, clientTok, nil)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, mockCompletePath(t, data), clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("signed mock checkout must be honoured, got %d %#v", code, env)
+	}
+}
+
+// Garde-fou inverse du durcissement commercial : la voie admin doit continuer à
+// pouvoir attacher un profil cabinet, sinon on a fermé la fonctionnalité et pas
+// seulement l'escalade.
+func TestAdminCanStillAttachPracticeProfile(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("me %d %#v", code, env)
+	}
+	practiceID, _ := dataMap(t, env)["practiceId"].(string)
+	if practiceID == "" {
+		t.Skip("seeded vet has no practice")
+	}
+
+	target := insertVerifiedUser(t, api, "client", uniqueEmail("adm-attach"), "ClientDemo123!", "Admin Attach", nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/users/"+target+"/profiles", adminTok,
+		map[string]any{"role": "vet", "practiceId": practiceID})
+	if code != http.StatusCreated {
+		t.Fatalf("admin must still attach a vet profile, got %d %#v", code, env)
+	}
+}
+
+// Garde-fou inverse de la révocation : token_version ne doit bouger qu'aux
+// moments prévus. Un bump à chaque refresh déconnecterait tout le monde en
+// boucle, et le test « ancien token révoqué » passerait quand même.
+func TestConsecutiveRefreshesKeepTheSessionAlive(t *testing.T) {
+	api := newTestAPI(t)
+
+	email := uniqueEmail("keep-session")
+	insertVerifiedUser(t, api, "client", email, "ClientDemo123!", "Keep Session", nil)
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login",
+		map[string]any{"email": email, "password": "ClientDemo123!"})
+	if code != http.StatusOK {
+		t.Fatalf("login %d %#v", code, env)
+	}
+	refresh, _ := dataMap(t, env)["refreshToken"].(string)
+
+	for i := 0; i < 3; i++ {
+		code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+			map[string]any{"refreshToken": refresh})
+		if code != http.StatusOK {
+			t.Fatalf("refresh %d must succeed, got %d %#v", i, code, env)
+		}
+		refresh, _ = dataMap(t, env)["refreshToken"].(string)
+		if refresh == "" {
+			t.Fatalf("refresh %d returned no new refresh token: %#v", i, env)
+		}
+	}
+}
+
+// Un reset de mot de passe doit invalider les tokens déjà émis : sans ça, un
+// refresh token volé reste utilisable 30 jours après la reprise en main.
+func TestPasswordResetRevokesExistingRefreshToken(t *testing.T) {
+	api := newTestAPI(t)
+
+	email := uniqueEmail("rev-user")
+	insertVerifiedUser(t, api, "client", email, "ClientDemo123!", "Revoke Me", nil)
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login",
+		map[string]any{"email": email, "password": "ClientDemo123!"})
+	if code != http.StatusOK {
+		t.Fatalf("login %d %#v", code, env)
+	}
+	stolen, _ := dataMap(t, env)["refreshToken"].(string)
+	if stolen == "" {
+		t.Fatalf("missing refresh token: %#v", env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+		map[string]any{"refreshToken": stolen})
+	if code != http.StatusOK {
+		t.Fatalf("refresh before reset should work: %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/forgot-password",
+		map[string]any{"email": email})
+	if code != http.StatusOK {
+		t.Fatalf("forgot-password %d %#v", code, env)
+	}
+	resetToken := resetTokenFor(t, api, email)
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/reset-password",
+		map[string]any{"token": resetToken, "password": "ClientDemo456!"})
+	if code != http.StatusOK {
+		t.Fatalf("reset-password %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+		map[string]any{"refreshToken": stolen})
+	if code != http.StatusUnauthorized {
+		t.Fatalf("refresh token issued before the reset must be revoked, got %d %#v", code, env)
+	}
+}
+
+// POST /auth/logout révoque côté serveur : purger le cookie httpOnly ne suffit
+// pas si le refresh token a déjà fuité.
+func TestLogoutRevokesRefreshToken(t *testing.T) {
+	api := newTestAPI(t)
+
+	email := uniqueEmail("lgo-user")
+	insertVerifiedUser(t, api, "client", email, "ClientDemo123!", "Logout Me", nil)
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login",
+		map[string]any{"email": email, "password": "ClientDemo123!"})
+	if code != http.StatusOK {
+		t.Fatalf("login %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	access, _ := data["accessToken"].(string)
+	refresh, _ := data["refreshToken"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/auth/logout", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("logout %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+		map[string]any{"refreshToken": refresh})
+	if code != http.StatusUnauthorized {
+		t.Fatalf("refresh after logout must fail, got %d %#v", code, env)
+	}
+}
+
+// /auth/refresh accepte un token volé en clair : sans limite de débit, c'est un
+// oracle de validation utilisable en rafale.
+func TestAuthRefreshIsRateLimited(t *testing.T) {
+	t.Setenv("AUTH_RATE_LIMIT_PER_MIN", "3")
+	api := newTestAPI(t)
+
+	for i := 0; i < 10; i++ {
+		code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+			map[string]any{"refreshToken": "forged." + uuid.NewString()})
+		if code == http.StatusTooManyRequests {
+			return
+		}
+		if code != http.StatusUnauthorized {
+			t.Fatalf("attempt %d: got %d %#v", i, code, env)
+		}
+	}
+	t.Fatal("POST /auth/refresh must be rate limited like the other /auth/* routes")
+}
+
+func resetTokenFor(t *testing.T, api *testAPI, email string) string {
+	t.Helper()
+	var token string
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT t.token
+		FROM identity.password_reset_tokens t
+		JOIN identity.users u ON u.id = t.user_id
+		WHERE u.email = $1 AND t.used_at IS NULL
+		ORDER BY t.created_at DESC LIMIT 1`, email).Scan(&token); err != nil {
+		t.Fatalf("reset token for %s: %v", email, err)
+	}
+	return token
+}
 
 // Un code d'invitation fait ~40 bits : sans limite de débit, GET /public/app-invite/{code}
 // est un oracle d'énumération (200 si le code existe, 404 sinon).

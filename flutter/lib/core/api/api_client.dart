@@ -392,6 +392,14 @@ class ApiClient {
   }
 
   Future<void> logout() async {
+    // Révoque les tokens émis côté serveur (token_version) : effacer le secure
+    // storage ne suffit pas si le refresh token a fuité. Best-effort : une API
+    // injoignable ne doit pas bloquer la déconnexion locale.
+    try {
+      await dio.post('/api/v1/auth/logout');
+    } catch (_) {
+      // session déjà expirée ou hors ligne
+    }
     token = null;
     refreshToken = null;
     userId = null;
@@ -867,6 +875,15 @@ class ApiClient {
   Future<List<int>> downloadPetHealthBook(String petId) async {
     final res = await dio.get<List<int>>(
       '/api/v1/pets/$petId/health-book',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return res.data ?? const <int>[];
+  }
+
+  /// Documents = PHI : pas d'URL publique, téléchargement authentifié uniquement.
+  Future<List<int>> downloadPetDocument(String petId, String documentId) async {
+    final res = await dio.get<List<int>>(
+      '/api/v1/pets/$petId/documents/$documentId/download',
       options: Options(responseType: ResponseType.bytes),
     );
     return res.data ?? const <int>[];

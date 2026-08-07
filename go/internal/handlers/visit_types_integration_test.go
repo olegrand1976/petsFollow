@@ -58,19 +58,41 @@ func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 	}
 	petID, _ := pets[0].(map[string]any)["id"].(string)
 
-	at := time.Now().UTC().Add(72 * time.Hour)
-	at = time.Date(at.Year(), at.Month(), at.Day(), 18, 0, 0, 0, time.UTC)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     at.Format(time.RFC3339),
+	// Créneaux lointains + retry : l'agenda VetPlus est partagé avec le seed et
+	// avec les autres tests du paquet, qui tournent en parallèle. Une heure fixe
+	// donne un slot_taken selon l'ordre d'exécution.
+	book := func(label string, start time.Time, body map[string]any) (map[string]any, time.Time) {
+		t.Helper()
+		for i := 0; i < 24; i++ {
+			at := start.Add(time.Duration(i) * time.Hour)
+			body["scheduledAt"] = at.Format(time.RFC3339)
+			body["notes"] = label
+			code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
+			if code == http.StatusCreated {
+				v := dataMap(t, env)
+				id, _ := v["id"].(string)
+				t.Cleanup(func() {
+					_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+id, vetTok, map[string]any{
+						"status": "cancelled",
+					})
+				})
+				return v, at
+			}
+			if code != http.StatusConflict && code != http.StatusBadRequest {
+				t.Fatalf("create %s %d %#v", label, code, env)
+			}
+		}
+		t.Fatalf("no free slot for %s", label)
+		return nil, time.Time{}
+	}
+
+	base := time.Now().UTC().Add(120 * 24 * time.Hour).Truncate(time.Hour)
+
+	visit, at := book("typed rdv", base, map[string]any{
 		"confirmDirect":   true,
 		"visitTypeId":     typeID,
 		"durationMinutes": 99, // ignored when type is set
-		"notes":           "typed rdv",
 	})
-	if code != http.StatusCreated {
-		t.Fatalf("create visit %d %#v", code, env)
-	}
-	visit := dataMap(t, env)
 	if visit["visitTypeId"] != typeID {
 		t.Fatalf("expected visitTypeId=%s got %#v", typeID, visit["visitTypeId"])
 	}
@@ -78,11 +100,6 @@ func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 		t.Fatalf("expected duration from type 30, got %#v", visit["durationMinutes"])
 	}
 	visitID, _ := visit["id"].(string)
-	t.Cleanup(func() {
-		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
-			"status": "cancelled",
-		})
-	})
 
 	from := at.Add(-time.Hour).Format(time.RFC3339)
 	to := at.Add(24 * time.Hour).Format(time.RFC3339)
@@ -109,24 +126,11 @@ func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 		t.Fatalf("created visit not in calendar %#v", cal)
 	}
 
-	at2 := at.Add(2 * time.Hour)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     at2.Format(time.RFC3339),
+	visit2, _ := book("manual duration", base.Add(36*time.Hour), map[string]any{
 		"confirmDirect":   true,
 		"durationMinutes": 20,
-		"notes":           "manual duration",
 	})
-	if code != http.StatusCreated {
-		t.Fatalf("create manual %d %#v", code, env)
-	}
-	visit2 := dataMap(t, env)
 	if visit2["durationMinutes"] != float64(20) {
 		t.Fatalf("expected manual 20, got %#v", visit2["durationMinutes"])
 	}
-	visit2ID, _ := visit2["id"].(string)
-	t.Cleanup(func() {
-		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visit2ID, vetTok, map[string]any{
-			"status": "cancelled",
-		})
-	})
 }

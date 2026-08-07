@@ -30,6 +30,14 @@ type RegisterGoogleClientInput struct {
 	TermsAccepted   bool
 }
 
+// BumpTokenVersion revokes every JWT already issued for the user: refresh
+// compares the token's version to this column.
+func (s *Store) BumpTokenVersion(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx,
+		`UPDATE identity.users SET token_version = token_version + 1 WHERE id = $1`, userID)
+	return err
+}
+
 func (s *Store) GetUserByGoogleSub(ctx context.Context, googleSub string) (User, error) {
 	u, err := scanUser(s.pool.QueryRow(ctx, `
 		SELECT `+userSelectCols+` FROM identity.users WHERE google_sub=$1`, googleSub))

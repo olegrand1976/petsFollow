@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/core/api/pet_document.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 /// Read-only lab panels list + detail for the pet owner.
@@ -25,7 +25,8 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
   String? error;
   List<Map<String, dynamic>> panels = [];
   Map<String, dynamic>? detail;
-  String? detailDocumentUrl;
+  String? detailDocumentId;
+  String? detailDocumentFileName;
   String? detailDocumentLabel;
 
   @override
@@ -79,7 +80,8 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
   Future<void> _open(String panelId) async {
     try {
       final data = await ApiClient.instance.getLabPanel(widget.petId, panelId);
-      String? docUrl;
+      String? attachedId;
+      String? docFileName;
       String? docLabel;
       final docId = data['documentId']?.toString();
       if (docId != null && docId.isNotEmpty) {
@@ -87,9 +89,10 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
         for (final raw in docs) {
           if (raw is! Map) continue;
           if ('${raw['id']}' != docId) continue;
-          docUrl = (raw['fileUrl'] as String?)?.trim();
+          attachedId = docId;
           final title = (raw['title'] as String?)?.trim();
           final fileName = (raw['fileName'] as String?)?.trim();
+          docFileName = fileName;
           docLabel = (title != null && title.isNotEmpty)
               ? title
               : (fileName ?? docId);
@@ -99,7 +102,8 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
       if (!mounted) return;
       setState(() {
         detail = data;
-        detailDocumentUrl = docUrl;
+        detailDocumentId = attachedId;
+        detailDocumentFileName = docFileName;
         detailDocumentLabel = docLabel;
       });
     } catch (e) {
@@ -112,10 +116,19 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
   }
 
   Future<void> _openDocument() async {
-    final url = detailDocumentUrl?.trim() ?? '';
-    if (url.isEmpty) return;
+    final documentId = detailDocumentId?.trim() ?? '';
+    if (documentId.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
-    final opened = await openExternalUrl(url);
+    var opened = false;
+    try {
+      opened = await openPetDocument(
+        petId: widget.petId,
+        documentId: documentId,
+        fileName: detailDocumentFileName,
+      );
+    } catch (_) {
+      opened = false;
+    }
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
@@ -168,8 +181,8 @@ class _LabPanelsScreenState extends State<LabPanelsScreen> {
                             l10n.labsResults,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          if (detailDocumentUrl != null &&
-                              detailDocumentUrl!.isNotEmpty) ...[
+                          if (detailDocumentId != null &&
+                              detailDocumentId!.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             OutlinedButton.icon(
                               key: const Key('lab_panel_document_open'),

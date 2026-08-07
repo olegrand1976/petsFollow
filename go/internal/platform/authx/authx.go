@@ -17,6 +17,8 @@ type Identity struct {
 	Role       kernel.Role `json:"role"`
 	PracticeID string      `json:"practiceId,omitempty"`
 	ProfileID  string      `json:"profileId,omitempty"`
+	// TokenVersion is checked at refresh only, against identity.users.token_version.
+	TokenVersion int `json:"tokenVersion,omitempty"`
 }
 
 type ctxKey struct{}
@@ -52,22 +54,23 @@ func NewTokenIssuer(secret string, accessTTL, refreshTTL time.Duration) *TokenIs
 }
 
 type claims struct {
-	Email      string       `json:"email"`
-	Role       kernel.Role  `json:"role"`
-	PracticeID string       `json:"practice_id,omitempty"`
-	ProfileID  string       `json:"profile_id,omitempty"`
-	Typ        string       `json:"typ"`
+	Email      string      `json:"email"`
+	Role       kernel.Role `json:"role"`
+	PracticeID string      `json:"practice_id,omitempty"`
+	ProfileID  string      `json:"profile_id,omitempty"`
+	Tv         int         `json:"tv,omitempty"`
+	Typ        string      `json:"typ"`
 	jwt.RegisteredClaims
 }
 
-func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID string) (TokenPair, error) {
-	return t.IssueProfile(userID, email, role, practiceID, "")
+func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID string, tokenVersion int) (TokenPair, error) {
+	return t.IssueProfile(userID, email, role, practiceID, "", tokenVersion)
 }
 
-func (t *TokenIssuer) IssueProfile(userID, email string, role kernel.Role, practiceID, profileID string) (TokenPair, error) {
+func (t *TokenIssuer) IssueProfile(userID, email string, role kernel.Role, practiceID, profileID string, tokenVersion int) (TokenPair, error) {
 	now := time.Now()
 	accessClaims := claims{
-		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Typ: "access",
+		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Tv: tokenVersion, Typ: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userID, IssuedAt: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(t.accessTTL)), ID: uuid.NewString(),
@@ -78,7 +81,7 @@ func (t *TokenIssuer) IssueProfile(userID, email string, role kernel.Role, pract
 		return TokenPair{}, err
 	}
 	refreshClaims := claims{
-		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Typ: "refresh",
+		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Tv: tokenVersion, Typ: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userID, IssuedAt: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(t.refreshTTL)), ID: uuid.NewString(),
@@ -159,7 +162,10 @@ func (t *TokenIssuer) parseTyped(tokenStr, typ string) (Identity, error) {
 	if !ok || !token.Valid || c.Typ != typ {
 		return Identity{}, ErrUnauthorized
 	}
-	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID, ProfileID: c.ProfileID}, nil
+	return Identity{
+		UserID: c.Subject, Email: c.Email, Role: c.Role,
+		PracticeID: c.PracticeID, ProfileID: c.ProfileID, TokenVersion: c.Tv,
+	}, nil
 }
 
 func WithIdentity(ctx context.Context, id Identity) context.Context {

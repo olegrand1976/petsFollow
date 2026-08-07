@@ -1295,3 +1295,117 @@ func TestPacsStudyCommentsCRUDAndIsolation(t *testing.T) {
 		t.Fatalf("unknown study row want 404 not_found got %d %#v", code, env)
 	}
 }
+
+func TestPacsDeleteStudyHardDelete(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+	var deletedMu sync.Mutex
+	var deletedStudy string
+	orthFail := false
+
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","MainDicomTags":{"StudyInstanceUID":"1.2.840.delete","StudyDescription":"RX delete","ModalitiesInStudy":"DX"}}`))
+		case r.Method == http.MethodDelete && r.URL.Path == "/studies/"+studyID:
+			if orthFail {
+				http.Error(w, "orthanc boom", http.StatusInternalServerError)
+				return
+			}
+			deletedMu.Lock()
+			deletedStudy = studyID
+			deletedMu.Unlock()
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{}`))
+		default:
+			_ = body
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	vetParcTok := loginToken(t, api.handler, "vet.parc@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "delete.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+	rowID, _ := dataMap(t, env)["id"].(string)
+	if rowID == "" {
+		t.Fatalf("missing pet_studies id %#v", env)
+	}
+	delPath := "/api/v1/pets/" + petID + "/pacs/studies/" + rowID
+
+	// Cross-cabinet cannot delete.
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, delPath, vetParcTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("cross-cabinet delete want 403 got %d %#v", code, env)
+	}
+
+	// Orthanc failure keeps DB row.
+	orthFail = true
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, delPath, vetTok, nil)
+	if code != http.StatusBadGateway || errCode(env) != "pacs_delete_failed" {
+		t.Fatalf("orthanc fail want 502 pacs_delete_failed got %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/pacs/studies", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list after failed delete %d %#v", code, env)
+	}
+	list, _ := env["data"].([]any)
+	found := false
+	for _, item := range list {
+		m, _ := item.(map[string]any)
+		if m["id"] == rowID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("study row should remain after Orthanc fail %#v", env)
+	}
+
+	// Happy path hard-delete.
+	orthFail = false
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, delPath, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("delete %d %#v", code, env)
+	}
+	deletedMu.Lock()
+	got := deletedStudy
+	deletedMu.Unlock()
+	if got != studyID {
+		t.Fatalf("Orthanc delete study=%q want %s", got, studyID)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/pacs/studies", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list after delete %d %#v", code, env)
+	}
+	list, _ = env["data"].([]any)
+	for _, item := range list {
+		m, _ := item.(map[string]any)
+		if m["id"] == rowID {
+			t.Fatalf("study still listed after delete %#v", env)
+		}
+	}
+
+	// Idempotent 404 once gone.
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, delPath, vetTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("second delete want 404 got %d %#v", code, env)
+	}
+}

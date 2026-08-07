@@ -1384,7 +1384,11 @@
     "queueEmptyTitle": "Niets openstaand",
     "queueEmptyDescription": "Geen openstaande afspraken, berichten of uitnodigingen.",
     "queueLinkRequests": "1 klantuitnodiging",
-    "queueLinkRequestsPlural": "{count} klantuitnodigingen"
+    "queueLinkRequestsPlural": "{count} klantuitnodigingen",
+    "afscaTitle": "FAVV-nieuws",
+    "afscaEmptyTitle": "Geen recente nieuwsbrieven",
+    "afscaEmptyDescription": "De feed kon nu niet worden geladen. Raadpleeg de FAVV-website.",
+    "afscaViewAll": "Alle FAVV-nieuwsbrieven"
   },
   "messages": {
     "title": "Berichten",
@@ -2647,6 +2651,11 @@
       "payoutBic": "BIC (optioneel)",
       "payoutAccountHolder": "Rekeninghouder",
       "countryCode": "Land van de praktijk",
+      "animalScope": "Klinische focus",
+      "animalScopeBoth": "Kleine en grote dieren",
+      "animalScopeSmall": "Kleine huisdieren",
+      "animalScopeLarge": "Grote dieren / paarden",
+      "animalScopeHint": "Filtert de FAVV-nieuwsbrieven op het dashboard.",
       "countries": {
         "BE": "België",
         "FR": "Frankrijk",

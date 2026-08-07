@@ -57,6 +57,15 @@
         <option v-for="c in countryOptions" :key="c" :value="c">{{ c }} — {{ $t(`components.profileForm.countries.${c}`) }}</option>
       </select>
     </div>
+    <div v-if="model.countryCode === 'BE'" class="pro-field" data-testid="profile-animal-scope">
+      <label class="pro-label" for="animal-scope">{{ $t('components.profileForm.animalScope') }}</label>
+      <select id="animal-scope" v-model="model.animalScope" class="pro-select" name="animalScope" data-testid="profile-animal-scope-select">
+        <option value="both">{{ $t('components.profileForm.animalScopeBoth') }}</option>
+        <option value="small">{{ $t('components.profileForm.animalScopeSmall') }}</option>
+        <option value="large">{{ $t('components.profileForm.animalScopeLarge') }}</option>
+      </select>
+      <p class="pro-profile-form__hint">{{ $t('components.profileForm.animalScopeHint') }}</p>
+    </div>
     <ProInput
       v-model="model.website"
       :label="$t('components.profileForm.website')"
@@ -189,6 +198,7 @@ export type PracticeProfileForm = {
   city: string
   postalCode: string
   countryCode: string
+  animalScope: 'small' | 'large' | 'both'
   website: string
   companyLegalName: string
   vatNumber: string
@@ -215,6 +225,7 @@ export function emptyPracticeProfileForm(): PracticeProfileForm {
     city: '',
     postalCode: '',
     countryCode: 'BE',
+    animalScope: 'both',
     website: '',
     companyLegalName: '',
     vatNumber: '',
@@ -243,6 +254,7 @@ export function mapPracticeProfileFromApi(data: any): PracticeProfileForm {
     city: data?.city || '',
     postalCode: data?.postalCode || '',
     countryCode: data?.countryCode || 'BE',
+    animalScope: (['small', 'large', 'both'].includes(data?.animalScope) ? data.animalScope : 'both') as PracticeProfileForm['animalScope'],
     website: data?.website || '',
     companyLegalName: data?.companyLegalName || '',
     vatNumber: data?.vatNumber || '',

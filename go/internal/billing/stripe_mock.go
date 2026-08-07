@@ -17,16 +17,20 @@ import (
 type MockGateway struct {
 	WebhookSecret string
 	APIPublicURL  string
+	// URLSecret signs mock checkout callbacks. The mock endpoints are reachable
+	// without a bearer token (the browser follows the checkout redirect), so the
+	// signature is what proves the URL was minted by us.
+	URLSecret string
 }
 
-func NewMockGateway(webhookSecret, apiPublicURL string) *MockGateway {
+func NewMockGateway(webhookSecret, apiPublicURL, urlSecret string) *MockGateway {
 	if webhookSecret == "" {
 		webhookSecret = "whsec_test"
 	}
 	if apiPublicURL == "" {
 		apiPublicURL = "http://localhost:8291"
 	}
-	return &MockGateway{WebhookSecret: webhookSecret, APIPublicURL: apiPublicURL}
+	return &MockGateway{WebhookSecret: webhookSecret, APIPublicURL: apiPublicURL, URLSecret: urlSecret}
 }
 
 func (g *MockGateway) CreateCheckoutSession(_ context.Context, req CheckoutRequest) (CheckoutSession, error) {
@@ -39,8 +43,36 @@ func (g *MockGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 	if req.SuccessURL != "" {
 		q.Set("success_url", req.SuccessURL)
 	}
+	q.Set(MockSignatureParam, SignMockURL(g.URLSecret, q))
 	checkoutURL := fmt.Sprintf("%s/api/v1/billing/dev/mock-complete?%s", strings.TrimRight(g.APIPublicURL, "/"), q.Encode())
 	return CheckoutSession{ID: id, URL: checkoutURL}, nil
+}
+
+// MockSignatureParam is the query parameter carrying the mock URL signature.
+const MockSignatureParam = "sig"
+
+// SignMockURL authenticates a mock billing URL over all its other parameters.
+// url.Values.Encode sorts by key, so the signed payload is canonical.
+func SignMockURL(secret string, q url.Values) string {
+	signed := url.Values{}
+	for k, v := range q {
+		if k == MockSignatureParam {
+			continue
+		}
+		signed[k] = v
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write([]byte(signed.Encode()))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// VerifyMockURL reports whether q carries a signature we minted.
+func VerifyMockURL(secret string, q url.Values) bool {
+	got := q.Get(MockSignatureParam)
+	if got == "" {
+		return false
+	}
+	return hmac.Equal([]byte(SignMockURL(secret, q)), []byte(got))
 }
 
 // MockCustomerID mirrors the customer id written by MockCompleteCheckout webhooks.
@@ -49,9 +81,12 @@ func MockCustomerID(ownerUserID string) string {
 }
 
 func (g *MockGateway) CreatePortalSession(_ context.Context, customerID, returnURL string) (PortalSession, error) {
-	base := strings.TrimRight(g.APIPublicURL, "/")
-	return PortalSession{URL: fmt.Sprintf("%s/api/v1/billing/dev/mock-portal?customer=%s&return=%s",
-		base, url.QueryEscape(customerID), url.QueryEscape(returnURL))}, nil
+	q := url.Values{}
+	q.Set("customer", customerID)
+	q.Set("return", returnURL)
+	q.Set(MockSignatureParam, SignMockURL(g.URLSecret, q))
+	return PortalSession{URL: fmt.Sprintf("%s/api/v1/billing/dev/mock-portal?%s",
+		strings.TrimRight(g.APIPublicURL, "/"), q.Encode())}, nil
 }
 
 func (g *MockGateway) CancelSubscription(_ context.Context, subscriptionID string) error {

@@ -77,7 +77,7 @@ func TestDenySensitivePrefixes(t *testing.T) {
 	okHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	h := DenySensitivePrefixes(okHandler, "visit-reports/")
+	h := DenySensitivePrefixes(okHandler)
 	for _, path := range []string{
 		"/media/visit-reports/v1/a.m4a",
 		"/media/visit-reports",
@@ -85,6 +85,9 @@ func TestDenySensitivePrefixes(t *testing.T) {
 		"/media/./visit-reports/v1/a.m4a",
 		"/media/foo/../visit-reports/v1/a.m4a",
 		"/media/Visit-Reports/v1/a.m4a",
+		"/media/documents/p1/a.pdf",
+		"/media/consultation-shares-v2/t1/report.pdf",
+		"/media/",
 	} {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
@@ -128,13 +131,27 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"compendium-imports/",
 		"compendium-imports/job1.pdf",
 		"Compendium-Imports/x",
+		// Documents du dossier animal (PDF d'analyses, radios) — PHI.
+		"documents/p1/a.pdf",
+		// Le suffixe -v2 ne doit pas rouvrir le partage de consultation.
+		"consultation-shares-v2/t1/report.pdf",
+		"pitch-sims/s1/rec.webm",
+		// Fail-closed : un namespace inconnu ou vide reste privé.
+		"unknown-kind/x.pdf",
+		"visit-report/x",
+		"",
+		"/",
+		".",
 	}
 	for _, k := range yes {
 		if !IsSensitiveObjectKey(k) {
 			t.Fatalf("expected sensitive: %q", k)
 		}
 	}
-	no := []string{"avatars/u1.png", "pets/p1.jpg", "visit-report/x", "documents/p1/a.pdf", ""}
+	no := []string{
+		"avatars/u1.png", "pets/p1.jpg", "messages/t1/clip.mp4",
+		"brand/qr_android", "Avatars/U1.PNG",
+	}
 	for _, k := range no {
 		if IsSensitiveObjectKey(k) {
 			t.Fatalf("expected not sensitive: %q", k)
@@ -160,11 +177,36 @@ func TestSensitiveUploadNoPublicURL(t *testing.T) {
 		t.Fatal("expected sensitive")
 	}
 	pdf := []byte("%PDF-1.4\n%%EOF\n")
-	url, err = st.Upload(nil, "compendium-imports/job.pdf", bytes.NewReader(pdf), int64(len(pdf)), "application/pdf")
-	if err != nil {
-		t.Fatal(err)
+	for _, key := range []string{
+		"compendium-imports/job.pdf",
+		// Namespaces refermés par le durcissement : ils avaient une URL publique.
+		"documents/p1/analyse.pdf",
+		"pitch-sims/s1/call.webm",
+		"consultation-shares-v2/t1/report.pdf",
+	} {
+		url, err = st.Upload(nil, key, bytes.NewReader(pdf), int64(len(pdf)), "application/pdf")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if url != "" {
+			t.Fatalf("expected empty public URL for %s, got %q", key, url)
+		}
 	}
-	if url != "" {
-		t.Fatalf("expected empty public URL for compendium import, got %q", url)
+}
+
+// publicPrefixes est toute la frontière PHI : un objet dont la clé y correspond
+// reçoit une URL `storage.googleapis.com` lisible par n'importe qui (le bucket
+// porte un binding `allUsers`). Élargir cette liste expose des données sans
+// autre garde-fou, donc le changement doit être explicite et relu — d'où
+// l'épinglage plutôt qu'une simple vérification de présence.
+func TestPublicPrefixesArePinned(t *testing.T) {
+	want := []string{"avatars/", "pets/", "messages/", "brand/"}
+	if len(publicPrefixes) != len(want) {
+		t.Fatalf("public namespaces changed: %v (want %v) — see documentation/36-RGPD.md", publicPrefixes, want)
+	}
+	for i, p := range want {
+		if publicPrefixes[i] != p {
+			t.Fatalf("public namespaces changed: %v (want %v) — see documentation/36-RGPD.md", publicPrefixes, want)
+		}
 	}
 }

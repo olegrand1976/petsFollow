@@ -475,21 +475,14 @@ test('heartrate — durées cabinet exposées au client + BPM sur 15s', async ()
   if (!createPet.ok) throw new Error(`create pet ${createPet.status}`)
   const petPayload = (await createPet.json()).data as {
     id?: string
-    pet?: { id: string; ownerUserId?: string }
-    ownerUserId?: string
+    pet?: { id: string }
+    checkoutUrl?: string
   }
   const petId = petPayload.pet?.id ?? petPayload.id
-  let ownerId = petPayload.pet?.ownerUserId ?? petPayload.ownerUserId
   if (!petId) throw new Error('missing pet id')
-  if (!ownerId) {
-    const me = await fetch(`${API}/api/v1/me`, { headers: clientHeaders })
-    ownerId = (await me.json()).data.userId as string
-  }
-
-  const mockComplete = await fetch(
-    `${API}/api/v1/billing/dev/mock-complete?pet_id=${petId}&owner_user_id=${ownerId}&plan_code=triennial&billing_mode=subscription`,
-    { headers: clientHeaders },
-  )
+  // Le callback mock est signé (HMAC) à l'émission : on suit l'URL renvoyée.
+  if (!petPayload.checkoutUrl) throw new Error('missing checkoutUrl')
+  const mockComplete = await fetch(petPayload.checkoutUrl, { headers: clientHeaders })
   if (!mockComplete.ok) throw new Error(`mock-complete ${mockComplete.status}`)
 
   const petsRes = await fetch(`${API}/api/v1/pets`, { headers: clientHeaders })

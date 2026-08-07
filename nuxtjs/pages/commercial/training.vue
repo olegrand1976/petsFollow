@@ -166,9 +166,9 @@
               <ul v-if="coachTips.length">
                 <li v-for="tip in coachTips" :key="tip">{{ tip }}</li>
               </ul>
-              <div v-if="sim.audioUrl || localAudioUrl" class="pro-mt-md">
+              <div v-if="localAudioUrl || replayUrl" class="pro-mt-md">
                 <label class="pro-label">{{ $t('training.replay') }}</label>
-                <audio controls :src="sim.audioUrl || localAudioUrl" data-testid="training-replay" class="pf-audio" />
+                <audio controls :src="localAudioUrl || replayUrl" data-testid="training-replay" class="pf-audio" />
               </div>
               <label class="pro-label">{{ $t('training.yourScore') }}</label>
               <input v-model.number="userScore" type="number" min="0" max="10" step="0.5" class="pro-input" data-testid="training-user-score">
@@ -232,7 +232,10 @@
               <td>{{ h.userScore ?? h.aiScore ?? '—' }}</td>
               <td>
                 <span v-if="h.isTop5">★</span>
-                <audio v-if="h.audioUrl" controls :src="h.audioUrl" class="pf-audio-mini" />
+                <audio v-if="pitchAudioUrls[h.id]" controls :src="pitchAudioUrls[h.id]" class="pf-audio-mini" />
+                <ProButton v-else-if="h.hasAudio" variant="ghost" @click="loadPitchAudio(h.id)">
+                  {{ $t('training.replay') }}
+                </ProButton>
               </td>
             </tr>
           </tbody>
@@ -327,6 +330,9 @@ const feedbackDone = ref(false)
 const canSkip = ref(true)
 const userScore = ref<number | null>(null)
 const localAudioUrl = ref('')
+/** Enregistrements pitch : média privé, récupéré en blob via le stream authentifié. */
+const pitchAudioUrls = ref<Record<string, string>>({})
+const replayUrl = computed(() => pitchAudioUrls.value[simId.value] || '')
 const fb = reactive({
   vetRealism: 4,
   coachUsefulness: 4,
@@ -441,13 +447,34 @@ async function uploadRecording(blob: Blob | null) {
       body: fd,
     })
     const data = res.data ?? res
-    if (data?.url) {
-      if (sim.value) sim.value.audioUrl = data.url
-      else sim.value = { audioUrl: data.url }
+    if (data?.hasAudio) {
+      if (sim.value) sim.value.hasAudio = true
+      else sim.value = { hasAudio: true }
     }
   } catch {
     // keep local blob URL for replay
   }
+}
+
+async function loadPitchAudio(id: string) {
+  if (!id || pitchAudioUrls.value[id]) return
+  try {
+    const blob = await $fetch<Blob>(`/api/commercial/pitch-sims/${id}/audio`, {
+      responseType: 'blob',
+    })
+    // Prefer server Content-Type; fall back so WebM dictation still plays.
+    const typed = blob.type && !blob.type.includes('octet-stream') && !blob.type.includes('json')
+      ? blob
+      : new Blob([blob], { type: 'audio/webm' })
+    pitchAudioUrls.value = { ...pitchAudioUrls.value, [id]: URL.createObjectURL(typed) }
+  } catch {
+    // pas de replay disponible (audio purgé ou non enregistré)
+  }
+}
+
+function revokePitchAudioUrls() {
+  for (const url of Object.values(pitchAudioUrls.value)) URL.revokeObjectURL(url)
+  pitchAudioUrls.value = {}
 }
 
 function unwrapList(res: any): any[] {
@@ -761,14 +788,15 @@ async function finalizeCall(outcome: string) {
     if (typeof data.coachFeedback === 'string') {
       try { data.coachFeedback = JSON.parse(data.coachFeedback) } catch { /* keep */ }
     }
-    if (localAudioUrl.value && !data.audioUrl) data.audioUrl = localAudioUrl.value
     sim.value = data
     phase.value = 'done'
     feedbackDone.value = !!data.hasFeedback || !!data.feedbackSkipped
+    // Le blob local couvre la relecture immédiate ; sinon on tire le stream authentifié.
+    if (data.hasAudio && !localAudioUrl.value) await loadPitchAudio(simId.value)
     await loadSkipQuota()
   } catch {
     phase.value = 'done'
-    sim.value = { outcome, aiScore: null, coachFeedback: null, audioUrl: localAudioUrl.value }
+    sim.value = { outcome, aiScore: null, coachFeedback: null }
   }
 }
 
@@ -829,6 +857,8 @@ onBeforeUnmount(() => {
   stopTimer()
   live.stop()
   void stopRecordingAsync(false)
+  if (localAudioUrl.value) URL.revokeObjectURL(localAudioUrl.value)
+  revokePitchAudioUrls()
 })
 </script>
 

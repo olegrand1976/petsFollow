@@ -245,6 +245,12 @@ func (a *API) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	// Reached by a browser redirect, so no bearer token: the signature minted by
+	// CreateCheckoutSession is what prevents a stranger granting entitlements.
+	if !billing.VerifyMockURL(a.cfg.JWTSigningKey, q) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "invalid_signature")
+		return
+	}
 	successURL := q.Get("success_url")
 	if addonID := q.Get("addon_id"); addonID != "" {
 		ownerUserID := q.Get("owner_user_id")
@@ -334,8 +340,16 @@ func allowedMockReturnURL(u string) bool {
 
 // billingMockPortal is the Stripe Customer Portal stand-in when BILLING_MOCK_ENABLED.
 func (a *API) billingMockPortal(w http.ResponseWriter, r *http.Request) {
-	customer := r.URL.Query().Get("customer")
-	returnURL := r.URL.Query().Get("return")
+	q := r.URL.Query()
+	if !billing.VerifyMockURL(a.cfg.JWTSigningKey, q) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "invalid_signature")
+		return
+	}
+	customer := q.Get("customer")
+	returnURL := q.Get("return")
+	if returnURL != "" && !allowedMockReturnURL(returnURL) {
+		returnURL = ""
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>

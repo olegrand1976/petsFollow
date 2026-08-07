@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/olegrand1976/petsFollow/go/internal/afsca"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
@@ -56,6 +57,7 @@ type API struct {
 	clientAiExplainRL   *httpx.RateLimiter
 	authPulse           *authPulse
 	redis               *redisx.Client
+	afsca               *afsca.Client
 	orthancClient       *orthancClient
 	// stagingSeedRun — seed destructif de POST /admin/staging/seed (défaut seed.Run).
 	// Injectable pour que les tests d'intégration couvrent l'endpoint sans tronquer
@@ -94,6 +96,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	a := &API{
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, sms: smsSender, gemini: g,
 		vamreg: vamregDecl, vamregAFMPS: vamregAFMPS, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
+		afsca:               afsca.NewClient(),
 		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
 		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
 		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),
@@ -176,8 +179,8 @@ func (a *API) Routes(r chi.Router) {
 		ar.Post("/auth/resend-confirmation", a.resendConfirmation)
 		ar.Post("/auth/forgot-password", a.forgotPassword)
 		ar.Post("/auth/reset-password", a.resetPassword)
+		ar.Post("/auth/refresh", a.refresh)
 	})
-	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
 	a.registerAppInviteRoutes(r, authRL.Middleware)
 	a.registerPreconsultPublicRoutes(r, authRL.Middleware)
@@ -310,6 +313,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/pets/{petID}/health-book", a.uploadPetHealthBook)
 		pr.Delete("/pets/{petID}/health-book", a.deletePetHealthBook)
 		pr.Get("/pets/{petID}/documents", a.listPetDocuments)
+		pr.Get("/pets/{petID}/documents/{documentID}/download", a.downloadPetDocument)
 		pr.Post("/pets/{petID}/documents", a.uploadPetDocument)
 		pr.Delete("/pets/documents/{documentID}", a.deletePetDocument)
 		pr.Get("/pets/{petID}/shares", a.listPetShares)
@@ -368,6 +372,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Put("/vet/availability", a.setAvailability)
 		pr.Get("/vet/availability", a.getAvailability)
 		pr.Get("/vet/overview", a.vetOverview)
+		pr.Get("/vet/afsca-newsletters", a.listAfscaNewsletters)
 		pr.Get("/vet/profile", a.getVetProfile)
 		pr.Put("/vet/profile", a.updateVetProfile)
 		pr.Post("/vet/prospects", a.vetCreateProspect)
@@ -444,11 +449,17 @@ func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
 		return
 	}
+	// Révocation : logout et reset de mot de passe incrémentent token_version.
+	// Contrôlé ici seulement — l'access token court (~15 min) reste valide d'ici là.
+	if id.TokenVersion != u.TokenVersion {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "token_revoked")
+		return
+	}
 	profileID := ""
 	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
 		profileID = active.ID
 	}
-	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID, u.TokenVersion)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -1633,7 +1644,7 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
 		profileID = active.ID
 	}
-	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID, u.TokenVersion)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -1779,8 +1790,9 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var durationsProbe struct {
-		HeartRateDurationsSec *[]int `json:"heartrateDurationsSec"`
-		DeskIdleMinutes       *int   `json:"deskIdleMinutes"`
+		HeartRateDurationsSec *[]int  `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int    `json:"deskIdleMinutes"`
+		AnimalScope           *string `json:"animalScope"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1814,6 +1826,12 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	req.BillingAddressLine2 = strings.TrimSpace(req.BillingAddressLine2)
 	req.BillingPostalCode = strings.TrimSpace(req.BillingPostalCode)
 	req.BillingCity = strings.TrimSpace(req.BillingCity)
+	var animalScopeUpdate *string
+	if durationsProbe.AnimalScope != nil {
+		v := store.NormalizeAnimalScope(*durationsProbe.AnimalScope)
+		animalScopeUpdate = &v
+		req.AnimalScope = v
+	}
 	// JSON omits default bool to false; treat empty billing address as same-as-practice.
 	if !req.BillingSameAsPractice && req.BillingAddressLine1 == "" {
 		req.BillingSameAsPractice = true
@@ -1833,7 +1851,7 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		deskIdleUpdate = &v
 	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate, animalScopeUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

@@ -240,6 +240,18 @@ func TestBookingRequiresSiteWhenMultiBookable(t *testing.T) {
 			t.Fatalf("siteId provided must not yield site_required: %#v", env)
 		}
 	}
+	// Ce POST peut réussir : sans annulation il laisse le créneau occupé pour
+	// les autres tests du paquet, qui partagent l'agenda VetPlus.
+	if code == http.StatusCreated {
+		if id, _ := dataMap(t, env)["id"].(string); id != "" {
+			vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+			t.Cleanup(func() {
+				_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+id, vetTok, map[string]any{
+					"status": "cancelled",
+				})
+			})
+		}
+	}
 }
 
 func TestDeactivateBlockedByOrphanRequestedVisit(t *testing.T) {

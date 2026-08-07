@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/headerlinks"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
@@ -25,6 +27,7 @@ type PracticeProfile struct {
 	City                  string     `json:"city"`
 	PostalCode            string     `json:"postalCode"`
 	CountryCode           string     `json:"countryCode"`
+	AnimalScope           string     `json:"animalScope"`
 	Website               string     `json:"website"`
 	ProfileCompletedAt    *time.Time `json:"profileCompletedAt,omitempty"`
 	VetFullName           string     `json:"vetFullName"`
@@ -46,6 +49,8 @@ type PracticeProfile struct {
 	PayoutBIC              string `json:"payoutBic"`
 	PayoutAccountHolder    string `json:"payoutAccountHolder"`
 	PayoutProfileComplete  bool   `json:"payoutProfileComplete"`
+	// HeaderLinks: catalog toggles + custom URLs for the Pro topbar.
+	HeaderLinks headerlinks.Prefs `json:"headerLinks"`
 }
 
 // IsVetPayoutProfileComplete reports whether company + bank fields are sufficient for payout.
@@ -103,6 +108,32 @@ func (s *Store) GetPracticeContact(ctx context.Context, practiceID string) (Prac
 	return c, err
 }
 
+// GetPracticeAnimalScope returns the AFSCA dashboard filter preference (small|large|both).
+func (s *Store) GetPracticeAnimalScope(ctx context.Context, practiceID string) (string, error) {
+	var scope string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(animal_scope,'both') FROM practice.practices WHERE id = $1`, practiceID,
+	).Scan(&scope)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "both", ErrNotFound
+	}
+	if err != nil {
+		return "both", err
+	}
+	return NormalizeAnimalScope(scope), nil
+}
+
+// NormalizeAnimalScope returns small|large|both (default both).
+// Kept in sync with afsca.NormalizeScope (same values).
+func NormalizeAnimalScope(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "small", "large":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return "both"
+	}
+}
+
 // NormalizeCountryCode returns a 2-letter ISO code (default BE).
 func NormalizeCountryCode(code string) string {
 	c := strings.ToUpper(strings.TrimSpace(code))
@@ -121,25 +152,29 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 	var p PracticeProfile
 	var completedAt *time.Time
 	var durations []int32
+	var headerLinksRaw []byte
 	err := s.pool.QueryRow(ctx, `
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
-			COALESCE(pr.postal_code,''), COALESCE(pr.country_code,'BE'), COALESCE(pr.website,''), pr.profile_completed_at,
+			COALESCE(pr.postal_code,''), COALESCE(pr.country_code,'BE'), COALESCE(pr.animal_scope,'both'),
+			COALESCE(pr.website,''), pr.profile_completed_at,
 			u.full_name, u.email, pr.heartrate_durations_sec, pr.desk_idle_minutes,
 			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
 			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
 			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_address_line2,''),
 			COALESCE(pr.billing_postal_code,''), COALESCE(pr.billing_city,''),
-			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,'')
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,''),
+			COALESCE(pr.header_links, '{}'::jsonb)
 		FROM practice.practices pr
 		JOIN identity.users u ON u.id = $2 AND u.practice_id = pr.id
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
-		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.CountryCode, &p.Website, &completedAt,
+		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.CountryCode, &p.AnimalScope, &p.Website, &completedAt,
 		&p.VetFullName, &p.VetEmail, &durations, &p.DeskIdleMinutes,
 		&p.CompanyLegalName, &p.VATNumber, &p.CompanyNumber, &p.LegalForm, &p.BillingSameAsPractice,
 		&p.BillingAddressLine1, &p.BillingAddressLine2, &p.BillingPostalCode, &p.BillingCity,
 		&p.PayoutIBAN, &p.PayoutBIC, &p.PayoutAccountHolder,
+		&headerLinksRaw,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PracticeProfile{}, ErrNotFound
@@ -149,9 +184,11 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 	}
 	p.ProfileCompletedAt = completedAt
 	p.CountryCode = NormalizeCountryCode(p.CountryCode)
+	p.AnimalScope = NormalizeAnimalScope(p.AnimalScope)
 	p.HeartRateDurationsSec = int32SliceToInts(durations)
 	p.DeskIdleMinutes = kernel.NormalizeDeskIdleMinutes(p.DeskIdleMinutes)
 	p.PayoutProfileComplete = IsVetPayoutProfileComplete(p)
+	p.HeaderLinks = headerlinks.ParsePrefs(headerLinksRaw)
 	return p, nil
 }
 
@@ -204,7 +241,7 @@ func (s *Store) GetPracticeName(ctx context.Context, practiceID string) (string,
 	return name, err
 }
 
-func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int, deskIdleMinutes *int) error {
+func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int, deskIdleMinutes *int, animalScope *string, headerLinks *headerlinks.Prefs) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -233,6 +270,10 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 		p.BillingPostalCode, p.BillingCity,
 		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
 	}
+	if animalScope != nil {
+		args = append(args, NormalizeAnimalScope(*animalScope))
+		q += `, animal_scope = $` + strconv.Itoa(len(args))
+	}
 	if heartRateDurationsSec != nil {
 		args = append(args, *heartRateDurationsSec)
 		q += `, heartrate_durations_sec = $` + strconv.Itoa(len(args))
@@ -240,6 +281,14 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	if deskIdleMinutes != nil {
 		args = append(args, kernel.NormalizeDeskIdleMinutes(*deskIdleMinutes))
 		q += `, desk_idle_minutes = $` + strconv.Itoa(len(args))
+	}
+	if headerLinks != nil {
+		raw, err := headerlinks.MarshalPrefs(*headerLinks)
+		if err != nil {
+			return err
+		}
+		args = append(args, json.RawMessage(raw))
+		q += `, header_links = $` + strconv.Itoa(len(args))
 	}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`
@@ -253,6 +302,22 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	}
 	_ = s.RefreshVetPayoutLineStatusesForPractice(ctx, practiceID)
 	return nil
+}
+
+// GetPracticeHeaderLinks returns raw header link prefs for a practice.
+func (s *Store) GetPracticeHeaderLinks(ctx context.Context, practiceID string) (headerlinks.Prefs, string, error) {
+	var raw []byte
+	var country string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(header_links, '{}'::jsonb), COALESCE(country_code, 'BE')
+		FROM practice.practices WHERE id = $1`, practiceID).Scan(&raw, &country)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return headerlinks.EmptyPrefs(), "BE", ErrNotFound
+	}
+	if err != nil {
+		return headerlinks.EmptyPrefs(), "BE", err
+	}
+	return headerlinks.ParsePrefs(raw), NormalizeCountryCode(country), nil
 }
 
 func (s *Store) IsProfileComplete(ctx context.Context, practiceID string) (bool, error) {

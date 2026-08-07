@@ -31,7 +31,7 @@ func TestParsePlanCode(t *testing.T) {
 }
 
 func TestMockWebhookIdempotence(t *testing.T) {
-	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291")
+	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291", "test-url-secret")
 	payload := []byte(`{"id":"evt_1","type":"checkout.session.completed","data":{"object":{"id":"cs_1","metadata":{"pet_id":"p1","owner_user_id":"u1","plan_code":"triennial","billing_mode":"one_time"}}}}`)
 	sig := "t=1,v1=deadbeef"
 	_, err := gw.VerifyWebhook(payload, sig)

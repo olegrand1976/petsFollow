@@ -32,11 +32,31 @@ func (a *API) registerAuthRoutes(r chi.Router, rateLimit func(http.Handler) http
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		// Pas de gate CGU ici : se déconnecter doit rester possible.
+		pr.Post("/auth/logout", a.logout)
 		pr.Get("/auth/2fa/status", a.twoFactorStatus)
 		pr.Post("/auth/2fa/setup", a.twoFactorSetup)
 		pr.Post("/auth/2fa/confirm", a.twoFactorConfirm)
 		pr.Post("/auth/2fa/disable", a.twoFactorDisable)
 	})
+}
+
+// logout revokes the caller's issued tokens by bumping token_version.
+//
+// JWTs are stateless, so this is what makes a stolen refresh token useless
+// before its 30-day expiry. It applies to every session of the account: a
+// logout on the web also ends the mobile session.
+func (a *API) logout(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if err := a.store.BumpTokenVersion(r.Context(), id.UserID); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]bool{"loggedOut": true})
 }
 
 type googleLoginReq struct {
@@ -254,7 +274,7 @@ func (a *API) issueLoginResponseWithExtra(w http.ResponseWriter, r *http.Request
 		httpx.WriteData(w, http.StatusOK, out)
 		return
 	}
-	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID, u.TokenVersion)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -343,7 +363,7 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
 		profileID = active.ID
 	}
-	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID, u.TokenVersion)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

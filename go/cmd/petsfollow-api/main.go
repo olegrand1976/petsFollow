@@ -54,6 +54,13 @@ func main() {
 		return
 	}
 
+	if app.IsRotatePetDocumentsCmd(os.Args[1:]) {
+		if err := app.RotatePetDocumentsOnly(ctx, cfg, os.Args[1:]); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
 	application, err := app.New(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)

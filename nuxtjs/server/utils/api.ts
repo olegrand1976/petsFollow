@@ -89,6 +89,23 @@ export function clearAuthCookies(event: H3Event) {
 }
 
 /**
+ * Purger les cookies ne suffit pas : un refresh token qui aurait fuité resterait
+ * valide 30 jours. L'API incrémente token_version pour le rendre inutilisable.
+ * Un échec ne doit pas empêcher la déconnexion locale.
+ */
+export async function revokeIssuedTokens(event: H3Event) {
+  try {
+    await $fetch(`${apiBase()}/api/v1/auth/logout`, {
+      method: 'POST',
+      headers: { ...localeHeaders(event), ...authHeaders(event) },
+    })
+  }
+  catch {
+    // session déjà expirée ou API indisponible : on purge quand même les cookies
+  }
+}
+
+/**
  * Absorbe une réponse auth Go : pose les cookies httpOnly et retire les JWT du body
  * renvoyé au navigateur. Les challenges MFA (sans accessToken) passent inchangés.
  * Expose `role` (claim JWT) pour la navigation document post-login sans XHR /me.

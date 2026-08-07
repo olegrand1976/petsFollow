@@ -26,13 +26,15 @@ type ThreadSummary struct {
 }
 
 type VetOverview struct {
-	ClientCount          int `json:"clientCount"`
-	UnreadMessages       int `json:"unreadMessages"`
-	RecentSessions7d     int `json:"recentSessions7d"`
-	PendingLinkRequests  int `json:"pendingLinkRequests"`
-	PendingVisits        int `json:"pendingVisits"`
-	OverdueCareCount     int `json:"overdueCareCount"`
-	UnreadHeartrate      int `json:"unreadHeartrate"`
+	ClientCount         int    `json:"clientCount"`
+	UnreadMessages      int    `json:"unreadMessages"`
+	RecentSessions7d    int    `json:"recentSessions7d"`
+	PendingLinkRequests int    `json:"pendingLinkRequests"`
+	PendingVisits       int    `json:"pendingVisits"`
+	OverdueCareCount    int    `json:"overdueCareCount"`
+	UnreadHeartrate     int    `json:"unreadHeartrate"`
+	CountryCode         string `json:"countryCode"`
+	AnimalScope         string `json:"animalScope"`
 }
 
 // ClientOverview aggregates vet-facing KPIs for a single client household.
@@ -254,13 +256,20 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			(SELECT COUNT(*)::int FROM care.reminders
 			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW()),
 			(SELECT COUNT(*)::int FROM heartrate.sessions
-			 WHERE practice_id = $1 AND status = 'validated' AND vet_seen_at IS NULL)`,
+			 WHERE practice_id = $1 AND status = 'validated' AND vet_seen_at IS NULL),
+			(SELECT COALESCE(country_code, 'BE') FROM practice.practices WHERE id = $1),
+			(SELECT COALESCE(animal_scope, 'both') FROM practice.practices WHERE id = $1)`,
 		practiceID, vetID).Scan(
 		&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d,
 		&o.PendingLinkRequests, &o.PendingVisits, &o.OverdueCareCount,
-		&o.UnreadHeartrate,
+		&o.UnreadHeartrate, &o.CountryCode, &o.AnimalScope,
 	)
-	return o, err
+	if err != nil {
+		return o, err
+	}
+	o.CountryCode = NormalizeCountryCode(o.CountryCode)
+	o.AnimalScope = NormalizeAnimalScope(o.AnimalScope)
+	return o, nil
 }
 
 const threadSummarySelect = `

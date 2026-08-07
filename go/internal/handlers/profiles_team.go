@@ -165,7 +165,7 @@ func (a *API) switchMyProfile(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, p.ID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, p.ID, u.TokenVersion)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -178,17 +178,23 @@ func (a *API) switchMyProfile(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (a *API) attachProfileFor(w http.ResponseWriter, r *http.Request, actor authx.Identity) {
-	targetID := chi.URLParam(r, "id")
-	var req struct {
-		Role       string `json:"role"`
-		Specialty  string `json:"specialty"`
-		PracticeID string `json:"practiceId"`
-	}
+type attachProfileReq struct {
+	Role       string `json:"role"`
+	Specialty  string `json:"specialty"`
+	PracticeID string `json:"practiceId"`
+}
+
+func decodeAttachProfileReq(w http.ResponseWriter, r *http.Request) (attachProfileReq, bool) {
+	var req attachProfileReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "validation", "validation")
-		return
+		return req, false
 	}
+	return req, true
+}
+
+func (a *API) attachProfileFor(w http.ResponseWriter, r *http.Request, actor authx.Identity, req attachProfileReq) {
+	targetID := chi.URLParam(r, "id")
 	role := kernel.Role(req.Role)
 	// Research observatory access is admin-only (not commercial attach).
 	if role == kernel.RoleResearch && actor.Role != kernel.RoleAdmin {
@@ -219,7 +225,19 @@ func (a *API) adminAttachProfile(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	a.attachProfileFor(w, r, id)
+	req, ok := decodeAttachProfileReq(w, r)
+	if !ok {
+		return
+	}
+	a.attachProfileFor(w, r, id, req)
+}
+
+// commercialAttachableRoles limits the sales force to extending a contact's own
+// account. Practice staff roles open a whole clinic's patient records and stay
+// admin-only, as does research (observatory).
+var commercialAttachableRoles = map[kernel.Role]bool{
+	kernel.RoleClient:  true,
+	kernel.RoleCarePro: true,
 }
 
 func (a *API) commercialAttachProfile(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +246,37 @@ func (a *API) commercialAttachProfile(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	a.attachProfileFor(w, r, id)
+	req, ok := decodeAttachProfileReq(w, r)
+	if !ok {
+		return
+	}
+	if !commercialAttachableRoles[kernel.Role(req.Role)] {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "role_admin_only")
+		return
+	}
+	targetID := chi.URLParam(r, "id")
+	assigned, err := a.store.GetAssignedCommercialID(r.Context(), targetID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if assigned == "" || assigned != id.UserID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_in_portfolio")
+		return
+	}
+	// The practice is never taken from the request here: a commercial must not
+	// be able to graft a target onto an arbitrary clinic.
+	target, err := a.store.GetUserByID(r.Context(), targetID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	req.PracticeID = target.PracticeID
+	a.attachProfileFor(w, r, id, req)
 }
 
 func (a *API) listVetTeam(w http.ResponseWriter, r *http.Request) {

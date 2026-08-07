@@ -2049,7 +2049,11 @@
     "queueEmptyTitle": "Niente in sospeso",
     "queueEmptyDescription": "Nessuna visita, messaggio o invito in sospeso.",
     "queueLinkRequests": "1 invito cliente",
-    "queueLinkRequestsPlural": "{count} inviti clienti"
+    "queueLinkRequestsPlural": "{count} inviti clienti",
+    "afscaTitle": "Notizie AFSCA",
+    "afscaEmptyTitle": "Nessuna newsletter recente",
+    "afscaEmptyDescription": "Impossibile caricare il feed. Consulta il sito AFSCA.",
+    "afscaViewAll": "Tutte le newsletter AFSCA"
   },
   "messages": {
     "title": "Messaggistica",
@@ -3610,6 +3614,11 @@
       "payoutBic": "BIC (facoltativo)",
       "payoutAccountHolder": "Titolare del conto",
       "countryCode": "Paese fermo",
+      "animalScope": "Orientamento clinico",
+      "animalScopeBoth": "Piccoli e grandi animali",
+      "animalScopeSmall": "Piccoli animali (compagnia)",
+      "animalScopeLarge": "Grandi animali / equini",
+      "animalScopeHint": "Filtra le newsletter AFSCA sulla dashboard.",
       "countries": {
         "BE": "Belgio",
         "FR": "Francia",

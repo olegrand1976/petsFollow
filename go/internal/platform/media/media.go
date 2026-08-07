@@ -87,54 +87,50 @@ func New(cfg config.Config) (*Bundle, error) {
 	}
 	return &Bundle{
 		Store:        st,
-		LocalHandler: DenySensitivePrefixes(handler, "visit-reports/", "health-books/"),
+		LocalHandler: DenySensitivePrefixes(handler),
 		LocalMount:   "/media/",
 	}, nil
 }
 
-// DenySensitivePrefixes blocks public FileServer access to object-key prefixes (PHI).
-func DenySensitivePrefixes(next http.Handler, prefixes ...string) http.Handler {
+// DenySensitivePrefixes blocks public FileServer access to PHI object keys.
+func DenySensitivePrefixes(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		p := strings.TrimPrefix(r.URL.Path, "/media/")
-		p = path.Clean("/" + p)
-		p = strings.TrimPrefix(p, "/")
-		if p == "." {
-			p = ""
-		}
-		for _, pref := range prefixes {
-			if IsSensitiveObjectKey(p) || strings.HasPrefix(p, pref) {
-				http.Error(w, "forbidden", http.StatusForbidden)
-				return
-			}
+		if IsSensitiveObjectKey(strings.TrimPrefix(r.URL.Path, "/media/")) {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-// IsSensitiveObjectKey reports PHI object keys that must not be publicly readable.
-func IsSensitiveObjectKey(objectKey string) bool {
-	objectKey = strings.TrimSpace(objectKey)
-	objectKey = path.Clean("/" + objectKey)
-	objectKey = strings.TrimPrefix(objectKey, "/")
-	objectKey = strings.ToLower(objectKey)
-	switch {
-	case objectKey == "visit-reports", strings.HasPrefix(objectKey, "visit-reports/"):
-		return true
-	case objectKey == "health-books", strings.HasPrefix(objectKey, "health-books/"):
-		return true
-	case objectKey == "dossier-shares", strings.HasPrefix(objectKey, "dossier-shares/"):
-		return true
-	case objectKey == "consultation-shares", strings.HasPrefix(objectKey, "consultation-shares/"):
-		return true
-	case objectKey == "daf", strings.HasPrefix(objectKey, "daf/"):
-		return true
-	case objectKey == "prescriptions", strings.HasPrefix(objectKey, "prescriptions/"):
-		return true
-	case objectKey == "compendium-imports", strings.HasPrefix(objectKey, "compendium-imports/"):
-		return true
-	default:
-		return false
+// publicPrefixes are the only object-key namespaces served without auth: user
+// avatars, pet photos, chat attachments and brand assets (store QR codes shown
+// on the public invite pages). Everything else is PHI or otherwise private.
+var publicPrefixes = []string{"avatars/", "pets/", "messages/", "brand/"}
+
+func normalizeObjectKey(objectKey string) string {
+	k := path.Clean("/" + strings.TrimSpace(objectKey))
+	k = strings.TrimPrefix(k, "/")
+	if k == "." {
+		return ""
 	}
+	return strings.ToLower(k)
+}
+
+// IsSensitiveObjectKey reports PHI object keys that must not be publicly readable.
+// Fail-closed: a namespace absent from publicPrefixes is treated as PHI, so a new
+// upload kind is never exposed by omission.
+func IsSensitiveObjectKey(objectKey string) bool {
+	k := normalizeObjectKey(objectKey)
+	if k == "" {
+		return true
+	}
+	for _, p := range publicPrefixes {
+		if strings.HasPrefix(k, p) {
+			return false
+		}
+	}
+	return true
 }
 
 func ExtForContentType(contentType string) (string, error) {
@@ -274,7 +270,7 @@ func ObjectKey(kind, entityID, ext string) string {
 	return fmt.Sprintf("%s/%s/%s%s", kind, entityID, newObjectID(), ext)
 }
 
-// ObjectKeyFromURL retrouve la clé d'objet depuis une URL publique construite par PublicURL
+// ObjectKeyFromURL retrouve la clé d'objet depuis une URL publique de stockage
 // (GCS ou /media/ local). Retourne "" si l'URL ne pointe pas vers notre stockage.
 func ObjectKeyFromURL(cfg config.Config, raw string) string {
 	raw = strings.TrimSpace(raw)
@@ -293,15 +289,3 @@ func ObjectKeyFromURL(cfg config.Config, raw string) string {
 	return ""
 }
 
-// PublicURL builds a reachable URL for an object key (empty key → "").
-// Sensitive PHI keys (visit-reports/) never get a public URL.
-func PublicURL(cfg config.Config, objectKey string) string {
-	objectKey = strings.TrimSpace(objectKey)
-	if objectKey == "" || IsSensitiveObjectKey(objectKey) {
-		return ""
-	}
-	if cfg.GCSMediaBucket != "" {
-		return fmt.Sprintf("https://storage.googleapis.com/%s/%s", cfg.GCSMediaBucket, objectKey)
-	}
-	return strings.TrimRight(cfg.APIPublicURL, "/") + "/media/" + objectKey
-}

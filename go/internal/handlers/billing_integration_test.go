@@ -562,7 +562,7 @@ type errString string
 func (e errString) Error() string { return string(e) }
 
 func TestBillingCreatePetCheckoutFailStill201(t *testing.T) {
-	inner := billing.NewMockGateway(webhookSecret(), "http://localhost:8291")
+	inner := billing.NewMockGateway(webhookSecret(), "http://localhost:8291", "test-url-secret")
 	api := newTestAPIWithBilling(t, failingCheckoutGateway{inner: inner})
 	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
 

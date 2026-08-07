@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/pet_document.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Fiche animal pour care_pro (infos, timeline, documents).
 class ProLightPetScreen extends StatefulWidget {
@@ -79,11 +79,23 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
   }
 
   Future<void> _openDoc(Map<String, dynamic> doc) async {
-    final url = (doc['fileUrl'] as String?)?.trim() ?? '';
-    if (url.isEmpty) return;
-    final uri = Uri.tryParse(url);
-    if (uri != null) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final documentId = '${doc['id'] ?? ''}'.trim();
+    if (documentId.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
+    var opened = false;
+    try {
+      opened = await openPetDocument(
+        petId: widget.petId,
+        documentId: documentId,
+        fileName: doc['fileName'] as String?,
+      );
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+      );
     }
   }
 

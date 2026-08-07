@@ -111,8 +111,10 @@ if [ -z "$PET_ID" ]; then
   CREATE=$(curl -sf -X POST "$API/api/v1/pets" -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
     -d '{"name":"SmokePet","species":"dog","breed":"test","plan":"triennial","billingMode":"subscription"}')
   PET_ID=$(echo "$CREATE" | python3 -c "import sys,json; d=json.load(sys.stdin)['data']; p=d.get('pet') or d; print(p.get('id') or p.get('ID',''))")
-  OWNER_ID=$(echo "$CREATE" | python3 -c "import sys,json; d=json.load(sys.stdin)['data']; p=d.get('pet') or d; print(p.get('ownerUserId') or p.get('OwnerUserID',''))")
-  curl -sf "$API/api/v1/billing/dev/mock-complete?pet_id=$PET_ID&owner_user_id=$OWNER_ID&plan_code=triennial&billing_mode=subscription" >/dev/null
+  # Le callback mock est signé (HMAC) à l'émission : on suit l'URL renvoyée.
+  CHECKOUT_URL=$(echo "$CREATE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('checkoutUrl',''))")
+  [ -n "$CHECKOUT_URL" ] || { echo "no checkoutUrl in create pet response"; exit 1; }
+  curl -sf "$CHECKOUT_URL" >/dev/null
 fi
 
 THREADS=$(curl -sf "$API/api/v1/messaging/threads" -H "Authorization: Bearer $CLIENT_TOKEN")

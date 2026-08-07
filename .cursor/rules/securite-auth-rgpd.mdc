@@ -8,7 +8,8 @@ alwaysApply: true
 ## Tokens & auth
 
 - **Jamais** de JWT accessible au JS client. Nuxt : cookies **httpOnly** (`pf_token`, `pf_refresh`) posés par la BFF (`nuxtjs/server/utils/api.ts` — `setAuthCookies`/`absorbAuthTokens`) ; seul le marqueur `pf_session` est lisible. Flutter : `flutter_secure_storage` uniquement.
-- Tout nouvel endpoint auth **public** (login-like, register-like) doit passer par le rate limiter `authRL.Middleware` (`go/internal/handlers/api.go`).
+- Tout nouvel endpoint auth **public** (login-like, register-like, refresh) doit passer par le rate limiter `authRL.Middleware` (`go/internal/handlers/api.go`).
+- **Révocation** : `identity.users.token_version` est porté par le claim `tv` et vérifié au refresh (`a.refresh`). Toute action qui reprend la main sur un compte (reset MDP, logout, suppression) doit appeler `store.BumpTokenVersion` — sinon un refresh token volé reste valide 30 jours.
 - Register (vet ou client) exige `"consent": true` → horodaté dans `identity.users.terms_accepted_at`. Tout nouveau flow d'inscription doit inclure le consentement (UI + API + tests).
 
 ```go
@@ -18,6 +19,22 @@ if r.Header.Get("X-My-Secret") != cfg.MySecret { ... }
 // ✅ GOOD — temps constant via le helper existant
 if !secretHeaderOK(r, "X-My-Secret", cfg.MySecret) { ... } // handlers/retention.go
 ```
+
+## Médias — allowlist fail-closed
+
+Le bucket médias est en lecture publique : `IsSensitiveObjectKey` (`go/internal/platform/media/media.go`) fonctionne en **allowlist**. Seuls `avatars/`, `pets/`, `messages/`, `brand/` sortent une URL publique ; tout autre namespace est PHI et exige un endpoint de stream authentifié.
+
+```go
+// ❌ BAD — nouveau kind d'upload dont on publie l'URL
+url, _ := a.media.Upload(ctx, media.ObjectKey("lab-results", petID, ext), f, size, ct)
+return httpx.WriteData(w, 200, map[string]string{"url": url})
+
+// ✅ GOOD — clé privée + stream gardé par l'ACL du dossier
+_, _ = a.media.Upload(ctx, media.ObjectKey("lab-results", petID, ext), f, size, ct)
+// … GET /pets/{petID}/lab-results/{id}/download → a.media.Open
+```
+
+Ne jamais persister d'URL de stockage pour du PHI (cf. `pets.documents.file_url`, vidé par `make rotate-pet-documents`).
 
 ## Headers & ressources externes
 

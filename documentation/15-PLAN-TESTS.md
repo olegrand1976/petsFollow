@@ -174,7 +174,7 @@ Compte : `vet.demo@petsfollow.test`
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
+| C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
 | C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) |
 | C2.4 | P0 | Dossier pet | Chart FR, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
@@ -733,6 +733,48 @@ Surface publique `/consultation/{token}` : mêmes headers noindex / no-referrer 
 | Flutter triage CTAs | `triage_chat_test` (call / book / message) |
 
 Doc : [`43-CLIENT-AI.md`](43-CLIENT-AI.md). Pas de useCase commercial tant que tag `dev`.
+
+### Durcissement sécurité web (Go intégration — P0/P1)
+
+`go test ./internal/handlers/ -run 'TestPetDocumentIsPrivate|TestPitchAudioIsPrivate|TestCommercialAttachProfileRefuses|TestAdminCanStillAttach|TestBillingMockComplete|TestPasswordResetRevokes|TestLogoutRevokes|TestConsecutiveRefreshes|TestAuthRefreshIsRateLimited' -count=1`
+
+Fichiers : `go/internal/handlers/security_hardening_integration_test.go`, `pitch_audio_integration_test.go` (+ unitaires `go/internal/platform/media/media_test.go`, `go/internal/platform/authx/authx_test.go`).
+
+| ID | Cas | Attendu |
+|----|-----|---------|
+| S1 | Namespace média inconnu (`documents/`, `consultation-shares-v2/`, vide) | `IsSensitiveObjectKey` → `true` (allowlist fail-closed) ; seuls `avatars/` `pets/` `messages/` `brand/` restent publics |
+| S2 | Upload document animal | Réponse **sans** `fileUrl` ; `pets.documents.file_url` vide ; listing sans URL |
+| S3 | `GET /pets/{id}/documents/{docID}/download` | 200 propriétaire **et** véto du cabinet ; ≠ 200 anonyme et véto d'un autre cabinet |
+| S4 | Commercial attache un profil hors portefeuille | 403/404 (`assigned_commercial_id` requis) |
+| S5 | Commercial attache un rôle `vet` dans son portefeuille | **403** `role_admin_only` ; `practiceId` du corps ignoré |
+| S6 | `GET /billing/dev/mock-complete` / `mock-portal` forgé | **403** `invalid_signature` (HMAC posé à l'émission du checkout) |
+| S7 | Refresh token émis avant un reset de mot de passe | **401** `token_revoked` (`token_version` bumpé) |
+| S8 | Refresh token après `POST /auth/logout` | **401** — la purge de cookie seule ne suffisait pas |
+| S9 | Rafale sur `POST /auth/refresh` | **429** (route passée sous `authRL`) |
+| S10 | Enregistrement pitch (`pitch-sims/`) | Upload et historique **sans** `audioUrl` / `audioObjectKey` ; `hasAudio=true` ; stream 200 propriétaire **et** son manager, ≠ 200 anonyme et commercial d'une autre équipe ; `Cache-Control: private, no-store` |
+| S11 | Liste `publicPrefixes` | Épinglée à `avatars/ pets/ messages/ brand/` — l'élargir expose des objets au binding `allUsers`, donc décision explicite |
+| S12 | `Upload` d'une clé sensible | Aucune URL rendue par le store (local **et** GCS) pour `documents/`, `pitch-sims/`, `consultation-shares-v2/`, `compendium-imports/` |
+
+Conséquence assumée de S7/S8 : l'access token reste valide jusqu'à son expiration (~15 min) — la révocation est vérifiée au refresh, pas à chaque requête. Le bump est **global au compte** : un logout web ferme aussi la session Flutter.
+
+#### Gardes inverses (anti sur-restriction)
+
+Un durcissement qui casse la fonctionnalité passe tous les tests « doit refuser ». Ces cas verrouillent le chemin nominal :
+
+| ID | Cas | Attendu |
+|----|-----|---------|
+| S13 | `checkoutUrl` réellement émis par `POST /pets` | **200** — un `mock-complete` qui refuserait tout satisferait sinon S6 |
+| S14 | Admin attache un profil `vet` | **201** — la restriction S5 ne doit viser que la voie commerciale |
+| S15 | Trois refresh consécutifs | **200** à chaque fois — un bump de `token_version` au refresh déconnecterait tout le monde en boucle tout en satisfaisant S7 |
+
+#### Face Pro (Vitest)
+
+| Fichier | Cas |
+|---|---|
+| `tests/unit/logoutRevocation.spec.ts` | La BFF appelle `POST /auth/logout` avec le bearer ; API injoignable → déconnexion locale quand même |
+| `tests/unit/petDocumentsPrivate.spec.ts` | `petDocumentHref` → route BFF authentifiée (ids encodés) ; **aucune** source Nuxt ne consomme `fileUrl` |
+
+Rejouer : `make test-go`, `make test-nuxt`, `make test-auth`.
 
 ### Parrainage / QR (Go intégration — anti-régression)
 

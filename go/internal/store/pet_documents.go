@@ -18,8 +18,10 @@ type PetDocument struct {
 	Title            string    `json:"title"`
 	FileName         string    `json:"fileName"`
 	ContentType      string    `json:"contentType"`
-	FileURL          string    `json:"fileUrl"`
-	ObjectKey        string    `json:"-"`
+	// FileURL: legacy public storage URL, kept for the rotation job only.
+	// Documents are PHI — clients download through the authenticated endpoint.
+	FileURL   string `json:"-"`
+	ObjectKey string `json:"-"`
 	SizeBytes        int64     `json:"sizeBytes"`
 	CreatedAt        time.Time `json:"createdAt"`
 }
@@ -30,7 +32,6 @@ type CreatePetDocumentInput struct {
 	Title            string
 	FileName         string
 	ContentType      string
-	FileURL          string
 	ObjectKey        string
 	SizeBytes        int64
 }
@@ -81,16 +82,16 @@ func (s *Store) CreatePetDocument(ctx context.Context, in CreatePetDocumentInput
 		Title:            title,
 		FileName:         in.FileName,
 		ContentType:      in.ContentType,
-		FileURL:          in.FileURL,
 		ObjectKey:        in.ObjectKey,
 		SizeBytes:        in.SizeBytes,
 	}
+	// file_url stays empty: the object lives in a private namespace.
 	err := s.pool.QueryRow(ctx, `
 		INSERT INTO pets.documents (
 			id, pet_id, uploaded_by_user_id, title, file_name, content_type, file_url, object_key, size_bytes
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		) VALUES ($1,$2,$3,$4,$5,$6,'',$7,$8)
 		RETURNING created_at`,
-		d.ID, d.PetID, d.UploadedByUserID, d.Title, d.FileName, d.ContentType, d.FileURL, d.ObjectKey, d.SizeBytes,
+		d.ID, d.PetID, d.UploadedByUserID, d.Title, d.FileName, d.ContentType, d.ObjectKey, d.SizeBytes,
 	).Scan(&d.CreatedAt)
 	return d, err
 }

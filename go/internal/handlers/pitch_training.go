@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ func (a *API) registerPitchTrainingRoutes(r chi.Router) {
 		pr.Post("/commercial/pitch-sims/{id}/turn", a.commercialPitchSimTurn)
 		pr.Post("/commercial/pitch-sims/{id}/finalize", a.commercialFinalizePitchSim)
 		pr.Post("/commercial/pitch-sims/{id}/audio", a.commercialUploadPitchAudio)
+		pr.Get("/commercial/pitch-sims/{id}/audio", a.commercialGetPitchAudio)
 		pr.Patch("/commercial/pitch-sims/{id}/rating", a.commercialRatePitchSim)
 		pr.Post("/commercial/pitch-sims/{id}/feedback", a.commercialPitchSimFeedback)
 
@@ -73,11 +75,77 @@ func normalizeInterest(level string) string {
 	}
 }
 
+// enrichPitchSim flags playback availability without leaking the storage key.
+// Pitch recordings are private: playback goes through the authenticated stream
+// GET /commercial/pitch-sims/{id}/audio, never a public media URL.
 func (a *API) enrichPitchSim(sim *store.PitchSimulation) {
 	if sim == nil {
 		return
 	}
-	sim.AudioURL = media.PublicURL(a.cfg, sim.AudioObjectKey)
+	sim.HasAudio = strings.TrimSpace(sim.AudioObjectKey) != ""
+	sim.AudioObjectKey = ""
+	sim.AudioURL = ""
+}
+
+// pitchSimAudioAccess resolves the sim owner and authorizes the caller
+// (owner, or the manager the owner reports to). Same ACL as the manager note.
+func (a *API) pitchSimAudioAccess(w http.ResponseWriter, r *http.Request, simID string) (string, bool) {
+	id, ok := a.requireCommercialOrManager(w, r)
+	if !ok {
+		return "", false
+	}
+	ownerID, err := a.store.GetPitchSimOwner(r.Context(), simID)
+	if err != nil {
+		if errors.Is(err, store.ErrPitchSimNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return "", false
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return "", false
+	}
+	if ownerID == id.UserID {
+		return ownerID, true
+	}
+	belongs, err := a.store.CommercialBelongsToManager(r.Context(), ownerID, id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return "", false
+	}
+	if !belongs {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return "", false
+	}
+	return ownerID, true
+}
+
+func (a *API) commercialGetPitchAudio(w http.ResponseWriter, r *http.Request) {
+	simID := chi.URLParam(r, "id")
+	ownerID, ok := a.pitchSimAudioAccess(w, r, simID)
+	if !ok {
+		return
+	}
+	sim, err := a.store.GetPitchSimulation(r.Context(), simID, ownerID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	key := strings.TrimSpace(sim.AudioObjectKey)
+	if key == "" || a.media == nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	rc, ct, err := a.media.Open(r.Context(), key)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	defer rc.Close()
+	if ct == "" || ct == "application/octet-stream" {
+		ct = "audio/webm"
+	}
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Cache-Control", "private, no-store")
+	_, _ = io.Copy(w, rc)
 }
 
 func (a *API) commercialListPitchScripts(w http.ResponseWriter, r *http.Request) {
@@ -449,8 +517,8 @@ func (a *API) commercialUploadPitchAudio(w http.ResponseWriter, r *http.Request)
 	}
 	ext, _ := media.ExtForPitchAudio(ct)
 	key := media.ObjectKey("pitch-sims", simID, ext)
-	url, err := a.media.Upload(r.Context(), key, file, hdr.Size, ct)
-	if err != nil {
+	// Upload returns no public URL: pitch-sims/ is a private namespace.
+	if _, err := a.media.Upload(r.Context(), key, file, hdr.Size, ct); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "upload_failed")
 		return
 	}
@@ -458,7 +526,7 @@ func (a *API) commercialUploadPitchAudio(w http.ResponseWriter, r *http.Request)
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]string{"url": url, "objectKey": key})
+	httpx.WriteData(w, http.StatusOK, map[string]bool{"hasAudio": true})
 }
 
 func (a *API) commercialRatePitchSim(w http.ResponseWriter, r *http.Request) {

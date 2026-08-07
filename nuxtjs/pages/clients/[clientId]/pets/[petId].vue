@@ -738,7 +738,7 @@
           <p v-if="labDetail.notes" class="text-muted">{{ labDetail.notes }}</p>
           <p v-if="labDetailDocument" class="pro-mb-md">
             <a
-              :href="labDetailDocument.fileUrl"
+              :href="documentHref(labDetailDocument.id)"
               target="_blank"
               rel="noopener noreferrer"
               data-testid="pet-lab-document-link"
@@ -1097,7 +1097,7 @@
         <tbody>
           <tr v-for="d in documents" :key="d.id">
             <td>
-              <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer">
+              <a :href="documentHref(d.id)" target="_blank" rel="noopener noreferrer">
                 {{ d.title || d.fileName }}
               </a>
             </td>
@@ -1109,7 +1109,7 @@
                 <ProIconAction
                   icon="open_in_new"
                   :label="$t('clients.pet.documentOpen')"
-                  :href="d.fileUrl"
+                  :href="documentHref(d.id)"
                 />
                 <ProIconAction
                   v-if="canWriteClinical"
@@ -1212,6 +1212,7 @@
 <script setup lang="ts">
 import { foodChainToYesNo, isFoodChainSpecies, yesNoToFoodChain } from '~/utils/pet-species'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import { petDocumentHref } from '~/utils/petDocuments'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
@@ -1336,6 +1337,10 @@ const labDetailDocument = computed(() => {
   if (!id) return null
   return documents.value.find((d: any) => d.id === id) || null
 })
+
+function documentHref(documentId: string) {
+  return petDocumentHref(petId, documentId)
+}
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)

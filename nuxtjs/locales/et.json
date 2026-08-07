@@ -1384,7 +1384,11 @@
     "queueEmptyTitle": "Kõik korras",
     "queueEmptyDescription": "Ootel visiite, sõnumeid ega kutseid pole.",
     "queueLinkRequests": "1 kliendi kutse",
-    "queueLinkRequestsPlural": "{count} kliendi kutset"
+    "queueLinkRequestsPlural": "{count} kliendi kutset",
+    "afscaTitle": "AFSCA uudised",
+    "afscaEmptyTitle": "Hiljutisi uudiskirju pole",
+    "afscaEmptyDescription": "Voogu ei õnnestunud laadida. Vaadake AFSCA veebisaiti.",
+    "afscaViewAll": "Kõik AFSCA uudiskirjad"
   },
   "messages": {
     "title": "Sõnumid",
@@ -2647,6 +2651,11 @@
       "payoutBic": "BIC (valikuline)",
       "payoutAccountHolder": "Konto omanik",
       "countryCode": "Kliiniku riik",
+      "animalScope": "Kliiniline fookus",
+      "animalScopeBoth": "Väikesed ja suured loomad",
+      "animalScopeSmall": "Väikesed lemmikloomad",
+      "animalScopeLarge": "Suured loomad / hobused",
+      "animalScopeHint": "Filtreerib AFSCA uudiskirju dashboardil.",
       "countries": {
         "BE": "Belgia",
         "FR": "Prantsusmaa",

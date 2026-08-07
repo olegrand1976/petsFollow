@@ -2093,7 +2093,11 @@
     "queueEmptyTitle": "Rien en attente",
     "queueEmptyDescription": "Pas de RDV, message ou invitation à traiter.",
     "queueLinkRequests": "1 invitation client",
-    "queueLinkRequestsPlural": "{count} invitations clients"
+    "queueLinkRequestsPlural": "{count} invitations clients",
+    "afscaTitle": "Actualités AFSCA",
+    "afscaEmptyTitle": "Aucune newsletter récente",
+    "afscaEmptyDescription": "Impossible de charger le fil pour le moment. Consultez le site AFSCA.",
+    "afscaViewAll": "Toutes les newsletters AFSCA"
   },
   "messages": {
     "title": "Messagerie",
@@ -3654,6 +3658,11 @@
       "payoutBic": "BIC (optionnel)",
       "payoutAccountHolder": "Titulaire du compte",
       "countryCode": "Pays du cabinet",
+      "animalScope": "Orientation clinique",
+      "animalScopeBoth": "Petits et gros animaux",
+      "animalScopeSmall": "Petits animaux (compagnie)",
+      "animalScopeLarge": "Gros animaux / équidés",
+      "animalScopeHint": "Filtre les newsletters AFSCA affichées sur le dashboard.",
       "countries": {
         "BE": "Belgique",
         "FR": "France",

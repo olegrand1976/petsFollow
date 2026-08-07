@@ -2,12 +2,26 @@ package handlers_test
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"unicode/utf8"
 
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
+
+// mockCompletePath extracts the signed mock checkout callback minted by
+// POST /pets. Hand-building the URL no longer works: the endpoint validates
+// the HMAC signature carried in the query.
+func mockCompletePath(t *testing.T, createData map[string]any) string {
+	t.Helper()
+	raw, _ := createData["checkoutUrl"].(string)
+	u, err := url.Parse(raw)
+	if raw == "" || err != nil {
+		t.Fatalf("missing checkoutUrl in create response (%q): %v", raw, err)
+	}
+	return u.RequestURI()
+}
 
 func activeDemoPetID(t *testing.T, h http.Handler, clientTok string) string {
 	t.Helper()
@@ -25,20 +39,10 @@ func activeDemoPetID(t *testing.T, h http.Handler, clientTok string) string {
 		pet = data
 	}
 	petID, _ := pet["id"].(string)
-	ownerID, _ := pet["ownerUserId"].(string)
-	if ownerID == "" {
-		meCode, meEnv := doAuthJSON(t, h, http.MethodGet, "/api/v1/me", clientTok, nil)
-		if meCode != http.StatusOK {
-			t.Fatalf("me %d %#v", meCode, meEnv)
-		}
-		ownerID, _ = dataMap(t, meEnv)["userId"].(string)
+	if petID == "" {
+		t.Fatalf("missing pet: %#v", env)
 	}
-	if petID == "" || ownerID == "" {
-		t.Fatalf("missing pet/owner: %#v", env)
-	}
-	code, env = doAuthJSON(t, h, http.MethodGet,
-		"/api/v1/billing/dev/mock-complete?pet_id="+petID+"&owner_user_id="+ownerID+"&plan_code=triennial&billing_mode=subscription",
-		clientTok, nil)
+	code, env = doAuthJSON(t, h, http.MethodGet, mockCompletePath(t, data), clientTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("mock-complete %d %#v", code, env)
 	}

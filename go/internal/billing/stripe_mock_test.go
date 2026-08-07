@@ -16,7 +16,7 @@ func TestMockCustomerID(t *testing.T) {
 }
 
 func TestMockGatewayCreatePortalSession(t *testing.T) {
-	g := billing.NewMockGateway("whsec_test", "http://localhost:8291/")
+	g := billing.NewMockGateway("whsec_test", "http://localhost:8291/", "test-url-secret")
 	sess, err := g.CreatePortalSession(context.Background(), "cus_mock_x", "petsfollow://home")
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +33,7 @@ func TestMockGatewayCreatePortalSession(t *testing.T) {
 }
 
 func TestMockGatewayCreateCheckoutSessionIncludesSuccessURL(t *testing.T) {
-	g := billing.NewMockGateway("whsec_test", "http://localhost:8291")
+	g := billing.NewMockGateway("whsec_test", "http://localhost:8291", "test-url-secret")
 	sess, err := g.CreateCheckoutSession(context.Background(), billing.CheckoutRequest{
 		PriceID:    "price_mock",
 		Mode:       "subscription",

@@ -28,7 +28,7 @@ func NewService(st *store.Store, cfg config.Config) *Service {
 	case LiveEnabled(cfg.StripeSecretKey, cfg.BillingMockEnabled):
 		gw = NewLiveGateway(cfg.StripeSecretKey, cfg.StripeWebhookSecret)
 	case cfg.BillingMockEnabled:
-		gw = NewMockGateway(cfg.StripeWebhookSecret, cfg.APIPublicURL)
+		gw = NewMockGateway(cfg.StripeWebhookSecret, cfg.APIPublicURL, cfg.JWTSigningKey)
 	default:
 		// Ni Stripe live ni mock explicite : fail-fast plutôt qu'un mock silencieux en prod.
 		gw = disabledGateway{}

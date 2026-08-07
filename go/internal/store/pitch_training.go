@@ -70,6 +70,7 @@ type PitchSimulation struct {
 	UserScore            *float64        `json:"userScore,omitempty"`
 	AudioObjectKey       string          `json:"audioObjectKey,omitempty"`
 	AudioURL             string          `json:"audioUrl,omitempty"`
+	HasAudio             bool            `json:"hasAudio"`
 	IsTop5               bool            `json:"isTop5"`
 	FeedbackSkipped      bool            `json:"feedbackSkipped,omitempty"`
 	CreatedAt            time.Time       `json:"createdAt"`

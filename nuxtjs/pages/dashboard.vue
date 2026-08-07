@@ -85,6 +85,46 @@
           </li>
         </ul>
       </ProCard>
+
+      <ProCard
+        v-if="showAfsca"
+        :title="$t('dashboard.afscaTitle')"
+        data-testid="dashboard-afsca"
+      >
+        <ProEmptyState
+          v-if="!afscaItems.length"
+          :title="$t('dashboard.afscaEmptyTitle')"
+          :description="$t('dashboard.afscaEmptyDescription')"
+        />
+        <ul v-else class="pro-dashboard-list">
+          <li v-for="item in afscaItems" :key="item.url" class="pro-dashboard-list__item">
+            <a
+              :href="item.url"
+              class="pro-dashboard-list__link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ProIcon name="campaign" :size="20" class="pro-dashboard-list__icon" />
+              <span class="pro-dashboard-list__main">
+                <strong>{{ item.title }}</strong>
+                <span>{{ formatAfscaDate(item.date) }} · {{ item.label }}</span>
+              </span>
+              <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
+            </a>
+          </li>
+        </ul>
+        <a
+          v-if="afscaSourceUrl"
+          :href="afscaSourceUrl"
+          class="pro-dashboard-afsca-more"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="dashboard-afsca-more"
+        >
+          {{ $t('dashboard.afscaViewAll') }}
+          <ProIcon name="open_in_new" :size="16" />
+        </a>
+      </ProCard>
     </div>
   </div>
 </template>
@@ -94,7 +134,7 @@ import type { CalendarVisit } from '~/composables/useCalendarGrid'
 
 definePageMeta({ middleware: 'vet-only' })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { canPractice } = usePracticePerms()
 const canReadClients = computed(() => canPractice('clients.read'))
 const canReadPets = computed(() => canPractice('pets.read'))
@@ -111,8 +151,13 @@ const unreadRaw = ref(0)
 const pendingLinksRaw = ref(0)
 const pendingVisitsRaw = ref(0)
 const unreadHeartrateRaw = ref(0)
+const practiceCountryCode = ref<string | null>(null)
+const showAfsca = ref(false)
+type AfscaItem = { date: string, title: string, label: string, url: string }
+const afscaItems = ref<AfscaItem[]>([])
+const afscaSourceUrl = ref('')
 const { fetchUser } = useProUser()
-const { formatTime } = useFormatters()
+const { formatTime, formatDay } = useFormatters()
 const { statusVariant } = useCalendarGrid()
 
 const hasUnread = computed(() => unreadRaw.value > 0)
@@ -226,6 +271,53 @@ async function loadUnreadThreads() {
   } catch { /* ignore */ }
 }
 
+function formatAfscaDate(iso: string) {
+  if (!iso) return ''
+  // Date-only ISO → noon local to avoid TZ day-shift; formatDay expects a datetime.
+  const value = iso.includes('T') ? iso : `${iso}T12:00:00`
+  try {
+    return formatDay(value)
+  } catch {
+    return iso
+  }
+}
+
+async function loadAfscaNewsletters() {
+  // Skip when overview already told us the practice is outside Belgium.
+  if (practiceCountryCode.value && practiceCountryCode.value !== 'BE') {
+    showAfsca.value = false
+    return
+  }
+  if (!canReadClients.value) return
+  try {
+    const res: any = await $fetch('/api/vet/afsca-newsletters', {
+      query: { locale: locale.value, limit: 5 },
+    })
+    const data = res.data ?? res
+    afscaItems.value = Array.isArray(data?.items) ? data.items : []
+    afscaSourceUrl.value = String(data?.sourceUrl || '')
+    showAfsca.value = true
+  } catch (e: any) {
+    const errCode = e?.data?.error?.code || ''
+    if (errCode === 'afsca_not_available') {
+      showAfsca.value = false
+      return
+    }
+    // Soft-fail only when we already know the practice is BE and have a fallback URL.
+    if (practiceCountryCode.value === 'BE') {
+      afscaItems.value = []
+      if (!afscaSourceUrl.value) {
+        afscaSourceUrl.value = locale.value === 'nl'
+          ? 'https://favv-afsca.be/nl/themas/zelfstandige-beroepen/zelfstandige-dierenartsen/nieuwsbrief-voor-dierenartsen'
+          : 'https://favv-afsca.be/fr/themes/metiers-independants/veterinaires-independants/newsletters-pour-les-veterinaires'
+      }
+      showAfsca.value = true
+      return
+    }
+    showAfsca.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const me = await fetchUser()
@@ -239,6 +331,7 @@ onMounted(async () => {
       const res: any = await $fetch('/api/vet/overview')
       const data = res.data ?? res
       clientCount.value = String(data.clientCount ?? 0)
+      if (data.countryCode) practiceCountryCode.value = String(data.countryCode).toUpperCase()
       if (canMessage.value) {
         unreadRaw.value = Number(data.unreadMessages ?? 0)
         unreadCount.value = String(unreadRaw.value)
@@ -258,7 +351,7 @@ onMounted(async () => {
     } catch { /* ignore */ }
   }
 
-  await Promise.all([loadCalendar(), loadUnreadThreads()])
+  await Promise.all([loadCalendar(), loadUnreadThreads(), loadAfscaNewsletters()])
 })
 </script>
 
@@ -308,5 +401,20 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pro-dashboard-afsca-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-vet-accent);
+  text-decoration: none;
+}
+
+.pro-dashboard-afsca-more:hover {
+  text-decoration: underline;
 }
 </style>

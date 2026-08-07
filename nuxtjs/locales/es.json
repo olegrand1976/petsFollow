@@ -1384,7 +1384,11 @@
     "queueEmptyTitle": "Nada pendiente",
     "queueEmptyDescription": "Sin citas, mensajes ni invitaciones pendientes.",
     "queueLinkRequests": "1 invitación de cliente",
-    "queueLinkRequestsPlural": "{count} invitaciones de clientes"
+    "queueLinkRequestsPlural": "{count} invitaciones de clientes",
+    "afscaTitle": "Noticias AFSCA",
+    "afscaEmptyTitle": "Sin boletines recientes",
+    "afscaEmptyDescription": "No se pudo cargar el feed. Consulte el sitio de la AFSCA.",
+    "afscaViewAll": "Todos los boletines AFSCA"
   },
   "messages": {
     "title": "Mensajería",
@@ -2647,6 +2651,11 @@
       "payoutBic": "BIC (opcional)",
       "payoutAccountHolder": "Titular de la cuenta",
       "countryCode": "País de la clínica",
+      "animalScope": "Orientación clínica",
+      "animalScopeBoth": "Pequeños y grandes animales",
+      "animalScopeSmall": "Pequeños animales (compañía)",
+      "animalScopeLarge": "Grandes animales / équidos",
+      "animalScopeHint": "Filtra las newsletters AFSCA del dashboard.",
       "countries": {
         "BE": "Bélgica",
         "FR": "Francia",

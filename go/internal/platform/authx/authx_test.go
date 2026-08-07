@@ -9,7 +9,7 @@ import (
 
 func TestIssueAndParseAccessToken(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1")
+	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestIssueAndParseAccessToken(t *testing.T) {
 
 func TestParseRejectsRefreshAsAccess(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1")
+	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestParseRejectsRefreshAsAccess(t *testing.T) {
 
 func TestParseRefresh(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1")
+	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,6 +48,10 @@ func TestParseRefresh(t *testing.T) {
 	}
 	if id.UserID != "user-1" || id.Email != "vet@test.com" || id.Role != kernel.RoleVet || id.PracticeID != "practice-1" {
 		t.Fatalf("unexpected identity %+v", id)
+	}
+	// La révocation se joue au refresh : sans ce claim, tout token resterait valide.
+	if id.TokenVersion != 3 {
+		t.Fatalf("expected token version 3, got %d", id.TokenVersion)
 	}
 	if _, err := issuer.ParseRefresh(pair.AccessToken); err == nil {
 		t.Fatal("expected access token to be rejected by ParseRefresh")

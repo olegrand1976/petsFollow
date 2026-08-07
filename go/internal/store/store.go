@@ -52,6 +52,8 @@ type User struct {
 	ContactPhone          string
 	TermsAcceptedAt       *time.Time
 	IsWalkinPlaceholder   bool
+	// TokenVersion invalidates previously issued refresh tokens when bumped.
+	TokenVersion int
 }
 
 type Practice struct {
@@ -224,7 +226,7 @@ func scanUser(row pgx.Row) (User, error) {
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
 		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
 		&u.MustChangePassword, &u.ProfessionalSpecialty, &u.ContactPhone, &u.TermsAcceptedAt,
-		&u.IsWalkinPlaceholder,
+		&u.IsWalkinPlaceholder, &u.TokenVersion,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -237,7 +239,7 @@ const userSelectCols = `
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
 	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password,
 	COALESCE(professional_specialty,''), COALESCE(contact_phone,''), terms_accepted_at,
-	COALESCE(is_walkin_placeholder, false)`
+	COALESCE(is_walkin_placeholder, false), COALESCE(token_version, 1)`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))

@@ -31,7 +31,7 @@ func TestLegacyAddonValidUntilIsOneYear(t *testing.T) {
 }
 
 func TestMockGatewayCancelSubscriptionNoop(t *testing.T) {
-	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291")
+	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291", "test-url-secret")
 	if err := gw.CancelSubscription(context.Background(), "sub_mock_x"); err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestMockAddonCheckoutPayloadIsOneTime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291")
+	gw := billing.NewMockGateway("whsec_test", "http://localhost:8291", "test-url-secret")
 	ev, err := gw.VerifyWebhook(body, header)
 	if err != nil {
 		t.Fatal(err)

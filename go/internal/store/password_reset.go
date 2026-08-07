@@ -100,8 +100,12 @@ func (s *Store) ResetPassword(ctx context.Context, token, newPassword string) er
 		return ErrNotFound
 	}
 
+	// token_version bumped in the same transaction: tokens issued before the
+	// reset (possibly by whoever prompted it) stop refreshing.
 	if _, err := tx.Exec(ctx, `
-		UPDATE identity.users SET password_hash = $2, must_change_password = false WHERE id = $1`,
+		UPDATE identity.users
+		SET password_hash = $2, must_change_password = false, token_version = token_version + 1
+		WHERE id = $1`,
 		userID, string(newHash)); err != nil {
 		return err
 	}

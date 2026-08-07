@@ -81,17 +81,7 @@ func TestHeartRateStartRejectsOtherSpecies(t *testing.T) {
 		pet = data
 	}
 	petID, _ := pet["id"].(string)
-	ownerID, _ := pet["ownerUserId"].(string)
-	if ownerID == "" {
-		meCode, meEnv := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", clientTok, nil)
-		if meCode != http.StatusOK {
-			t.Fatalf("me %d %#v", meCode, meEnv)
-		}
-		ownerID, _ = dataMap(t, meEnv)["userId"].(string)
-	}
-	code, env = doAuthJSON(t, api.handler, http.MethodGet,
-		"/api/v1/billing/dev/mock-complete?pet_id="+petID+"&owner_user_id="+ownerID+"&plan_code=triennial&billing_mode=subscription",
-		clientTok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, mockCompletePath(t, data), clientTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("mock-complete %d %#v", code, env)
 	}

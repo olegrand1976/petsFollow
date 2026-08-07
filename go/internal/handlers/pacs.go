@@ -66,6 +66,7 @@ func (a *API) registerPacsRoutes(pr chi.Router) {
 	pr.Post("/pacs/wake", a.pacsWake)
 	pr.Get("/pets/{petID}/pacs/studies", a.listPetPacsStudies)
 	pr.Post("/pets/{petID}/pacs/studies", a.uploadPetPacsStudy)
+	pr.Delete("/pets/{petID}/pacs/studies/{studyID}", a.deletePetPacsStudy)
 	pr.Get("/pets/{petID}/pacs/studies/{studyID}/comments", a.listPetPacsStudyComments)
 	pr.Post("/pets/{petID}/pacs/studies/{studyID}/comments", a.createPetPacsStudyComment)
 	pr.Get("/pacs/studies/{orthancStudyID}", a.getPacsStudy)
@@ -625,6 +626,53 @@ func (a *API) createPetPacsStudyComment(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteData(w, http.StatusCreated, comment)
 }
 
+// deletePetPacsStudy hard-deletes Orthanc study then the imaging.pet_studies row.
+// Orthanc 404 is treated as already gone; other Orthanc errors keep the DB row (no half-delete).
+func (a *API) deletePetPacsStudy(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.write_clinical")
+	if !ok {
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	studyID := chi.URLParam(r, "studyID")
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
+	if !ok {
+		return
+	}
+	st, ok := a.requirePetPacsStudyRow(w, r, petID, studyID, id, pet)
+	if !ok {
+		return
+	}
+	client := a.orthanc()
+	if client == nil {
+		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_url_missing")
+		return
+	}
+	status := a.resolvePacsStatus(r.Context(), false)
+	if status.State != pacsStateReady {
+		writeErr(w, r, http.StatusServiceUnavailable, "pacs_not_ready", status.State)
+		return
+	}
+	if err := client.deleteStudy(r.Context(), st.OrthancStudyID); err != nil {
+		a.appendPacsLog(r.Context(), "error", "delete_study", "orthanc delete failed", err.Error())
+		writeErr(w, r, http.StatusBadGateway, "pacs_delete_failed", "pacs_delete_failed")
+		return
+	}
+	if err := a.store.DeletePetStudyByID(r.Context(), st.ID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			httpx.WriteData(w, http.StatusOK, map[string]any{"deleted": true, "id": st.ID})
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	a.appendPacsLog(r.Context(), "info", "delete_study", "study hard-deleted", st.OrthancStudyID)
+	httpx.WriteData(w, http.StatusOK, map[string]any{"deleted": true, "id": st.ID})
+}
+
 func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePacsEnabled(w, r) {
 		return
@@ -981,6 +1029,7 @@ func (a *API) getPacsInstanceMetadata(w http.ResponseWriter, r *http.Request) {
 type pacsInstanceMetadata struct {
 	InstanceID       string         `json:"instanceId"`
 	PixelSpacingMm   []float64      `json:"pixelSpacingMm,omitempty"`
+	SpacingSource    string         `json:"spacingSource,omitempty"`
 	WindowCenter     *float64       `json:"windowCenter,omitempty"`
 	WindowWidth      *float64       `json:"windowWidth,omitempty"`
 	NumberOfFrames   int            `json:"numberOfFrames,omitempty"`
@@ -996,13 +1045,7 @@ func buildPacsInstanceMetadata(instanceID string, tags map[string]any) pacsInsta
 		Tags:       tags,
 		Modality:   tagString(tags, "Modality"),
 	}
-	out.PixelSpacingMm = parseSpacingTag(tags, "PixelSpacing")
-	if len(out.PixelSpacingMm) == 0 {
-		out.PixelSpacingMm = parseSpacingTag(tags, "ImagerPixelSpacing")
-	}
-	if len(out.PixelSpacingMm) == 0 {
-		out.PixelSpacingMm = parseSpacingTag(tags, "NominalScannedPixelSpacing")
-	}
+	out.PixelSpacingMm, out.SpacingSource = resolvePixelSpacingMm(tags)
 	if v, ok := tagFloat(tags, "WindowCenter"); ok {
 		out.WindowCenter = &v
 	}
@@ -1021,17 +1064,56 @@ func buildPacsInstanceMetadata(instanceID string, tags map[string]any) pacsInsta
 	return out
 }
 
-func tagString(tags map[string]any, key string) string {
-	v, _ := tags[key].(string)
-	return strings.TrimSpace(v)
+// resolvePixelSpacingMm picks DICOM spacing tags for mm/px conversion.
+// Priority (DICOM CP-586 / Cornerstone-OHIF practice):
+//  1. PixelSpacing (0028,0030) — calibrated patient plane when present
+//  2. ImagerPixelSpacing (0018,1164) ÷ EstimatedRadiographicMagnificationFactor when known
+//  3. ImagerPixelSpacing raw (detector plane — may omit geometric magnification)
+//  4. NominalScannedPixelSpacing (0018,2010)
+func resolvePixelSpacingMm(tags map[string]any) ([]float64, string) {
+	if sp := parseSpacingTag(tags, "PixelSpacing"); len(sp) == 2 {
+		return sp, "PixelSpacing"
+	}
+	if sp := parseSpacingTag(tags, "ImagerPixelSpacing"); len(sp) == 2 {
+		if mag, ok := tagFloat(tags, "EstimatedRadiographicMagnificationFactor"); ok && mag > 0 {
+			return []float64{sp[0] / mag, sp[1] / mag}, "ImagerPixelSpacing/Magnification"
+		}
+		return sp, "ImagerPixelSpacing"
+	}
+	if sp := parseSpacingTag(tags, "NominalScannedPixelSpacing"); len(sp) == 2 {
+		return sp, "NominalScannedPixelSpacing"
+	}
+	return nil, ""
 }
 
-func tagFloat(tags map[string]any, key string) (float64, bool) {
-	switch v := tags[key].(type) {
-	case float64:
-		return v, true
+func tagString(tags map[string]any, key string) string {
+	v, ok := tags[key]
+	if !ok || v == nil {
+		return ""
+	}
+	switch t := v.(type) {
 	case string:
-		parts := strings.FieldsFunc(v, func(r rune) bool { return r == '\\' || r == ',' })
+		return strings.TrimSpace(t)
+	default:
+		return strings.TrimSpace(fmt.Sprint(t))
+	}
+}
+
+func coerceFloat64(v any) (float64, bool) {
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case json.Number:
+		f, err := n.Float64()
+		return f, err == nil
+	case string:
+		parts := strings.FieldsFunc(n, func(r rune) bool { return r == '\\' || r == ',' })
 		if len(parts) == 0 {
 			return 0, false
 		}
@@ -1042,16 +1124,20 @@ func tagFloat(tags map[string]any, key string) (float64, bool) {
 	}
 }
 
-func tagInt(tags map[string]any, key string) (int, bool) {
-	switch v := tags[key].(type) {
-	case float64:
-		return int(v), true
-	case string:
-		n, err := strconv.Atoi(strings.TrimSpace(v))
-		return n, err == nil
-	default:
+func tagFloat(tags map[string]any, key string) (float64, bool) {
+	v, ok := tags[key]
+	if !ok || v == nil {
 		return 0, false
 	}
+	return coerceFloat64(v)
+}
+
+func tagInt(tags map[string]any, key string) (int, bool) {
+	f, ok := tagFloat(tags, key)
+	if !ok {
+		return 0, false
+	}
+	return int(f), true
 }
 
 func parseSpacingTag(tags map[string]any, key string) []float64 {
@@ -1062,7 +1148,7 @@ func parseSpacingTag(tags map[string]any, key string) []float64 {
 	var out []float64
 	switch v := raw.(type) {
 	case string:
-		parts := strings.FieldsFunc(v, func(r rune) bool { return r == '\\' || r == ',' })
+		parts := strings.FieldsFunc(v, func(r rune) bool { return r == '\\' || r == ',' || r == '/' })
 		for _, p := range parts {
 			f, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
 			if err != nil || f <= 0 {
@@ -1070,30 +1156,25 @@ func parseSpacingTag(tags map[string]any, key string) []float64 {
 			}
 			out = append(out, f)
 		}
-	case float64:
-		if v <= 0 {
-			return nil
-		}
-		return []float64{v, v}
-	case []any:
-		for _, item := range v {
-			switch n := item.(type) {
-			case float64:
-				if n <= 0 {
-					return nil
-				}
-				out = append(out, n)
-			case string:
-				f, err := strconv.ParseFloat(strings.TrimSpace(n), 64)
-				if err != nil || f <= 0 {
-					return nil
-				}
-				out = append(out, f)
-			default:
+	case []float64:
+		for _, n := range v {
+			if n <= 0 {
 				return nil
 			}
+			out = append(out, n)
+		}
+	case []any:
+		for _, item := range v {
+			f, ok := coerceFloat64(item)
+			if !ok || f <= 0 {
+				return nil
+			}
+			out = append(out, f)
 		}
 	default:
+		if f, ok := coerceFloat64(v); ok && f > 0 {
+			return []float64{f, f}
+		}
 		return nil
 	}
 	if len(out) == 1 {

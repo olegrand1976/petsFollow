@@ -30,6 +30,56 @@ func (a *API) listPetDocuments(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, docs)
 }
 
+// downloadPetDocument streams a pet document (PHI) to an authorized caller.
+// Object keys live in a private namespace: there is no public URL to link to.
+func (a *API) downloadPetDocument(w http.ResponseWriter, r *http.Request) {
+	pet, _, ok := a.petAccessForDocuments(w, r)
+	if !ok {
+		return
+	}
+	doc, err := a.store.GetPetDocument(r.Context(), chi.URLParam(r, "documentID"))
+	if err != nil || doc.PetID != pet.ID {
+		writeErr(w, r, http.StatusNotFound, "not_found", "document_not_found")
+		return
+	}
+	key := strings.TrimSpace(doc.ObjectKey)
+	if key == "" || a.media == nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "document_not_found")
+		return
+	}
+	rc, ct, err := a.media.Open(r.Context(), key)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "document_not_found")
+		return
+	}
+	defer rc.Close()
+	if strings.TrimSpace(doc.ContentType) != "" {
+		ct = doc.ContentType
+	}
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Content-Disposition", `inline; filename="`+documentDownloadName(doc)+`"`)
+	w.Header().Set("Cache-Control", "private, no-store")
+	_, _ = io.Copy(w, rc)
+}
+
+// documentDownloadName builds a header-safe filename. The stem is sanitized
+// (sanitizeFilename also drops the dot) and the extension comes from the stored
+// content type, which was validated at upload — never from the raw filename.
+func documentDownloadName(doc store.PetDocument) string {
+	stem := strings.TrimSuffix(strings.TrimSpace(doc.FileName), path.Ext(doc.FileName))
+	if strings.TrimSpace(stem) == "" {
+		stem = "document"
+	}
+	ext, err := media.ExtForDocument(doc.ContentType)
+	if err != nil {
+		ext = ""
+	}
+	return sanitizeFilename(stem) + ext
+}
+
 func (a *API) uploadPetDocument(w http.ResponseWriter, r *http.Request) {
 	pet, id, ok := a.petAccessForDocuments(w, r)
 	if !ok {
@@ -39,7 +89,7 @@ func (a *API) uploadPetDocument(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
 		return
 	}
-	url, ct, size, fileName, objectKey, err := a.uploadDocumentFile(r, "documents", pet.ID)
+	ct, size, fileName, objectKey, err := a.uploadDocumentFile(r, "documents", pet.ID)
 	if err != nil {
 		a.writeUploadErr(w, r, err)
 		return
@@ -51,7 +101,6 @@ func (a *API) uploadPetDocument(w http.ResponseWriter, r *http.Request) {
 		Title:            title,
 		FileName:         fileName,
 		ContentType:      ct,
-		FileURL:          url,
 		ObjectKey:        objectKey,
 		SizeBytes:        size,
 	})
@@ -140,26 +189,28 @@ func (a *API) canAccessPetDocuments(ctx context.Context, id authx.Identity, pet 
 	return err == nil && ok
 }
 
-func (a *API) uploadDocumentFile(r *http.Request, kind, entityID string) (url, contentType string, size int64, fileName, objectKey string, err error) {
+// uploadDocumentFile stores the upload and returns its metadata. No URL is
+// returned: the documents/ namespace is private (media.IsSensitiveObjectKey).
+func (a *API) uploadDocumentFile(r *http.Request, kind, entityID string) (contentType string, size int64, fileName, objectKey string, err error) {
 	if a.media == nil {
-		return "", "", 0, "", "", media.ErrNotConfigured
+		return "", 0, "", "", media.ErrNotConfigured
 	}
 	if err := r.ParseMultipartForm(media.MaxDocumentBytes + (1 << 20)); err != nil {
-		return "", "", 0, "", "", media.ErrTooLarge
+		return "", 0, "", "", media.ErrTooLarge
 	}
 	file, hdr, err := r.FormFile("file")
 	if err != nil {
-		return "", "", 0, "", "", media.ErrEmptyFile
+		return "", 0, "", "", media.ErrEmptyFile
 	}
 	defer file.Close()
 
 	ct, err := media.NormalizeDocumentType(hdr.Header.Get("Content-Type"), hdr.Filename)
 	if err != nil {
-		return "", "", 0, "", "", err
+		return "", 0, "", "", err
 	}
 	ext, err := media.ExtForDocument(ct)
 	if err != nil {
-		return "", "", 0, "", "", err
+		return "", 0, "", "", err
 	}
 	fileName = path.Base(strings.TrimSpace(hdr.Filename))
 	if fileName == "" || fileName == "." {
@@ -172,18 +223,18 @@ func (a *API) uploadDocumentFile(r *http.Request, kind, entityID string) (url, c
 		limited := io.LimitReader(file, media.MaxDocumentBytes+1)
 		buf, readErr := io.ReadAll(limited)
 		if readErr != nil {
-			return "", "", 0, "", "", readErr
+			return "", 0, "", "", readErr
 		}
 		if err := media.ValidateSizeLimit(int64(len(buf)), media.MaxDocumentBytes); err != nil {
-			return "", "", 0, "", "", err
+			return "", 0, "", "", err
 		}
 		size = int64(len(buf))
-		url, err = a.media.Upload(r.Context(), objectKey, bytes.NewReader(buf), size, ct)
-		return url, ct, size, fileName, objectKey, err
+		_, err = a.media.Upload(r.Context(), objectKey, bytes.NewReader(buf), size, ct)
+		return ct, size, fileName, objectKey, err
 	}
 	if err := media.ValidateSizeLimit(size, media.MaxDocumentBytes); err != nil {
-		return "", "", 0, "", "", err
+		return "", 0, "", "", err
 	}
-	url, err = a.media.Upload(r.Context(), objectKey, file, size, ct)
-	return url, ct, size, fileName, objectKey, err
+	_, err = a.media.Upload(r.Context(), objectKey, file, size, ct)
+	return ct, size, fileName, objectKey, err
 }
