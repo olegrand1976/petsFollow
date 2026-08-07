@@ -106,25 +106,19 @@ func (s *Store) MarkProductDigestSent(ctx context.Context, digestDate time.Time)
 }
 
 // ListDigestRecipients returns staff for product digest emails.
+// Skips *.petsfollow.test demo emails (same rule as weekly).
 func (s *Store) ListDigestRecipients(ctx context.Context) ([]DigestRecipient, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, email, COALESCE(full_name,''), COALESCE(preferred_locale,'fr'), role
 		FROM identity.users
 		WHERE role IN ('admin', 'commercial', 'commercial_manager')
+		  AND email IS NOT NULL AND TRIM(email) <> ''
+		  AND LOWER(email) NOT LIKE '%@petsfollow.test'
 		ORDER BY role, email`)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	var out []DigestRecipient
-	for rows.Next() {
-		var r DigestRecipient
-		if err := rows.Scan(&r.ID, &r.Email, &r.FullName, &r.PreferredLocale, &r.Role); err != nil {
-			return nil, err
-		}
-		out = append(out, r)
-	}
-	return out, rows.Err()
+	return scanDigestRecipients(rows)
 }
 
 // RecordProductDigestSend inserts an idempotent send row. Returns true if newly inserted.
@@ -240,6 +234,12 @@ func (s *Store) ListWeeklyDigestRecipients(ctx context.Context) ([]DigestRecipie
 			WHERE p.reference_vet_user_id IS NOT NULL
 			  AND u.email IS NOT NULL AND TRIM(u.email) <> ''
 			  AND LOWER(u.email) NOT LIKE '%@petsfollow.test'
+			  AND EXISTS (
+				SELECT 1 FROM practice.team_members tm
+				WHERE tm.practice_id = p.id
+				  AND tm.user_id = u.id
+				  AND tm.status = 'active'
+			  )
 		) r
 		ORDER BY role, email`)
 	if err != nil {

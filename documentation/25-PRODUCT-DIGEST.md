@@ -42,13 +42,15 @@ Si aucun commit ou aucun impact produit : status `empty` → **pas d’email**.
 Samedi 08:00 Brussels        Cloud Scheduler
         ▼
 POST /api/v1/internal/product-digest/weekly-run
-        │  agrège digests ready/sent des 7 derniers jours
+        │  agrège digests ready/sent du lundi ISO → aujourd’hui (Europe/Brussels)
         │  skip si semaine vide / aucun destinataire hors *.petsfollow.test
         ▼
-admin / commercial / commercial_manager / reference_vet
+admin / commercial / commercial_manager / reference_vet (team_members active)
 ```
 
-Idempotence : `ops.product_digest_weekly_sends` (`week_start` = lundi ISO Europe/Brussels).
+Idempotence : `ops.product_digest_weekly_sends` (`week_start` = lundi ISO Europe/Brussels — même borne que l’agrégat).
+
+Quotidien et hebdo : destinataires `*.petsfollow.test` exclus.
 
 ## UI Nouveautés
 

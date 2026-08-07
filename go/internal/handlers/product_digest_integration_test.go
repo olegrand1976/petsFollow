@@ -57,6 +57,13 @@ func TestProductDigestIngestAndRunWithBranch(t *testing.T) {
 		t.Fatalf("upsert digest: %v", err)
 	}
 
+	staffEmail := strings.Replace(uniqueEmail("daily-digest"), "@petsfollow.test", "@example.com", 1)
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM identity.users WHERE email = $1`, staffEmail)
+	})
+	_ = insertVerifiedUser(t, api, "admin", staffEmail, "AdminDemo123!", "Daily Staff", nil)
+
 	smtpHost, smtpPort, apiBase := resolveMailhog(t)
 	mailhogUp := smtpPort > 0
 	if mailhogUp {
@@ -256,6 +263,9 @@ func TestProductDigestWeeklyRunEmptyAndSend(t *testing.T) {
 	data := dataMap(t, env)
 	if data["weekStart"] != weekStart.Format("2006-01-02") {
 		t.Fatalf("weekStart %#v", data["weekStart"])
+	}
+	if data["from"] != weekStart.Format("2006-01-02") {
+		t.Fatalf("from %#v want ISO week Monday", data["from"])
 	}
 	branch, _ := data["branch"].(string)
 	if !strings.Contains(branch, "TEST") {

@@ -80,7 +80,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			  AND s.vet_seen_at IS NULL
 		) ur ON TRUE
 		WHERE p.practice_id = $1
-		ORDER BY COALESCE(p.is_walkin_placeholder, false) ASC, p.name`
+		ORDER BY COALESCE(p.is_walkin_placeholder, false) DESC, p.name`
 	rows, err := s.pool.Query(ctx, q, practiceID)
 	if err != nil {
 		return nil, err

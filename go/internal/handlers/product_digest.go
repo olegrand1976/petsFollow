@@ -491,7 +491,8 @@ func (a *API) internalRunProductDigestWeekly(w http.ResponseWriter, r *http.Requ
 	}
 
 	weekStart := isoWeekStartMonday(today)
-	since := today.AddDate(0, 0, -6)
+	// Rollup = ISO week Monday → today (matches weekStart idempotence key).
+	since := weekStart
 
 	digests, err := a.store.ListProductDigestsSince(r.Context(), since)
 	if err != nil {
