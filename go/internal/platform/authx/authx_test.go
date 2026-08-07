@@ -9,7 +9,7 @@ import (
 
 func TestIssueAndParseAccessToken(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
+	pair, err := issuer.IssueProfile("user-1", "vet@test.com", kernel.RoleVet, "practice-1", "", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestIssueAndParseAccessToken(t *testing.T) {
 
 func TestParseRejectsRefreshAsAccess(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
+	pair, err := issuer.IssueProfile("user-1", "vet@test.com", kernel.RoleVet, "practice-1", "", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestParseRejectsRefreshAsAccess(t *testing.T) {
 
 func TestParseRefresh(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
-	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1", 3)
+	pair, err := issuer.IssueProfile("user-1", "vet@test.com", kernel.RoleVet, "practice-1", "", 3)
 	if err != nil {
 		t.Fatal(err)
 	}

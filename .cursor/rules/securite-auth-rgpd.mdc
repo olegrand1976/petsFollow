@@ -9,7 +9,8 @@ alwaysApply: true
 
 - **Jamais** de JWT accessible au JS client. Nuxt : cookies **httpOnly** (`pf_token`, `pf_refresh`) posés par la BFF (`nuxtjs/server/utils/api.ts` — `setAuthCookies`/`absorbAuthTokens`) ; seul le marqueur `pf_session` est lisible. Flutter : `flutter_secure_storage` uniquement.
 - Tout nouvel endpoint auth **public** (login-like, register-like, refresh) doit passer par le rate limiter `authRL.Middleware` (`go/internal/handlers/api.go`).
-- **Révocation** : `identity.users.token_version` est porté par le claim `tv` et vérifié au refresh (`a.refresh`). Toute action qui reprend la main sur un compte (reset MDP, logout, suppression) doit appeler `store.BumpTokenVersion` — sinon un refresh token volé reste valide 30 jours.
+- **Révocation** : `identity.users.token_version` est porté par le claim `tv` et vérifié au refresh (`a.refresh`). Bumpé par `POST /auth/logout`, `ResetPassword` et `ChangeUserPassword` ; la suppression de compte est couverte autrement (ligne purgée ou tombstone rejeté au refresh). Toute nouvelle action qui reprend la main sur un compte doit bumper, sinon un refresh token volé reste valide 30 jours.
+- Une action qui bumpe **sans intention de déconnecter l'appelant** doit lui réémettre une paire (cf. `changeMePassword` → `absorbAuthTokens` côté BFF, `_persistTokens` côté Flutter) : sinon changer son mot de passe revient à se déconnecter soi-même.
 - Register (vet ou client) exige `"consent": true` → horodaté dans `identity.users.terms_accepted_at`. Tout nouveau flow d'inscription doit inclure le consentement (UI + API + tests).
 
 ```go

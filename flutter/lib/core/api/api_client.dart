@@ -894,7 +894,24 @@ class ApiClient {
     if (currentPassword.isNotEmpty) {
       body['currentPassword'] = currentPassword;
     }
-    await dio.patch('/api/v1/me/password', data: body);
+    final res = await dio.patch('/api/v1/me/password', data: body);
+    // Le changement révoque les tokens du compte : sans adopter la paire
+    // réémise, cet appareil se déconnecterait au prochain refresh.
+    final data = res.data is Map ? res.data['data'] : null;
+    final access = data is Map ? data['accessToken'] as String? : null;
+    if (access != null && access.isNotEmpty) {
+      token = access;
+      refreshToken = (data as Map)['refreshToken'] as String?;
+      await _persistTokens(token, refreshToken);
+      loadToken();
+      return;
+    }
+    // L'API n'a pas pu réémettre : la session est révoquée malgré le succès du
+    // changement. On coupe tout de suite par le chemin habituel plutôt que de
+    // laisser l'utilisateur tomber au prochain refresh.
+    if (data is Map && data['reauthRequired'] == true) {
+      await _invalidateSessionFromUnauthorized();
+    }
   }
 
   Future<void> acceptTerms() async {

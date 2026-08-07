@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -98,7 +99,32 @@ func (a *API) changeMePassword(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{"ok": true})
+	// ChangeUserPassword a incrémenté token_version : sans réémission, l'appareil
+	// qui vient de changer son mot de passe se déconnecterait avec les autres.
+	// En cas d'échec le mot de passe est bien changé — on ne rejoue pas la
+	// requête, on annonce que la session est morte pour que le client renvoie
+	// vers le login au lieu de laisser l'utilisateur tomber 15 min plus tard.
+	pair, err := a.reissueAfterPasswordChange(r, id)
+	if err != nil {
+		log.Printf("me/password: re-issue failed for %s: %v", id.UserID, err)
+		httpx.WriteData(w, http.StatusOK, map[string]any{"ok": true, "reauthRequired": true})
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"ok":           true,
+		"accessToken":  pair.AccessToken,
+		"refreshToken": pair.RefreshToken,
+	})
+}
+
+// reissueAfterPasswordChange mints a fresh pair carrying the bumped
+// token_version, so the caller's own device survives the revocation.
+func (a *API) reissueAfterPasswordChange(r *http.Request, id authx.Identity) (authx.TokenPair, error) {
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		return authx.TokenPair{}, err
+	}
+	return a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, id.ProfileID, u.TokenVersion)
 }
 
 func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {

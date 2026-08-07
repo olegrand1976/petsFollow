@@ -76,8 +76,13 @@ func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword,
 	if err != nil {
 		return err
 	}
+	// Comme au reset : changer son mot de passe révoque les tokens déjà émis.
+	// L'appelant réémet une paire pour son propre appareil (changeMePassword),
+	// les autres sessions tombent à leur prochain refresh.
 	_, err = s.pool.Exec(ctx, `
-		UPDATE identity.users SET password_hash = $2, must_change_password = false WHERE id = $1`,
+		UPDATE identity.users
+		SET password_hash = $2, must_change_password = false, token_version = token_version + 1
+		WHERE id = $1`,
 		userID, string(newHash))
 	return err
 }

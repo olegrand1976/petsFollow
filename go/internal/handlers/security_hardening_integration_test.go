@@ -153,6 +153,45 @@ func TestCommercialAttachProfileRefusesOutsidePortfolio(t *testing.T) {
 	}
 }
 
+// Le portefeuille d'un manager, ce sont les contacts de son équipe : restreindre
+// l'attach au seul commercial assigné rendrait la route morte pour lui. Le
+// périmètre s'arrête à son équipe — pas au reste de la force de vente.
+func TestCommercialManagerAttachCoversItsTeamOnly(t *testing.T) {
+	api := newTestAPI(t)
+
+	mgrEmail := uniqueEmail("mgr-attach")
+	mgrID := insertVerifiedUser(t, api, "commercial_manager", mgrEmail, "CommercialDemo123!", "Team Lead", nil)
+	repID := insertVerifiedUser(t, api, "commercial", uniqueEmail("mgr-rep"), "CommercialDemo123!", "Own Rep",
+		map[string]any{"manager_user_id": mgrID})
+	otherRepID := insertVerifiedUser(t, api, "commercial", uniqueEmail("mgr-other"), "CommercialDemo123!", "Other Rep", nil)
+
+	teamContact := insertVerifiedUser(t, api, "client", uniqueEmail("mgr-own"), "ClientDemo123!", "Team Contact",
+		map[string]any{"assigned_commercial_id": repID})
+	foreignContact := insertVerifiedUser(t, api, "client", uniqueEmail("mgr-foreign"), "ClientDemo123!", "Foreign Contact",
+		map[string]any{"assigned_commercial_id": otherRepID})
+
+	t.Cleanup(func() {
+		ctx := context.Background()
+		_, _ = api.pool.Exec(ctx, `DELETE FROM identity.profiles WHERE user_id = $1::uuid`, teamContact)
+	})
+
+	tok := loginToken(t, api.handler, mgrEmail, "CommercialDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/commercial/users/"+teamContact+"/profiles", tok,
+		map[string]any{"role": "care_pro", "specialty": "farrier"})
+	if code != http.StatusCreated {
+		t.Fatalf("a manager must cover its team's portfolio, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/commercial/users/"+foreignContact+"/profiles", tok,
+		map[string]any{"role": "care_pro", "specialty": "farrier"})
+	if code != http.StatusForbidden && code != http.StatusNotFound {
+		t.Fatalf("another team's contact must stay out of reach, got %d %#v", code, env)
+	}
+}
+
 // Les callbacks mock de facturation sont atteints par redirection navigateur,
 // donc sans bearer : la signature HMAC est le seul contrôle.
 func TestBillingMockCompleteRequiresSignature(t *testing.T) {
@@ -334,6 +373,55 @@ func TestLogoutRevokesRefreshToken(t *testing.T) {
 		map[string]any{"refreshToken": refresh})
 	if code != http.StatusUnauthorized {
 		t.Fatalf("refresh after logout must fail, got %d %#v", code, env)
+	}
+}
+
+// Changer son mot de passe doit fermer les autres appareils — c'est le geste
+// qu'on fait quand on soupçonne une compromission. Mais l'appareil qui le
+// demande doit survivre : le handler lui réémet une paire, sinon changer son
+// mot de passe revient à se déconnecter soi-même.
+func TestChangePasswordRevokesOtherDevicesButNotTheCaller(t *testing.T) {
+	api := newTestAPI(t)
+
+	email := uniqueEmail("chg-pwd")
+	insertVerifiedUser(t, api, "client", email, "ClientDemo123!", "Change Pwd", nil)
+
+	// Appareil A : la session qui restera ouverte ailleurs.
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login",
+		map[string]any{"email": email, "password": "ClientDemo123!"})
+	if code != http.StatusOK {
+		t.Fatalf("login A %d %#v", code, env)
+	}
+	otherRefresh, _ := dataMap(t, env)["refreshToken"].(string)
+
+	// Appareil B : celui qui change le mot de passe.
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login",
+		map[string]any{"email": email, "password": "ClientDemo123!"})
+	if code != http.StatusOK {
+		t.Fatalf("login B %d %#v", code, env)
+	}
+	callerAccess, _ := dataMap(t, env)["accessToken"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/me/password", callerAccess,
+		map[string]any{"currentPassword": "ClientDemo123!", "newPassword": "ClientDemo456!"})
+	if code != http.StatusOK {
+		t.Fatalf("change password %d %#v", code, env)
+	}
+	reissued, _ := dataMap(t, env)["refreshToken"].(string)
+	if reissued == "" {
+		t.Fatalf("change password must re-issue tokens for the caller: %#v", env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+		map[string]any{"refreshToken": otherRefresh})
+	if code != http.StatusUnauthorized {
+		t.Fatalf("the other device must be revoked, got %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh",
+		map[string]any{"refreshToken": reissued})
+	if code != http.StatusOK {
+		t.Fatalf("the caller's re-issued token must still refresh, got %d %#v", code, env)
 	}
 }
 

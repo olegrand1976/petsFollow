@@ -63,10 +63,6 @@ type claims struct {
 	jwt.RegisteredClaims
 }
 
-func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID string, tokenVersion int) (TokenPair, error) {
-	return t.IssueProfile(userID, email, role, practiceID, "", tokenVersion)
-}
-
 func (t *TokenIssuer) IssueProfile(userID, email string, role kernel.Role, practiceID, profileID string, tokenVersion int) (TokenPair, error) {
 	now := time.Now()
 	accessClaims := claims{

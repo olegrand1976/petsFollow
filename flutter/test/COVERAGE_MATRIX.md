@@ -8,6 +8,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Forgot / reset / confirm | · | ~ | · | confirm partiel ; resend depuis login (`login_resend_confirmation`) |
 | Register + consent | · | ~ | · | social buttons existants |
 | Accept terms (provisionné) | · | ✓ | · | `accept_terms_screen_test` (checkbox + POST) |
+| Changer son mot de passe | ✓ | · | · | `change_password_test` — adopte la paire réémise (sinon l'appareil se déconnecte : le changement bumpe `token_version`) ; `reauthRequired` → session coupée tout de suite |
 | Home HR / poids keys | · | ✓ | · | `pet_quick_actions_test` |
 | Weight sheet validate/save | ✓ | ✓ | ✓ | min 0.01 + POST mock + smoke |
 | BP sheet validate/save | · | ✓ | · | `pet_quick_actions_test` (SYS≥DIA + POST mock) |

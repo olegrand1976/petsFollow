@@ -757,6 +757,8 @@ Fichiers : `go/internal/handlers/security_hardening_integration_test.go`, `pitch
 | S12 | `Upload` d'une clé sensible | Aucune URL rendue par le store (local **et** GCS) pour `documents/`, `pitch-sims/`, `consultation-shares-v2/`, `compendium-imports/` |
 | S17 | `PATCH /me/password` | Refresh d'un **autre** appareil → **401** ; la paire réémise à l'appelant → **200** |
 | S18 | Manager attache un profil sur un contact d'une **autre** équipe | 403/404 — le périmètre s'arrête à ses commerciaux rattachés |
+| S19 | URL mock billing signée puis **modifiée** (plan, propriétaire, animal, paramètre ajouté/retiré) | **Rejetée** — la signature couvre tous les paramètres, pas seulement leur présence |
+| S20 | Nom de fichier hostile sur un document (`"`, CRLF, `../`) | `Content-Disposition` inoffensif ; extension issue du **content type stocké**, jamais du nom d'origine |
 
 Conséquence assumée de S7/S8 : l'access token reste valide jusqu'à son expiration (~15 min) — la révocation est vérifiée au refresh, pas à chaque requête. Le bump est **global au compte** : un logout web ferme aussi la session Flutter.
 
@@ -779,6 +781,10 @@ Un durcissement qui casse la fonctionnalité passe tous les tests « doit refuse
 |---|---|
 | `tests/unit/logoutRevocation.spec.ts` | La BFF appelle `POST /auth/logout` avec le bearer ; API injoignable → déconnexion locale quand même |
 | `tests/unit/petDocumentsPrivate.spec.ts` | `petDocumentHref` → route BFF authentifiée (ids encodés) ; **aucune** source Nuxt ne consomme `fileUrl` |
+| `tests/unit/passwordChangeReissue.spec.ts` | La paire réémise au changement de mot de passe repart en cookies httpOnly, jamais au JS client ; `reauthRequired` → purge `pf_token` / `pf_refresh` / `pf_session` |
+| `tests/unit/bffUpstreamCalls.spec.ts` | Aucune route BFF authentifiée ne rappelle `apiBase()` à la main — sinon pas de rejeu après refresh (401 sur token expiré) |
+
+Côté Flutter : `test/core/api/change_password_test.dart` — le client adopte la paire réémise, et garde sa session si l'API n'en renvoie pas.
 
 Rejouer : `make test-go`, `make test-nuxt`, `make test-auth`.
 

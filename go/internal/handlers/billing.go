@@ -345,11 +345,10 @@ func (a *API) billingMockPortal(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "invalid_signature")
 		return
 	}
+	// returnURL n'est pas refiltré : il est couvert par la signature ci-dessus,
+	// donc il vaut ce que CreatePortalSession a émis et rien d'autre.
 	customer := q.Get("customer")
 	returnURL := q.Get("return")
-	if returnURL != "" && !allowedMockReturnURL(returnURL) {
-		returnURL = ""
-	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>

@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -240,6 +242,26 @@ var commercialAttachableRoles = map[kernel.Role]bool{
 	kernel.RoleCarePro: true,
 }
 
+// commercialOwnsContact reports whether the actor may act on a contact assigned
+// to assignedCommercialID. A manager covers their team's portfolio, otherwise
+// the contact must be assigned to the actor themselves.
+func (a *API) commercialOwnsContact(ctx context.Context, actor authx.Identity, assignedCommercialID string) bool {
+	if assignedCommercialID == "" {
+		return false
+	}
+	if assignedCommercialID == actor.UserID {
+		return true
+	}
+	if actor.Role != kernel.RoleCommercialManager {
+		return false
+	}
+	team, err := a.store.ListTeamCommercialIDs(ctx, actor.UserID)
+	if err != nil {
+		return false
+	}
+	return slices.Contains(team, assignedCommercialID)
+}
+
 func (a *API) commercialAttachProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || !kernel.IsSalesForce(id.Role) {
@@ -264,7 +286,7 @@ func (a *API) commercialAttachProfile(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	if assigned == "" || assigned != id.UserID {
+	if !a.commercialOwnsContact(r.Context(), id, assigned) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_in_portfolio")
 		return
 	}

@@ -100,6 +100,12 @@ Le bucket `petsfollow-media` est en lecture publique globale (binding `allUsers`
 
 Deux conséquences assumées : un access token déjà émis reste valide jusqu’à son expiration (~15 min), et le bump vaut pour **tout le compte** — se déconnecter du Web Pro ferme aussi la session Flutter du même utilisateur. Si cette UX doit changer, l’alternative est de réserver le bump au reset de mot de passe et à la suppression de compte, et d’exposer une action « Déconnecter tous mes appareils » dans `/settings`.
 
+**Au déploiement** : les tokens émis avant la migration ne portent pas de claim `tv` (lu à 0) alors que la colonne vaut 1 par défaut. Toutes les sessions actives sont donc refusées au premier refresh et chaque utilisateur doit se reconnecter une fois — web comme Flutter. Le seul moyen de l’éviter serait d’accepter `tv == 0` comme legacy pendant la durée de vie des refresh tokens (30 jours), au prix d’une fenêtre où les anciens tokens restent irrévocables.
+
+`PATCH /me/password` bumpe aussi : changer son mot de passe ferme les sessions des **autres** appareils, ce qui est le geste attendu quand on soupçonne une compromission. L’appareil qui en fait la demande est préservé — le handler lui réémet une paire de tokens, absorbée en cookies httpOnly par la BFF (`me/password.patch.ts`) et persistée côté Flutter (`ApiClient.changePassword`). Sans cette réémission, changer son mot de passe reviendrait à se déconnecter soi-même.
+
+Si la réémission échoue (base ou clé de signature indisponibles), le mot de passe a **quand même** changé : la réponse porte `reauthRequired: true` et l’échec est loggé côté API. La BFF purge alors les cookies et Flutter coupe la session par `_invalidateSessionFromUnauthorized`, pour renvoyer au login immédiatement plutôt que de laisser tomber l’utilisateur au refresh suivant, sans rapport apparent avec ce qu’il vient de faire.
+
 ## 6. Checklist ops
 
 - [ ] `RETENTION_PURGE_SECRET` câblé + `make gcp-retention-scheduler` + redeploy API
