@@ -1059,6 +1059,13 @@ class AppLocalizationsEt extends AppLocalizations {
   String get homeRecentActivity => 'Viimane tegevus';
 
   @override
+  String get homePetTipsTitle => 'Nõuanded teie loomadele';
+
+  @override
+  String get homePetTipsDisclaimer =>
+      'Üldised nõuanded — loomaarst jääb peamiseks allikaks.';
+
+  @override
   String get discoveryMission => 'Teie petsFollow teekond';
 
   @override

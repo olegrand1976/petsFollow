@@ -1062,6 +1062,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get homeRecentActivity => 'Attività recente';
 
   @override
+  String get homePetTipsTitle => 'Consigli per i vostri animali';
+
+  @override
+  String get homePetTipsDisclaimer =>
+      'Consigli generali: il veterinario resta il riferimento.';
+
+  @override
   String get discoveryMission => 'Il tuo percorso petsFollow';
 
   @override

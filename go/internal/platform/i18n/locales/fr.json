@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Traitement cabinet",
     "timeline_body": "Traitement administré / fourni au cabinet"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Chaleur : prudence",
+      "body": "En été, ne laissez jamais votre animal dans une voiture, privilégiez les sorties tôt/tard et offrez toujours de l'eau fraîche."
+    },
+    "parasite_season": {
+      "title": "Parasites de saison",
+      "body": "Puces, tiques et vers sont plus actifs au printemps et en été. Vérifiez le calendrier antiparasitaire avec votre vétérinaire."
+    },
+    "cold_paw_care": {
+      "title": "Froid et pattes",
+      "body": "En hiver, rincez les pattes après la promenade (sel, gravillons) et séchez-les bien pour éviter irritations."
+    },
+    "horse_pasture": {
+      "title": "Pâturage & parasitisme",
+      "body": "Au retour des beaux jours, surveillez le pâturage et les rappels de vermifuge / ferrure convenus avec vos professionnels."
+    },
+    "hydration": {
+      "title": "Hydratation",
+      "body": "Par temps chaud, multipliez les points d'eau fraîche et limitez l'effort aux heures les plus chaudes."
+    },
+    "seasonal_care_check": {
+      "title": "Soins de saison",
+      "body": "Pensez à vérifier vaccins, vermifuge et contrôles à venir dans l'onglet Soins — votre vétérinaire reste la référence."
+    }
   }
 }

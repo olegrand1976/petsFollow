@@ -1060,6 +1060,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get homeRecentActivity => 'Recente activiteit';
 
   @override
+  String get homePetTipsTitle => 'Tips voor uw dieren';
+
+  @override
+  String get homePetTipsDisclaimer =>
+      'Algemene tips — uw dierenarts blijft de referentie.';
+
+  @override
   String get discoveryMission => 'Uw petsFollow-traject';
 
   @override

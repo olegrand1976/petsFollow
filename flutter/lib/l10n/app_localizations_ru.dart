@@ -1065,6 +1065,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeRecentActivity => 'Недавняя активность';
 
   @override
+  String get homePetTipsTitle => 'Советы для ваших питомцев';
+
+  @override
+  String get homePetTipsDisclaimer =>
+      'Общие советы — ваш ветеринар остаётся ориентиром.';
+
+  @override
   String get discoveryMission => 'Ваш путь в petsFollow';
 
   @override

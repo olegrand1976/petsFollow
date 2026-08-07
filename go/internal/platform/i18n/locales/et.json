@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Kliiniku ravi",
     "timeline_body": "Ravi manustatud / väljastatud kliinikus"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Kuumus: ettevaatust",
+      "body": "Suvel ärge jätke looma kunagi autosse, jalutage vara/hilja ning pakkuge alati värsket vett."
+    },
+    "parasite_season": {
+      "title": "Hooajalised parasiidid",
+      "body": "Kirbud, puugid ja ussid on kevadel-suvel aktiivsemad. Kontrollige parasiiditõrje kava loomaarstiga."
+    },
+    "cold_paw_care": {
+      "title": "Külm ja käpad",
+      "body": "Talvel loputage käpad pärast jalutuskäiku (sool, killustik) ja kuivatage hästi."
+    },
+    "horse_pasture": {
+      "title": "Karjamaa ja parasiidid",
+      "body": "Soojematel päevadel jälgige karjamaad ning ussirohtu / rattaseppa koos spetsialistidega."
+    },
+    "hydration": {
+      "title": "Joogivesi",
+      "body": "Kuumaga pakkuge mitut värske vee kohta ja piirake koormust kõige kuumematel tundidel."
+    },
+    "seasonal_care_check": {
+      "title": "Hooajaline hooldus",
+      "body": "Kontrollige vaktsiine, ussirohtu ja kontrolle vahekaardil Hooldus — loomaarst jääb peamiseks allikaks."
+    }
   }
 }

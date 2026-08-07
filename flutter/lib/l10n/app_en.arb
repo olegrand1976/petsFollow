@@ -385,6 +385,8 @@
   "emptyPetsBody": "Add your first pet to start prescribed follow-up with your veterinarian.",
   "discoveryTitle": "Discover petsFollow",
   "homeRecentActivity": "Recent activity",
+  "homePetTipsTitle": "Tips for your pets",
+  "homePetTipsDisclaimer": "General advice — your veterinarian remains the reference.",
   "discoveryMission": "Your petsFollow journey",
   "discoveryDay0Title": "Step 1 — Welcome",
   "discoveryDay0Body": "Create your pet's profile and explore the app — messaging, reminders and readings (including respiratory rate).",

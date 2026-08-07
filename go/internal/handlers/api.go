@@ -297,6 +297,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/me/notification-preferences", a.getClientNotificationPrefs)
 		pr.Patch("/me/notification-preferences", a.updateClientNotificationPrefs)
 		pr.Get("/me/household", a.getHousehold)
+		pr.Get("/me/pet-tips", a.getPetTips)
 		pr.Get("/clients", a.listClients)
 		pr.Post("/vet/clients", a.createVetClient)
 		pr.Post("/vet/clients/{clientID}/link", a.linkExistingVetClient)

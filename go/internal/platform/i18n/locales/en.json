@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Clinic treatment",
     "timeline_body": "Treatment administered / dispensed at the clinic"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Heat safety",
+      "body": "In summer, never leave your pet in a car, walk early or late, and always offer fresh water."
+    },
+    "parasite_season": {
+      "title": "Seasonal parasites",
+      "body": "Fleas, ticks and worms are more active in spring and summer. Check the parasite plan with your vet."
+    },
+    "cold_paw_care": {
+      "title": "Cold and paws",
+      "body": "In winter, rinse paws after walks (salt, grit) and dry them well to avoid irritation."
+    },
+    "horse_pasture": {
+      "title": "Pasture & parasites",
+      "body": "When warmer days return, watch pasture access and keep deworming / farrier schedules agreed with your pros."
+    },
+    "hydration": {
+      "title": "Hydration",
+      "body": "In hot weather, provide several fresh water spots and limit exercise in the hottest hours."
+    },
+    "seasonal_care_check": {
+      "title": "Seasonal care check",
+      "body": "Review upcoming vaccines, deworming and check-ups in the Care tab — your vet remains the reference."
+    }
   }
 }

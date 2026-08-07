@@ -2042,6 +2042,18 @@ abstract class AppLocalizations {
   /// **'Activité récente'**
   String get homeRecentActivity;
 
+  /// No description provided for @homePetTipsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Infos pour vos animaux'**
+  String get homePetTipsTitle;
+
+  /// No description provided for @homePetTipsDisclaimer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conseils généraux — votre vétérinaire reste la référence.'**
+  String get homePetTipsDisclaimer;
+
   /// No description provided for @discoveryMission.
   ///
   /// In fr, this message translates to:

@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Behandeling praktijk",
     "timeline_body": "Behandeling toegediend / afgeleverd in de praktijk"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Hitte: voorzichtig",
+      "body": "Laat uw dier 's zomers nooit in een auto, wandel vroeg/laat en bied steeds fris water aan."
+    },
+    "parasite_season": {
+      "title": "Seizoensparasieten",
+      "body": "Vlooien, teken en wormen zijn actiever in lente en zomer. Check het antiparasitaire schema met uw dierenarts."
+    },
+    "cold_paw_care": {
+      "title": "Kou en poten",
+      "body": "Spoel in de winter de poten na de wandeling (zout, grit) en droog ze goed om irritatie te vermijden."
+    },
+    "horse_pasture": {
+      "title": "Weide & parasieten",
+      "body": "Bij warmer weer: let op weidegang en houd ontworming / hoefsmid bij zoals afgesproken."
+    },
+    "hydration": {
+      "title": "Hydratatie",
+      "body": "Bij hitte: meerdere bakjes fris water en minder inspanning op de warmste uren."
+    },
+    "seasonal_care_check": {
+      "title": "Seizoenszorg",
+      "body": "Check vaccins, ontworming en controles in het tabblad Zorgen — uw dierenarts blijft de referentie."
+    }
   }
 }

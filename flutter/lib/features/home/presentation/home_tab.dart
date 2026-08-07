@@ -17,6 +17,7 @@ import 'package:petsfollow_mobile/features/client_ai/presentation/triage_chat_sc
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
+import 'package:petsfollow_mobile/features/home/presentation/pet_tips_section.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
@@ -287,7 +288,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                       mission: true,
                       onComplete: () => _completeMission(mission),
                     ),
+                    const SizedBox(height: 16),
                   ],
+                  PetTipsSection(
+                    key: ValueKey('pet_tips_$householdEpoch'),
+                    l10n: l10n,
+                    reloadEpoch: householdEpoch,
+                  ),
                   if (pets.isEmpty)
                     _EmptyPetsState(
                       onAdd: _openPetForm,

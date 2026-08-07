@@ -44,6 +44,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Settings language screen (8 locales uk/ru) | · | ✓ | · | `settings_language_test` (écran plein ; locale locale même si PATCH KO) |
 | Discovery merge + legacy seed close | ✓ | · | · | `discovery_controller_test` |
 | Home activité récente (discovery done) | · | ✓ | · | `home_recent_activity_test` |
+| Home infos animaux (pet-tips) | · | ✓ | · | `home_pet_tips_test` |
 | Settings pref canal SMS (opt-out) | · | ✓ | · | `notification_prefs_sms_test` (toggle → PATCH sms:false + relecture STOP serveur) |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` (dictation/save/finalize ; no improve IA) |

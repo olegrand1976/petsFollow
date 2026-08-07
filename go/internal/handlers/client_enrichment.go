@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/olegrand1976/petsFollow/go/internal/pettips"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -290,6 +291,27 @@ func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 		"pets":              pets,
 		"upcomingReminders": upcoming,
 	})
+}
+
+// getPetTips returns practical owner tips filtered by household species (not Pro vet news).
+func (a *API) getPetTips(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	pets, err := a.store.ListPetsByOwner(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	species := make([]string, 0, len(pets))
+	for _, p := range pets {
+		species = append(species, p.Species)
+	}
+	now := time.Now().In(brusselsLocation())
+	items := pettips.ForHousehold(localeOf(r), species, now, 3)
+	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
 }
 
 type createCareReminderReq struct {

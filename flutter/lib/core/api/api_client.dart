@@ -1091,6 +1091,16 @@ class ApiClient {
     return Map<String, dynamic>.from(res.data['data'] as Map);
   }
 
+  /// Practical pet tips for the household (species-filtered, non-scientific).
+  Future<List<dynamic>> getPetTips() async {
+    final res = await dio.get('/api/v1/me/pet-tips');
+    final data = res.data['data'];
+    if (data is Map && data['items'] is List) {
+      return data['items'] as List<dynamic>;
+    }
+    return const [];
+  }
+
   Future<List<dynamic>> getHorseContacts(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/horse-contacts');
     return res.data['data'] as List<dynamic>;

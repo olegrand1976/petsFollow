@@ -385,6 +385,8 @@
   "emptyPetsBody": "Lisage oma esimene lemmikloom, et alustada ettekirjutatud jälgimist koos loomaarstiga.",
   "discoveryTitle": "Avastage petsFollow",
   "homeRecentActivity": "Viimane tegevus",
+  "homePetTipsTitle": "Nõuanded teie loomadele",
+  "homePetTipsDisclaimer": "Üldised nõuanded — loomaarst jääb peamiseks allikaks.",
   "discoveryMission": "Teie petsFollow teekond",
   "discoveryDay0Title": "Samm 1 — Tere tulemast",
   "discoveryDay0Body": "Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh hingamissagedus).",

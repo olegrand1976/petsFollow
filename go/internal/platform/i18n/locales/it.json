@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Trattamento in clinica",
     "timeline_body": "Trattamento somministrato / erogato in clinica"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Caldo: attenzione",
+      "body": "In estate non lasciate mai l'animale in auto, uscite presto/tardi e offrite sempre acqua fresca."
+    },
+    "parasite_season": {
+      "title": "Parassiti di stagione",
+      "body": "Pulci, zecche e vermi sono più attivi in primavera ed estate. Controllate il piano antiparassitario col veterinario."
+    },
+    "cold_paw_care": {
+      "title": "Freddo e zampe",
+      "body": "In inverno sciacquate le zampe dopo la passeggiata (sale, ghiaia) e asciugatele bene."
+    },
+    "horse_pasture": {
+      "title": "Pascolo e parassiti",
+      "body": "Con il bel tempo controllate il pascolo e rispettate sverminazione / maniscalco concordati."
+    },
+    "hydration": {
+      "title": "Idratazione",
+      "body": "Con il caldo moltiplicate i punti d'acqua fresca e limitate lo sforzo nelle ore più calde."
+    },
+    "seasonal_care_check": {
+      "title": "Cure di stagione",
+      "body": "Controllate vaccini, sverminazione e visite nella scheda Cure — il veterinario resta il riferimento."
+    }
   }
 }

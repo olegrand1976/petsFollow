@@ -699,5 +699,31 @@
   "daf": {
     "timeline_title": "Tratamiento en clínica",
     "timeline_body": "Tratamiento administrado / dispensado en la clínica"
+  },
+  "pet_tips": {
+    "heat_safety": {
+      "title": "Calor: precaución",
+      "body": "En verano, no deje nunca a su animal en el coche, salga temprano o tarde y ofrezca siempre agua fresca."
+    },
+    "parasite_season": {
+      "title": "Parásitos de temporada",
+      "body": "Pulgas, garrapatas y gusanos son más activos en primavera y verano. Revise el plan antiparasitario con su veterinario."
+    },
+    "cold_paw_care": {
+      "title": "Frío y patas",
+      "body": "En invierno, enjuague las patas tras el paseo (sal, gravilla) y séquelas bien para evitar irritaciones."
+    },
+    "horse_pasture": {
+      "title": "Pasto y parásitos",
+      "body": "Con el buen tiempo, vigile el pasto y mantenga la desparasitación / herrado acordados con sus profesionales."
+    },
+    "hydration": {
+      "title": "Hidratación",
+      "body": "Con calor, multiplique los puntos de agua fresca y limite el esfuerzo en las horas más calurosas."
+    },
+    "seasonal_care_check": {
+      "title": "Cuidados de temporada",
+      "body": "Revise vacunas, desparasitación y controles en la pestaña Cuidados — su veterinario es la referencia."
+    }
   }
 }
