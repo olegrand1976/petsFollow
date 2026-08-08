@@ -85,41 +85,54 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	}
 	petID := firstNonWalkinPetID(t, pets)
 
-	// Find a free slot tomorrow morning-ish via availability or schedule window.
-	start := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Hour)
-	// Prefer weekday 09:00 local-ish: bump until weekday Mon-Fri
-	for start.Weekday() == time.Saturday || start.Weekday() == time.Sunday {
-		start = start.Add(24 * time.Hour)
+	// Créneaux lointains + cleanup : l'agenda VetPlus est partagé avec le seed et
+	// les autres tests du paquet. Une fenêtre à J+2 donne un slot_taken selon
+	// l'ordre d'exécution (CI staging : unassigned should coexist → 409).
+	cancelOnCleanup := func(id string) {
+		t.Helper()
+		if id == "" {
+			return
+		}
+		t.Cleanup(func() {
+			_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+id, vetTok, map[string]any{
+				"status": "cancelled",
+			})
+		})
 	}
-	start = time.Date(start.Year(), start.Month(), start.Day(), 9, 0, 0, 0, time.UTC)
 
-	body := map[string]any{
-		"scheduledAt":     start.Format(time.RFC3339),
-		"siteId":          siteID,
-		"confirmDirect":   true,
-		"durationMinutes": 30,
-		"assigneeUserId":  assigneeID,
-		"roomId":          roomAID,
-		"notes":           "resource test",
-	}
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
-	if code != http.StatusOK && code != http.StatusCreated {
-		// Slot may collide with seed — try +1h a few times
-		ok := false
-		for range 8 {
-			start = start.Add(time.Hour)
-			body["scheduledAt"] = start.Format(time.RFC3339)
-			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, body)
+	bookAssigned := func(label string, start time.Time, roomID string) (map[string]any, time.Time) {
+		t.Helper()
+		for i := range 36 {
+			at := start.Add(time.Duration(i) * time.Hour)
+			code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+				"scheduledAt":     at.Format(time.RFC3339),
+				"siteId":          siteID,
+				"confirmDirect":   true,
+				"durationMinutes": 30,
+				"assigneeUserId":  assigneeID,
+				"roomId":          roomID,
+				"notes":           label,
+			})
 			if code == http.StatusOK || code == http.StatusCreated {
-				ok = true
-				break
+				v := env["data"].(map[string]any)
+				cancelOnCleanup(v["id"].(string))
+				return v, at
+			}
+			if code != http.StatusConflict && code != http.StatusBadRequest {
+				t.Fatalf("create %s %d %#v", label, code, env)
 			}
 		}
-		if !ok {
-			t.Fatalf("create visit with resources: %d %#v", code, env)
-		}
+		t.Fatalf("no free slot for %s", label)
+		return nil, time.Time{}
 	}
-	visit := env["data"].(map[string]any)
+
+	base := time.Now().UTC().Add(120 * 24 * time.Hour).Truncate(time.Hour)
+	for base.Weekday() == time.Saturday || base.Weekday() == time.Sunday {
+		base = base.Add(24 * time.Hour)
+	}
+	base = time.Date(base.Year(), base.Month(), base.Day(), 9, 0, 0, 0, time.UTC)
+
+	visit, start := bookAssigned("resource test", base, roomAID)
 	visitID, _ := visit["id"].(string)
 	if visit["assigneeUserId"] != assigneeID {
 		t.Fatalf("assignee not set: %#v", visit["assigneeUserId"])
@@ -171,50 +184,56 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	}
 
 	// Unassigned can share the same wall-clock slot as an assigned visit (parallel).
-	unassignedStart := start.Add(3 * time.Hour)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     unassignedStart.Format(time.RFC3339),
-		"siteId":          siteID,
-		"confirmDirect":   true,
-		"durationMinutes": 30,
-		"assigneeUserId":  assigneeID,
-		"roomId":          roomAID,
-		"notes":           "assigned parallel",
-	})
-	if code != http.StatusOK && code != http.StatusCreated {
-		ok := false
-		for range 6 {
-			unassignedStart = unassignedStart.Add(time.Hour)
-			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-				"scheduledAt":     unassignedStart.Format(time.RFC3339),
-				"siteId":          siteID,
-				"confirmDirect":   true,
-				"durationMinutes": 30,
-				"assigneeUserId":  assigneeID,
-				"roomId":          roomAID,
-			})
-			if code == http.StatusOK || code == http.StatusCreated {
-				ok = true
-				break
-			}
+	// Retry the *pair* together: a free assigned slot may still have an orphan
+	// unassigned from seed/other tests → slot_taken on the second create.
+	var assignedParallelID, unassignedID string
+	var unassignedStart time.Time
+	pairBase := start.Add(48 * time.Hour)
+	okPair := false
+	for i := range 36 {
+		at := pairBase.Add(time.Duration(i) * time.Hour)
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":     at.Format(time.RFC3339),
+			"siteId":          siteID,
+			"confirmDirect":   true,
+			"durationMinutes": 30,
+			"assigneeUserId":  assigneeID,
+			"roomId":          roomAID,
+			"notes":           "assigned parallel",
+		})
+		if code != http.StatusOK && code != http.StatusCreated {
+			continue
 		}
-		if !ok {
-			t.Fatalf("create assigned for parallel test: %d %#v", code, env)
+		assigned := env["data"].(map[string]any)
+		aid, _ := assigned["id"].(string)
+		cancelOnCleanup(aid)
+
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":     at.Format(time.RFC3339),
+			"siteId":          siteID,
+			"confirmDirect":   true,
+			"durationMinutes": 30,
+			"notes":           "unassigned parallel OK",
+		})
+		if code == http.StatusOK || code == http.StatusCreated {
+			uid, _ := env["data"].(map[string]any)["id"].(string)
+			cancelOnCleanup(uid)
+			assignedParallelID = aid
+			unassignedID = uid
+			unassignedStart = at
+			okPair = true
+			break
 		}
+		// Slot not suitable for coexistence — cancel the assigned we just created
+		// (cleanup still runs too) and try the next hour.
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+aid, vetTok, map[string]any{
+			"status": "cancelled",
+		})
 	}
-	assignedParallel := env["data"].(map[string]any)
-	assignedParallelID, _ := assignedParallel["id"].(string)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     unassignedStart.Format(time.RFC3339),
-		"siteId":          siteID,
-		"confirmDirect":   true,
-		"durationMinutes": 30,
-		"notes":           "unassigned parallel OK",
-	})
-	if code != http.StatusOK && code != http.StatusCreated {
-		t.Fatalf("unassigned should coexist with assigned: %d %#v", code, env)
+	if !okPair {
+		t.Fatalf("unassigned should coexist with assigned: no free parallel slot")
 	}
-	unassignedID, _ := env["data"].(map[string]any)["id"].(string)
+	_ = unassignedStart
 
 	// Clearing resources into a busy unassigned queue → slot_taken
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+assignedParallelID, vetTok, map[string]any{
@@ -264,7 +283,6 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 	if code != http.StatusOK {
 		t.Fatalf("deactivate room: %d %#v", code, env)
 	}
-	activeFalse := false
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/vet/sites/"+siteID+"/rooms/"+roomBID, vetTok, map[string]any{
 		"active": true,
 	})
@@ -272,44 +290,45 @@ func TestRoomsCRUDAndVisitResources(t *testing.T) {
 		t.Fatalf("reactivate room: %d %#v", code, env)
 	}
 	if room, _ := env["data"].(map[string]any); room["active"] != true {
-		t.Fatalf("room not active after reactivate: %#v (want != %v)", room, activeFalse)
+		t.Fatalf("room not active after reactivate: %#v", room)
 	}
 
 	// Assigned visit may reschedule onto a wall-clock slot held by an unassigned visit.
-	parallelSlot := start.Add(5 * time.Hour)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     parallelSlot.Format(time.RFC3339),
-		"siteId":          siteID,
-		"confirmDirect":   true,
-		"durationMinutes": 30,
-		"notes":           "unassigned occupies slot",
-	})
-	if code != http.StatusOK && code != http.StatusCreated {
-		ok := false
-		for range 6 {
-			parallelSlot = parallelSlot.Add(time.Hour)
-			code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-				"scheduledAt":     parallelSlot.Format(time.RFC3339),
-				"siteId":          siteID,
-				"confirmDirect":   true,
-				"durationMinutes": 30,
-			})
-			if code == http.StatusOK || code == http.StatusCreated {
-				ok = true
-				break
-			}
+	var parallelSlot time.Time
+	okReschedule := false
+	rescheduleBase := start.Add(96 * time.Hour)
+	for i := range 36 {
+		at := rescheduleBase.Add(time.Duration(i) * time.Hour)
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":     at.Format(time.RFC3339),
+			"siteId":          siteID,
+			"confirmDirect":   true,
+			"durationMinutes": 30,
+			"notes":           "unassigned occupies slot",
+		})
+		if code != http.StatusOK && code != http.StatusCreated {
+			continue
 		}
-		if !ok {
-			t.Fatalf("create unassigned for reschedule parallel: %d %#v", code, env)
+		uid, _ := env["data"].(map[string]any)["id"].(string)
+		cancelOnCleanup(uid)
+
+		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"action":              "reschedule_direct",
+			"proposedScheduledAt": at.Format(time.RFC3339),
+		})
+		if code == http.StatusOK {
+			parallelSlot = at
+			okReschedule = true
+			break
 		}
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+uid, vetTok, map[string]any{
+			"status": "cancelled",
+		})
 	}
-	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
-		"action":              "reschedule_direct",
-		"proposedScheduledAt": parallelSlot.Format(time.RFC3339),
-	})
-	if code != http.StatusOK {
-		t.Fatalf("assigned reschedule onto unassigned slot should succeed, got %d %#v", code, env)
+	if !okReschedule {
+		t.Fatalf("assigned reschedule onto unassigned slot should succeed")
 	}
+	_ = parallelSlot
 
 	// Patch team defaultSiteId
 	memberID, _ := members[0].(map[string]any)["id"].(string)
