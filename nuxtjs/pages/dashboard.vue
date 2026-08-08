@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import type { CalendarVisit } from '~/composables/useCalendarGrid'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -229,7 +230,7 @@ const afscaHomeUrl = computed(() =>
   locale.value === 'nl' ? 'https://favv-afsca.be/nl' : 'https://favv-afsca.be/fr',
 )
 const config = useRuntimeConfig()
-const showVetNews = computed(() => Boolean(config.public.vetNewsEnabled) && canReadClients.value)
+const showVetNews = computed(() => isPublicFlagOn(config.public.vetNewsEnabled) && canReadClients.value)
 type VetNewsItem = {
   id?: string
   title: string

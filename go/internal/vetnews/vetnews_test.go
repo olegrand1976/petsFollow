@@ -34,6 +34,26 @@ func TestClassifyCritical(t *testing.T) {
 	}
 }
 
+func TestClassifyDoesNotOverfireOnSoftWords(t *testing.T) {
+	_, imp, _ := Classify(RawItem{
+		Title:   "A study of clinical evidence in practice",
+		Summary: "Research notes",
+	}, "todays_vet_practice", []string{"pratique"})
+	if imp == ImportanceCritical {
+		t.Fatalf("soft clinical text should not be critical, got %s", imp)
+	}
+}
+
+func TestSourceCatalog(t *testing.T) {
+	cat := SourceCatalog()
+	if len(cat) != 6 {
+		t.Fatalf("want 6 got %d", len(cat))
+	}
+	if cat[0].ID != "anses" || cat[0].Name == "" {
+		t.Fatalf("%#v", cat[0])
+	}
+}
+
 func TestParseRSSDedup(t *testing.T) {
 	body := []byte(`<?xml version="1.0"?>
 <rss version="2.0"><channel>

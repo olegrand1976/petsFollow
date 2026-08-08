@@ -33,25 +33,25 @@ func Classify(item RawItem, sourceID string, defaultTags []string) (category, im
 
 	criticalHints := []string{
 		"outbreak", "épidémie", "epidemie", "epizoot", "foyer", "rappel de lot", "product recall",
-		"urgence", "emergency", "alerte sanitaire", "high pathogenicity", "haute pathogénicité",
+		"alerte sanitaire", "high pathogenicity", "haute pathogénicité",
 		"influenza aviaire", "avian influenza", "fièvre aphteuse", "foot-and-mouth", "peste porcine",
 		"african swine", "rage ", "rabies", "dermatose nodulaire", "lumpy skin",
 	}
 	highHints := []string{
 		"surveillance", "réglement", "reglement", "décret", "arrete", "arrêté", "legislation",
-		"législation", "cvmp", "amm ", "withdrawal", "résistance", "resistance", "one health",
-		"zoonose", "zoonosis", "west nile", "nil occidental", "bluetongue", "fièvre catarrhale",
+		"législation", "cvmp", "withdrawal", "résistance antimicrobien", "antimicrobial resistance",
+		"one health", "zoonose", "zoonosis", "west nile", "nil occidental", "bluetongue", "fièvre catarrhale",
 	}
 	clinicalHints := []string{
 		"chirurgie", "surgery", "diagnostic", "traitement", "treatment", "clinique", "clinical",
 		"canin", "félin", "feline", "canine", "anesth",
 	}
 	scienceHints := []string{
-		"étude", "study", "evidence", "ebm", "peer-reviewed", "essai", "trial", "recherche", "research",
+		"peer-reviewed", "evidence-based", "ebvm", "essai clinique", "clinical trial",
 	}
 	regulatoryHints := []string{
-		"réglement", "reglement", "décret", "arrêté", "legislation", "législation", "norme", "code ",
-		"peppol", "amm", "autorisation",
+		"réglement", "reglement", "décret", "arrêté", "legislation", "législation",
+		"autorisation de mise sur le marché", "peppol",
 	}
 
 	if containsAny(blob, criticalHints) {

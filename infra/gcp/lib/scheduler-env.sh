@@ -38,6 +38,7 @@ pf_scheduler_ensure_secret() {
 
 pf_scheduler_upsert_http() {
   # Args via env: JOB_NAME SCHEDULE TZ ENDPOINT HEADERS [ATTEMPT_DEADLINE]
+  # stdout/stderr of gcloud are discarded: job YAML embeds secret headers.
   local location="${GCP_SCHEDULER_LOCATION:-europe-west1}"
   local deadline="${ATTEMPT_DEADLINE:-120s}"
   if gcloud scheduler jobs describe "$JOB_NAME" --location="$location" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
@@ -50,7 +51,8 @@ pf_scheduler_upsert_http() {
       --http-method=POST \
       --headers="$HEADERS" \
       --message-body='{}' \
-      --attempt-deadline="$deadline"
+      --attempt-deadline="$deadline" \
+      >/dev/null
     echo "Updated scheduler job ${JOB_NAME} (${SCHEDULE} ${TZ}) → ${ENDPOINT}"
   else
     gcloud scheduler jobs create http "$JOB_NAME" \
@@ -62,7 +64,8 @@ pf_scheduler_upsert_http() {
       --http-method=POST \
       --headers="$HEADERS" \
       --message-body='{}' \
-      --attempt-deadline="$deadline"
+      --attempt-deadline="$deadline" \
+      >/dev/null
     echo "Created scheduler job ${JOB_NAME} (${SCHEDULE} ${TZ}) → ${ENDPOINT}"
   fi
 }

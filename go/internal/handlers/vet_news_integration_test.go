@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/internal/vetnews"
 )
 
 func TestVetNewsDisabled(t *testing.T) {
@@ -32,19 +36,40 @@ func TestVetNewsListAndIngestAuth(t *testing.T) {
 		t.Fatalf("no secret want 401 got %d %#v", code, env)
 	}
 
-	// Seed one article directly (avoid live network in CI).
+	st := store.New(api.pool)
 	url := "https://www.anses.fr/fr/content/test-vet-news-" + strings.ReplaceAll(uniqueEmail("vn"), "@", "-")
-	_, err := api.pool.Exec(t.Context(), `
-		INSERT INTO ops.vet_news_articles (
-			source_id, source_name, source_url, title, summary, category, importance, tags
-		) VALUES (
-			'anses', 'Anses — Santé animale', $1,
-			'Rage : une réémergence préoccupante',
-			'Résumé test',
-			'epidemio', 'critical', ARRAY['anses','fr']
-		)`, url)
+	art := vetnews.Article{
+		SourceID:   "anses",
+		SourceName: "Anses — Santé animale",
+		SourceURL:  url,
+		Title:      "Rage : une réémergence préoccupante",
+		Summary:    "Résumé test",
+		Category:   "epidemio",
+		Importance: "critical",
+		Tags:       []string{"anses", "fr"},
+		FetchedAt:  time.Now().UTC(),
+	}
+	outcome, err := st.UpsertVetNewsArticle(t.Context(), art)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if outcome != vetnews.UpsertInserted {
+		t.Fatalf("first upsert want inserted got %v", outcome)
+	}
+	outcome, err = st.UpsertVetNewsArticle(t.Context(), art)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if outcome != vetnews.UpsertUnchanged {
+		t.Fatalf("second upsert same hash want unchanged got %v", outcome)
+	}
+	art.Title = "Rage : titre mis à jour"
+	outcome, err = st.UpsertVetNewsArticle(t.Context(), art)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if outcome != vetnews.UpsertUpdated {
+		t.Fatalf("title change want updated got %v", outcome)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/news?limit=5", vetTok, nil)
@@ -60,8 +85,13 @@ func TestVetNewsListAndIngestAuth(t *testing.T) {
 	if len(legend) != 4 {
 		t.Fatalf("legend %#v", legend)
 	}
-	first, _ := items[0].(map[string]any)
-	if first["importance"] == nil || first["title"] == nil {
-		t.Fatalf("item %#v", first)
+	sources, _ := data["sources"].([]any)
+	if len(sources) != 6 {
+		t.Fatalf("sources %#v", sources)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/news?importance=not-a-level", vetTok, nil)
+	if code != http.StatusBadRequest {
+		t.Fatalf("bad importance want 400 got %d %#v", code, env)
 	}
 }

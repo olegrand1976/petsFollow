@@ -40,9 +40,16 @@ func NormalizeURL(u string) string {
 	return u
 }
 
-// ContentHash fingerprints title+url for change detection.
-func ContentHash(title, url string) string {
-	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(title)) + "\n" + NormalizeURL(url)))
+// ContentHash fingerprints title/url/summary/category/importance for change detection.
+func ContentHash(title, url, summary, category, importance string) string {
+	payload := strings.Join([]string{
+		strings.ToLower(strings.TrimSpace(title)),
+		NormalizeURL(url),
+		strings.ToLower(strings.TrimSpace(summary)),
+		strings.TrimSpace(category),
+		strings.TrimSpace(importance),
+	}, "\n")
+	sum := sha256.Sum256([]byte(payload))
 	return hex.EncodeToString(sum[:16])
 }
 

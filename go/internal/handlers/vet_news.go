@@ -34,8 +34,8 @@ func (a *API) internalRunVetNews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := a.vetNewsIngester().Run(r.Context())
-	log.Printf("vetnews run inserted=%d updated=%d skipped=%d duration_ms=%d sources=%d",
-		res.Inserted, res.Updated, res.Skipped, res.DurationMs, len(res.Sources))
+	log.Printf("vetnews run inserted=%d updated=%d unchanged=%d skipped=%d duration_ms=%d sources=%d",
+		res.Inserted, res.Updated, res.Unchanged, res.Skipped, res.DurationMs, len(res.Sources))
 	httpx.WriteData(w, http.StatusOK, res)
 }
 
@@ -53,9 +53,16 @@ func (a *API) listVetNews(w http.ResponseWriter, r *http.Request) {
 			limit = n
 		}
 	}
+	importance := strings.TrimSpace(r.URL.Query().Get("importance"))
+	switch importance {
+	case "", vetnews.ImportanceCritical, vetnews.ImportanceHigh, vetnews.ImportanceMedium, vetnews.ImportanceLow:
+	default:
+		writeErr(w, r, http.StatusBadRequest, "invalid_importance", "bad_request")
+		return
+	}
 	filter := vetnews.ListFilter{
 		SourceID:   strings.TrimSpace(r.URL.Query().Get("source")),
-		Importance: strings.TrimSpace(r.URL.Query().Get("importance")),
+		Importance: importance,
 		Limit:      limit,
 	}
 	items, err := a.store.ListVetNewsArticles(r.Context(), filter)
@@ -66,14 +73,6 @@ func (a *API) listVetNews(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"items":   items,
 		"legend":  vetnews.ImportanceLegend(),
-		"sources": sourceCatalog(),
+		"sources": vetnews.SourceCatalog(),
 	})
-}
-
-func sourceCatalog() []map[string]string {
-	out := make([]map[string]string, 0, 6)
-	for _, p := range vetnews.DefaultProviders(nil) {
-		out = append(out, map[string]string{"id": p.ID(), "name": p.Name()})
-	}
-	return out
 }

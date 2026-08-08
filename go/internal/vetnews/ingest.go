@@ -8,7 +8,7 @@ import (
 
 // ArticleStore persists classified articles (implemented by store.Store).
 type ArticleStore interface {
-	UpsertVetNewsArticle(ctx context.Context, a Article) (inserted bool, err error)
+	UpsertVetNewsArticle(ctx context.Context, a Article) (UpsertResult, error)
 	ListVetNewsArticles(ctx context.Context, filter ListFilter) ([]Article, error)
 	PurgeOldVetNewsArticles(ctx context.Context, olderThan time.Time) (int64, error)
 }
@@ -49,6 +49,7 @@ func (in *Ingester) Run(ctx context.Context) RunResult {
 		res.Sources = append(res.Sources, sr)
 		res.Inserted += sr.Inserted
 		res.Updated += sr.Updated
+		res.Unchanged += sr.Unchanged
 		res.Skipped += sr.Skipped
 	}
 	if n, err := in.Store.PurgeOldVetNewsArticles(ctx, time.Now().UTC().AddDate(0, 0, -90)); err != nil {
@@ -91,16 +92,21 @@ func (in *Ingester) ingestOne(ctx context.Context, p Provider) SourceResult {
 			Tags:        tags,
 			FetchedAt:   now,
 		}
-		inserted, err := in.Store.UpsertVetNewsArticle(ctx, art)
+		outcome, err := in.Store.UpsertVetNewsArticle(ctx, art)
 		if err != nil {
 			log.Printf("vetnews upsert source=%s url=%s err=%v", p.ID(), art.SourceURL, err)
 			sr.Skipped++
 			continue
 		}
-		if inserted {
+		switch outcome {
+		case UpsertInserted:
 			sr.Inserted++
-		} else {
+		case UpsertUpdated:
 			sr.Updated++
+		case UpsertUnchanged:
+			sr.Unchanged++
+		default:
+			sr.Skipped++
 		}
 	}
 	return sr

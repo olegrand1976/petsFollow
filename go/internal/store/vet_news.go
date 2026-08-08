@@ -6,26 +6,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/vetnews"
 )
 
 // UpsertVetNewsArticle inserts or refreshes by unique source_url.
-// Returns inserted=true when a new row was created.
-func (s *Store) UpsertVetNewsArticle(ctx context.Context, a vetnews.Article) (inserted bool, err error) {
+// Unchanged content_hash → UpsertUnchanged (no row rewrite).
+func (s *Store) UpsertVetNewsArticle(ctx context.Context, a vetnews.Article) (vetnews.UpsertResult, error) {
 	if s == nil || s.pool == nil {
-		return false, errors.New("store_unavailable")
+		return 0, errors.New("store_unavailable")
 	}
 	url := strings.TrimSpace(a.SourceURL)
 	if url == "" || strings.TrimSpace(a.Title) == "" {
-		return false, errors.New("invalid_article")
+		return 0, errors.New("invalid_article")
 	}
-	hash := vetnews.ContentHash(a.Title, url)
+	hash := vetnews.ContentHash(a.Title, url, a.Summary, a.Category, a.Importance)
 	tags := a.Tags
 	if tags == nil {
 		tags = []string{}
 	}
 	var id string
-	err = s.pool.QueryRow(ctx, `
+	var inserted bool
+	err := s.pool.QueryRow(ctx, `
 		INSERT INTO ops.vet_news_articles (
 			source_id, source_name, source_url, title, summary, image_url,
 			published_at, category, importance, tags, content_hash, fetched_at
@@ -43,11 +45,22 @@ func (s *Store) UpsertVetNewsArticle(ctx context.Context, a vetnews.Article) (in
 			content_hash = EXCLUDED.content_hash,
 			fetched_at = EXCLUDED.fetched_at,
 			updated_at = NOW()
+		WHERE ops.vet_news_articles.content_hash IS DISTINCT FROM EXCLUDED.content_hash
 		RETURNING id, (xmax = 0) AS inserted`,
 		a.SourceID, a.SourceName, url, a.Title, a.Summary, a.ImageURL,
 		a.PublishedAt, a.Category, a.Importance, tags, hash, a.FetchedAt,
 	).Scan(&id, &inserted)
-	return inserted, err
+	if errors.Is(err, pgx.ErrNoRows) {
+		// Conflict row exists but WHERE filtered the UPDATE → unchanged.
+		return vetnews.UpsertUnchanged, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	if inserted {
+		return vetnews.UpsertInserted, nil
+	}
+	return vetnews.UpsertUpdated, nil
 }
 
 // ListVetNewsArticles returns recent articles (newest first).
@@ -62,6 +75,12 @@ func (s *Store) ListVetNewsArticles(ctx context.Context, filter vetnews.ListFilt
 	if limit > 50 {
 		limit = 50
 	}
+	importance := strings.TrimSpace(filter.Importance)
+	switch importance {
+	case "", vetnews.ImportanceCritical, vetnews.ImportanceHigh, vetnews.ImportanceMedium, vetnews.ImportanceLow:
+	default:
+		importance = ""
+	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, source_id, source_name, source_url, title, summary,
 			COALESCE(image_url, ''), published_at, category, importance, tags, fetched_at
@@ -71,7 +90,7 @@ func (s *Store) ListVetNewsArticles(ctx context.Context, filter vetnews.ListFilt
 		ORDER BY published_at DESC NULLS LAST, fetched_at DESC
 		LIMIT $3`,
 		strings.TrimSpace(filter.SourceID),
-		strings.TrimSpace(filter.Importance),
+		importance,
 		limit,
 	)
 	if err != nil {

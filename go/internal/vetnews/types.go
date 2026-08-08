@@ -58,14 +58,24 @@ type Provider interface {
 	Fetch(ctx context.Context) ([]RawItem, error)
 }
 
+// UpsertResult is the outcome of persisting one article.
+type UpsertResult int
+
+const (
+	UpsertInserted UpsertResult = iota
+	UpsertUpdated
+	UpsertUnchanged
+)
+
 // SourceResult is per-provider ingest stats (CRON logs).
 type SourceResult struct {
-	SourceID string `json:"sourceId"`
-	Fetched  int    `json:"fetched"`
-	Inserted int    `json:"inserted"`
-	Updated  int    `json:"updated"`
-	Skipped  int    `json:"skipped"`
-	Error    string `json:"error,omitempty"`
+	SourceID  string `json:"sourceId"`
+	Fetched   int    `json:"fetched"`
+	Inserted  int    `json:"inserted"`
+	Updated   int    `json:"updated"`
+	Unchanged int    `json:"unchanged"`
+	Skipped   int    `json:"skipped"`
+	Error     string `json:"error,omitempty"`
 }
 
 // RunResult aggregates a full ingest pass.
@@ -73,6 +83,7 @@ type RunResult struct {
 	Sources    []SourceResult `json:"sources"`
 	Inserted   int            `json:"inserted"`
 	Updated    int            `json:"updated"`
+	Unchanged  int            `json:"unchanged"`
 	Skipped    int            `json:"skipped"`
 	StartedAt  time.Time      `json:"startedAt"`
 	DurationMs int64          `json:"durationMs"`
