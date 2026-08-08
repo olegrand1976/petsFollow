@@ -58,6 +58,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "237481297060-1kn76mmfijosb9lu51u04c93q65t8nbh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "be.llitsc.petsfollow_mobile",
+            "certificate_hash": "e03f3d7e4e2127932feda23689818c9ae8a0d872"
+          }
+        },
+        {
           "client_id": "237481297060-kj9git6gdlpovs43ivkes7eo3ohivbrb.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -101,6 +109,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "237481297060-bfrpn98ft7rib063b97c8nll1b6c682c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "be.llitsc.petsfollow_mobile.staging",
+            "certificate_hash": "e03f3d7e4e2127932feda23689818c9ae8a0d872"
+          }
+        },
         {
           "client_id": "237481297060-di2ustjgphenh04mhf1hlfdlb145iiav.apps.googleusercontent.com",
           "client_type": 1,

@@ -120,6 +120,9 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 // TestReplaceNotifier swaps the email notifier (integration tests only).
 func (a *API) TestReplaceNotifier(n *email.Notifier) { a.notifier = n }
 
+// TestSetGoogleOAuthClientID sets GOOGLE_OAUTH_CLIENT_ID (integration tests only).
+func (a *API) TestSetGoogleOAuthClientID(clientID string) { a.cfg.GoogleOAuthClientID = clientID }
+
 // TestSetMedia installs a media store (integration tests only).
 func (a *API) TestSetMedia(m media.Store) { a.media = m }
 

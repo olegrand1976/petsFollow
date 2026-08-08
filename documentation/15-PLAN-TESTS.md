@@ -127,8 +127,8 @@ Parcours minimum avant toute dist / staging.
 | B2.3 | P0 | Login véto dans Flutter | Compte `vet.demo` | Message « utilisez Pro web » / refus |
 | B2.4 | P1 | Register client | Self-signup → confirm email | Compte client créé |
 | B2.5 | P1 | Forgot / reset | Flux MDP | Reset OK |
-| B2.6 | P1 | Google client (si config) | Sign-In Google email inconnu | Create-if-absent client |
-| B2.7 | P1 | Google email Pro | Compte véto via Google | Erreur `google_client_only` |
+| B2.6 | P1 | Google client (si config) | Sign-In Google email inconnu | Create-if-absent client — **auto** : `TestGoogleLoginCreateClientOK` + `login_google_test` (audience=client) |
+| B2.7 | P1 | Google email Pro | Compte véto via Google | Erreur `google_client_only` — **auto** : `TestGoogleLoginClientOnlyForVetEmail` + mapping `register_social_buttons_test` |
 | B2.8 | P2 | Force change password | Compte temporaire | Écran dédié |
 | B2.9 | P2 | Logout | Settings → logout | Retour login ; token invalidé |
 | B2.10 | P2 | Delete account | Profile → delete | Compte inaccessible |

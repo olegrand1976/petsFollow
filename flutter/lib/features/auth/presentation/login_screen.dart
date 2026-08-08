@@ -406,6 +406,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
+            key: const Key('login_google'),
             onPressed: _busy ? null : submitGoogle,
             icon: const GoogleLogo(size: 20),
             label: Text(l10n.loginWithGoogle),

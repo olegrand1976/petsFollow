@@ -70,15 +70,16 @@ VERIFY_DIR="$(mktemp -d)"
 cleanup_verify() { rm -rf "${VERIFY_DIR}"; }
 trap cleanup_verify EXIT
 unzip -q -o "${APK_PATH}" "lib/*/libapp.so" -d "${VERIFY_DIR}"
-python3 - "${VERIFY_DIR}" "${NEW_VERSION}" <<'PY'
+python3 - "${VERIFY_DIR}" "${NEW_VERSION}" "${GOOGLE_SERVER_CLIENT_ID}" <<'PY'
 import sys
 from pathlib import Path
-root, version = Path(sys.argv[1]), sys.argv[2]
+root, version, google_client = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 needles = [
     "Masquer le parcours".encode("latin-1"),
     version.encode("ascii"),
     "AppLocalizationsUk".encode("ascii"),
     "AppLocalizationsRu".encode("ascii"),
+    google_client.encode("ascii"),
 ]
 apps = list(root.rglob("libapp.so"))
 if not apps:
@@ -90,7 +91,7 @@ if missing:
     print("FAIL: chaînes absentes du libapp.so:", ", ".join(missing), file=sys.stderr)
     print(f"(fichier vérifié: {apps[0]}, {len(data)} octets)", file=sys.stderr)
     sys.exit(1)
-print(f"OK: libapp.so contient Masquer le parcours + {version} + Uk/Ru")
+print(f"OK: libapp.so contient Masquer le parcours + {version} + Uk/Ru + Google Web client")
 PY
 
 echo "→ Upload App Distribution (staging) → group ${GROUP_ALIAS}"

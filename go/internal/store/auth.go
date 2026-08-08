@@ -50,7 +50,9 @@ func (s *Store) GetUserByGoogleSub(ctx context.Context, googleSub string) (User,
 func (s *Store) LinkGoogleAccount(ctx context.Context, userID, googleSub string) error {
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE identity.users
-		SET google_sub = $2, auth_provider = CASE WHEN password_hash IS NULL THEN 'google' ELSE auth_provider END
+		SET google_sub = $2,
+		    auth_provider = CASE WHEN password_hash IS NULL THEN 'google' ELSE auth_provider END,
+		    email_verified_at = COALESCE(email_verified_at, now())
 		WHERE id = $1 AND (google_sub IS NULL OR google_sub = $2)`, userID, googleSub)
 	if err != nil {
 		return err
@@ -59,6 +61,25 @@ func (s *Store) LinkGoogleAccount(ctx context.Context, userID, googleSub string)
 		return ErrNotFound
 	}
 	return nil
+}
+
+// ConfirmTrustedGoogleLogin marks email verified after a successful Google OIDC
+// check (email_verified claim). Optionally records terms acceptance when consent
+// was given on this sign-in. Does not weaken password-login gates.
+func (s *Store) ConfirmTrustedGoogleLogin(ctx context.Context, userID string, acceptTerms bool) error {
+	if acceptTerms {
+		_, err := s.pool.Exec(ctx, `
+			UPDATE identity.users
+			SET email_verified_at = COALESCE(email_verified_at, now()),
+			    terms_accepted_at = COALESCE(terms_accepted_at, now())
+			WHERE id = $1`, userID)
+		return err
+	}
+	_, err := s.pool.Exec(ctx, `
+		UPDATE identity.users
+		SET email_verified_at = COALESCE(email_verified_at, now())
+		WHERE id = $1`, userID)
+	return err
 }
 
 func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput) (User, error) {

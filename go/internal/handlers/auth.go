@@ -80,27 +80,18 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := validateGoogleIDToken(r.Context(), req.IDToken, a.cfg.GoogleOAuthClientID)
+	claims, err := validateGoogleIDToken(r.Context(), req.IDToken, a.cfg.GoogleOAuthClientID)
 	if err != nil {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
 		return
 	}
-	var gClaims struct {
-		Email         string `json:"email"`
-		EmailVerified bool   `json:"email_verified"`
-		Name          string `json:"name"`
-	}
-	if err := payload.Claims(&gClaims); err != nil {
-		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
-		return
-	}
-	email := strings.TrimSpace(strings.ToLower(gClaims.Email))
-	name := gClaims.Name
+	email := strings.TrimSpace(strings.ToLower(claims.Email))
+	name := claims.Name
 	if email == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "google_email_missing")
 		return
 	}
-	if !gClaims.EmailVerified {
+	if !claims.EmailVerified {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "google_email_not_verified")
 		return
 	}
@@ -108,7 +99,7 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		name = strings.Split(email, "@")[0]
 	}
 
-	u, err := a.resolveGoogleUser(r, email, name, payload.Subject, req.Audience, req.Consent)
+	u, err := a.resolveGoogleUser(r, email, name, claims.Subject, req.Audience, req.Consent)
 	if err != nil {
 		a.writeGoogleAuthError(w, r, err)
 		return
@@ -116,6 +107,15 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 	if u.IsWalkinPlaceholder || store.IsWalkinPlaceholderEmail(u.Email) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
+	}
+	// Google OIDC already asserted email_verified — sync local gate so link /
+	// legacy unverified password clients are not blocked after Google sign-in.
+	if err := a.store.ConfirmTrustedGoogleLogin(r.Context(), u.ID, req.Consent); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if u2, err := a.store.GetUserByID(r.Context(), u.ID); err == nil {
+		u = u2
 	}
 	if normalizeGoogleAudience(req.Audience) == "client" {
 		inviteStatus := a.tryClaimInvite(r, u.ID, req.InviteCode)
@@ -501,11 +501,54 @@ func (a *API) twoFactorDisable(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": false})
 }
 
-func validateGoogleIDToken(ctx context.Context, rawToken, clientID string) (*oidc.IDToken, error) {
+// GoogleIDTokenClaims is the subset of Google OIDC claims used by googleLogin.
+type GoogleIDTokenClaims struct {
+	Subject       string
+	Email         string
+	EmailVerified bool
+	Name          string
+}
+
+// googleIDTokenValidator validates a raw Google ID token. Overridable in tests
+// via TestSetGoogleIDTokenValidator (default = live OIDC against accounts.google.com).
+var googleIDTokenValidator = validateGoogleIDTokenOIDC
+
+func validateGoogleIDToken(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error) {
+	return googleIDTokenValidator(ctx, rawToken, clientID)
+}
+
+func validateGoogleIDTokenOIDC(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error) {
 	provider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 	if err != nil {
-		return nil, err
+		return GoogleIDTokenClaims{}, err
 	}
 	verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
-	return verifier.Verify(ctx, rawToken)
+	payload, err := verifier.Verify(ctx, rawToken)
+	if err != nil {
+		return GoogleIDTokenClaims{}, err
+	}
+	var gClaims struct {
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
+		Name          string `json:"name"`
+	}
+	if err := payload.Claims(&gClaims); err != nil {
+		return GoogleIDTokenClaims{}, err
+	}
+	return GoogleIDTokenClaims{
+		Subject:       payload.Subject,
+		Email:         gClaims.Email,
+		EmailVerified: gClaims.EmailVerified,
+		Name:          gClaims.Name,
+	}, nil
+}
+
+// TestSetGoogleIDTokenValidator overrides Google ID token validation (integration tests).
+// Pass nil to restore the live OIDC verifier.
+func TestSetGoogleIDTokenValidator(fn func(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error)) {
+	if fn == nil {
+		googleIDTokenValidator = validateGoogleIDTokenOIDC
+		return
+	}
+	googleIDTokenValidator = fn
 }

@@ -5,6 +5,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Action | Unit | Widget | Smoke | Notes |
 |--------|------|--------|-------|-------|
 | Login email/mdp + erreurs | · | ✓ | ✓ | `login_screen_test` + smoke |
+| Login Google (bouton + audience client) | ✓ | ✓ | · | `login_google_test` ; Go `TestGoogleLogin*` ; SHA staging upload dans `google-services.json` |
 | Forgot / reset / confirm | · | ~ | · | confirm partiel ; resend depuis login (`login_resend_confirmation`) |
 | Register + consent | · | ~ | · | social buttons existants |
 | Accept terms (provisionné) | · | ✓ | · | `accept_terms_screen_test` (checkbox + POST) |

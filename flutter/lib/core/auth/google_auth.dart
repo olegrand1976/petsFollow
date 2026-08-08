@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -12,12 +13,16 @@ class GoogleAuth {
     defaultValue: '',
   );
 
+  /// Test-only override for [isConfigured] (widget tests without dart-define).
+  @visibleForTesting
+  static bool? debugForceConfigured;
+
   static final GoogleSignIn _signIn = GoogleSignIn(
     scopes: const ['email', 'profile'],
     serverClientId: serverClientId.isEmpty ? null : serverClientId,
   );
 
-  static bool get isConfigured => serverClientId.isNotEmpty;
+  static bool get isConfigured => debugForceConfigured ?? serverClientId.isNotEmpty;
 
   /// Returns a Google ID token, or null if the user cancelled.
   static Future<String?> signInForIdToken() async {
