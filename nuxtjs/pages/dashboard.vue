@@ -416,7 +416,9 @@ async function loadVetNews() {
     const res: any = await $fetch('/api/vet/news', { query: { limit: 8 } })
     const data = res.data ?? res
     vetNewsItems.value = Array.isArray(data?.items) ? data.items : []
-  } catch {
+  } catch (e: any) {
+    const code = e?.statusCode || e?.status || e?.data?.error?.code || 'unknown'
+    console.warn('[dashboard] vet news load failed', code, e?.data?.error || e?.message || e)
     vetNewsItems.value = []
   }
 }
