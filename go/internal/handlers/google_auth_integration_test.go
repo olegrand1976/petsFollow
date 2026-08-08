@@ -9,15 +9,15 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
 )
 
-func stubGoogleClaims(t *testing.T, claims handlers.GoogleIDTokenClaims) {
+func stubGoogleClaims(t *testing.T, api *testAPI, claims handlers.GoogleIDTokenClaims) {
 	t.Helper()
-	handlers.TestSetGoogleIDTokenValidator(func(ctx context.Context, rawToken, clientID string) (handlers.GoogleIDTokenClaims, error) {
+	api.api.TestSetGoogleIDTokenValidator(func(ctx context.Context, rawToken, clientID string) (handlers.GoogleIDTokenClaims, error) {
 		if rawToken == "" || clientID == "" {
 			return handlers.GoogleIDTokenClaims{}, errors.New("missing token or client id")
 		}
 		return claims, nil
 	})
-	t.Cleanup(func() { handlers.TestSetGoogleIDTokenValidator(nil) })
+	t.Cleanup(func() { api.api.TestSetGoogleIDTokenValidator(nil) })
 }
 
 func TestGoogleLoginNotConfigured(t *testing.T) {
@@ -39,10 +39,10 @@ func TestGoogleLoginNotConfigured(t *testing.T) {
 func TestGoogleLoginInvalidToken(t *testing.T) {
 	api := newTestAPI(t)
 	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
-	handlers.TestSetGoogleIDTokenValidator(func(ctx context.Context, rawToken, clientID string) (handlers.GoogleIDTokenClaims, error) {
+	api.api.TestSetGoogleIDTokenValidator(func(ctx context.Context, rawToken, clientID string) (handlers.GoogleIDTokenClaims, error) {
 		return handlers.GoogleIDTokenClaims{}, errors.New("bad token")
 	})
-	t.Cleanup(func() { handlers.TestSetGoogleIDTokenValidator(nil) })
+	t.Cleanup(func() { api.api.TestSetGoogleIDTokenValidator(nil) })
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
 		"idToken":  "bad",
@@ -61,7 +61,7 @@ func TestGoogleLoginCreateClientRequiresConsent(t *testing.T) {
 	api := newTestAPI(t)
 	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
 	email := uniqueEmail("google-noconsent")
-	stubGoogleClaims(t, handlers.GoogleIDTokenClaims{
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
 		Subject: "sub-" + email, Email: email, EmailVerified: true, Name: "Google User",
 	})
 
@@ -82,7 +82,7 @@ func TestGoogleLoginCreateClientOK(t *testing.T) {
 	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
 	email := uniqueEmail("google-new")
 	sub := "sub-" + email
-	stubGoogleClaims(t, handlers.GoogleIDTokenClaims{
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
 		Subject: sub, Email: email, EmailVerified: true, Name: "Google New",
 	})
 
@@ -114,12 +114,15 @@ func TestGoogleLoginCreateClientOK(t *testing.T) {
 	if me["email"] != email {
 		t.Fatalf("email %#v", me)
 	}
+	if me["termsAcceptedAt"] == nil || me["termsAcceptedAt"] == "" {
+		t.Fatalf("termsAcceptedAt missing %#v", me)
+	}
 }
 
 func TestGoogleLoginClientOnlyForVetEmail(t *testing.T) {
 	api := newTestAPI(t)
 	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
-	stubGoogleClaims(t, handlers.GoogleIDTokenClaims{
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
 		Subject: "sub-vet-demo-google", Email: "vet.demo@petsfollow.test",
 		EmailVerified: true, Name: "Vet Demo",
 	})
@@ -156,7 +159,7 @@ func TestGoogleLoginLinksUnverifiedClientAndVerifies(t *testing.T) {
 		t.Fatalf("precondition login want email_not_verified got %d %#v", code, env)
 	}
 
-	stubGoogleClaims(t, handlers.GoogleIDTokenClaims{
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
 		Subject: "sub-" + email, Email: email, EmailVerified: true, Name: "Unverified Client",
 	})
 	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
@@ -182,5 +185,46 @@ func TestGoogleLoginLinksUnverifiedClientAndVerifies(t *testing.T) {
 	}
 	if me["googleLinked"] != true {
 		t.Fatalf("googleLinked %#v", me)
+	}
+}
+
+func TestGoogleLoginProAudienceDoesNotSetTermsViaConsent(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
+	email := uniqueEmail("google-pro")
+	// Create a vet-less path: audience pro with unknown email creates a vet (RegisterGoogleVet).
+	// We only assert that consent on Pro path does not rely on client terms semantics —
+	// here we link an existing client via wrong audience first is forbidden; instead
+	// create client without terms then google as pro → google_pro_only.
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": email, "password": "ClientDemo123!", "fullName": "Client", "consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register %d %#v", code, env)
+	}
+	// Clear terms to simulate provisioned-like state.
+	if _, err := api.pool.Exec(t.Context(), `
+		UPDATE identity.users SET terms_accepted_at = NULL WHERE email = $1`, email); err != nil {
+		t.Fatal(err)
+	}
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
+		Subject: "sub-pro-" + email, Email: email, EmailVerified: true, Name: "Client",
+	})
+	// Pro audience on a client role → google_pro_only (no terms write).
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
+		"idToken":  "tok",
+		"audience": "pro",
+		"consent":  true,
+	})
+	if code != http.StatusForbidden || errMsgKey(env) != "google_pro_only" {
+		t.Fatalf("want google_pro_only got %d %#v", code, env)
+	}
+	var terms any
+	if err := api.pool.QueryRow(t.Context(), `
+		SELECT terms_accepted_at FROM identity.users WHERE email = $1`, email).Scan(&terms); err != nil {
+		t.Fatal(err)
+	}
+	if terms != nil {
+		t.Fatalf("pro path must not set terms_accepted_at, got %#v", terms)
 	}
 }

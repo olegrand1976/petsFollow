@@ -64,8 +64,9 @@ func (s *Store) LinkGoogleAccount(ctx context.Context, userID, googleSub string)
 }
 
 // ConfirmTrustedGoogleLogin marks email verified after a successful Google OIDC
-// check (email_verified claim). Optionally records terms acceptance when consent
-// was given on this sign-in. Does not weaken password-login gates.
+// check (email_verified claim). When acceptTerms is true, records terms only if
+// terms_accepted_at is still null (COALESCE) — caller must restrict acceptTerms
+// to client audience + explicit consent. Does not weaken password-login gates.
 func (s *Store) ConfirmTrustedGoogleLogin(ctx context.Context, userID string, acceptTerms bool) error {
 	if acceptTerms {
 		_, err := s.pool.Exec(ctx, `

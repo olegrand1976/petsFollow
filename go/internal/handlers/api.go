@@ -72,6 +72,8 @@ type API struct {
 	stagingSeedRun func(ctx context.Context, pool *pgxpool.Pool) error
 	// failNextPetStudyInsert — armed only via TestArmFailNextPetStudyInsert (integration tests).
 	failNextPetStudyInsert bool
+	// googleIDTokenValidator — nil = live OIDC. Set via TestSetGoogleIDTokenValidator (tests only).
+	googleIDTokenValidator func(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error)
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher, smsSender sms.Sender) *API {
@@ -122,6 +124,12 @@ func (a *API) TestReplaceNotifier(n *email.Notifier) { a.notifier = n }
 
 // TestSetGoogleOAuthClientID sets GOOGLE_OAUTH_CLIENT_ID (integration tests only).
 func (a *API) TestSetGoogleOAuthClientID(clientID string) { a.cfg.GoogleOAuthClientID = clientID }
+
+// TestSetGoogleIDTokenValidator overrides Google ID token validation for this API
+// instance (integration tests only). Pass nil to restore live OIDC.
+func (a *API) TestSetGoogleIDTokenValidator(fn func(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error)) {
+	a.googleIDTokenValidator = fn
+}
 
 // TestSetMedia installs a media store (integration tests only).
 func (a *API) TestSetMedia(m media.Store) { a.media = m }
