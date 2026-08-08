@@ -1434,8 +1434,8 @@
     "afscaViewAll": "Kõik AFSCA uudiskirjad",
     "afscaSiteLink": "AFSCA ametlik veebisait",
     "afscaScope": {
-      "small": "Lemmikloomad",
-      "large": "Suured loomad / karjakasvatus"
+      "small": "Lemmik",
+      "large": "Karjakasvatus"
     },
     "vetNewsTitle": "Teaduslik ja sanitaarne seire",
     "vetNewsSourceNote": "Allikad: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Igapäevane automaatne laadimine.",
@@ -1446,6 +1446,12 @@
       "high": "Kõrge — regulatiivne või epideemia",
       "medium": "Keskmine — kliiniline / praktika",
       "low": "Info — üldine seire / EBM"
+    },
+    "vetNewsImportanceShort": {
+      "critical": "Kriitiline",
+      "high": "Kõrge",
+      "medium": "Keskmine",
+      "low": "Info"
     }
   },
   "messages": {

@@ -2099,8 +2099,8 @@
     "afscaViewAll": "Tutte le newsletter AFSCA",
     "afscaSiteLink": "Sito ufficiale AFSCA",
     "afscaScope": {
-      "small": "Animali da compagnia",
-      "large": "Grandi animali / allevamento"
+      "small": "Compagnia",
+      "large": "Allevamento"
     },
     "vetNewsTitle": "Vigilanza scientifica e sanitaria",
     "vetNewsSourceNote": "Fonti: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Ingestione giornaliera automatica.",
@@ -2111,6 +2111,12 @@
       "high": "Alta — normativa o epidemiologica",
       "medium": "Media — clinica / pratica",
       "low": "Info — vigilanza generale / EBM"
+    },
+    "vetNewsImportanceShort": {
+      "critical": "Critica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Info"
     }
   },
   "messages": {

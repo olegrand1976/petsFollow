@@ -46,7 +46,7 @@
         :variant="pendingVisitsRaw > 0 ? 'alert' : 'default'"
       />
     </div>
-    <div class="pro-grid-2 pro-mt-lg">
+    <div class="pro-dashboard-widgets pro-mt-lg">
       <ProCard v-if="canManageCalendar" :title="$t('dashboard.todayTitle')" data-testid="dashboard-today">
         <ProEmptyState
           v-if="!todayVisits.length"
@@ -60,7 +60,9 @@
                 <strong>{{ formatVisitTime(v) }}</strong>
                 <span>{{ v.clientName }}<template v-if="v.petName"> · {{ v.petName }}</template></span>
               </span>
-              <ProBadge :variant="statusVariant(v.status)">{{ $t(`calendar.status.${v.status}`) }}</ProBadge>
+              <ProBadge class="pro-dashboard-list__badge" :variant="statusVariant(v.status)">
+                {{ $t(`calendar.status.${v.status}`) }}
+              </ProBadge>
             </NuxtLink>
           </li>
         </ul>
@@ -80,7 +82,9 @@
                 <strong>{{ item.label }}</strong>
                 <span v-if="item.meta">{{ item.meta }}</span>
               </span>
-              <ProBadge v-if="item.badge" variant="warning">{{ item.badge }}</ProBadge>
+              <ProBadge v-if="item.badge" class="pro-dashboard-list__badge" variant="warning">
+                {{ item.badge }}
+              </ProBadge>
             </NuxtLink>
           </li>
         </ul>
@@ -109,15 +113,15 @@
             >
               <ProIcon name="campaign" :size="20" class="pro-dashboard-list__icon" />
               <span class="pro-dashboard-list__main">
-                <strong>{{ item.title }}</strong>
-                <span>{{ formatAfscaDate(item.date) }} · {{ item.label }}</span>
+                <strong class="pro-dashboard-list__title">{{ item.title }}</strong>
+                <span class="pro-dashboard-list__meta">
+                  {{ formatAfscaDate(item.date) }}
+                  <template v-if="item.label"> · {{ item.label }}</template>
+                  <template v-if="item.scope && item.scope !== 'both'">
+                    · {{ $t(`dashboard.afscaScope.${item.scope}`) }}
+                  </template>
+                </span>
               </span>
-              <ProBadge
-                v-if="item.scope && item.scope !== 'both'"
-                :variant="item.scope === 'large' ? 'warning' : 'neutral'"
-              >
-                {{ $t(`dashboard.afscaScope.${item.scope}`) }}
-              </ProBadge>
               <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
             </a>
           </li>
@@ -161,7 +165,7 @@
         <ul class="pro-dashboard-vet-news-legend" data-testid="dashboard-vet-news-legend">
           <li v-for="row in vetNewsLegendRows" :key="row.id">
             <span class="pro-dashboard-importance" :data-importance="row.id" aria-hidden="true" />
-            {{ $t(`dashboard.vetNewsImportance.${row.id}`) }}
+            {{ $t(`dashboard.vetNewsImportanceShort.${row.id}`) }}
           </li>
         </ul>
         <ProEmptyState
@@ -183,7 +187,7 @@
                 :title="$t(`dashboard.vetNewsImportance.${item.importance || 'low'}`)"
               />
               <span class="pro-dashboard-list__main">
-                <strong>{{ item.title }}</strong>
+                <strong class="pro-dashboard-list__title">{{ item.title }}</strong>
                 <span>
                   {{ item.sourceName }}
                   <template v-if="item.publishedAt"> · {{ formatDay(item.publishedAt) }}</template>
@@ -201,6 +205,7 @@
 <script setup lang="ts">
 import type { CalendarVisit } from '~/composables/useCalendarGrid'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import { welcomeDisplayName } from '~/utils/welcome-display-name'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -427,8 +432,8 @@ async function loadVetNews() {
 onMounted(async () => {
   try {
     const me = await fetchUser()
-    const name = me?.fullName
-    if (name) welcomeTitle.value = t('dashboard.welcome', { name: name.split(' ')[0] })
+    const name = welcomeDisplayName(me?.fullName)
+    if (name) welcomeTitle.value = t('dashboard.welcome', { name })
   } catch { /* ignore */ }
 
   // Overview is gated by clients.read on the API — skip if unavailable.
@@ -462,10 +467,29 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.pro-dashboard-widgets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.pro-dashboard-widgets > :deep(.pro-card) {
+  margin-bottom: 0;
+  min-width: 0;
+  height: 100%;
+}
+
+@media (max-width: 960px) {
+  .pro-dashboard-widgets {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pro-dashboard-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -475,9 +499,9 @@ onMounted(async () => {
 
 .pro-dashboard-list__link {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.75rem;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
   border-radius: var(--pf-vet-radius);
   background: var(--pf-vet-bg);
   color: inherit;
@@ -490,6 +514,7 @@ onMounted(async () => {
 
 .pro-dashboard-list__icon {
   flex: none;
+  margin-top: 0.1rem;
   color: var(--pf-vet-text-muted);
 }
 
@@ -501,9 +526,27 @@ onMounted(async () => {
   min-width: 0;
 }
 
-.pro-dashboard-list__main span {
+.pro-dashboard-list__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+.pro-dashboard-list__main > span,
+.pro-dashboard-list__meta {
   font-size: 0.8125rem;
   color: var(--pf-vet-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pro-dashboard-list__badge {
+  flex: none;
+  align-self: center;
+  max-width: 7.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -540,15 +583,21 @@ onMounted(async () => {
 
 .pro-dashboard-vet-news-head {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
+}
+
+.pro-dashboard-vet-news-head .pro-dashboard-afsca-meta {
+  flex: 1 1 12rem;
+  margin: 0;
 }
 
 .pro-dashboard-vet-news-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  gap: 0.35rem 0.85rem;
   margin: 0 0 0.75rem;
   padding: 0;
   list-style: none;
@@ -564,10 +613,15 @@ onMounted(async () => {
 
 .pro-dashboard-importance {
   flex: none;
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.35rem;
   border-radius: 999px;
   background: var(--pf-vet-text-muted);
+}
+
+.pro-dashboard-vet-news-legend .pro-dashboard-importance {
+  margin-top: 0;
 }
 
 .pro-dashboard-importance[data-importance='critical'] {

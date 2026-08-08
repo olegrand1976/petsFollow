@@ -1434,8 +1434,8 @@
     "afscaViewAll": "All AFSCA newsletters",
     "afscaSiteLink": "Official AFSCA website",
     "afscaScope": {
-      "small": "Companion animals",
-      "large": "Large animals / livestock"
+      "small": "Companion",
+      "large": "Livestock"
     },
     "vetNewsTitle": "Scientific & sanitary watch",
     "vetNewsSourceNote": "Sources: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Daily automatic ingest.",
@@ -1446,6 +1446,12 @@
       "high": "High — major regulatory or epi",
       "medium": "Medium — clinical / practice",
       "low": "Info — general watch / EBM"
+    },
+    "vetNewsImportanceShort": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Info"
     }
   },
   "messages": {

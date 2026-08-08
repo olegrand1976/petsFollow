@@ -2143,8 +2143,8 @@
     "afscaViewAll": "Toutes les newsletters AFSCA",
     "afscaSiteLink": "Site officiel AFSCA",
     "afscaScope": {
-      "small": "Animaux de compagnie",
-      "large": "Gros animaux / élevage"
+      "small": "Compagnie",
+      "large": "Élevage"
     },
     "vetNewsTitle": "Veille scientifique & sanitaire",
     "vetNewsSourceNote": "Sources : Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH/OMSA. Ingestion quotidienne automatique.",
@@ -2155,6 +2155,12 @@
       "high": "Élevée — réglementaire ou épidémio majeure",
       "medium": "Moyenne — clinique / pratique",
       "low": "Info — veille générale / EBM"
+    },
+    "vetNewsImportanceShort": {
+      "critical": "Critique",
+      "high": "Élevée",
+      "medium": "Moyenne",
+      "low": "Info"
     }
   },
   "messages": {

@@ -1434,8 +1434,8 @@
     "afscaViewAll": "Alle FAVV-nieuwsbrieven",
     "afscaSiteLink": "Officiële FAVV-website",
     "afscaScope": {
-      "small": "Gezelschapsdieren",
-      "large": "Grote dieren / veeteelt"
+      "small": "Gezelschap",
+      "large": "Veeteelt"
     },
     "vetNewsTitle": "Wetenschappelijke & sanitaire monitoring",
     "vetNewsSourceNote": "Bronnen: Anses, Veterinary Evidence, Clinician’s Brief, Today’s Veterinary Practice, Le Point Vétérinaire, WOAH. Dagelijkse automatische import.",
@@ -1446,6 +1446,12 @@
       "high": "Hoog — regelgeving of epi",
       "medium": "Gemiddeld — kliniek / praktijk",
       "low": "Info — algemene monitoring / EBM"
+    },
+    "vetNewsImportanceShort": {
+      "critical": "Kritiek",
+      "high": "Hoog",
+      "medium": "Gemiddeld",
+      "low": "Info"
     }
   },
   "messages": {
