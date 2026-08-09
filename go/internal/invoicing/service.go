@@ -455,12 +455,7 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 	if PeppolRequired(doc.Type) {
 		transport := ResolveTransport(doc.Counterparty)
 		if err := s.gw.Send(ctx, c.BillitPartyID, key, orderID, transport); err != nil {
-			if errors.Is(err, ErrAccountUnverified) {
-				_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, "account_unverified"), nil)
-				return Document{}, err
-			}
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, "send_failed"), nil)
-			return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+			return Document{}, s.recordSendFailure(ctx, practiceID, docID, orderID, transport, err)
 		}
 		// Mock: gateway is synchronous — delivered + usage in one TX (same path as live webhook).
 		if s.cfg.BillitMockEnabled {
@@ -599,6 +594,21 @@ func failedPeppolStatus(t Transport, reason string) string {
 		return EmailStatusPrefix + reason
 	}
 	return reason
+}
+
+// recordSendFailure trace le refus puis rend l'erreur telle que l'API doit la
+// présenter. Le refus d'identité du compte Billit garde sa sentinelle (409, le
+// cabinet peut agir) là où toute autre panne devient ErrGateway (502).
+func (s *Service) recordSendFailure(ctx context.Context, practiceID, docID, orderID string, transport Transport, err error) error {
+	reason := "send_failed"
+	if errors.Is(err, ErrAccountUnverified) {
+		reason = "account_unverified"
+	}
+	_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, reason), nil)
+	if errors.Is(err, ErrAccountUnverified) {
+		return err
+	}
+	return fmt.Errorf("%w: %v", ErrGateway, err)
 }
 
 // issueProformaToClient emails a magic-link (handler) — no Billit Offer create.
@@ -1177,12 +1187,7 @@ func (s *Service) SendSaasDocument(ctx context.Context, practiceID, docID string
 
 	transport := ResolveTransport(doc.Counterparty)
 	if err := s.gw.Send(ctx, partyID, apiKey, orderID, transport); err != nil {
-		if errors.Is(err, ErrAccountUnverified) {
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, "account_unverified"), nil)
-			return Document{}, err
-		}
-		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, "send_failed"), nil)
-		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+		return Document{}, s.recordSendFailure(ctx, practiceID, docID, orderID, transport, err)
 	}
 	now := time.Now().UTC()
 	if s.cfg.BillitMockEnabled {
