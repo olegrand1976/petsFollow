@@ -82,7 +82,7 @@
       <ProButton variant="secondary" test-id="daf-save-draft" :disabled="busy || !canSubmit" @click="saveDraft">{{ $t('pharmacy.daf.saveDraft') }}</ProButton>
       <ProButton variant="primary" test-id="daf-finalize-btn" :disabled="busy || !canSubmit" @click="requestFinalize">{{ $t('pharmacy.daf.finalize') }}</ProButton>
       <ProButton
-        v-if="finalizedDafId && invoicingUiEnabled"
+        v-if="finalizedDafId && canInvoice"
         test-id="daf-go-invoice"
         :disabled="busy"
         @click="goInvoice"
@@ -154,7 +154,14 @@ function pharmacyErr(e: any, fallbackKey: string): string {
   return pharmacyErrorMessage(t, e, fallbackKey)
 }
 const route = useRoute()
-const invoicingUiEnabled = INVOICING_UI_ENABLED
+const runtimeConfig = useRuntimeConfig()
+const { canPractice } = usePracticePerms()
+// Sans Billit actif la page /invoicing redirige : ne pas proposer le CTA.
+const canInvoice = computed(() => (
+  INVOICING_UI_ENABLED
+  && isPublicFlagOn(runtimeConfig.public.billitEnabled)
+  && canPractice('clients.write')
+))
 const busy = ref(false)
 const error = ref('')
 const preview = ref<any[]>([])

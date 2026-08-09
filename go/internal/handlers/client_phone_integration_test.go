@@ -342,6 +342,7 @@ func TestClientBillingPatchAndExport(t *testing.T) {
 		"billingCity":          "Liège",
 		"billingPostal":        "4000",
 		"billingCountry":       "be",
+		"billingCustomerKind":  "Business",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create with billing %d %#v", code, env)
@@ -361,6 +362,9 @@ func TestClientBillingPatchAndExport(t *testing.T) {
 	}
 	if got["billingStreet"] != "1 rue Peppol" || got["billingCity"] != "Liège" || got["billingPostal"] != "4000" {
 		t.Fatalf("create address billing %#v", got)
+	}
+	if got["billingCustomerKind"] != "business" {
+		t.Fatalf("customer kind should be normalized to business %#v", got)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
@@ -386,6 +390,44 @@ func TestClientBillingPatchAndExport(t *testing.T) {
 		t.Fatalf("short country want 400 billing_country_invalid got %d %#v", code, env)
 	}
 
+	// Une valeur libre passerait sinon en base et ferait basculer la facture sur
+	// un transport imprévu (email au lieu de Peppol, ou l'inverse).
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingCustomerKind": "particulier",
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "billing_customer_kind_invalid" {
+		t.Fatalf("unknown kind want 400 billing_customer_kind_invalid got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingCustomerKind": "individual",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("patch customer kind %d %#v", code, env)
+	}
+	if dataMap(t, env)["billingCustomerKind"] != "individual" {
+		t.Fatalf("customer kind not persisted %#v", dataMap(t, env))
+	}
+
+	// Retour à « non renseigné » : la facturation doit repartir sur la déduction
+	// par identifiant fiscal, pas rester bloquée sur le dernier choix.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingCustomerKind": "",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("clear customer kind %d %#v", code, env)
+	}
+	if v, ok := dataMap(t, env)["billingCustomerKind"]; ok && v != "" {
+		t.Fatalf("customer kind not cleared %#v", dataMap(t, env))
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"billingCustomerKind": "individual",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("restore customer kind %d %#v", code, env)
+	}
+
 	clientTok := loginToken(t, api.handler, email, password)
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", clientTok, nil)
 	if code != http.StatusOK {
@@ -400,5 +442,8 @@ func TestClientBillingPatchAndExport(t *testing.T) {
 	}
 	if profile["billing_street"] != "2 av. Louise" {
 		t.Fatalf("export billing_street=%v", profile["billing_street"])
+	}
+	if profile["billing_customer_kind"] != "individual" {
+		t.Fatalf("export billing_customer_kind=%v", profile["billing_customer_kind"])
 	}
 }

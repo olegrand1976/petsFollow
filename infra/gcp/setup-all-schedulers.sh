@@ -27,7 +27,9 @@ run setup-retention-scheduler.sh
 run setup-auth-health-scheduler.sh
 run setup-pharmacy-expiry-scheduler.sh
 run setup-sales-branches-scheduler.sh
-run setup-saas-invoices-scheduler.sh
+run setup-invoicing-reconcile-scheduler.sh
+# setup-saas-invoices-scheduler.sh : Flux A en sommeil (INVOICING_SAAS_ENABLED off).
+# L'abonnement Pro se facture hors application — lancer le script à la main si le flux est réveillé.
 run setup-research-etl-scheduler.sh
 run setup-vet-news-scheduler.sh
 run setup-ai-module-friction-scheduler.sh

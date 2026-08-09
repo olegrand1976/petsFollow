@@ -99,6 +99,39 @@ func (s *Store) GetMedicationPrice(ctx context.Context, practiceID, medicationID
 	return p, err
 }
 
+// ListMedicationPricesByIDs returns the practice prices for the given medications,
+// keyed by medication ID. Une clé absente = **pas** de tarif catalogue, ce que
+// GetMedicationPrice ne sait pas dire (il renvoie un prix à 0 / TVA 21 par défaut).
+//
+// Le préremplissage d'une facture ne porte que sur les quelques lignes d'un DAF :
+// charger tout le catalogue tarifé d'un cabinet pour en retenir trois ne tient pas
+// dès qu'il tarife son stock complet.
+func (s *Store) ListMedicationPricesByIDs(ctx context.Context, practiceID string, medicationIDs []string) (map[string]MedicationPrice, error) {
+	out := map[string]MedicationPrice{}
+	if practiceID == "" || len(medicationIDs) == 0 {
+		return out, nil
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT p.medication_id::text, COALESCE(m.cnk,''), COALESCE(m.name,''),
+		       p.purchase_price_cents, p.sell_price_cents, p.vat_percent::float8, p.currency
+		FROM pharmacy.medication_prices p
+		JOIN pharmacy.ref_medications m ON m.id = p.medication_id
+		WHERE p.practice_id = $1 AND p.medication_id = ANY($2::uuid[])`, practiceID, medicationIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p := MedicationPrice{PracticeID: practiceID}
+		if err := rows.Scan(&p.MedicationID, &p.MedicationCNK, &p.MedicationName,
+			&p.PurchasePriceCents, &p.SellPriceCents, &p.VATPercent, &p.Currency); err != nil {
+			return nil, err
+		}
+		out[p.MedicationID] = p
+	}
+	return out, rows.Err()
+}
+
 // ListMedicationPrices lists all priced medications for a practice.
 func (s *Store) ListMedicationPrices(ctx context.Context, practiceID string) ([]MedicationPrice, error) {
 	rows, err := s.pool.Query(ctx, `

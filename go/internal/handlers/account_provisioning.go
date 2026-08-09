@@ -26,6 +26,7 @@ type createClientReq struct {
 	BillingCity            string `json:"billingCity"`
 	BillingPostal          string `json:"billingPostal"`
 	BillingCountry         string `json:"billingCountry"`
+	BillingCustomerKind    string `json:"billingCustomerKind"`
 	VetUserID              string `json:"vetUserId"`
 }
 
@@ -79,6 +80,7 @@ func createClientInputFromReq(req createClientReq, r *http.Request) store.Create
 		BillingCity:            req.BillingCity,
 		BillingPostal:          req.BillingPostal,
 		BillingCountry:         req.BillingCountry,
+		BillingCustomerKind:    req.BillingCustomerKind,
 		Locale:                 localeOf(r),
 	}
 }
@@ -324,6 +326,12 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	req.BillingCountry = country
+	kind, kindCode := normalizeBillingCustomerKind(req.BillingCustomerKind)
+	if kindCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", kindCode)
+		return req, false
+	}
+	req.BillingCustomerKind = kind
 	// Password optional: empty → server generates an opaque temp (never shown to the vet).
 	if req.Email == "" || req.FullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")

@@ -158,6 +158,7 @@
     "self_referral": "Auto-parrainage interdit",
     "invalid_counterparty": "Données client / identifiants fiscaux invalides",
     "invoicing_disabled": "Facturation indisponible",
+    "invoicing_saas_disabled": "Facturation SaaS Billit désactivée (facturation hors application)",
     "invoicing_not_connected": "Facturation non connectée",
     "connection_not_active": "Connexion Billit non active",
     "document_not_found": "Document introuvable",
@@ -199,7 +200,9 @@
     "related_invoice_not_on_billit": "La facture liée n’a pas encore été créée chez Billit — envoyez-la d’abord",
     "be_vat_required": "Numéro de TVA belge requis",
     "be_vat_invalid": "Numéro de TVA belge invalide (format ou clé de contrôle)",
-    "be_address_required": "Adresse complète requise pour la Belgique (rue, code postal, ville)"
+    "be_address_required": "Adresse complète requise pour la Belgique (rue, code postal, ville)",
+    "individual_address_required": "Adresse complète requise pour un particulier (rue, code postal, ville)",
+    "individual_email_required": "Email requis pour un particulier — la facture lui est envoyée par email"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

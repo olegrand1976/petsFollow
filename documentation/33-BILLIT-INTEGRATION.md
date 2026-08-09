@@ -1,6 +1,13 @@
 # 33 — Plan d’implémentation Billit (facturation Peppol)
 
-**Statut** : **socle livré** (mock T0/T1 + client live + multi-pays + webhook durci) — pilote sandbox Billit ops ; Flux A SaaS = **opt-in + brouillon + envoi Peppol master** + cron C1 draft-only bouclé (`saas-targets` / `saas-invoices/run` ; smoke `make billit-saas-master-smoke` ; pas encore send auto).  
+**Statut** : **socle livré** (mock T0/T1 + client live + multi-pays + webhook durci) — pilote sandbox Billit ops.
+
+> **Recentrage 2026-08 — Billit = cabinet → clients, uniquement.**
+>
+> - **Clients particuliers (B2C) supportés** : `customerKind: individual` sur la contrepartie → ni TVA ni identifiant fiscal, adresse + email obligatoires, envoi Billit `Transporttype: SMTP`. Depuis février 2026 Billit ne fait plus de repli email : un destinataire hors réseau Peppol échouerait immédiatement. C'est le cas majoritaire d'un cabinet vétérinaire.
+> - **Clients professionnels** : inchangé — TVA / identifiants fiscaux, `Transporttype: Peppol` (`SDI` en Italie), header `StrictTransportType: true` pour interdire tout repli silencieux.
+> - **Flux A (SaaS LL-IT-SC → cabinet) : EN SOMMEIL** — décision produit, l'abonnement Pro se facture hors application. Flag `INVOICING_SAAS_ENABLED` (défaut `false`) : routes admin `saas-*` et cron `/internal/saas-invoices/run` répondent 404 `invoicing_saas_disabled`, carte Flux A masquée dans `/admin/invoicing`, scheduler retiré de `setup-all-schedulers.sh`. Code et tests conservés (les tests forcent le flag). Les montants « 88 € HT/mois » ci-dessous relèvent de ce flux dormant et ne sont pas la politique tarifaire en vigueur ([17-POLITIQUE-TARIFAIRE](17-POLITIQUE-TARIFAIRE.md)).
+
 **Décisions produit figées** (sessions 2026-07) :
 
 | Décision | Choix |
@@ -11,7 +18,7 @@
 | Comptes | **1 PartyID Billit / cabinet** (BCE/TVA) |
 | Payeur Billit | **LL-IT-SC** (`Invoice to` = Integration Partner) |
 | UX | Facturation **dans Pro** (Billit invisible au quotidien) |
-| Contreparties | Identifiants fiscaux **BE / FR / IT / ES** mappés vers Billit `Identifiers` |
+| Contreparties | **Particulier** : nom + adresse + email, aucun identifiant fiscal (`SMTP`) · **Professionnel** : identifiants fiscaux **BE / FR / IT / ES** mappés vers Billit `Identifiers` (`Peppol` / `SDI`) |
 | Hors scope | Remplacer un PMS (Pégase…) ; Peppol sur abos animaux Stripe (B2C) |
 | Lien futur | Driver Billit = implémentation concrète de `invoices.connect` ([27](27-PHARMACIE-BELGIQUE.md)) |
 
@@ -170,7 +177,8 @@ Interface minimale :
 type InvoicesGateway interface {
   EnsureParty(ctx context.Context, practice PracticeParty) (partyID string, err error)
   CreateDocument(ctx context.Context, partyID string, doc Document) (externalID string, err error)
-  SendPeppol(ctx context.Context, partyID string, externalID string) error
+  // Transport résolu depuis la contrepartie : SMTP (particulier), SDI (IT), Peppol.
+  Send(ctx context.Context, partyID, externalID string, transport Transport) error
   GetStatus(ctx context.Context, partyID string, externalID string) (Status, error)
 }
 ```
@@ -292,19 +300,31 @@ Clés `invoicing.*` dans les **6** locales Nuxt (+ emails si notifs).
 
 ---
 
-### Phase 5 — Branche pharmacie / DAF (BIL-9) — **go dès accès reseller**
+### Phase 5 — Lignes préremplies acte + DAF (BIL-9) — **livré**
 
-> **Statut** : ⏸ **gelé** jusqu’aux accès **reseller Billit** (Phase 0 / P0-2).  
-> Pas de date fixe — démarrer S5 pharmacie + [37 Phase 3](37-ROADMAP-STOCK-FACTURATION.md) **immédiatement** après credentials SM + env staging.  
-> Suivi stock : [28 Sprint 5](28-PLAN-STOCK-PEREMPTION.md) · roadmap [37](37-ROADMAP-STOCK-FACTURATION.md).
+Le véto arrive sur `/invoicing` depuis la fin de consultation ou depuis un DAF finalisé ; les lignes sont proposées par l’API, pas construites dans le navigateur.
 
-Quand reseller OK **et** [27](27-PHARMACIE-BELGIQUE.md) / DAF opérationnels :
+`GET /api/v1/practices/me/invoicing/prefill?visitId=&dafId=` (permission `clients.write`, la même que la création du document) renvoie :
 
-- Worker Asynq `invoices.connect` → **même** `InvoicesGateway` Billit  
-- Payload DAF → lignes document (prix côté catalogue practice ou saisie)  
-- Idempotency = `daf_id`
+| Champ | Contenu |
+|---|---|
+| `lines[]` | `description`, `quantity`, `unitPriceExclCents`, `vatPercent` |
+| `visitTypeName` | libellé de l’acte proposé, si le type de RDV est tarifé |
+| `dafId` / `dafNumber` | DAF facturé, retrouvé seul quand seul `visitId` est passé |
+| `clientName` | repli du nom de contrepartie |
 
-Ne pas dupliquer un second client HTTP Billit.
+Composition : d’abord l’**acte** au tarif du type de rendez-vous (`practice.visit_types.price_excl_cents` / `vat_percent`, migration `000166`), puis les **médicaments** du DAF **finalisé** de la visite, tarifés depuis `pharmacy.medication_prices` (`sellPriceCents` HTVA + `vatPercent`).
+
+Règles :
+
+- rien n’est bloquant — visite inconnue, type non tarifé ou DAF absent renvoient une liste vide et le véto saisit comme avant ;
+- un DAF encore en **brouillon** n’est jamais proposé : il n’a pas consommé de stock ;
+- un médicament absent du catalogue de prix sort à `unitPriceExclCents: 0`, champ laissé vide dans l’UI — `ValidateLines` refuse de toute façon une ligne à 0, donc le véto complète avant envoi ;
+- le tarif de l’acte s’édite dans `/settings` onglet Agenda (permission `calendar.manage`), masqué si l’UI facturation est gelée. `0` = non tarifé.
+
+Il n’existe **pas** de catalogue de prestations vétérinaires : le type de RDV est le seul ancrage du prix d’un acte. Un vrai catalogue multi-actes reste à faire si le besoin se confirme.
+
+Idempotency du document : inchangée (`idempotencyKey` client, `visitId` / `dafId` tracés sur le document).
 
 ---
 
@@ -315,14 +335,18 @@ Document
   type: invoice | credit_note | proforma
   status: draft | issued | sending | delivered | rejected | cancelled
   peppolRequired: true pour invoice/credit_note B2B BE ; false pour proforma
-  counterparty: { name, vat, address, peppolId? }
+  counterparty: { customerKind: individual | business, name, email, address, vat?, identifiers? }
+    # individual  → ni TVA ni identifiants (nettoyés à la normalisation), email requis, transport SMTP
+    # business    → identifiants fiscaux requis selon le pays, transport Peppol / SDI
+    # Origine du type : identity.users.billing_customer_kind (fiche client, migration 000165) ;
+    # vide sur une fiche antérieure → déduction par identifiant fiscal.
   lines[]: { description, qty, unitPriceExcl, vatPercent, meta }
   references: { relatedInvoiceId? }  # pour NC
 ```
 
 Règles :
 
-- **Pro forma** : jamais `SendPeppol` ; PDF / email only.  
+- **Pro forma** : jamais d'envoi réseau ; PDF / email only.  
 - **Credit note** : liée à une facture émise ; montants cohérents.  
 - **Numérotation** : préférer la numérotation Billit / config Party ; si double numérotation petsFollow, figer une seule source de vérité (décision Phase 2 — **recommandation : Billit**).
 
@@ -336,7 +360,8 @@ Règles :
 | Clés Billit | Secret Manager ; rotation runbook |
 | Webhook | HMAC / secret temps constant (`secretHeaderOK` pattern) |
 | PHI | Lignes médicaments = données santé → même discipline que DAF ; pas de log body complet |
-| Export / purge | Export Pro : docs `created_by` ; anonymisation Pro : `created_by` → NULL + purge `connect_states` ; webhooks > 90 j purgés ; docs `sending` > 7 j → `rejected` (`stale_timeout`) |
+| Export / purge | Export Pro : docs `created_by` ; anonymisation Pro : `created_by` → NULL + purge `connect_states` + `billing_customer_kind` vidé ; export client : `billing_customer_kind` inclus ; webhooks > 90 j purgés ; docs `sending` > 7 j → `rejected` (`stale_timeout`) |
+| Webhook manqué | Cron horaire `/internal/invoicing-reconcile/run` : relit chez Billit les documents `sending` > 30 min, n'écrit que sur un statut terminal ; le rejet à 7 j reste le filet final ([34](34-BILLIT-RESELLER-TECH.md)) |
 | Erreurs gateway | `ErrGateway` → HTTP 502 (`invoicing_gateway_error`) |
 | Webhook idempotence | clé = `EventID` Billit ou `sha256(body)` (pas order seul) — progression de statut appliquée |
 | CSP | Pas de script Billit tiers ; API server-side only |
@@ -357,7 +382,7 @@ Règles :
 | BIL-6 | NC + pro forma + statuts Peppol | 3 | 5 j |
 | BIL-7 | Admin usage + alertes plafond | 4 | 3 j |
 | BIL-8 | Tests Go + Playwright + plan tests + UC | 3–4 | 5 j |
-| BIL-9 | Driver DAF → Billit | 5 | **Bloqué** : accès reseller ; puis avec pharmacie S5 |
+| BIL-9 | Lignes préremplies acte + DAF (`/invoicing/prefill`) | 5 | **Livré** |
 
 **Total ordre de grandeur** (hors Phase 0 & 5) : **~6–8 semaines** 1 dev senior à temps plein, après signature partner / reseller.
 
@@ -366,8 +391,9 @@ Règles :
 ## 7. Critères d’acceptation globaux
 
 - [ ] Cabinet pilote : crée et envoie une facture Peppol **sans** compte MyBillit au quotidien  
+- [ ] Cabinet pilote : facture un **client particulier** (sans TVA) livrée par email — cas majoritaire, preuve live via `make billit-sandbox-smoke`  
 - [ ] Cabinet pilote : **ne reçoit pas** de facture Billit (Invoice to = LL-IT-SC)  
-- [ ] LL-IT-SC : émet SaaS 88 € en Peppol (Flux A) — **code admin OK (mock)** ; smoke sandbox live restant  
+- [ ] ~~LL-IT-SC : émet SaaS 88 € en Peppol (Flux A)~~ — **hors périmètre** : flux dormant, l'abonnement Pro se facture hors application  
 - [ ] Admin : voit usage docs et connexions  
 - [ ] `BILLIT_MOCK_ENABLED` : CI verte sans appels externes  
 - [ ] Docs tarifaires + locales + useCase alignés 88 €  
@@ -393,11 +419,11 @@ Règles :
 ```text
 1. Phase 0 signée
 2. Staging : `BILLIT_ENABLED` + sandbox (`api.sandbox.billit.be`), 1 practice seed ; mock off dès secret webhook SM présent
-3. Phase 1 Flux A (prod LL-IT-SC) — valeur conformité immédiate
+3. (Phase 1 Flux A — **retirée du chemin critique** : flux dormant, `INVOICING_SAAS_ENABLED=false`)
 4. Phase 2–3 staging → pilote 2 cabinets
 5. Feature flag prod progressive
 6. Phase 4 un mois puis généralisation
-7. Phase 5 (BIL-9) dès accès reseller + pharmacie S5
+7. (Phase 5 / BIL-9 : préremplissage acte + DAF **déjà livré**, indépendant du reseller)
 ```
 
 ---
@@ -405,12 +431,12 @@ Règles :
 ## 10. Actions immédiates (cette semaine)
 
 1. Créer compte Billit LL-IT-SC.  
-2. Envoyer / relancer la demande **Integration Partner + Reseller + Invoice to partner** — **bloque BIL-9**.  
+2. Envoyer / relancer la demande **Integration Partner + Reseller + Invoice to partner** — bloque la preuve live, plus BIL-9.  
 3. Figer avec le comptable : plafond docs inclus dans les 88 €.  
 4. Brouillon CGV e-invoicing.  
 5. Exécuter la **checklist sandbox** de [34 § checklist A–F](34-BILLIT-RESELLER-TECH.md) dès R2–R5 obtenus (ne pas attendre l’UI admin).  
 6. Gate : 1 facture BE `delivered` + webhook HMAC OK avant tout pilote multi-cabinets.  
-7. Dès reseller reçu : débloquer S5 / BIL-9 + [37 Phase 3](37-ROADMAP-STOCK-FACTURATION.md) (pas de date fixe).
+7. Dès reseller reçu : débloquer [37 Phase 3](37-ROADMAP-STOCK-FACTURATION.md) (pas de date fixe) — BIL-9 est livré.
 
 ---
 

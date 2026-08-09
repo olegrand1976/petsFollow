@@ -343,6 +343,9 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret BFF_PROXY_SECRET bff-proxy-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret SALES_BRANCHES_AUTO_SECRET sales-branches-auto-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret SAAS_INVOICES_SECRET saas-invoices-secret)"
+  # Sans ce secret, /internal/invoicing-reconcile/run répond 401 : une facture
+  # dont le webhook s'est perdu reste en vol jusqu'au rejet automatique à 7 jours.
+  secrets="${secrets}$(pf_api_mount_job_secret INVOICING_RECONCILE_SECRET invoicing-reconcile-secret)"
   # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.
   secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_EXPIRY_SECRET pharmacy-expiry-secret)"
   # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.

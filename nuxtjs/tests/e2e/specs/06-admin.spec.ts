@@ -49,11 +49,12 @@ test('admin voit page facturation Billit', async ({ page }) => {
   } else {
     await expect(page.getByTestId('admin-invoicing-list')).toBeVisible()
     await expect(page.getByTestId('admin-invoicing-export-csv')).toBeVisible()
-    await expect(page.getByTestId('admin-invoicing-saas-list')).toBeVisible()
   }
 })
 
-test.describe('admin Flux A SaaS I7.9', { tag: ['@p1', '@invoicing'] }, () => {
+// Flux A dormant par défaut (INVOICING_SAAS_ENABLED off) : la carte n'existe
+// pas et le scénario se saute. Réveillé, il doit rester vert.
+test.describe('admin Flux A SaaS I7.9 (dormant)', { tag: ['@p1', '@invoicing'] }, () => {
   test('I7.9 draft puis send Peppol master (mock)', async ({ page }) => {
     await loginAsAdmin(page)
     page.on('dialog', (d) => d.accept())
@@ -65,7 +66,10 @@ test.describe('admin Flux A SaaS I7.9', { tag: ['@p1', '@invoicing'] }, () => {
       test.skip(true, 'Billit API disabled')
     }
 
-    await expect(page.getByTestId('admin-invoicing-saas-list')).toBeVisible()
+    const saasList = page.getByTestId('admin-invoicing-saas-list')
+    if (await saasList.count() === 0) {
+      test.skip(true, 'Flux A SaaS en sommeil (INVOICING_SAAS_ENABLED off)')
+    }
     const enableBtn = page.locator('[data-testid^="admin-invoicing-saas-enable-"]').first()
     if (await enableBtn.count() > 0) {
       await enableBtn.click()

@@ -5,6 +5,9 @@
 #   BILLIT_WEBHOOK_SECRET=… make billit-sandbox-smoke
 # Optionnel (parcours send) :
 #   BILLIT_SMOKE_PARTY_ID=… BILLIT_SMOKE_API_KEY=… make billit-sandbox-smoke
+# Optionnel (facture particulier → email) : boîte réellement relevable, sinon
+# l'envoi part vers une adresse .test et seule la sortie API est vérifiable.
+#   BILLIT_SMOKE_INDIVIDUAL_EMAIL=moi@exemple.be
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -24,12 +27,12 @@ _restore() {
   fi
 }
 for _k in BILLIT_ENABLED BILLIT_MOCK_ENABLED BILLIT_WEBHOOK_SECRET BILLIT_SECRETS_BACKEND BILLIT_SECRETS_KEY \
-  BILLIT_SMOKE_PARTY_ID BILLIT_SMOKE_API_KEY PETSFOLLOW_API_URL PETSFOLLOW_API_PORT; do
+  BILLIT_SMOKE_PARTY_ID BILLIT_SMOKE_API_KEY BILLIT_SMOKE_INDIVIDUAL_EMAIL PETSFOLLOW_API_URL PETSFOLLOW_API_PORT; do
   _preserve "$_k"
 done
 if [ -f "$ROOT/.env" ]; then set -a && source "$ROOT/.env" && set +a; fi
 for _k in BILLIT_ENABLED BILLIT_MOCK_ENABLED BILLIT_WEBHOOK_SECRET BILLIT_SECRETS_BACKEND BILLIT_SECRETS_KEY \
-  BILLIT_SMOKE_PARTY_ID BILLIT_SMOKE_API_KEY PETSFOLLOW_API_URL PETSFOLLOW_API_PORT; do
+  BILLIT_SMOKE_PARTY_ID BILLIT_SMOKE_API_KEY BILLIT_SMOKE_INDIVIDUAL_EMAIL PETSFOLLOW_API_URL PETSFOLLOW_API_PORT; do
   _restore "$_k"
 done
 
@@ -162,7 +165,7 @@ DOC_ID=$(echo "$CREATE" | python3 -c "import sys,json; print(json.load(sys.stdin
 ok "created document $DOC_ID"
 
 SEND=$(curl -sf -X POST "$API/api/v1/practices/me/invoicing/documents/$DOC_ID/send" \
-  -H "Authorization: Bearer $VET_TOKEN") || fail "send invoice (Billit CreateDocument/SendPeppol)"
+  -H "Authorization: Bearer $VET_TOKEN") || fail "send invoice (Billit CreateDocument/Send Peppol)"
 STATUS=$(echo "$SEND" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('status'))")
 ORDER=$(echo "$SEND" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('billitOrderId') or '')")
 [ -n "$ORDER" ] || fail "send returned empty billitOrderId"
@@ -171,6 +174,76 @@ case "$STATUS" in
   *) fail "send unexpected status=$STATUS (live expect sending until webhook)" ;;
 esac
 
-echo "== Billit sandbox smoke: PASS (gates + send) =="
+# --- D bis. Facture particulier → Transporttype SMTP (cœur du métier) ---
+# Le mock accepte n'importe quel nom de champ : seul ce passage live prouve que
+# Billit accepte `Transporttype: SMTP` et livre bien la facture par email.
+INDIV_EMAIL="${BILLIT_SMOKE_INDIVIDUAL_EMAIL:-}"
+if [ -z "$INDIV_EMAIL" ]; then
+  INDIV_EMAIL="smoke.particulier@petsfollow.test"
+  skip "BILLIT_SMOKE_INDIVIDUAL_EMAIL unset — envoi vers $INDIV_EMAIL (aucune boîte à relever)"
+fi
+
+CODE=$(curl -sS -o /tmp/pf-billit-b2c-noemail.json -w '%{http_code}' \
+  -X POST "$API/api/v1/practices/me/invoicing/documents" \
+  -H "Authorization: Bearer $VET_TOKEN" -H 'Content-Type: application/json' \
+  -d "{
+    \"type\": \"invoice\",
+    \"counterparty\": {
+      \"name\": \"Smoke particulier sans email\",
+      \"customerKind\": \"individual\",
+      \"country\": \"BE\",
+      \"street\": \"Rue Smoke 2\",
+      \"city\": \"Bruxelles\",
+      \"postal\": \"1000\"
+    },
+    \"lines\": [{\"description\": \"Consultation\", \"quantity\": 1, \"unitPriceExclCents\": 4500, \"vatPercent\": 21}]
+  }")
+MSGKEY=$(python3 -c "import json;print(json.load(open('/tmp/pf-billit-b2c-noemail.json')).get('error',{}).get('msgKey',''))" 2>/dev/null || echo '')
+if [ "$CODE" != "400" ] || [ "$MSGKEY" != "individual_email_required" ]; then
+  fail "particulier sans email want 400/individual_email_required got $CODE/$MSGKEY"
+fi
+ok "particulier sans email → 400 individual_email_required"
+
+CREATE_B2C=$(curl -sf -X POST "$API/api/v1/practices/me/invoicing/documents" \
+  -H "Authorization: Bearer $VET_TOKEN" -H 'Content-Type: application/json' \
+  -d "{
+    \"type\": \"invoice\",
+    \"counterparty\": {
+      \"name\": \"Smoke particulier $(date +%s)\",
+      \"customerKind\": \"individual\",
+      \"country\": \"BE\",
+      \"email\": \"$INDIV_EMAIL\",
+      \"street\": \"Rue Smoke 2\",
+      \"city\": \"Bruxelles\",
+      \"postal\": \"1000\"
+    },
+    \"lines\": [{\"description\": \"Consultation particulier\", \"quantity\": 1, \"unitPriceExclCents\": 4500, \"vatPercent\": 21}]
+  }") || fail "create invoice particulier"
+B2C_ID=$(echo "$CREATE_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['id'])")
+B2C_KIND=$(echo "$CREATE_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('counterparty',{}).get('customerKind',''))")
+B2C_VAT=$(echo "$CREATE_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('counterparty',{}).get('vatNumber',''))")
+[ "$B2C_KIND" = "individual" ] || fail "counterparty customerKind want individual got '$B2C_KIND'"
+[ -z "$B2C_VAT" ] || fail "particulier must carry no VAT number (got '$B2C_VAT')"
+ok "created individual document $B2C_ID (no VAT)"
+
+SEND_B2C=$(curl -sf -X POST "$API/api/v1/practices/me/invoicing/documents/$B2C_ID/send" \
+  -H "Authorization: Bearer $VET_TOKEN") \
+  || fail "send particulier — Billit a refusé Transporttype SMTP (vérifier le canal email du Party)"
+B2C_STATUS=$(echo "$SEND_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('status'))")
+B2C_PEPPOL=$(echo "$SEND_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('peppolStatus') or '')")
+B2C_ORDER=$(echo "$SEND_B2C" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('billitOrderId') or '')")
+[ -n "$B2C_ORDER" ] || fail "send particulier returned empty billitOrderId"
+case "$B2C_STATUS" in
+  sending|delivered) ;;
+  *) fail "send particulier unexpected status=$B2C_STATUS" ;;
+esac
+case "$B2C_PEPPOL" in
+  email_*) ok "send particulier → status=$B2C_STATUS peppol_status=$B2C_PEPPOL order=$B2C_ORDER" ;;
+  *) fail "audit trail must stay email_* for an SMTP send, got '$B2C_PEPPOL'" ;;
+esac
+
+echo "== Billit sandbox smoke: PASS (gates + send B2B + send particulier) =="
 echo "Attendre webhook delivered pour order $ORDER ; rejouer body → status=duplicate."
+echo "Particulier : order $B2C_ORDER — vérifier la réception du PDF sur $INDIV_EMAIL"
+echo "  (expéditeur, gabarit, pièce jointe) et le statut final email_delivered."
 echo "Admin : /admin/invoicing — mark partner après bascule Billit."

@@ -2,6 +2,7 @@ package invoicing_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
@@ -200,5 +201,128 @@ func TestResolveWebhookApplyStatus(t *testing.T) {
 		if got != tc.want {
 			t.Fatalf("%s+%s => %s want %s", tc.prev, tc.in, got, tc.want)
 		}
+	}
+}
+
+// Un particulier n'a ni TVA ni identifiant fiscal : la validation doit exiger
+// l'adresse (mention légale) et l'email (canal de livraison SMTP).
+func TestValidateCounterpartyIndividual(t *testing.T) {
+	base := invoicing.Counterparty{
+		Name: "Marie Dupont", CustomerKind: invoicing.KindIndividual, Country: "BE",
+		Email: "marie@example.test", Street: "Rue 1", City: "Bruxelles", Postal: "1000",
+	}
+	if err := invoicing.ValidateCounterparty(invoicing.NormalizeCounterparty(base)); err != nil {
+		t.Fatalf("valid individual rejected: %v", err)
+	}
+
+	cases := []struct {
+		name   string
+		mutate func(c *invoicing.Counterparty)
+		want   string
+	}{
+		{"sans email", func(c *invoicing.Counterparty) { c.Email = "" }, "individual_email_required"},
+		{"email sans @", func(c *invoicing.Counterparty) { c.Email = "marie" }, "individual_email_required"},
+		{"sans rue", func(c *invoicing.Counterparty) { c.Street = "" }, "individual_address_required"},
+		{"sans ville", func(c *invoicing.Counterparty) { c.City = "" }, "individual_address_required"},
+		{"sans code postal", func(c *invoicing.Counterparty) { c.Postal = "" }, "individual_address_required"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := base
+			tc.mutate(&c)
+			err := invoicing.ValidateCounterparty(invoicing.NormalizeCounterparty(c))
+			if err == nil || !errors.Is(err, invoicing.ErrInvalidCounterparty) {
+				t.Fatalf("want ErrInvalidCounterparty got %v", err)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("want reason %s got %v", tc.want, err)
+			}
+		})
+	}
+
+	// Une TVA saisie par erreur sur un particulier est effacée, pas propagée.
+	dirty := base
+	dirty.VATNumber = "BE1000000021"
+	dirty.SIRET = "84249114400015"
+	dirty.CodiceDestinatario = "3PRL4IK"
+	clean := invoicing.NormalizeCounterparty(dirty)
+	if clean.VATNumber != "" || clean.SIRET != "" || clean.SIREN != "" || clean.CodiceDestinatario != "" {
+		t.Fatalf("individual must carry no fiscal id: %+v", clean)
+	}
+}
+
+// Le défaut reste professionnel : une contrepartie sans kind ne doit pas
+// basculer silencieusement en email.
+func TestNormalizeCounterpartyDefaultsToBusiness(t *testing.T) {
+	c := invoicing.NormalizeCounterparty(invoicing.Counterparty{
+		Name: "Clinique", Country: "be", VATNumber: "BE1000000021",
+	})
+	if c.CustomerKind != invoicing.KindBusiness {
+		t.Fatalf("kind=%q want business", c.CustomerKind)
+	}
+	if c.VATNumber != "BE1000000021" {
+		t.Fatalf("business VAT must be preserved: %+v", c)
+	}
+}
+
+// Une valeur inconnue ne doit pas ouvrir le chemin B2C (facture sans TVA
+// envoyée par email) sur une faute de frappe côté client.
+func TestNormalizeCounterpartyUnknownKindFallsBackToBusiness(t *testing.T) {
+	c := invoicing.NormalizeCounterparty(invoicing.Counterparty{
+		Name: "Clinique", Country: "BE", VATNumber: "BE1000000021", CustomerKind: "particulier",
+	})
+	if c.CustomerKind != invoicing.KindBusiness {
+		t.Fatalf("kind=%q want business", c.CustomerKind)
+	}
+	if c.VATNumber != "BE1000000021" {
+		t.Fatalf("unknown kind must not strip the VAT: %+v", c)
+	}
+	if got := invoicing.ResolveTransport(c); got != invoicing.TransportPeppol {
+		t.Fatalf("transport=%q want Peppol", got)
+	}
+}
+
+// Billit renvoie les mêmes libellés de statut quel que soit le transport : sans
+// ce garde-fou, le webhook d'un envoi email afficherait « delivered » (Peppol).
+func TestResolveWebhookPeppolStatus(t *testing.T) {
+	cases := []struct{ prev, incoming, want string }{
+		{"email_sending", "delivered", "email_delivered"},
+		{"email_sending", "rejected", "email_rejected"},
+		{"email_delivered", "email_delivered", "email_delivered"},
+		{"sending", "delivered", "delivered"},
+		{"", "delivered", "delivered"},
+		{"email_sending", "", ""},
+	}
+	for _, tc := range cases {
+		if got := invoicing.ResolveWebhookPeppolStatus(tc.prev, tc.incoming); got != tc.want {
+			t.Fatalf("prev=%q incoming=%q → %q want %q", tc.prev, tc.incoming, got, tc.want)
+		}
+	}
+}
+
+func TestResolveTransport(t *testing.T) {
+	cases := []struct {
+		name string
+		cp   invoicing.Counterparty
+		want invoicing.Transport
+	}{
+		{"particulier BE", invoicing.Counterparty{CustomerKind: invoicing.KindIndividual, Country: "BE"}, invoicing.TransportSMTP},
+		{"particulier IT", invoicing.Counterparty{CustomerKind: invoicing.KindIndividual, Country: "IT"}, invoicing.TransportSMTP},
+		{"pro BE", invoicing.Counterparty{CustomerKind: invoicing.KindBusiness, Country: "BE"}, invoicing.TransportPeppol},
+		{"pro IT", invoicing.Counterparty{CustomerKind: invoicing.KindBusiness, Country: "it"}, invoicing.TransportSDI},
+		{"kind absent", invoicing.Counterparty{Country: "FR"}, invoicing.TransportPeppol},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := invoicing.ResolveTransport(tc.cp); got != tc.want {
+				t.Fatalf("got %s want %s", got, tc.want)
+			}
+		})
+	}
+	if !invoicing.TransportPeppol.IsEInvoiceNetwork() || !invoicing.TransportSDI.IsEInvoiceNetwork() {
+		t.Fatal("Peppol/SDI must be network transports")
+	}
+	if invoicing.TransportSMTP.IsEInvoiceNetwork() {
+		t.Fatal("SMTP must not be treated as an e-invoice network")
 	}
 }

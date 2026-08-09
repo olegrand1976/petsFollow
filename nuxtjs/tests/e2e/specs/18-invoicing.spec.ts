@@ -4,6 +4,16 @@ import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
 
 const STAFF_PASSWORD = 'VetDemo123!'
 
+/** L'éditeur de types de RDV est dans l'onglet Agenda, replié par défaut. */
+async function openVisitTypesSection(page: import('@playwright/test').Page) {
+  await page.getByTestId('section-tab-calendar').click()
+  const section = page.getByTestId('settings-visit-types')
+  await expect(section).toBeVisible({ timeout: 15000 })
+  if (!await section.evaluate((el: HTMLDetailsElement) => el.open)) {
+    await section.locator('summary').click()
+  }
+}
+
 test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -25,6 +35,112 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     await expect(page.getByTestId('invoicing-under-development')).toBeVisible()
     await expect(page.getByTestId('invoicing-connect-start')).toHaveCount(0)
     await expect(page.getByTestId('invoicing-create')).toHaveCount(0)
+  })
+
+  // Cœur du métier : un cabinet facture d'abord des particuliers. Pas de TVA,
+  // pas de Peppol (Billit refuse un destinataire hors réseau) → envoi email.
+  test('I7.10 facture particulier (sans TVA) → email', { tag: ['@p0'] }, async ({ page }) => {
+    test.setTimeout(120_000)
+    if (!INVOICING_UI_ENABLED) {
+      test.skip(true, 'INVOICING_UI_ENABLED off')
+    }
+
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    const probe = await page.request.get('/api/invoicing/connection')
+    if (probe.status() === 404) {
+      test.skip(true, 'BILLIT_ENABLED off')
+    }
+    expect(probe.status(), await probe.text()).toBe(200)
+
+    await page.goto('/invoicing', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('invoicing-page')).toBeVisible()
+
+    const startBtn = page.getByTestId('invoicing-connect-start')
+    if (await startBtn.isVisible()) {
+      await startBtn.click()
+      await expect(page.getByTestId('invoicing-complete-form')).toBeVisible({ timeout: 15000 })
+      await fillField(page, 'invoicing-complete-party', `party_e2e_b2c_${Date.now()}`)
+      await fillField(page, 'invoicing-complete-apikey', 'mock-key-e2e')
+      await page.getByTestId('invoicing-complete-submit').click()
+    }
+
+    await expect(page.getByTestId('invoicing-create')).toBeVisible({ timeout: 20000 })
+    // Particulier par défaut : les champs fiscaux disparaissent.
+    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('individual')
+    await expect(page.getByTestId('invoicing-cp-vat')).toHaveCount(0)
+    await expect(page.getByTestId('invoicing-cp-company')).toHaveCount(0)
+
+    await fillField(page, 'invoicing-cp-name', `Particulier E2E ${Date.now()}`)
+    await fillField(page, 'invoicing-cp-email', 'particulier.e2e@petsfollow.test')
+    await page.getByTestId('invoicing-country').selectOption('BE')
+    await fillField(page, 'invoicing-cp-street', 'Rue des Fleurs 12')
+    await fillField(page, 'invoicing-cp-postal', '1000')
+    await fillField(page, 'invoicing-cp-city', 'Bruxelles')
+    await fillField(page, 'invoicing-line-0-desc', 'Consultation particulier')
+    await fillField(page, 'invoicing-line-0-qty', '1')
+    await fillField(page, 'invoicing-line-0-unit', '45')
+
+    const createRes = page.waitForResponse(
+      (r) => r.url().includes('/api/invoicing/documents') && r.request().method() === 'POST',
+      { timeout: 20000 },
+    )
+    await page.getByTestId('invoicing-new-doc').click()
+    const created = await createRes
+    expect([200, 201]).toContain(created.status())
+    const createdJson = await created.json() as {
+      data?: { id?: string, counterparty?: { customerKind?: string, vatNumber?: string } }
+    }
+    const createdData = createdJson.data || (createdJson as any)
+    const docId = createdData.id
+    expect(docId).toBeTruthy()
+    expect(createdData.counterparty?.customerKind).toBe('individual')
+    expect(createdData.counterparty?.vatNumber || '').toBe('')
+
+    const sendRes = page.waitForResponse(
+      (r) => r.url().includes(`/api/invoicing/documents/${docId}/send`) && r.request().method() === 'POST',
+      { timeout: 20000 },
+    )
+    await page.getByTestId(`invoicing-send-${docId}`).click()
+    const sent = await sendRes
+    expect(sent.status(), await sent.text()).toBe(200)
+    const sentBody = await sent.json() as { data?: { status?: string, peppolStatus?: string } }
+    expect(['delivered', 'sending']).toContain(sentBody.data?.status || '')
+    // L'audit doit dire email, pas Peppol.
+    expect(sentBody.data?.peppolStatus || '').toMatch(/^email_/)
+
+    // …mais le véto lit un libellé traduit, la valeur technique restant en infobulle.
+    const delivery = page.getByTestId(`invoicing-delivery-${docId}`)
+    await expect(delivery).toBeVisible()
+    await expect(delivery).toHaveAttribute('title', /^email_/)
+    await expect(delivery).not.toContainText('email_')
+    await expect(delivery).toContainText(/E-?mail/)
+
+    // Avoir sur cette facture : la contrepartie reprise reste un particulier.
+    await page.getByTestId('invoicing-doc-type').selectOption('credit_note')
+    await page.getByTestId('invoicing-related-invoice').selectOption(String(docId))
+    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('individual')
+    await expect(page.getByTestId('invoicing-cp-vat')).toHaveCount(0)
+    await page.getByTestId('invoicing-doc-type').selectOption('invoice')
+
+    // Sans email, la facture d'un particulier n'a pas de canal de livraison.
+    const noEmail = await page.request.post('/api/invoicing/documents', {
+      data: {
+        type: 'invoice',
+        counterparty: {
+          name: 'Particulier sans email',
+          customerKind: 'individual',
+          country: 'BE',
+          street: 'Rue 1',
+          city: 'Bruxelles',
+          postal: '1000',
+        },
+        lines: [{ description: 'Consultation', quantity: 1, unitPriceExclCents: 4500, vatPercent: 21 }],
+      },
+    })
+    expect(noEmail.status()).toBe(400)
   })
 
   test('I7 connect → facture BE delivered + credit/proforma/IT', async ({ page }) => {
@@ -65,6 +181,8 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     await expect(page.getByTestId('pro-combobox-list')).toBeVisible({ timeout: 8000 })
     await page.getByTestId('pro-combobox-list').locator('[role="option"]').first().click()
     await expect(page.getByTestId('invoicing-cp-name')).toHaveValue(/Sophie/)
+    // Type repris de la fiche client (billingCustomerKind), sans ressaisie.
+    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('business')
     await expect(page.getByTestId('invoicing-cp-vat')).toHaveValue('BE1000000021')
     await expect(page.getByTestId('invoicing-cp-street')).toHaveValue(/Loi/)
     await expect(page.getByTestId('invoicing-cp-city')).toHaveValue('Bruxelles')
@@ -220,8 +338,140 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     expect(resendPf.status()).toBeGreaterThanOrEqual(400)
 
     await page.goto('/invoicing', { waitUntil: 'networkidle' })
+
+    // Avoir sur une facture pro : la contrepartie doit rester professionnelle,
+    // sinon la TVA saute du document et l'avoir part par email au lieu de Peppol.
+    await page.getByTestId('invoicing-doc-type').selectOption('credit_note')
+    await page.getByTestId('invoicing-related-invoice').selectOption(String(docId))
+    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('business')
+    await expect(page.getByTestId('invoicing-cp-vat')).toHaveValue('BE1000000021')
+    await page.getByTestId('invoicing-doc-type').selectOption('invoice')
+
     await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toBeVisible()
     await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toContainText(/proforma/i)
     await expect(page.getByTestId(`invoicing-send-${pfId}`)).toHaveCount(0)
+  })
+
+  // BIL-9 : le tarif de l'acte vit sur le type de RDV. Sans aller-retour fiable
+  // ici, la facture de fin de consultation repart vide et le véto ressaisit tout.
+  test('I7.15 tarif du type de RDV — aller-retour /settings', async ({ page }) => {
+    test.setTimeout(90_000)
+    if (!INVOICING_UI_ENABLED) {
+      test.skip(true, 'INVOICING_UI_ENABLED off')
+    }
+
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    const probe = await page.request.get('/api/invoicing/connection')
+    if (probe.status() === 404) {
+      test.skip(true, 'BILLIT_ENABLED off')
+    }
+
+    await page.goto('/settings', { waitUntil: 'networkidle' })
+    await openVisitTypesSection(page)
+    const priceInput = page.getByTestId('settings-visit-type-price').first()
+    await expect(priceInput).toBeVisible({ timeout: 15000 })
+    const initialPrice = await priceInput.inputValue()
+
+    await priceInput.fill('45.50')
+    await page.getByTestId('settings-visit-type-vat').first().fill('21')
+    await page.getByTestId('settings-visit-types-save').click()
+
+    // Relecture depuis l'API : le tarif est bien persisté en centimes HTVA.
+    await expect(async () => {
+      const res = await page.request.get('/api/vet/visit-types')
+      expect(res.status()).toBe(200)
+      const body = await res.json() as { data?: Array<{ priceExclCents?: number, vatPercent?: number }> }
+      const first = (body.data ?? [])[0]
+      expect(first?.priceExclCents).toBe(4550)
+      expect(Number(first?.vatPercent)).toBe(21)
+    }).toPass({ timeout: 15000 })
+
+    await page.reload({ waitUntil: 'networkidle' })
+    await openVisitTypesSection(page)
+    await expect(page.getByTestId('settings-visit-type-price').first()).toHaveValue('45.50')
+
+    // Tarif du seed remis en place : les autres suites (et la démo) comptent dessus.
+    await page.getByTestId('settings-visit-type-price').first().fill(initialPrice)
+    await page.getByTestId('settings-visit-types-save').click()
+    await expect(async () => {
+      const res = await page.request.get('/api/vet/visit-types')
+      const body = await res.json() as { data?: Array<{ priceExclCents?: number }> }
+      const restored = Math.round(Number(initialPrice || 0) * 100)
+      expect((body.data ?? [])[0]?.priceExclCents).toBe(restored)
+    }).toPass({ timeout: 15000 })
+  })
+
+  // Bout de chaîne visible du préremplissage : le tarif saisi dans /settings doit
+  // arriver dans le formulaire de facture au retour de consultation. Le contrat
+  // d'API est couvert côté Go, la conversion centimes → euros par Vitest ; ici on
+  // vérifie que la page câble bien les deux.
+  test('I7.14 lignes préremplies depuis la consultation', async ({ page }) => {
+    test.setTimeout(90_000)
+    if (!INVOICING_UI_ENABLED) {
+      test.skip(true, 'INVOICING_UI_ENABLED off')
+    }
+
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    const probe = await page.request.get('/api/invoicing/connection')
+    if (probe.status() === 404) {
+      test.skip(true, 'BILLIT_ENABLED off')
+    }
+
+    const typesRes = await page.request.get('/api/vet/visit-types')
+    expect(typesRes.status()).toBe(200)
+    const types = ((await typesRes.json()) as {
+      data?: Array<{ id: string, name: string, priceExclCents?: number }>
+    }).data ?? []
+    const tariffed = types.find((t) => Number(t.priceExclCents) > 0)
+    if (!tariffed) {
+      test.skip(true, 'aucun type de RDV tarifé (make seed)')
+    }
+
+    const clientsRes = await page.request.get('/api/clients')
+    const clients = ((await clientsRes.json()) as {
+      data?: Array<{ userId: string, email?: string }>
+    }).data ?? []
+    const demoClient = clients.find((c) => c.email === 'client.demo@petsfollow.test')
+    expect(demoClient, 'client démo introuvable (make seed)').toBeTruthy()
+    const petsRes = await page.request.get(`/api/clients/${demoClient!.userId}/pets`)
+    const pets = ((await petsRes.json()) as { data?: Array<{ id: string }> }).data ?? []
+    expect(pets.length, 'client démo sans animal (make seed)').toBeGreaterThan(0)
+
+    const visitRes = await page.request.post(`/api/pets/${pets[0].id}/visits`, {
+      data: {
+        scheduledAt: new Date().toISOString(),
+        durationMinutes: 30,
+        confirmDirect: true,
+        silentConfirm: true,
+        consultationSession: true,
+        visitTypeId: tariffed!.id,
+        notes: 'e2e prefill',
+      },
+    })
+    expect([200, 201]).toContain(visitRes.status())
+    const visitId = String(((await visitRes.json()) as any)?.data?.id ?? '')
+    expect(visitId).toBeTruthy()
+    try {
+      // `networkidle` est trop strict ici : la page garde des appels en vol
+      // (documents, médicaments) et l'attente explicite ci-dessous suffit.
+      await page.goto(`/invoicing?visitId=${visitId}&mode=direct`, { waitUntil: 'domcontentloaded' })
+      await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 20000 })
+
+      await expect(page.getByTestId('invoicing-line-0-desc')).toHaveValue(tariffed!.name, { timeout: 15000 })
+      await expect(page.getByTestId('invoicing-line-0-unit'))
+        .toHaveValue((Number(tariffed!.priceExclCents) / 100).toFixed(2))
+      await expect(page.getByTestId('invoicing-consultation-context')).toContainText(tariffed!.name)
+    }
+    finally {
+      // Supprimée plutôt qu'annulée : une consultation annulée resterait visible
+      // dans l'agenda de démo, une par exécution de la suite.
+      await page.request.delete(`/api/visits/${visitId}`).catch(() => undefined)
+    }
   })
 })

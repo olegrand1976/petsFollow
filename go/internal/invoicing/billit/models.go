@@ -53,11 +53,14 @@ type OrderDTO struct {
 	OrderLines         []OrderLine `json:"OrderLines"`
 }
 
-// SendCommand is the body for POST /v1/orders/commands/send (shape may vary by Billit version).
+// SendCommand is the body for POST /v1/orders/commands/send.
+// Billit reads `Transporttype` (docs.billit.be/reference/order_postsend-1) —
+// any other spelling is ignored and the order silently falls back to the
+// party's configured channel.
 type SendCommand struct {
-	OrderID   int64   `json:"OrderID,omitempty"`
-	OrderIDs  []int64 `json:"OrderIDs,omitempty"`
-	Transport string  `json:"Transport,omitempty"`
+	OrderID       int64   `json:"OrderID,omitempty"`
+	OrderIDs      []int64 `json:"OrderIDs,omitempty"`
+	TransportType string  `json:"Transporttype,omitempty"`
 }
 
 // WebhookPayload is a flexible Billit status callback.

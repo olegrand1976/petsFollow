@@ -2,13 +2,10 @@ package handlers_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 func TestPracticeAvailabilityIncludesPhoneWhenDisabled(t *testing.T) {
@@ -30,31 +27,42 @@ func TestPracticeAvailabilityIncludesPhoneWhenDisabled(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	var oldEnabled bool
-	hadRow := true
-	err := api.pool.QueryRow(ctx, `
-		SELECT client_booking_enabled FROM practice.vet_schedule WHERE practice_id = $1`, practiceID,
-	).Scan(&oldEnabled)
-	if errors.Is(err, pgx.ErrNoRows) {
-		hadRow = false
-	} else if err != nil {
+	// Un cabinet multi-sites a une ligne d'agenda par site : on mémorise ceux qui
+	// prennent des RDV en ligne pour ne réactiver qu'eux. Relire une seule ligne
+	// puis l'appliquer à toutes les remettait toutes à false — la réservation en
+	// ligne du cabinet de démo restait cassée pour les suites suivantes.
+	rows, err := api.pool.Query(ctx, `
+		SELECT site_id::text FROM practice.vet_schedule
+		WHERE practice_id = $1 AND client_booking_enabled`, practiceID)
+	if err != nil {
+		t.Fatalf("read schedule: %v", err)
+	}
+	var bookableSiteIDs []string
+	for rows.Next() {
+		var siteID string
+		if err := rows.Scan(&siteID); err != nil {
+			rows.Close()
+			t.Fatalf("scan schedule: %v", err)
+		}
+		bookableSiteIDs = append(bookableSiteIDs, siteID)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
 		t.Fatalf("read schedule: %v", err)
 	}
 
-	_, err = api.pool.Exec(ctx, `
+	if _, err := api.pool.Exec(ctx, `
 		UPDATE practice.vet_schedule SET client_booking_enabled = false, updated_at = NOW()
-		WHERE practice_id = $1`, practiceID)
-	if err != nil {
+		WHERE practice_id = $1`, practiceID); err != nil {
 		t.Fatalf("disable booking: %v", err)
 	}
 	t.Cleanup(func() {
-		if !hadRow {
-			_, _ = api.pool.Exec(ctx, `DELETE FROM practice.vet_schedule WHERE practice_id = $1`, practiceID)
+		if len(bookableSiteIDs) == 0 {
 			return
 		}
 		_, _ = api.pool.Exec(ctx, `
-			UPDATE practice.vet_schedule SET client_booking_enabled = $2, updated_at = NOW()
-			WHERE practice_id = $1`, practiceID, oldEnabled)
+			UPDATE practice.vet_schedule SET client_booking_enabled = true, updated_at = NOW()
+			WHERE practice_id = $1 AND site_id::text = ANY($2)`, practiceID, bookableSiteIDs)
 	})
 
 	from := time.Now().UTC().Format(time.RFC3339)

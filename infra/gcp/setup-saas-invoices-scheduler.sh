@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Cloud Scheduler mensuel : POST /internal/saas-invoices/run (1er du mois 06:00).
+# ⚠ DORMANT — retiré de setup-all-schedulers.sh. Le Flux A (facturation SaaS
+# LL-IT-SC → cabinet) est en sommeil : sans INVOICING_SAAS_ENABLED=true sur
+# l'API, le job ne recevrait que des 404 invoicing_saas_disabled.
 # Staging (défaut) ou prod : PETSFOLLOW_GCP_ENV=prod …
 # Usage:
 #   SAAS_INVOICES_SECRET=... ./infra/gcp/setup-saas-invoices-scheduler.sh

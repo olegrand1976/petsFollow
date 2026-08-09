@@ -44,20 +44,58 @@ const (
 	ConnError               ConnectionStatus = "error"
 )
 
+// CustomerKind distingue un client professionnel (identifiant fiscal, réseau
+// e-invoicing) d'un particulier (pas de TVA, facture envoyée par email).
+type CustomerKind string
+
+const (
+	KindBusiness   CustomerKind = "business"
+	KindIndividual CustomerKind = "individual"
+)
+
+// Transport is the Billit delivery channel (`Transporttype` on
+// POST /v1/orders/commands/send). Peppol/SDI refuse a receiver absent from the
+// network since février 2026 — a particulier must go through SMTP.
+type Transport string
+
+const (
+	TransportPeppol Transport = "Peppol"
+	TransportSDI    Transport = "SDI"
+	TransportSMTP   Transport = "SMTP"
+)
+
+// IsEInvoiceNetwork reports transports where delivery is legally bound to a
+// network (no email fallback allowed).
+func (t Transport) IsEInvoiceNetwork() bool {
+	return t == TransportPeppol || t == TransportSDI
+}
+
+// ResolveTransport picks the Billit channel from the counterparty.
+func ResolveTransport(c Counterparty) Transport {
+	if c.CustomerKind == KindIndividual {
+		return TransportSMTP
+	}
+	if strings.ToUpper(strings.TrimSpace(c.Country)) == "IT" {
+		return TransportSDI
+	}
+	return TransportPeppol
+}
+
 type Counterparty struct {
-	Name               string `json:"name"`
-	VATNumber          string `json:"vatNumber,omitempty"`
-	CompanyNumber      string `json:"companyNumber,omitempty"`      // BE BCE (optional)
-	SIRET              string `json:"siret,omitempty"`              // FR
-	SIREN              string `json:"siren,omitempty"`              // FR
-	CodiceDestinatario string `json:"codiceDestinatario,omitempty"` // IT SDI (7 chars)
-	PEC                string `json:"pec,omitempty"`                // IT certified email
-	TaxID              string `json:"taxId,omitempty"`              // ES NIF/CIF
-	Email              string `json:"email,omitempty"`
-	Street             string `json:"street,omitempty"`
-	City               string `json:"city,omitempty"`
-	Postal             string `json:"postal,omitempty"`
-	Country            string `json:"country,omitempty"` // ISO-3166-1 alpha-2
+	Name               string       `json:"name"`
+	CustomerKind       CustomerKind `json:"customerKind,omitempty"` // défaut business
+	VATNumber          string       `json:"vatNumber,omitempty"`
+	CompanyNumber      string       `json:"companyNumber,omitempty"`      // BE BCE (optional)
+	SIRET              string       `json:"siret,omitempty"`              // FR
+	SIREN              string       `json:"siren,omitempty"`              // FR
+	CodiceDestinatario string       `json:"codiceDestinatario,omitempty"` // IT SDI (7 chars)
+	PEC                string       `json:"pec,omitempty"`                // IT certified email
+	TaxID              string       `json:"taxId,omitempty"`              // ES NIF/CIF
+	Email              string       `json:"email,omitempty"`
+	Street             string       `json:"street,omitempty"`
+	City               string       `json:"city,omitempty"`
+	Postal             string       `json:"postal,omitempty"`
+	Country            string       `json:"country,omitempty"` // ISO-3166-1 alpha-2
 }
 
 type Line struct {
@@ -221,8 +259,16 @@ func CountryFromVAT(vat string) string {
 	return ""
 }
 
-// NormalizeCounterparty trims fields and uppercases Country.
+// NormalizeCounterparty trims fields, uppercases Country and strips the fiscal
+// identifiers of a particulier (they have no legal meaning on a B2C invoice).
 func NormalizeCounterparty(c Counterparty) Counterparty {
+	// Tout ce qui n'est pas explicitement `individual` retombe sur business :
+	// une valeur inconnue ne doit pas ouvrir le chemin B2C sans identifiant fiscal.
+	if CustomerKind(strings.ToLower(strings.TrimSpace(string(c.CustomerKind)))) == KindIndividual {
+		c.CustomerKind = KindIndividual
+	} else {
+		c.CustomerKind = KindBusiness
+	}
 	c.Name = strings.TrimSpace(c.Name)
 	c.VATNumber = strings.TrimSpace(c.VATNumber)
 	c.CompanyNumber = strings.TrimSpace(c.CompanyNumber)
@@ -239,6 +285,12 @@ func NormalizeCounterparty(c Counterparty) Counterparty {
 	if c.SIREN == "" && len(c.SIRET) == 14 && reDigits.MatchString(c.SIRET) {
 		c.SIREN = c.SIRET[:9]
 	}
+	if c.CustomerKind == KindIndividual {
+		c.VATNumber, c.CompanyNumber = "", ""
+		c.SIRET, c.SIREN = "", ""
+		c.CodiceDestinatario, c.PEC = "", ""
+		c.TaxID = ""
+	}
 	return c
 }
 
@@ -250,6 +302,17 @@ func ValidateCounterparty(c Counterparty) error {
 	}
 	if len(c.Country) != 2 {
 		return fmt.Errorf("%w: country_required", ErrInvalidCounterparty)
+	}
+	if c.CustomerKind == KindIndividual {
+		// Pas de TVA : l'adresse reste obligatoire (mention légale) et l'email
+		// est le canal de livraison (Transporttype SMTP).
+		if c.Street == "" || c.City == "" || c.Postal == "" {
+			return fmt.Errorf("%w: individual_address_required", ErrInvalidCounterparty)
+		}
+		if !strings.Contains(c.Email, "@") {
+			return fmt.Errorf("%w: individual_email_required", ErrInvalidCounterparty)
+		}
+		return nil
 	}
 	switch c.Country {
 	case "BE":
@@ -350,6 +413,38 @@ func ResolveWebhookApplyStatus(prev, incoming DocStatus) DocStatus {
 	default:
 		return incoming
 	}
+}
+
+// SendingDoc identifie un document en vol chez Billit, candidat à la
+// réconciliation quand aucun webhook n'est arrivé.
+type SendingDoc struct {
+	DocumentID    string
+	PracticeID    string
+	BillitOrderID string
+}
+
+// EmailStatusPrefix marque, dans `peppol_status`, un document livré par email
+// (particulier) et non sur un réseau e-invoice.
+//
+// Toute nouvelle valeur écrite dans `peppol_status` est lue telle quelle par le
+// véto si elle n'est pas traduite : l'ajouter à `invoicing.deliveryStatus` dans
+// les 6 locales servies et à la liste du helper
+// `nuxtjs/utils/invoicing-delivery-status.ts` (verrouillé par
+// `tests/unit/invoicingDeliveryStatus.spec.ts`).
+const EmailStatusPrefix = "email_"
+
+// ResolveWebhookPeppolStatus garde l'audit honnête : Billit renvoie les mêmes
+// libellés de statut quel que soit le transport, donc un webhook sur un envoi
+// SMTP écraserait `email_sending` par `delivered` et laisserait croire que la
+// facture a voyagé sur Peppol.
+func ResolveWebhookPeppolStatus(prev, incoming string) string {
+	if incoming == "" || !strings.HasPrefix(prev, EmailStatusPrefix) {
+		return incoming
+	}
+	if strings.HasPrefix(incoming, EmailStatusPrefix) {
+		return incoming
+	}
+	return EmailStatusPrefix + incoming
 }
 
 func PeppolRequired(t DocType) bool {

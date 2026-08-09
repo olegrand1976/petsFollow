@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { LIVE_LOCALES, TEMPLATE_LOCALE, localesDir } from './support/locales'
 
 /**
  * Garde-fou de complétude des catalogues i18n Nuxt.
@@ -12,15 +13,7 @@ import { describe, expect, it } from 'vitest'
  * couvrent qu'une poignée de clés énumérées à la main.
  */
 
-const localesDir = join(__dirname, '../../locales')
-
-/**
- * Locales réellement servies par la face Pro. Doit rester le miroir de
- * `i18n.locales` (nuxt.config.ts) et de `SUPPORTED_LOCALES` (useLocaleSync).
- * `fr` est la source de vérité.
- */
-const LIVE_LOCALES = ['fr', 'nl', 'en', 'es', 'et', 'it'] as const
-const TEMPLATE = 'fr'
+const TEMPLATE = TEMPLATE_LOCALE
 
 /** Les trois familles de catalogues déclarées par locale dans nuxt.config.ts. */
 const FAMILIES = ['.', 'presentation', 'ai-flows'] as const

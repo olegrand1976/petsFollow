@@ -147,3 +147,37 @@ func hasID(ord billit.OrderDTO, typ, val string) bool {
 	}
 	return false
 }
+
+// Facture à un particulier : ni TVA ni Identifiers dans l'OrderDTO — Billit
+// refuserait un Peppol sans adresse réseau, l'envoi passe par email.
+func TestMapDocumentIndividual(t *testing.T) {
+	doc := invoicing.Document{
+		Type:      invoicing.DocInvoice,
+		CreatedAt: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
+		Currency:  "EUR",
+		Counterparty: invoicing.Counterparty{
+			Name: "Marie Dupont", CustomerKind: invoicing.KindIndividual, Country: "BE",
+			Email: "marie@example.test", Street: "Rue des Fleurs 12", City: "Bruxelles", Postal: "1000",
+		},
+		Lines: []invoicing.Line{{
+			Description: "Consultation", Quantity: 1, UnitPriceExclCents: 4500, VATPercent: 21,
+		}},
+	}
+	ord, err := billit.MapDocument(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ord.Customer.VATNumber != "" {
+		t.Fatalf("individual must have no VAT number: %+v", ord.Customer)
+	}
+	if len(ord.Customer.Identifiers) != 0 {
+		t.Fatalf("individual must have no fiscal identifiers: %+v", ord.Customer.Identifiers)
+	}
+	// L'adresse de facturation reste obligatoire (mention légale).
+	if ord.Customer.Street == "" || ord.Customer.City == "" || ord.Customer.Zipcode == "" {
+		t.Fatalf("billing address must be kept: %+v", ord.Customer)
+	}
+	if ord.Customer.Email != "marie@example.test" {
+		t.Fatalf("email is the delivery channel: %+v", ord.Customer)
+	}
+}

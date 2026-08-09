@@ -158,6 +158,7 @@
     "self_referral": "Self-referral is not allowed",
     "invalid_counterparty": "Invalid customer / tax identifiers",
     "invoicing_disabled": "Invoicing unavailable",
+    "invoicing_saas_disabled": "Billit SaaS invoicing disabled (billed outside the app)",
     "invoicing_not_connected": "Invoicing not connected",
     "connection_not_active": "Billit connection not active",
     "document_not_found": "Document not found",
@@ -199,7 +200,9 @@
     "related_invoice_not_on_billit": "Related invoice was not created on Billit yet — send it first",
     "be_vat_required": "Belgian VAT number required",
     "be_vat_invalid": "Invalid Belgian VAT number (format or check digits)",
-    "be_address_required": "Full address required for Belgium (street, postal code, city)"
+    "be_address_required": "Full address required for Belgium (street, postal code, city)",
+    "individual_address_required": "Full address required for an individual (street, postal code, city)",
+    "individual_email_required": "Email required for an individual — the invoice is delivered by email"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

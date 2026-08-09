@@ -665,18 +665,21 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 			v.waiting_room_at,
 			COALESCE(v.assignee_user_id::text,''), COALESCE(au.full_name,''),
 			COALESCE(v.room_id::text,''), COALESCE(rm.name,''),
-			COALESCE(v.callback_phone,''), COALESCE(p.is_walkin_placeholder, false)
+			COALESCE(v.callback_phone,''), COALESCE(p.is_walkin_placeholder, false),
+			COALESCE(v.visit_type_id::text,''), COALESCE(vt.name,'')
 		FROM visits.visits v
 		LEFT JOIN practice.sites si ON si.id = v.site_id
 		LEFT JOIN identity.users au ON au.id = v.assignee_user_id
 		LEFT JOIN practice.rooms rm ON rm.id = v.room_id
 		LEFT JOIN pets.pets p ON p.id = v.pet_id
+		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
 		WHERE v.id = $1 AND v.deleted_at IS NULL`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.SiteID, &v.SiteName, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession, &v.WaitingRoomAt,
 		&v.AssigneeUserID, &v.AssigneeName, &v.RoomID, &v.RoomName,
-		&v.CallbackPhone, &v.IsWalkinPlaceholder)
+		&v.CallbackPhone, &v.IsWalkinPlaceholder,
+		&v.VisitTypeID, &v.VisitTypeName)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}

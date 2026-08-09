@@ -32,7 +32,7 @@ Montrer le parcours **one-sitting** : CR → traitements (protocole 1 clic / CNK
 3. **Enregistrer le brouillon** → **Preview FEFO** (lots seed visibles).
 4. Si rupture : mini-réception lot inline → re-preview (sans aller sur `/stock`).
 5. **Finaliser le DAF** → confirm ProModal → stock déduit.
-6. CTA **Facturer** (si Billit UI on) → `/invoicing?dafId=&mode=fromDaf` avec lignes + montant HT estimé si prix stock.
+6. CTA **Facturer** (si Billit UI on) → `/invoicing?dafId=&mode=fromDaf` : une ligne par médicament au prix catalogue + montant HT estimé (l’acte du type de RDV s’ajoute quand la facture part de la consultation).
 7. Fiche animal → bloc **Dispenses DAF** (lecture).
 8. `/daf?status=draft` : badge âge si brouillon > 1 h ; `/consultations` : badge « Brouillon DAF >1 h ».
 

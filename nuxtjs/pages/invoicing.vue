@@ -164,6 +164,16 @@
               @select="onClientSelect"
             />
           </div>
+          <label class="pro-field">
+            <span class="pro-field__label">{{ $t('invoicing.counterparty.kind') }}</span>
+            <select v-model="docForm.customerKind" class="pro-input" data-testid="invoicing-cp-kind" required>
+              <option value="individual">{{ $t('invoicing.counterparty.kindIndividual') }}</option>
+              <option value="business">{{ $t('invoicing.counterparty.kindBusiness') }}</option>
+            </select>
+            <p class="pro-hint">
+              {{ isIndividual ? $t('invoicing.counterparty.kindIndividualHint') : $t('invoicing.counterparty.kindBusinessHint') }}
+            </p>
+          </label>
           <ProInput
             v-model="docForm.name"
             test-id="invoicing-cp-name"
@@ -175,9 +185,10 @@
             test-id="invoicing-cp-email"
             type="email"
             :label="$t('invoicing.counterparty.email')"
-            :required="docForm.type === 'proforma'"
+            :required="docForm.type === 'proforma' || isIndividual"
           />
           <p v-if="docForm.type === 'proforma'" class="pro-hint">{{ $t('invoicing.counterparty.emailProformaHint') }}</p>
+          <p v-else-if="isIndividual" class="pro-hint">{{ $t('invoicing.counterparty.emailIndividualHint') }}</p>
           <label class="pro-field">
             <span class="pro-field__label">{{ $t('invoicing.counterparty.country') }}</span>
             <select v-model="docForm.country" class="pro-input" data-testid="invoicing-country" required>
@@ -188,54 +199,54 @@
             </select>
           </label>
           <ProInput
-            v-if="docForm.country === 'BE' || docForm.country === 'FR' || docForm.country === 'IT'"
+            v-if="!isIndividual && vatRequired"
             v-model="docForm.vatNumber"
             test-id="invoicing-cp-vat"
             :label="$t('invoicing.counterparty.vatNumber')"
             required
           />
           <ProInput
-            v-if="docForm.country === 'ES'"
+            v-if="!isIndividual && docForm.country === 'ES'"
             v-model="docForm.vatNumber"
             test-id="invoicing-cp-vat"
             :label="$t('invoicing.counterparty.vatNumber')"
           />
           <ProInput
-            v-if="docForm.country === 'BE'"
+            v-if="!isIndividual && docForm.country === 'BE'"
             v-model="docForm.companyNumber"
             test-id="invoicing-cp-company"
             :label="$t('invoicing.counterparty.companyNumber')"
           />
           <ProInput
-            v-if="docForm.country === 'FR'"
+            v-if="!isIndividual && docForm.country === 'FR'"
             v-model="docForm.siret"
             test-id="invoicing-cp-siret"
             :label="$t('invoicing.counterparty.siret')"
             :required="!docForm.siren"
           />
           <ProInput
-            v-if="docForm.country === 'FR'"
+            v-if="!isIndividual && docForm.country === 'FR'"
             v-model="docForm.siren"
             test-id="invoicing-cp-siren"
             :label="$t('invoicing.counterparty.siren')"
             :required="!docForm.siret"
           />
           <ProInput
-            v-if="docForm.country === 'IT'"
+            v-if="!isIndividual && docForm.country === 'IT'"
             v-model="docForm.codiceDestinatario"
             test-id="invoicing-cp-codice"
             :label="$t('invoicing.counterparty.codiceDestinatario')"
             :required="!docForm.pec"
           />
           <ProInput
-            v-if="docForm.country === 'IT'"
+            v-if="!isIndividual && docForm.country === 'IT'"
             v-model="docForm.pec"
             test-id="invoicing-cp-pec"
             :label="$t('invoicing.counterparty.pec')"
             :required="!docForm.codiceDestinatario"
           />
           <ProInput
-            v-if="docForm.country === 'ES'"
+            v-if="!isIndividual && docForm.country === 'ES'"
             v-model="docForm.taxId"
             test-id="invoicing-cp-taxid"
             :label="$t('invoicing.counterparty.taxId')"
@@ -245,19 +256,19 @@
             v-model="docForm.street"
             test-id="invoicing-cp-street"
             :label="$t('invoicing.counterparty.street')"
-            :required="docForm.country === 'BE'"
+            :required="addressRequired"
           />
           <ProInput
             v-model="docForm.postal"
             test-id="invoicing-cp-postal"
             :label="$t('invoicing.counterparty.postal')"
-            :required="docForm.country === 'BE'"
+            :required="addressRequired"
           />
           <ProInput
             v-model="docForm.city"
             test-id="invoicing-cp-city"
             :label="$t('invoicing.counterparty.city')"
-            :required="docForm.country === 'BE'"
+            :required="addressRequired"
           />
 
           <div class="invoicing-lines" data-testid="invoicing-lines">
@@ -372,7 +383,12 @@
               <td>{{ doc.number || doc.counterparty?.name || doc.id.slice(0, 8) }}</td>
               <td>
                 <ProBadge :variant="docStatusVariant(doc.status)">{{ statusLabel(doc.status) }}</ProBadge>
-                <span v-if="doc.peppolStatus" class="pro-hint"> · {{ doc.peppolStatus }}</span>
+                <span
+                  v-if="deliveryLabel(doc)"
+                  class="pro-hint"
+                  :title="doc.peppolStatus"
+                  :data-testid="`invoicing-delivery-${doc.id}`"
+                > · {{ deliveryLabel(doc) }}</span>
               </td>
               <td>{{ formatMoney(doc.totalInclCents) }}</td>
               <td>
@@ -400,6 +416,9 @@
 
 <script setup lang="ts">
 import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
+import { counterpartyKind } from '~/utils/invoicing-counterparty'
+import { isRedundantDelivery, parseDeliveryStatus } from '~/utils/invoicing-delivery-status'
+import { prefillDraft } from '~/utils/invoicing-prefill'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
@@ -434,6 +453,7 @@ type Document = {
   billitOrderId?: string
   counterparty?: {
     name?: string
+    customerKind?: string
     country?: string
     vatNumber?: string
     companyNumber?: string
@@ -461,6 +481,7 @@ type ClientRow = {
   billingCity?: string
   billingPostal?: string
   billingCountry?: string
+  billingCustomerKind?: string
 }
 
 type DocLine = {
@@ -511,6 +532,8 @@ const docForm = reactive({
   relatedDocumentId: '',
   name: '',
   email: '',
+  // Un cabinet facture majoritairement des particuliers : c'est le défaut.
+  customerKind: 'individual' as 'individual' | 'business',
   country: 'BE',
   vatNumber: '',
   companyNumber: '',
@@ -530,6 +553,13 @@ const queryClientId = computed(() => String(route.query.clientUserId || ''))
 const queryDafId = computed(() => String(route.query.dafId || ''))
 const queryVisitId = computed(() => String(route.query.visitId || ''))
 const queryMode = computed(() => String(route.query.mode || ''))
+
+const isIndividual = computed(() => docForm.customerKind === 'individual')
+// Miroir de ValidateCounterparty côté Go : l'ES accepte un NIF/CIF à la place.
+const VAT_REQUIRED_COUNTRIES = ['BE', 'FR', 'IT']
+const vatRequired = computed(() => VAT_REQUIRED_COUNTRIES.includes(docForm.country))
+// Particulier : adresse obligatoire (mention légale) quel que soit le pays.
+const addressRequired = computed(() => isIndividual.value || docForm.country === 'BE')
 
 const isActive = computed(() => connection.value?.status === 'active')
 const pendingRegistration = computed(() => connection.value?.status === 'pending_registration')
@@ -646,6 +676,15 @@ function statusLabel(status: string) {
   return translated === key ? status : translated
 }
 
+// Statut d'acheminement : traduit, avec le canal en préfixe quand la facture
+// part par email. La valeur technique reste dans l'infobulle pour le support.
+function deliveryLabel(doc: { status: string, peppolStatus?: string }) {
+  const status = parseDeliveryStatus(doc.peppolStatus)
+  if (!status || isRedundantDelivery(status, doc.status)) return ''
+  const label = status.key ? t(status.key) : status.raw
+  return status.byEmail ? t('invoicing.deliveryStatus.byEmail', { status: label }) : label
+}
+
 function docStatusVariant(status: string) {
   switch (status) {
     case 'delivered':
@@ -689,9 +728,11 @@ function applyCounterparty(cp: {
   codiceDestinatario?: string
   pec?: string
   taxId?: string
+  customerKind?: string
 }, opts?: { keepCountryFallback?: string }) {
   docForm.name = cp.name || ''
   docForm.email = cp.email || ''
+  docForm.customerKind = counterpartyKind(cp)
   docForm.country = cp.country || opts?.keepCountryFallback || 'BE'
   docForm.vatNumber = cp.vatNumber || ''
   docForm.companyNumber = cp.companyNumber || ''
@@ -718,10 +759,13 @@ function onRelatedInvoiceChange() {
 }
 
 function applyClientToForm(c: ClientRow) {
+  // Le type vient de la fiche client quand il y est renseigné ; sinon
+  // applyCounterparty le déduit des identifiants fiscaux (fiches antérieures).
   applyCounterparty({
     name: c.fullName || '',
     email: c.email || '',
     country: c.billingCountry || undefined,
+    customerKind: c.billingCustomerKind || undefined,
     vatNumber: c.billingVatNumber || '',
     companyNumber: c.billingCompanyNumber || '',
     street: c.billingStreet || '',
@@ -911,10 +955,17 @@ async function createDocument() {
       error.value = t('invoicing.relatedInvoiceRequired')
       return
     }
-    if (docForm.country === 'BE' && (!docForm.street || !docForm.city || !docForm.postal)) {
-      error.value = t('invoicing.beAddressRequired')
+    if (addressRequired.value && (!docForm.street || !docForm.city || !docForm.postal)) {
+      error.value = isIndividual.value
+        ? t('invoicing.individualAddressRequired')
+        : t('invoicing.beAddressRequired')
       return
     }
+    if (isIndividual.value && !docForm.email.includes('@')) {
+      error.value = t('invoicing.individualEmailRequired')
+      return
+    }
+    const business = !isIndividual.value
     await $fetch('/api/invoicing/documents', {
       method: 'POST',
       body: {
@@ -925,14 +976,15 @@ async function createDocument() {
         counterparty: {
           name: docForm.name,
           email: docForm.email || undefined,
+          customerKind: docForm.customerKind,
           country: docForm.country,
-          vatNumber: docForm.vatNumber || undefined,
-          companyNumber: docForm.companyNumber || undefined,
-          siret: docForm.siret || undefined,
-          siren: docForm.siren || undefined,
-          codiceDestinatario: docForm.codiceDestinatario || undefined,
-          pec: docForm.pec || undefined,
-          taxId: docForm.taxId || undefined,
+          vatNumber: business ? docForm.vatNumber || undefined : undefined,
+          companyNumber: business ? docForm.companyNumber || undefined : undefined,
+          siret: business ? docForm.siret || undefined : undefined,
+          siren: business ? docForm.siren || undefined : undefined,
+          codiceDestinatario: business ? docForm.codiceDestinatario || undefined : undefined,
+          pec: business ? docForm.pec || undefined : undefined,
+          taxId: business ? docForm.taxId || undefined : undefined,
           street: docForm.street || undefined,
           city: docForm.city || undefined,
           postal: docForm.postal || undefined,
@@ -997,60 +1049,33 @@ async function applyConsultationPrefill() {
     }
   }
 
-  if (queryDafId.value) {
+  if (queryDafId.value || queryVisitId.value) {
+    // Lignes proposées par l'API : acte au tarif du type de RDV + médicaments du
+    // DAF finalisé. Le calcul est côté serveur (une requête au lieu d'un appel
+    // de prix par médicament, et mêmes droits que la création du document).
     try {
-      const res = await $fetch(`/api/vet/pharmacy/daf/${queryDafId.value}`)
-      const doc: any = unwrap(res)
-      const items = Array.isArray(doc?.items) ? doc.items : []
-      if (items.length) {
-        const defVat = docForm.country === 'IT' ? 22 : 21
-        const nextLines: DocLine[] = []
-        let priced = 0
-        for (const it of items) {
-          const medId = String(it.medicationId || it.refMedicationId || '')
-          const qty = Number(it.qty) || 0
-          const line = emptyLine(defVat)
-          line.description = String(it.medicationName || 'Médicament')
-          line.quantity = qty > 0 ? String(qty) : '1'
-          if (medId) {
-            try {
-              const priceRes = await $fetch(`/api/vet/pharmacy/prices/${medId}`)
-              const price: any = unwrap(priceRes)
-              const sell = Number(price?.sellPriceCents)
-              if (Number.isFinite(sell) && sell > 0) {
-                line.unitPriceExcl = (sell / 100).toFixed(2)
-                priced++
-              }
-              const vat = Number(price?.vatPercent)
-              if (Number.isFinite(vat) && vat >= 0) line.vatPercent = vat
-            }
-            catch {
-              // price optional — leave PU empty to complete
-            }
-          }
-          nextLines.push(line)
-        }
-        if (nextLines.length) {
-          docLines.value = nextLines
-          hints.push(t('invoicing.prefillDafLines', { n: nextLines.length }))
-          let excl = 0
-          for (const line of nextLines) {
-            const qty = Number(line.quantity)
-            const unitCents = Math.round(Number(line.unitPriceExcl) * 100)
-            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(unitCents) || unitCents <= 0) continue
-            excl += Math.round(unitCents * qty)
-          }
-          if (priced > 0 && excl > 0) {
-            hints.push(t('invoicing.prefillDafAmount', { amount: (excl / 100).toFixed(2) }))
-          }
+      const params = new URLSearchParams()
+      if (queryVisitId.value) params.set('visitId', queryVisitId.value)
+      if (queryDafId.value) params.set('dafId', queryDafId.value)
+      const res = await $fetch(`/api/invoicing/prefill?${params.toString()}`)
+      const payload: any = unwrap(res)
+      const defVat = docForm.country === 'IT' ? 22 : 21
+      const draft = prefillDraft(payload, defVat)
+      const nextLines: DocLine[] = draft.lines.map((l) => ({ ...emptyLine(defVat), ...l }))
+      if (nextLines.length) {
+        docLines.value = nextLines
+        if (payload?.visitTypeName) hints.push(t('invoicing.prefillVisitType', { name: payload.visitTypeName }))
+        if (draft.dafLineCount > 0) hints.push(t('invoicing.prefillDafLines', { n: draft.dafLineCount }))
+        if (draft.estimatedExclCents > 0) {
+          hints.push(t('invoicing.prefillEstimatedAmount', { amount: (draft.estimatedExclCents / 100).toFixed(2) }))
         }
       }
-      if (doc?.clientName && !docForm.name) {
-        docForm.name = doc.clientName
+      if (payload?.clientName && !docForm.name) {
+        docForm.name = payload.clientName
       }
     }
     catch {
-      // DAF optional if pharmacy off
+      // Préremplissage best-effort : sans lui le véto saisit manuellement.
     }
   }
 

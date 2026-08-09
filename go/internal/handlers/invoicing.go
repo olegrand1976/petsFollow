@@ -25,6 +25,7 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 		pr.Post("/practices/me/invoicing/connect/start", a.invoicingConnectStart)
 		pr.Post("/practices/me/invoicing/connect/complete", a.invoicingConnectComplete)
 		pr.Post("/practices/me/invoicing/connect/refresh", a.invoicingConnectRefresh)
+		pr.Get("/practices/me/invoicing/prefill", a.invoicingPrefill)
 		pr.Get("/practices/me/invoicing/documents", a.invoicingListDocuments)
 		pr.Post("/practices/me/invoicing/documents", a.invoicingCreateDocument)
 		pr.Get("/practices/me/invoicing/documents/{id}", a.invoicingGetDocument)
@@ -123,6 +124,134 @@ func (a *API) invoicingListDocuments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, items)
+}
+
+// invoicingPrefill propose les lignes d'une facture en fin de consultation :
+// l'acte au tarif du type de RDV, puis les médicaments du DAF finalisé de la
+// visite. Le calcul est fait ici et non dans le navigateur : c'est la même
+// permission que la création du document, une seule requête au lieu d'un appel
+// de prix par médicament, et les prix restent testables au niveau Go.
+//
+// Rien n'est bloquant : une visite sans tarif ou sans DAF renvoie une liste
+// vide plutôt qu'une erreur — le véto saisit alors comme avant.
+func (a *API) invoicingPrefill(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
+		return
+	}
+	visitID := strings.TrimSpace(r.URL.Query().Get("visitId"))
+	dafID := strings.TrimSpace(r.URL.Query().Get("dafId"))
+	out := map[string]any{}
+	lines := []prefillLine{}
+
+	if visitID != "" {
+		visit, err := a.store.GetVisit(r.Context(), visitID)
+		if err != nil {
+			if !errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+		} else if visit.PracticeID == id.PracticeID && visit.VisitTypeID != "" {
+			vt, err := a.store.GetVisitType(r.Context(), id.PracticeID, visit.VisitTypeID)
+			switch {
+			case err == nil && vt.PriceExclCents > 0:
+				vat := vt.VATPercent
+				lines = append(lines, prefillLine{
+					Description:        vt.Name,
+					Quantity:           1,
+					UnitPriceExclCents: int64(vt.PriceExclCents),
+					VATPercent:         &vat,
+					Source:             prefillSourceVisitType,
+				})
+				out["visitTypeName"] = vt.Name
+			case err != nil && !errors.Is(err, store.ErrNotFound):
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+		}
+	}
+
+	if daf, found := a.resolvePrefillDAF(r, id.PracticeID, dafID, visitID); found {
+		medIDs := make([]string, 0, len(daf.Items))
+		for _, it := range daf.Items {
+			medIDs = append(medIDs, it.MedicationID)
+		}
+		prices, err := a.store.ListMedicationPricesByIDs(r.Context(), id.PracticeID, medIDs)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		for _, it := range daf.Items {
+			line := prefillLine{
+				Description: strings.TrimSpace(it.MedicationName),
+				Quantity:    it.Qty,
+				Source:      prefillSourceDAF,
+			}
+			if line.Description == "" {
+				line.Description = it.MedicationCNK
+			}
+			// Médicament hors catalogue : prix à 0 et TVA absente. Le véto
+			// complète le prix (ValidateLines refuse une ligne à 0) et l'UI
+			// garde le taux par défaut du pays plutôt qu'un 21 % belge imposé.
+			if p, priced := prices[it.MedicationID]; priced {
+				vat := p.VATPercent
+				line.UnitPriceExclCents = int64(p.SellPriceCents)
+				line.VATPercent = &vat
+			}
+			lines = append(lines, line)
+		}
+		out["dafId"] = daf.ID
+		if daf.DisplayNumber != "" {
+			out["dafNumber"] = daf.DisplayNumber
+		}
+		if daf.ClientName != "" {
+			out["clientName"] = daf.ClientName
+		}
+	}
+	out["lines"] = lines
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
+// prefillLine est une *suggestion* de ligne, pas une ligne de document : le prix
+// et la TVA peuvent être inconnus. `vatPercent` absent ≠ 0 % — sans cette
+// distinction, un médicament non tarifé imposerait 21 % à un cabinet italien.
+// `source` dit d'où vient la ligne, pour que l'UI n'ait pas à le déduire d'un
+// comptage.
+type prefillLine struct {
+	Description        string   `json:"description"`
+	Quantity           float64  `json:"quantity"`
+	UnitPriceExclCents int64    `json:"unitPriceExclCents"`
+	VATPercent         *float64 `json:"vatPercent,omitempty"`
+	Source             string   `json:"source"`
+}
+
+const (
+	prefillSourceVisitType = "visitType"
+	prefillSourceDAF       = "daf"
+)
+
+// resolvePrefillDAF retourne le DAF facturable : celui demandé explicitement,
+// sinon le DAF finalisé de la visite (CTA fin de consultation). Un DAF encore
+// en brouillon n'a pas consommé de stock : il n'est pas facturable.
+func (a *API) resolvePrefillDAF(r *http.Request, practiceID, dafID, visitID string) (store.DAFDocument, bool) {
+	if dafID != "" {
+		daf, err := a.store.GetDAF(r.Context(), practiceID, dafID)
+		if err != nil || daf.Status != "finalized" {
+			return store.DAFDocument{}, false
+		}
+		if visitID != "" && daf.VisitID != "" && daf.VisitID != visitID {
+			return store.DAFDocument{}, false
+		}
+		return daf, true
+	}
+	if visitID == "" {
+		return store.DAFDocument{}, false
+	}
+	daf, err := a.store.GetFinalizedDAFByVisit(r.Context(), practiceID, visitID)
+	if err != nil {
+		return store.DAFDocument{}, false
+	}
+	return daf, true
 }
 
 func (a *API) invoicingCreateDocument(w http.ResponseWriter, r *http.Request) {
@@ -487,6 +616,8 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusServiceUnavailable, "saas_master_not_configured", "saas_master_not_configured")
 	case errors.Is(err, invoicing.ErrSaasNotEligible):
 		writeErr(w, r, http.StatusConflict, "saas_not_eligible", "saas_not_eligible")
+	case errors.Is(err, invoicing.ErrSaasDisabled):
+		writeErr(w, r, http.StatusNotFound, "not_found", "invoicing_saas_disabled")
 	case errors.Is(err, invoicing.ErrSaasBillingDisabled):
 		writeErr(w, r, http.StatusConflict, "saas_billing_disabled", "saas_billing_disabled")
 	case errors.Is(err, invoicing.ErrSecrets):

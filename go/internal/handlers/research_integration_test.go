@@ -184,6 +184,15 @@ func TestResearchHeatmapDistinctPractices(t *testing.T) {
 
 	week := store.ResearchIsoWeekMonday(time.Now())
 	postal := "99119"
+	// Ce code postal fictif appartient au test : sans purge, les événements du run
+	// précédent ont déjà déverrouillé la cellule et l'assertion k-anonymat tombe.
+	purgePostal := func() {
+		if _, err := api.pool.Exec(ctx, `DELETE FROM research.anon_events WHERE postal_code = $1`, postal); err != nil {
+			t.Fatalf("purge heatmap postal: %v", err)
+		}
+	}
+	purgePostal()
+	t.Cleanup(purgePostal)
 	// Many events from a single practice must not unlock the cell.
 	for range 10 {
 		_, err := api.pool.Exec(ctx, `

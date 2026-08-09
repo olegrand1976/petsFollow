@@ -82,12 +82,15 @@ func TestWebhookDedupeKey(t *testing.T) {
 }
 
 func TestClientCreateAndSend(t *testing.T) {
-	var gotParty, gotKey string
+	var gotParty, gotKey, gotStrict string
 	var created bool
 	var sendBody map[string]any
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotParty = r.Header.Get("PartyID")
 		gotKey = r.Header.Get("ApiKey")
+		if r.URL.Path == "/v1/orders/commands/send" {
+			gotStrict = r.Header.Get("StrictTransportType")
+		}
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/parties/party1":
 			w.WriteHeader(http.StatusOK)
@@ -129,21 +132,49 @@ func TestClientCreateAndSend(t *testing.T) {
 	if err != nil || id != "99" || !created {
 		t.Fatalf("id=%s err=%v created=%v", id, err, created)
 	}
-	if err := c.SendPeppol(ctx, "party1", "key1", id, "BE"); err != nil {
+	if err := c.Send(ctx, "party1", "key1", id, invoicing.TransportPeppol); err != nil {
 		t.Fatal(err)
 	}
 	if gotParty != "party1" || gotKey != "key1" {
 		t.Fatalf("auth %s %s", gotParty, gotKey)
 	}
-	if sendBody["Transport"] != "Peppol" {
+	// Billit lit `Transporttype` : toute autre orthographe est ignorée et
+	// l'ordre repart sur le canal par défaut du cabinet.
+	if sendBody["Transporttype"] != "Peppol" {
 		t.Fatalf("expected Peppol transport %#v", sendBody)
 	}
-	sendBody = nil
-	if err := c.SendPeppol(ctx, "party1", "key1", id, "IT"); err != nil {
+	if _, legacy := sendBody["Transport"]; legacy {
+		t.Fatalf("legacy Transport key must not be sent %#v", sendBody)
+	}
+	if gotStrict != "true" {
+		t.Fatalf("Peppol must be strict (no silent email fallback), got %q", gotStrict)
+	}
+
+	sendBody, gotStrict = nil, ""
+	if err := c.Send(ctx, "party1", "key1", id, invoicing.TransportSDI); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := sendBody["Transport"]; ok && sendBody["Transport"] != "" && sendBody["Transport"] != nil {
-		t.Fatalf("IT must omit Transport %#v", sendBody)
+	if sendBody["Transporttype"] != "SDI" {
+		t.Fatalf("IT must route over SDI %#v", sendBody)
+	}
+	if gotStrict != "true" {
+		t.Fatalf("SDI must be strict, got %q", gotStrict)
+	}
+
+	// Particulier : pas d'adresse réseau → email, et surtout pas de mode strict.
+	sendBody, gotStrict = nil, ""
+	if err := c.Send(ctx, "party1", "key1", id, invoicing.TransportSMTP); err != nil {
+		t.Fatal(err)
+	}
+	if sendBody["Transporttype"] != "SMTP" {
+		t.Fatalf("individual must route over SMTP %#v", sendBody)
+	}
+	if gotStrict != "" {
+		t.Fatalf("SMTP must not set StrictTransportType, got %q", gotStrict)
+	}
+
+	if err := c.Send(ctx, "party1", "key1", id, ""); err == nil {
+		t.Fatal("empty transport must fail closed")
 	}
 }
 
@@ -343,6 +374,45 @@ func TestParseWebhookAcceptSuccessNotDelivered(t *testing.T) {
 	}
 	if status != invoicing.StatusDelivered || peppol != "delivered" {
 		t.Fatalf("OrderDelivered → %s %s", status, peppol)
+	}
+}
+
+// Relecture d'ordre (réconciliation) : le libellé de statut n'est pas au même
+// endroit selon le canal, et un état non terminal ne doit rien conclure.
+func TestClientFetchStatus(t *testing.T) {
+	cases := []struct {
+		name     string
+		body     string
+		status   invoicing.DocStatus
+		peppol   string
+		terminal bool
+	}{
+		{"flow state delivered", `{"OrderID":42,"EInvoiceFlowState":"Delivered"}`, invoicing.StatusDelivered, "delivered", true},
+		{"refused", `{"OrderID":42,"EInvoiceFlowState":"Refused"}`, invoicing.StatusRejected, "rejected", true},
+		{"nested message info", `{"OrderID":42,"AdditionalMessageInformation":{"EInvoiceFlowState":"Delivered"}}`, invoicing.StatusDelivered, "delivered", true},
+		{"accepted is not delivered", `{"OrderID":42,"EInvoiceFlowState":"Accepted"}`, invoicing.StatusSending, "sending", false},
+		{"no status field", `{"OrderID":42}`, invoicing.StatusSending, "unknown", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotPath string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			t.Cleanup(srv.Close)
+			st, err := billit.NewClient(srv.URL).FetchStatus(context.Background(), "p", "k", "42")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gotPath != "/v1/orders/42" {
+				t.Fatalf("path %s", gotPath)
+			}
+			if st.Status != tc.status || st.PeppolStatus != tc.peppol || st.Terminal != tc.terminal {
+				t.Fatalf("got %+v want %s/%s terminal=%v", st, tc.status, tc.peppol, tc.terminal)
+			}
+		})
 	}
 }
 

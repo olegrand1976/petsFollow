@@ -281,6 +281,38 @@ func (s *Store) MarkStaleSendingDocuments(ctx context.Context, cutoff time.Time,
 	return int(tag.RowsAffected()), nil
 }
 
+// ListSendingDocuments renvoie les documents en vol depuis plus longtemps que
+// cutoff, candidats à une relecture chez Billit (webhook manqué). Même périmètre
+// que MarkStaleSendingDocuments, qui reste le filet terminal à 7 jours.
+func (s *Store) ListSendingDocuments(ctx context.Context, cutoff time.Time, limit int) ([]invoicing.SendingDoc, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, practice_id::text, COALESCE(billit_order_id, '')
+		FROM invoicing.documents
+		WHERE status = 'sending'
+		  AND type IN ('invoice', 'credit_note')
+		  AND COALESCE(source, 'practice') = 'practice'
+		  AND COALESCE(billit_order_id, '') <> ''
+		  AND updated_at < $1
+		ORDER BY updated_at
+		LIMIT $2`, cutoff, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []invoicing.SendingDoc
+	for rows.Next() {
+		var d invoicing.SendingDoc
+		if err := rows.Scan(&d.DocumentID, &d.PracticeID, &d.BillitOrderID); err != nil {
+			return nil, err
+		}
+		out = append(out, d)
+	}
+	return out, rows.Err()
+}
+
 func (s *Store) CreateDocument(ctx context.Context, doc invoicing.Document, lines []invoicing.Line) (invoicing.Document, error) {
 	cp, err := json.Marshal(doc.Counterparty)
 	if err != nil {
@@ -606,12 +638,12 @@ func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, st
 	}
 	defer tx.Rollback(ctx)
 
-	var docID, practiceID, prev, source string
+	var docID, practiceID, prev, source, prevPeppol string
 	err = tx.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, status, COALESCE(source, 'practice')
+		SELECT id::text, practice_id::text, status, COALESCE(source, 'practice'), COALESCE(peppol_status, '')
 		FROM invoicing.documents
 		WHERE billit_order_id = $1
-		FOR UPDATE`, orderID).Scan(&docID, &practiceID, &prev, &source)
+		FOR UPDATE`, orderID).Scan(&docID, &practiceID, &prev, &source, &prevPeppol)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return invoicing.ErrDocNotFound
@@ -620,7 +652,7 @@ func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, st
 	}
 	prevStatus := invoicing.DocStatus(prev)
 	applyStatus := invoicing.ResolveWebhookApplyStatus(prevStatus, status)
-	applyPeppol := peppolStatus
+	applyPeppol := invoicing.ResolveWebhookPeppolStatus(prevPeppol, peppolStatus)
 	applySent := sentAt
 	if applyStatus != status {
 		// Transition suppressed (monotonic) — keep peppol/sent as-is.

@@ -193,6 +193,10 @@ func (a *API) putVetVisitTypes(w http.ResponseWriter, r *http.Request) {
 				code = "invalid_color"
 			case strings.Contains(msg, "name_required"):
 				code = "name_required"
+			case strings.Contains(msg, "invalid_price"):
+				code = "invalid_price"
+			case strings.Contains(msg, "invalid_vat_percent"):
+				code = "invalid_vat_percent"
 			}
 			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
 			return

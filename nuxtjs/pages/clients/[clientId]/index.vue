@@ -231,6 +231,15 @@
                 <h4 class="client-billing-title" data-testid="client-billing-section">{{ $t('clients.billing.title') }}</h4>
                 <p class="pro-hint">{{ $t('clients.billing.hint') }}</p>
                 <label class="pro-field">
+                  <span class="pro-field__label">{{ $t('clients.billing.customerKind') }}</span>
+                  <select v-model="identityDraft.billingCustomerKind" class="pro-input" data-testid="client-billing-customer-kind">
+                    <option value="">{{ $t('clients.billing.customerKindUnset') }}</option>
+                    <option value="individual">{{ $t('clients.billing.customerKindIndividual') }}</option>
+                    <option value="business">{{ $t('clients.billing.customerKindBusiness') }}</option>
+                  </select>
+                  <span class="pro-hint">{{ $t('clients.billing.customerKindHint') }}</span>
+                </label>
+                <label class="pro-field">
                   <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
                   <select v-model="identityDraft.billingCountry" class="pro-input" data-testid="client-billing-country">
                     <option value="">—</option>
@@ -240,13 +249,22 @@
                     <option value="ES">ES</option>
                   </select>
                 </label>
+                <p
+                  v-if="identityFiscalIdsIgnored"
+                  class="pro-hint client-billing-warn"
+                  data-testid="client-billing-fiscal-ignored"
+                >
+                  {{ $t('clients.billing.customerKindFiscalIgnored') }}
+                </p>
                 <ProInput
+                  v-if="!identityIsIndividual"
                   v-model="identityDraft.billingVatNumber"
                   test-id="client-billing-vat"
                   :label="$t('clients.billing.vatNumber')"
                   :maxlength="120"
                 />
                 <ProInput
+                  v-if="!identityIsIndividual"
                   v-model="identityDraft.billingCompanyNumber"
                   test-id="client-billing-company"
                   :label="$t('clients.billing.companyNumber')"
@@ -319,6 +337,7 @@ type ClientRow = {
   billingCity?: string
   billingPostal?: string
   billingCountry?: string
+  billingCustomerKind?: string
   isWalkinPlaceholder?: boolean
 }
 
@@ -369,6 +388,7 @@ const identityDraft = reactive({
   billingCity: '',
   billingPostal: '',
   billingCountry: '',
+  billingCustomerKind: '',
 })
 const identitySaving = ref(false)
 const identityMsg = ref('')
@@ -386,7 +406,17 @@ function syncIdentityDraft(c: ClientRow | null) {
   identityDraft.billingCity = c?.billingCity || ''
   identityDraft.billingPostal = c?.billingPostal || ''
   identityDraft.billingCountry = c?.billingCountry || ''
+  identityDraft.billingCustomerKind = c?.billingCustomerKind || ''
 }
+
+const identityIsIndividual = computed(() => identityDraft.billingCustomerKind === 'individual')
+// Les identifiants déjà saisis ne sont pas effacés — un mauvais clic sur
+// « Particulier » ne doit pas détruire un n° de TVA — mais ils ne serviront plus
+// à la facturation, qui suit le type explicite. On le dit plutôt que le taire.
+const identityFiscalIdsIgnored = computed(() =>
+  identityIsIndividual.value
+  && !!(identityDraft.billingVatNumber.trim() || identityDraft.billingCompanyNumber.trim()),
+)
 
 const identityDirty = computed(() => {
   const c = client.value
@@ -402,7 +432,8 @@ const identityDirty = computed(() => {
     identityDraft.billingStreet.trim() !== (c.billingStreet || '').trim() ||
     identityDraft.billingCity.trim() !== (c.billingCity || '').trim() ||
     identityDraft.billingPostal.trim() !== (c.billingPostal || '').trim() ||
-    identityDraft.billingCountry.trim() !== (c.billingCountry || '').trim()
+    identityDraft.billingCountry.trim() !== (c.billingCountry || '').trim() ||
+    identityDraft.billingCustomerKind !== (c.billingCustomerKind || '')
   )
 })
 
@@ -425,10 +456,12 @@ async function saveIdentity() {
         billingCity: identityDraft.billingCity.trim(),
         billingPostal: identityDraft.billingPostal.trim(),
         billingCountry: identityDraft.billingCountry.trim(),
+        billingCustomerKind: identityDraft.billingCustomerKind,
       },
     })
-    const data = res.data ?? res
-    client.value = { ...(client.value || {} as ClientRow), ...data }
+    // Remplacement et non fusion : les champs vidés sont absents de la réponse
+    // (omitempty), une fusion ressusciterait l'ancienne valeur dans le formulaire.
+    client.value = (res.data ?? res) as ClientRow
     syncIdentityDraft(client.value)
     identityMsg.value = t('clients.detail.identitySaved')
   } catch (e: any) {
@@ -626,6 +659,9 @@ onMounted(async () => {
   margin: 1.25rem 0 0.25rem;
   font-size: 0.95rem;
   font-weight: 600;
+}
+.client-billing-warn {
+  color: #8a6d1d;
 }
 .pro-mb-md {
   margin-bottom: 1rem;

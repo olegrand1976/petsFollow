@@ -156,12 +156,19 @@ type Config struct {
 	BillitDefaultDocsIncluded int
 	BillitSecretsBackend      string // local_enc | plain_dev
 	BillitSecretsKey          string
+	// InvoicingSaasEnabled réveille le Flux A (facturation SaaS LL-IT-SC → cabinet
+	// via le compte Billit master). Off par défaut : l'abonnement Pro est facturé
+	// hors application (commercial / compta). Billit ne sert que cabinet → clients.
+	InvoicingSaasEnabled bool
 	// InvoicingSaasPriceEURCents = SaaS Pro monthly HT in cents (Flux A draft). Default 8800 = 88 €.
 	InvoicingSaasPriceEURCents int
 	// InvoicingSaasAllowlist = UUIDs opted-in for Flux A without DB flag (comma-separated).
 	InvoicingSaasAllowlist []string
 	// SaasInvoicesSecret protège POST /internal/saas-invoices/run (cron brouillons Flux A).
 	SaasInvoicesSecret string
+	// InvoicingReconcileSecret protège POST /internal/invoicing-reconcile/run
+	// (relecture des documents restés en `sending` après un webhook manqué).
+	InvoicingReconcileSecret string
 	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging reset).
 	SeedNotifyStaff bool
 	// AdminStagingSeedEnabled enables POST /admin/staging/seed (staging only — never prod).
@@ -284,9 +291,11 @@ func Load() Config {
 		BillitDefaultDocsIncluded:  envInt("BILLIT_DEFAULT_DOCS_INCLUDED", 50),
 		BillitSecretsBackend:       envOr("BILLIT_SECRETS_BACKEND", "plain_dev"),
 		BillitSecretsKey:           envOr("BILLIT_SECRETS_KEY", ""),
+		InvoicingSaasEnabled:       envBool("INVOICING_SAAS_ENABLED"),
 		InvoicingSaasPriceEURCents: envInt("INVOICING_SAAS_PRICE_EUR_CENTS", 8800),
 		InvoicingSaasAllowlist:     envCSV("INVOICING_SAAS_ALLOWLIST"),
 		SaasInvoicesSecret:         envOr("SAAS_INVOICES_SECRET", ""),
+		InvoicingReconcileSecret:   envOr("INVOICING_RECONCILE_SECRET", ""),
 		SeedNotifyStaff:            envBool("SEED_NOTIFY_STAFF"),
 		AdminStagingSeedEnabled:    envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}

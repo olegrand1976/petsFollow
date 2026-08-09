@@ -83,7 +83,7 @@
             </td>
             <td>{{ c.billitPartyId || '—' }}</td>
             <td>
-              <ProBadge :variant="statusVariant(c.status)">{{ c.status }}</ProBadge>
+              <ProBadge :variant="statusVariant(c.status)">{{ statusLabel(c.status) }}</ProBadge>
             </td>
             <td>
               <span :data-testid="`admin-invoicing-usage-${c.practiceId}`">
@@ -131,7 +131,9 @@
       </ProTable>
     </ProCard>
 
+    <!-- Flux A en sommeil (INVOICING_SAAS_ENABLED off) : l'API répond 404 et la carte disparaît. -->
     <ProCard
+      v-if="saasFluxOn"
       class="pro-mt-xl"
       :title="$t('admin.invoicing.saasTitle')"
       data-testid="admin-invoicing-saas-list"
@@ -253,9 +255,10 @@ type SaasTarget = {
   saasDocument?: SaasDoc
 }
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const rows = ref<Conn[]>([])
 const saasTargets = ref<SaasTarget[]>([])
+const saasFluxOn = ref(false)
 const loading = ref(true)
 const busyId = ref('')
 const error = ref('')
@@ -275,6 +278,12 @@ function formatDate(iso: string) {
   } catch {
     return iso
   }
+}
+
+function statusLabel(status: string): string {
+  if (!status) return '—'
+  const key = `invoicing.connStatus.${status}`
+  return te(key) ? t(key) : status
 }
 
 function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
@@ -352,11 +361,13 @@ async function load() {
       }),
     ])
     rows.value = unwrap<Conn[]>(connRes) || []
+    saasFluxOn.value = saasRes !== null
     saasTargets.value = saasRes ? (unwrap<SaasTarget[]>(saasRes) || []) : []
   } catch (e: any) {
     if (e?.statusCode === 404 || e?.status === 404) {
       error.value = t('admin.invoicing.disabled')
       rows.value = []
+      saasFluxOn.value = false
       saasTargets.value = []
     } else {
       error.value = e?.data?.error?.message || e?.message || t('admin.invoicing.loadError')

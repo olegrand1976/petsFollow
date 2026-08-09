@@ -260,7 +260,7 @@
         "Historique cabinet : /consultations (walk-ins + RDV avec CR, date décroissante, filtres, audio draft si disponible + durée d’enregistrement).",
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
-        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module prescriptions).",
+        "Deep-links DAF / Billit cohérents avec le contexte consultation ; visitId persisté sur le document. Lignes préremplies acte + DAF, prix à compléter seulement si un médicament n’a pas de tarif catalogue. CTA libellé DAF (≠ module prescriptions).",
         "Hub CTA DAF → wizard avec visitId ; finalize FEFO + déduction stock dans le wizard (jamais silencieux à la clôture CR).",
         "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · leave-save · dirty post-save · CTA DAF/facture · hub sans traitements in-workspace · détail RDV agenda → visite conservée).",
         "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
@@ -299,7 +299,7 @@
         "Enregistrer le brouillon → Preview FEFO (lots seed visibles).",
         "Si rupture : mini-réception lot inline → re-preview (sans aller sur /stock).",
         "Finaliser le DAF → confirm ProModal → stock déduit.",
-        "CTA Facturer (si Billit UI on) → /invoicing?dafId=&mode=fromDaf avec lignes + montant HT estimé si prix stock.",
+        "CTA Facturer (si Billit UI on) → /invoicing?dafId=&mode=fromDaf : une ligne par médicament au prix catalogue + montant HT estimé (l’acte du type de RDV s’ajoute quand la facture part de la consultation).",
         "Fiche animal → bloc Dispenses DAF (lecture).",
         "/daf?status=draft : badge âge si brouillon > 1 h ; /consultations : badge « Brouillon DAF >1 h »."
       ],

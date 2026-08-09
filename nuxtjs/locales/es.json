@@ -501,7 +501,13 @@
       "visitTypesSaved": "Tipos de cita guardados.",
       "visitTypesSaveFailed": "No se pudieron guardar los tipos.",
       "visitTypeNameRequired": "Cada tipo debe tener un nombre.",
-      "visitTypeDurationInvalid": "Duración no válida (5 a 480 minutos)."
+      "visitTypeDurationInvalid": "Duración no válida (5 a 480 minutos).",
+      "visitTypePrice": "Tarifa sin IVA (€)",
+      "visitTypePricePlaceholder": "Tarifa",
+      "visitTypeVat": "IVA (%)",
+      "visitTypePriceHint": "La tarifa rellena la factura al final de la consulta. Déjala vacía para no proponer nada.",
+      "visitTypePriceInvalid": "Tarifa no válida (se espera un importe positivo).",
+      "visitTypeVatInvalid": "IVA no válido (0 a 100 %)."
     },
     "sections": {
       "avatar": {
@@ -976,6 +982,12 @@
       "title": "Facturación / Peppol",
       "hint": "Datos fiscales usados para rellenar facturas.",
       "hintOptional": "Opcional — rellena la contraparte Peppol al facturar.",
+      "customerKind": "Tipo de cliente",
+      "customerKindUnset": "Sin definir",
+      "customerKindIndividual": "Particular",
+      "customerKindBusiness": "Profesional",
+      "customerKindHint": "Particular: factura sin IVA enviada por correo. Profesional: envío Peppol con identificadores fiscales.",
+      "customerKindFiscalIgnored": "Este cliente está marcado como particular: el NIF y el número de empresa guardados se conservan pero no aparecerán en sus facturas.",
       "country": "País",
       "vatNumber": "NIF/IVA",
       "companyNumber": "Nº de empresa",
@@ -1107,6 +1119,7 @@
     "colTotal": "Total IVA incl.",
     "send": "Enviar",
     "prefillVisit": "Vinculado a la visita",
+    "prefillVisitType": "Acto: {name}",
     "amountRequired": "Indique un importe sin IVA válido (> 0).",
     "errorGeneric": "Ha ocurrido un error",
     "issue": "Emitir",
@@ -1117,7 +1130,7 @@
     "relatedInvoicePlaceholder": "Elegir una factura…",
     "relatedInvoiceEmpty": "No hay factura emitida/entregada — envíe primero una factura.",
     "relatedInvoiceRequired": "Seleccione la factura vinculada a esta nota de crédito.",
-    "prefillDafAmount": "Importe HT estimado {amount} € (precios stock)",
+    "prefillEstimatedAmount": "Importe estimado sin IVA {amount} €",
     "counterparty": {
       "name": "Cliente",
       "country": "País",
@@ -1132,7 +1145,13 @@
       "postal": "Código postal",
       "city": "Ciudad",
       "email": "Correo",
-      "emailProformaHint": "Obligatorio para enviar el presupuesto al cliente (enlace de validación)."
+      "emailProformaHint": "Obligatorio para enviar el presupuesto al cliente (enlace de validación).",
+      "kind": "Tipo de cliente",
+      "kindIndividual": "Particular",
+      "kindBusiness": "Profesional",
+      "kindIndividualHint": "Sin n.º de IVA: la factura se envía por correo electrónico.",
+      "kindBusinessHint": "Identificador fiscal obligatorio: la factura circula por la red Peppol.",
+      "emailIndividualHint": "Obligatorio: es la dirección de entrega de la factura."
     },
     "create": "Crear la factura",
     "createDocument": "Crear el documento",
@@ -1153,10 +1172,13 @@
     "filterDelivered": "Entregados",
     "relatedInvoiceEmptyBillit": "Ninguna factura ya enviada por Peppol — envíe primero una factura.",
     "beAddressRequired": "Dirección completa obligatoria (calle, CP, ciudad) para Bélgica.",
+    "individualAddressRequired": "Dirección completa obligatoria (calle, CP, ciudad) para un particular.",
+    "individualEmailRequired": "Correo obligatorio: la factura de un particular se envía por email.",
     "secretsMismatchHint": "La clave almacenada no es legible (rotación). Vuelva a conectar.",
     "reconnect": "Reconectar",
     "connStatus": {
       "active": "Activa",
+      "disconnected": "No conectada",
       "pending_registration": "Registro en curso",
       "pending_kyc": "KYC en curso",
       "suspended": "Suspendida",
@@ -1170,6 +1192,18 @@
       "rejected": "Rechazada",
       "cancelled": "Anulada",
       "accepted": "Aceptado por el cliente"
+    },
+    "deliveryStatus": {
+      "byEmail": "Email · {status}",
+      "creating_order": "Preparación en Billit",
+      "sending": "Envío en curso",
+      "delivered": "Entrega confirmada",
+      "rejected": "Rechazada por el destinatario",
+      "cancelled": "Anulada",
+      "unknown": "Estado desconocido",
+      "send_failed": "Fallo en el envío",
+      "stale_timeout": "Sin respuesta — revisar",
+      "awaiting_client": "Esperando al cliente"
     },
     "clientSearch": "Buscar un cliente",
     "clientSearchPlaceholder": "Nombre, email o teléfono…",

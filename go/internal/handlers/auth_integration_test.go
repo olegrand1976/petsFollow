@@ -63,6 +63,20 @@ func newTestAPI(t *testing.T) *testAPI {
 	return newTestAPIWithBilling(t, nil)
 }
 
+// Interne au harnais : voir newTestAPIBillitOff.
+const envTestBillitOff = "PF_TEST_BILLIT_OFF"
+
+// newTestAPIBillitOff monte l'API module facturation coupé, pour vérifier qu'un
+// flag à false n'ouvre aucune route (règle modules-tag-dev).
+func newTestAPIBillitOff(t *testing.T) *testAPI {
+	t.Helper()
+	// `t.Setenv` plutôt qu'un os.Setenv dans le constructeur : la valeur d'origine
+	// est remise en fin de test, sans laisser le module éteint pour la suite.
+	t.Setenv(envTestBillitOff, "1")
+	t.Setenv("BILLIT_ENABLED", "false")
+	return newTestAPIWithBilling(t, nil)
+}
+
 // newTestAPIWithPprof monte l'API avec les routes de profilage activées.
 func newTestAPIWithPprof(t *testing.T, secret string) *testAPI {
 	t.Helper()
@@ -81,7 +95,12 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	// dev/demo) et sur le gateway billing mock (opt-in explicite).
 	_ = os.Setenv("DEV_SEED_ENABLED", "true")
 	_ = os.Setenv("BILLING_MOCK_ENABLED", "true")
-	_ = os.Setenv("BILLIT_ENABLED", "true")
+	// Facturation forcée quel que soit le `.env` du poste — un flag à false y
+	// ferait répondre 404 partout au lieu d'échouer franchement. L'extinction se
+	// demande explicitement (`newTestAPIBillitOff`), jamais par accident.
+	if os.Getenv(envTestBillitOff) != "1" {
+		_ = os.Setenv("BILLIT_ENABLED", "true")
+	}
 	_ = os.Setenv("BILLIT_MOCK_ENABLED", "true")
 	if os.Getenv("BILLIT_WEBHOOK_SECRET") == "" {
 		_ = os.Setenv("BILLIT_WEBHOOK_SECRET", "test-billit-webhook-secret")
@@ -151,6 +170,13 @@ func firstNonWalkinPetID(t *testing.T, pets []any) string {
 
 func uniqueEmail(prefix string) string {
 	return fmt.Sprintf("%s+%d@petsfollow.test", prefix, time.Now().UnixNano())
+}
+
+// uniqueLabel : même logique que uniqueEmail pour les libellés soumis à une
+// contrainte d'unicité métier (un prospect déjà détenu renvoie 409), sinon un
+// second `make test-go` sur la même base échoue sur les restes du premier.
+func uniqueLabel(prefix string) string {
+	return fmt.Sprintf("%s %d", prefix, time.Now().UnixNano())
 }
 
 func doJSON(t *testing.T, h http.Handler, method, path string, body any) (int, map[string]any) {

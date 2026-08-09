@@ -497,6 +497,29 @@ func (s *Store) GetDraftDAFByVisit(ctx context.Context, practiceID, visitID stri
 	return s.GetDAF(ctx, practiceID, dafID)
 }
 
+// GetFinalizedDAFByVisit returns the most recent finalized DAF of a visit, if any.
+// Sert au pré-remplissage d'une facture en fin de consultation : seul un DAF
+// finalisé a consommé du stock, donc est facturable.
+func (s *Store) GetFinalizedDAFByVisit(ctx context.Context, practiceID, visitID string) (DAFDocument, error) {
+	visitID = strings.TrimSpace(visitID)
+	if practiceID == "" || visitID == "" {
+		return DAFDocument{}, ErrValidation
+	}
+	var dafID string
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text FROM pharmacy.daf_documents
+		WHERE practice_id = $1 AND visit_id = $2::uuid AND status = 'finalized'
+		ORDER BY finalized_at DESC NULLS LAST, created_at DESC
+		LIMIT 1`, practiceID, visitID).Scan(&dafID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return DAFDocument{}, pharmacy.ErrDAFNotFound
+	}
+	if err != nil {
+		return DAFDocument{}, err
+	}
+	return s.GetDAF(ctx, practiceID, dafID)
+}
+
 // UpsertDraftDAFForVisit creates or replaces the draft DAF for a consultation visit.
 func (s *Store) UpsertDraftDAFForVisit(
 	ctx context.Context,

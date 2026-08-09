@@ -37,7 +37,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 5. Hub post-CR : CTA **DAF** (wizard `/daf/nouveau` prérempli `visitId`) / **Facturer** / **Consignes** (si flags) — pas de panneau traitements in-workspace ; parcours DAF détaillé → [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md).
 6. Choisir :
    - **Créer un DAF & Facturer** → wizard si besoin, sinon finalize inline puis **Facturer** (`mode=fromDaf`, lignes + montant estimé mock).
-   - **ou Facturer directement** → page facturation avec contrepartie préremplie.
+   - **ou Facturer directement** → page facturation avec contrepartie préremplie **et lignes proposées** : l’acte au tarif du type de rendez-vous, plus les médicaments du DAF finalisé de la visite s’il y en a un. Bandeau « Acte : Consultation · Montant HT estimé … € ». Type de RDV non tarifé → aucune ligne, saisie manuelle comme avant (tarifs éditables dans **Paramètres → Agenda**).
    - **ou Terminer** → visite `done` + finalisation auto des brouillons CR non vides (visible côté app client) → retour liste `/consultations`.
 7. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**. Voir aussi [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md) pour le parcours stock/DAF détaillé.
 8. (Optionnel) Depuis **Agenda** → détail d’un RDV : le détail n’affiche **plus** le CR — bouton **Nouvelle consultation** (RDV confirmé à venir, ou walk-in à reprendre) **et** **Voir la consultation** (RDV passé / `done`) ouvrent le **même** écran `/consultations/{id}` (stade édition ou lecture selon droits / statut ; fermer sans enregistrer **n’annule pas** un RDV agenda).
@@ -49,7 +49,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - Historique cabinet : `/consultations` (walk-ins + RDV avec CR, date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
 - Veille / switch profil : autosave CR + reprise de la consultation pour le **même** utilisateur.
 - CR accessible immédiatement.
-- Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module prescriptions).
+- Deep-links DAF / Billit cohérents avec le contexte consultation ; `visitId` persisté sur le document. Lignes préremplies acte + DAF, prix à compléter seulement si un médicament n’a pas de tarif catalogue. CTA libellé **DAF** (≠ module prescriptions).
 - Hub CTA **DAF** → wizard avec `visitId` ; finalize FEFO + déduction stock dans le wizard (jamais silencieux à la clôture CR).
 - E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · leave-save · dirty post-save · CTA DAF/facture · hub sans traitements in-workspace · détail RDV agenda → visite conservée).
 - E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).

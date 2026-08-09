@@ -158,6 +158,7 @@
     "self_referral": "L’auto-referral non è consentito",
     "invalid_counterparty": "Dati cliente / fiscali non validi",
     "invoicing_disabled": "Fatturazione non disponibile",
+    "invoicing_saas_disabled": "Fatturazione SaaS Billit disattivata (fatturata fuori dall'app)",
     "invoicing_not_connected": "Fatturazione non collegata",
     "connection_not_active": "Connessione Billit non attiva",
     "document_not_found": "Documento non trovato",
@@ -199,7 +200,9 @@
     "related_invoice_not_on_billit": "La fattura collegata non esiste ancora su Billit — inviala prima",
     "be_vat_required": "Partita IVA belga obbligatoria",
     "be_vat_invalid": "Partita IVA belga non valida (formato o cifre di controllo)",
-    "be_address_required": "Indirizzo completo obbligatorio per il Belgio (via, CAP, città)"
+    "be_address_required": "Indirizzo completo obbligatorio per il Belgio (via, CAP, città)",
+    "individual_address_required": "Indirizzo completo obbligatorio per un privato (via, CAP, città)",
+    "individual_email_required": "Email obbligatoria per un privato: la fattura viene inviata via email"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

@@ -31,7 +31,8 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 
 **On attend encore les accès reseller Billit.** Tant qu’ils ne sont pas reçus :
 
-- **Gelé** : Sprint 5 (DAF → Billit / BIL-9), Phase 3, Peppol live cabinet, GA facturation.
+- **Gelé** : Phase 3, Peppol live cabinet, GA facturation.
+- **Livré sans reseller** : BIL-9 — lignes de facture préremplies (acte du type de RDV + DAF finalisé de la visite) via `GET /practices/me/invoicing/prefill`, en mock comme en live.
 - **Poursuivable** : S4 VAMReg, S6 staging pharmacie, Phase 2 stock ops, Phase 4 réglementaire (hors lien facture), Phase 5 grossistes/Bigame.
 - Socle Billit déjà dans le repo : **ne pas ré-implémenter** ; ne pas pousser DAF→facture en pilote réel sans reseller.
 
@@ -59,7 +60,7 @@ Voir détail d’exécution dans [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PER
 | Sprint | Contenu | Statut |
 |--------|---------|--------|
 | **S4** VAMReg | `job_audit`, Asynq opt-in, dry-run sync, retry UI | ✅ Dry-run |
-| **S5** DAF→Billit | BIL-9 / invoices.connect | ⏸ **Gelé** (P0-2) |
+| **S5** DAF→Billit | BIL-9 lignes préremplies (acte + DAF) | ✅ Livré · worker `invoices.connect` toujours ⏸ (P0-2) |
 | **S6** Ops staging | `PHARMACY_ENABLED`, `VAMREG_DRY_RUN`, workers env, `pg_trgm`, smoke, UC | ✅ Env/secrets · `pg_trgm` · smoke MVP · `smoke-pharmacy-s6-staging` · UC-VP-05 |
 
 **Done when (chemin stock)** : pilote staging — receipt → DAF → VAMReg dry-run OK.  
@@ -93,13 +94,13 @@ Objectif : tourner sans Excel (hors EDI).
 
 | ID | Chantier | Contenu | Statut |
 |----|----------|---------|--------|
-| 3.A | Mapping DAF → lignes | Auto-doc Billit (qty, CNK, prix catalogue, TVA) ; revue humaine avant Peppol | ⏸ Spec + gate |
-| 3.B | Parcours consultation | CTA post-CR : DAF → facture guidé | 🟡 Deep-link existant |
+| 3.A | Mapping DAF → lignes | Lignes proposées par l’API (qty, libellé, prix catalogue, TVA) ; revue humaine avant envoi | ✅ Livré (`/invoicing/prefill`) |
+| 3.B | Parcours consultation | CTA post-CR : acte tarifé + lignes DAF préremplies | ✅ Livré |
 | 3.C | Avoirs / retours | Credit note + cohérence stock | ⏸ |
 | 3.D | KYC & quotas | Connexion `active`, plafonds, runbook rejet | ⏸ |
 | 3.E | Reporting | CA médicaments, marge, export comptable | ⏸ |
 
-Lien ticket : **BIL-9** — [33 § Phase 5](33-BILLIT-INTEGRATION.md) — **go dès accès reseller** (pas de date fixe).
+Lien ticket : **BIL-9** — [33 § Phase 5](33-BILLIT-INTEGRATION.md) — **livré** ; le reste de la Phase 3 (avoirs/stock, KYC, reporting) attend les accès reseller.
 
 ---
 

@@ -501,7 +501,13 @@
       "visitTypesSaved": "Vastuvõtu tüübid salvestatud.",
       "visitTypesSaveFailed": "Tüüpide salvestamine ebaõnnestus.",
       "visitTypeNameRequired": "Igal tüübil peab olema nimi.",
-      "visitTypeDurationInvalid": "Vigane kestus (5–480 minutit)."
+      "visitTypeDurationInvalid": "Vigane kestus (5–480 minutit).",
+      "visitTypePrice": "Hind ilma KM-ta (€)",
+      "visitTypePricePlaceholder": "Hind",
+      "visitTypeVat": "KM (%)",
+      "visitTypePriceHint": "Hind täidab arve visiidi lõpus automaatselt. Jäta tühjaks, kui ei soovi ettepanekut.",
+      "visitTypePriceInvalid": "Vigane hind (oodatakse positiivset summat).",
+      "visitTypeVatInvalid": "Vigane käibemaks (0–100 %)."
     },
     "sections": {
       "avatar": {
@@ -976,6 +982,12 @@
       "title": "Arveldus / Peppol",
       "hint": "Maksuandmed arvete eeltäitmiseks.",
       "hintOptional": "Valikuline — eeltäidab Peppol-vastaspoole arveldamisel.",
+      "customerKind": "Kliendi tüüp",
+      "customerKindUnset": "Määramata",
+      "customerKindIndividual": "Eraisik",
+      "customerKindBusiness": "Ettevõte",
+      "customerKindHint": "Eraisik: käibemaksuta arve saadetakse e-postiga. Ettevõte: Peppol-saadetis maksuandmetega.",
+      "customerKindFiscalIgnored": "See klient on märgitud eraisikuks: salvestatud KMKR- ja registrikood säilivad, kuid neid ei kasutata tema arvetel.",
       "country": "Riik",
       "vatNumber": "KMKR number",
       "companyNumber": "Ettevõtte number",
@@ -1107,6 +1119,7 @@
     "colTotal": "Kokku koos KM-ga",
     "send": "Saada",
     "prefillVisit": "Seotud visiidiga",
+    "prefillVisitType": "Teenus: {name}",
     "amountRequired": "Sisesta kehtiv summa ilma käibemaksuta (> 0).",
     "errorGeneric": "Midagi läks valesti",
     "issue": "Väljasta",
@@ -1117,7 +1130,7 @@
     "relatedInvoicePlaceholder": "Vali arve…",
     "relatedInvoiceEmpty": "Väljastatud/kohale toimetatud arvet pole — saatke esmalt arve.",
     "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve.",
-    "prefillDafAmount": "Hinnanguline summa ilma KM {amount} € (laohinnad)",
+    "prefillEstimatedAmount": "Hinnanguline summa ilma KM {amount} €",
     "counterparty": {
       "name": "Klient",
       "country": "Riik",
@@ -1132,7 +1145,13 @@
       "postal": "Postiindeks",
       "city": "Linn",
       "email": "E-post",
-      "emailProformaHint": "Kohustuslik pakkumise saatmiseks kliendile (kinnituslink)."
+      "emailProformaHint": "Kohustuslik pakkumise saatmiseks kliendile (kinnituslink).",
+      "kind": "Kliendi tüüp",
+      "kindIndividual": "Eraisik",
+      "kindBusiness": "Ettevõte",
+      "kindIndividualHint": "KMKR numbrit pole — arve saadetakse e-postiga.",
+      "kindBusinessHint": "Maksukohustuslase number on nõutav — arve liigub Peppoli võrgus.",
+      "emailIndividualHint": "Kohustuslik: see on arve kohaletoimetamise aadress."
     },
     "create": "Loo arve",
     "createDocument": "Loo dokument",
@@ -1153,10 +1172,13 @@
     "filterDelivered": "Kohale toimetatud",
     "relatedInvoiceEmptyBillit": "Peppoli kaudu saadetud arvet pole — saatke esmalt arve.",
     "beAddressRequired": "Belgia jaoks on vaja täielikku aadressi (tänav, sihtnumber, linn).",
+    "individualAddressRequired": "Eraisiku puhul on vaja täielikku aadressi (tänav, sihtnumber, linn).",
+    "individualEmailRequired": "E-post on kohustuslik: eraisiku arve saadetakse e-postiga.",
     "secretsMismatchHint": "Salvestatud võti on loetamatu (võtme vahetus). Ühendage uuesti.",
     "reconnect": "Ühenda uuesti",
     "connStatus": {
       "active": "Aktiivne",
+      "disconnected": "Ühendamata",
       "pending_registration": "Registreerimine",
       "pending_kyc": "KYC pooleli",
       "suspended": "Peatatud",
@@ -1170,6 +1192,18 @@
       "rejected": "Tagasi lükatud",
       "cancelled": "Tühistatud",
       "accepted": "Klient kinnitas"
+    },
+    "deliveryStatus": {
+      "byEmail": "E-post · {status}",
+      "creating_order": "Ettevalmistus Billitis",
+      "sending": "Saatmine käib",
+      "delivered": "Kohaletoimetamine kinnitatud",
+      "rejected": "Saaja lükkas tagasi",
+      "cancelled": "Tühistatud",
+      "unknown": "Tundmatu olek",
+      "send_failed": "Saatmine ebaõnnestus",
+      "stale_timeout": "Vastuseta — vaja kontrollida",
+      "awaiting_client": "Ootab klienti"
     },
     "clientSearch": "Otsi klienti",
     "clientSearchPlaceholder": "Nimi, e-post või telefon…",

@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,9 +11,34 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
+
+// newSaasTestAPI réveille le Flux A (SaaS LL-IT-SC → cabinet), dormant par
+// défaut : l'abonnement Pro se facture hors Billit.
+func newSaasTestAPI(t *testing.T) *testAPI {
+	t.Helper()
+	t.Setenv("INVOICING_SAAS_ENABLED", "true")
+	return newTestAPI(t)
+}
+
+// connectInvoicingPractice active la connexion Billit (mock) du cabinet.
+func connectInvoicingPractice(t *testing.T, api *testAPI, access, partyID string) {
+	t.Helper()
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("connect/start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": partyID, "apiKey": "mock-key",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("connect/complete %d %#v", code, env)
+	}
+}
 
 func TestInvoicingConnectAndSendMock(t *testing.T) {
 	api := newTestAPI(t)
@@ -104,6 +130,277 @@ func TestInvoicingConnectAndSendMock(t *testing.T) {
 	}
 }
 
+// Un cabinet facture d'abord des particuliers : pas de TVA, pas de Peppol,
+// livraison par email (Transporttype SMTP côté Billit).
+func TestInvoicingIndividualCustomer(t *testing.T) {
+	api := newTestAPI(t)
+	access, _ := registerInvoicingPractice(t, api, "inv-b2c")
+	connectInvoicingPractice(t, api, access, "party_b2c")
+
+	individual := func(over map[string]any) map[string]any {
+		cp := map[string]any{
+			"name": "Marie Dupont", "customerKind": "individual", "country": "BE",
+			"email":  "marie.dupont@example.test",
+			"street": "Rue des Fleurs 12", "city": "Bruxelles", "postal": "1000",
+		}
+		for k, v := range over {
+			if v == nil {
+				delete(cp, k)
+				continue
+			}
+			cp[k] = v
+		}
+		return map[string]any{
+			"type":         "invoice",
+			"counterparty": cp,
+			"lines": []map[string]any{
+				{"description": "Consultation", "quantity": 1, "unitPriceExclCents": 4500, "vatPercent": 21},
+			},
+		}
+	}
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, individual(nil))
+	if code != http.StatusCreated {
+		t.Fatalf("create individual invoice %d %#v", code, env)
+	}
+	docID, _ := dataMap(t, env)["id"].(string)
+	if docID == "" {
+		t.Fatalf("missing doc id %#v", env)
+	}
+	cp, _ := dataMap(t, env)["counterparty"].(map[string]any)
+	if cp["customerKind"] != string(invoicing.KindIndividual) {
+		t.Fatalf("expected individual counterparty %#v", cp)
+	}
+	if v, ok := cp["vatNumber"].(string); ok && v != "" {
+		t.Fatalf("individual must carry no VAT number %#v", cp)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+docID+"/send", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("send individual invoice %d %#v", code, env)
+	}
+	sent := dataMap(t, env)
+	if sent["status"] != string(invoicing.StatusDelivered) {
+		t.Fatalf("expected delivered %#v", env)
+	}
+	// L'audit ne doit pas prétendre que la facture a voyagé sur Peppol.
+	if sent["peppolStatus"] != "email_delivered" {
+		t.Fatalf("expected email_delivered peppolStatus, got %#v", sent["peppolStatus"])
+	}
+
+	// Séquence live rejouée à la main (le mock livre en synchrone) : le webhook
+	// Billit renvoie les mêmes libellés quel que soit le transport, il ne doit
+	// pas transformer un envoi email en livraison Peppol dans l'audit.
+	orderID, _ := sent["billitOrderId"].(string)
+	if orderID == "" {
+		t.Fatalf("missing billit order id %#v", sent)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents SET status = 'sending', peppol_status = 'email_sending'
+		WHERE billit_order_id = $1`, orderID); err != nil {
+		t.Fatal(err)
+	}
+	api.api.TestSetBillitWebhookSecret(testBillitWebhookSecret)
+	raw, _ := json.Marshal(map[string]any{
+		"OrderID": orderID, "EventType": "OrderDelivered", "Status": "delivered",
+	})
+	if code, env := postBillitWebhook(t, api.handler, testBillitWebhookSecret, raw); code != http.StatusOK {
+		t.Fatalf("webhook %d %#v", code, env)
+	}
+	var afterWebhook string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(peppol_status, '') FROM invoicing.documents WHERE billit_order_id = $1`,
+		orderID).Scan(&afterWebhook); err != nil {
+		t.Fatal(err)
+	}
+	if afterWebhook != "email_delivered" {
+		t.Fatalf("webhook must keep the email audit trail, got %q", afterWebhook)
+	}
+
+	// Le quota mensuel se décompte comme pour une facture Peppol.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/connection", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("connection %d %#v", code, env)
+	}
+	if usage, _ := dataMap(t, env)["usageThisMonth"].(float64); usage < 1 {
+		t.Fatalf("individual invoice must consume quota, usage=%v", usage)
+	}
+
+	// Sans email, Billit n'a aucune adresse de livraison : refus à la création.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access,
+		individual(map[string]any{"email": nil}))
+	if code != http.StatusBadRequest || errMsgKey(env) != "individual_email_required" {
+		t.Fatalf("expected individual_email_required, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access,
+		individual(map[string]any{"street": nil}))
+	if code != http.StatusBadRequest || errMsgKey(env) != "individual_address_required" {
+		t.Fatalf("expected individual_address_required, got %d %#v", code, env)
+	}
+}
+
+// Flux A (SaaS LL-IT-SC → cabinet) en sommeil : les surfaces admin et le cron
+// doivent répondre 404 tant que INVOICING_SAAS_ENABLED n'est pas posé.
+func TestInvoicingSaasFluxDormant(t *testing.T) {
+	t.Setenv("SAAS_INVOICES_SECRET", "test-saas-invoices-secret")
+	// Explicite : ne pas dépendre de l'environnement du poste qui lance les tests.
+	t.Setenv("INVOICING_SAAS_ENABLED", "false")
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/invoicing/saas-targets", adminTok, nil)
+	if code != http.StatusNotFound || errMsgKey(env) != "invoicing_saas_disabled" {
+		t.Fatalf("expected dormant saas-targets 404, got %d %#v", code, env)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/saas-invoices/run", nil)
+	req.Header.Set("X-Saas-Invoices-Secret", "test-saas-invoices-secret")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	var cronEnv map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &cronEnv)
+	if rec.Code != http.StatusNotFound || errMsgKey(cronEnv) != "invoicing_saas_disabled" {
+		t.Fatalf("expected dormant cron 404, got %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// Module tag `dev` : coupé, il ne doit rien laisser dépasser. Le harnais force
+// BILLIT_ENABLED=true partout ailleurs, donc sans ce test personne ne vérifie
+// que le drapeau éteint réellement la facturation — la règle modules-tag-dev
+// exige un 404, pas une route ouverte à un cabinet non connecté.
+func TestInvoicingRoutesDisabledWhenBillitOff(t *testing.T) {
+	api := newTestAPIBillitOff(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	for _, tc := range []struct{ method, path string }{
+		{http.MethodGet, "/api/v1/practices/me/invoicing/connection"},
+		{http.MethodGet, "/api/v1/practices/me/invoicing/documents"},
+		{http.MethodPost, "/api/v1/practices/me/invoicing/documents"},
+		{http.MethodGet, "/api/v1/practices/me/invoicing/prefill?visitId=00000000-0000-4000-8000-000000000001"},
+		{http.MethodPost, "/api/v1/practices/me/invoicing/connect/start"},
+		{http.MethodGet, "/api/v1/admin/invoicing/connections"},
+	} {
+		code, env := doAuthJSON(t, api.handler, tc.method, tc.path, vetTok, nil)
+		if code != http.StatusNotFound {
+			t.Fatalf("%s %s want 404 with Billit off, got %d %#v", tc.method, tc.path, code, env)
+		}
+	}
+
+	// Route publique (proforma client) : pas de token de session à opposer.
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/public/proforma/whatever", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("public proforma want 404 with Billit off, got %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// Webhook Billit jamais reçu : sans relecture, la facture reste « en vol » et son
+// quota consommé jusqu'au rejet automatique à 7 jours. Le cron de réconciliation
+// doit la rattraper — sans toucher aux envois encore récents.
+func TestInvoicingReconcileStuckSending(t *testing.T) {
+	t.Setenv("INVOICING_RECONCILE_SECRET", "test-invoicing-reconcile-secret")
+	api := newTestAPI(t)
+	access, _ := registerInvoicingPractice(t, api, "inv-reconcile")
+	connectInvoicingPractice(t, api, access, "party_reconcile")
+
+	sendInvoice := func(label string) (docID, orderID string) {
+		t.Helper()
+		code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+			"type": "invoice",
+			"counterparty": map[string]any{
+				"name": label, "country": "BE", "vatNumber": "BE1000000021",
+				"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+			},
+			"lines": []map[string]any{
+				{"description": "Consult", "quantity": 1, "unitPriceExclCents": 5000, "vatPercent": 21},
+			},
+		})
+		if code != http.StatusCreated {
+			t.Fatalf("create doc %d %#v", code, env)
+		}
+		docID, _ = dataMap(t, env)["id"].(string)
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+docID+"/send", access, nil)
+		if code != http.StatusOK {
+			t.Fatalf("send %d %#v", code, env)
+		}
+		orderID, _ = dataMap(t, env)["billitOrderId"].(string)
+		if docID == "" || orderID == "" {
+			t.Fatalf("missing ids %#v", env)
+		}
+		return docID, orderID
+	}
+
+	stuckID, _ := sendInvoice("Client Bloqué")
+	recentID, _ := sendInvoice("Client Récent")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	// Rejoue l'état réel d'un webhook manqué : en vol depuis 2 h pour l'un,
+	// depuis quelques secondes pour l'autre (Billit n'a pas encore répondu).
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'sending', peppol_status = 'sending', updated_at = now() - interval '2 hours'
+		WHERE id = $1`, stuckID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'sending', peppol_status = 'sending', updated_at = now()
+		WHERE id = $1`, recentID); err != nil {
+		t.Fatal(err)
+	}
+
+	runReconcile := func(secret string) (int, map[string]any) {
+		t.Helper()
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/invoicing-reconcile/run", nil)
+		if secret != "" {
+			req.Header.Set("X-Invoicing-Reconcile-Secret", secret)
+		}
+		rec := httptest.NewRecorder()
+		api.handler.ServeHTTP(rec, req)
+		var body map[string]any
+		_ = json.Unmarshal(rec.Body.Bytes(), &body)
+		return rec.Code, body
+	}
+
+	if code, _ := runReconcile(""); code != http.StatusUnauthorized {
+		t.Fatalf("reconcile without secret want 401 got %d", code)
+	}
+	if code, _ := runReconcile("wrong-secret"); code != http.StatusUnauthorized {
+		t.Fatalf("reconcile with wrong secret want 401 got %d", code)
+	}
+
+	code, body := runReconcile("test-invoicing-reconcile-secret")
+	if code != http.StatusOK {
+		t.Fatalf("reconcile %d %#v", code, body)
+	}
+	res := dataMap(t, body)
+	if n, _ := res["reconciled"].(float64); n < 1 {
+		t.Fatalf("expected at least one reconciled doc %#v", res)
+	}
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents/"+stuckID, access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get stuck doc %d %#v", code, env)
+	}
+	if got := dataMap(t, env)["status"]; got != string(invoicing.StatusDelivered) {
+		t.Fatalf("stuck doc should be reconciled to delivered, got %v", got)
+	}
+
+	// Garde-fou : un envoi de moins de 30 min n'est pas relu (sinon on martèle
+	// l'API Billit pendant la fenêtre normale d'arrivée du webhook).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents/"+recentID, access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get recent doc %d %#v", code, env)
+	}
+	if got := dataMap(t, env)["status"]; got != string(invoicing.StatusSending) {
+		t.Fatalf("recent doc must stay sending, got %v", got)
+	}
+}
+
 func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 	api := newTestAPI(t)
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
@@ -140,9 +437,14 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	// Cabinet de démo partagé avec les parcours Playwright : on remet sa connexion
+	// telle qu'elle était. Et le secret est scellé (`plain:`) comme le ferait
+	// `connect/complete` — un ref brut est illisible et fait répondre 409
+	// `invoicing_secrets_mismatch` au premier envoi, longtemps après ce test.
+	restoreInvoicingConnection(t, api, practiceID)
 	if _, err := api.pool.Exec(ctx, `
 		INSERT INTO invoicing.practice_connections (practice_id, billit_party_id, status, api_secret_ref, connected_at)
-		VALUES ($1, 'party_demo', 'active', 'mock-secret', now())
+		VALUES ($1, 'party_demo', 'active', 'plain:mock-secret', now())
 		ON CONFLICT (practice_id) DO UPDATE
 		SET status = 'active', billit_party_id = EXCLUDED.billit_party_id, api_secret_ref = EXCLUDED.api_secret_ref`,
 		practiceID); err != nil {
@@ -296,6 +598,380 @@ func TestInvoicingCreateDocumentWithVisitID(t *testing.T) {
 	}
 	if dataMap(t, env)["dafId"] != dafID {
 		t.Fatalf("dafId=%v want %s", dataMap(t, env)["dafId"], dafID)
+	}
+}
+
+// TestInvoicingPrefillFromConsultation couvre BIL-9 : en fin de consultation, la
+// facture propose l'acte au tarif du type de RDV puis les médicaments du DAF
+// finalisé de la visite. Le CTA consultation ne passe que `visitId` : le DAF doit
+// être retrouvé sans que l'UI ait à le connaître.
+func TestInvoicingPrefillFromConsultation(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v (make seed?)", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+	practiceID, _ := pets[0].(map[string]any)["practiceId"].(string)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Type de RDV tarifé, inséré en SQL : le PUT du catalogue remplace toute la
+	// liste du cabinet et polluerait le seed partagé par les autres suites.
+	vtID := uuid.NewString()
+	vtName := uniqueLabel("BIL9 Consultation")
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO practice.visit_types (
+			id, practice_id, name, duration_minutes, color, is_active, sort_order,
+			price_excl_cents, vat_percent
+		) VALUES ($1::uuid, $2::uuid, $3, 30, '#2A9D8F', true, 99, 4500, 21)`,
+		vtID, practiceID, vtName); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM practice.visit_types WHERE id = $1::uuid`, vtID)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         time.Now().UTC().Format(time.RFC3339),
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"visitTypeId":         vtID,
+		"notes":               "bil9 prefill",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"status": "cancelled",
+		})
+	})
+
+	// Acte seul : pas encore de DAF finalisé.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId="+visitID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prefill act only %d %#v", code, env)
+	}
+	lines := prefillLines(t, env)
+	if len(lines) != 1 {
+		t.Fatalf("want 1 act line, got %d %#v", len(lines), env)
+	}
+	if lines[0]["description"] != vtName {
+		t.Fatalf("act description=%v want %s", lines[0]["description"], vtName)
+	}
+	if lines[0]["unitPriceExclCents"] != float64(4500) || lines[0]["vatPercent"] != float64(21) {
+		t.Fatalf("act price=%#v", lines[0])
+	}
+	if dataMap(t, env)["visitTypeName"] != vtName {
+		t.Fatalf("visitTypeName=%v", dataMap(t, env)["visitTypeName"])
+	}
+
+	// Médicament sans prix cabinet : on le tarife pour ce test seulement.
+	var medID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT m.id::text FROM pharmacy.ref_medications m
+		WHERE NOT EXISTS (
+			SELECT 1 FROM pharmacy.medication_prices p
+			WHERE p.medication_id = m.id AND p.practice_id = $1::uuid
+		)
+		LIMIT 1`, practiceID).Scan(&medID); err != nil {
+		t.Skipf("no unpriced medication available: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.medication_prices (practice_id, medication_id, sell_price_cents, vat_percent)
+		VALUES ($1::uuid, $2::uuid, 1250, 6)`, practiceID, medID); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `
+			DELETE FROM pharmacy.medication_prices WHERE practice_id = $1::uuid AND medication_id = $2::uuid`,
+			practiceID, medID)
+	})
+
+	dafID := uuid.NewString()
+	dafNum := time.Now().UnixNano()%900000 + 100000
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.daf_documents (
+			id, practice_id, daf_year, daf_number, status, pet_id, visit_id, prescriber_user_id,
+			issued_at, finalized_at
+		) VALUES (
+			$1::uuid, $2::uuid, 2099, $5, 'finalized', $3::uuid, $4::uuid,
+			(SELECT id FROM identity.users WHERE email = 'vet.demo@petsfollow.test' LIMIT 1),
+			now(), now()
+		)`, dafID, practiceID, petID, visitID, dafNum); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pharmacy.daf_documents WHERE id = $1::uuid`, dafID)
+	})
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.daf_items (
+			id, daf_id, medication_id, qty, unit, amm_number, is_antibiotic, sort_order
+		) VALUES ($1::uuid, $2::uuid, $3::uuid, 2, 'boite', 'AMM-BIL9', false, 0)`,
+		uuid.NewString(), dafID, medID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Second médicament laissé hors catalogue de prix : sa ligne doit sortir sans
+	// tarif ni TVA imposée — un 21 % belge par défaut fausserait une facture IT.
+	var unpricedID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT m.id::text FROM pharmacy.ref_medications m
+		WHERE m.id <> $2::uuid AND NOT EXISTS (
+			SELECT 1 FROM pharmacy.medication_prices p
+			WHERE p.medication_id = m.id AND p.practice_id = $1::uuid
+		)
+		LIMIT 1`, practiceID, medID).Scan(&unpricedID); err != nil {
+		t.Skipf("no second unpriced medication available: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.daf_items (
+			id, daf_id, medication_id, qty, unit, amm_number, is_antibiotic, sort_order
+		) VALUES ($1::uuid, $2::uuid, $3::uuid, 1, 'boite', 'AMM-BIL9-B', false, 1)`,
+		uuid.NewString(), dafID, unpricedID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Même appel, sans dafId : le DAF finalisé de la visite est retrouvé seul.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId="+visitID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prefill act+daf %d %#v", code, env)
+	}
+	lines = prefillLines(t, env)
+	if len(lines) != 3 {
+		t.Fatalf("want act + 2 daf lines, got %d %#v", len(lines), env)
+	}
+	if lines[1]["unitPriceExclCents"] != float64(1250) || lines[1]["vatPercent"] != float64(6) {
+		t.Fatalf("daf line price=%#v", lines[1])
+	}
+	if lines[1]["quantity"] != float64(2) {
+		t.Fatalf("daf line qty=%v want 2", lines[1]["quantity"])
+	}
+	if lines[2]["unitPriceExclCents"] != float64(0) {
+		t.Fatalf("unpriced line should have no price %#v", lines[2])
+	}
+	if _, has := lines[2]["vatPercent"]; has {
+		t.Fatalf("unpriced line must not impose a VAT rate %#v", lines[2])
+	}
+	if dataMap(t, env)["dafId"] != dafID {
+		t.Fatalf("dafId=%v want %s", dataMap(t, env)["dafId"], dafID)
+	}
+
+	// Visite inconnue : pas d'erreur, simplement rien à proposer.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId=00000000-0000-4000-8000-000000000099", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prefill unknown visit %d %#v", code, env)
+	}
+	if len(prefillLines(t, env)) != 0 {
+		t.Fatalf("unknown visit should propose nothing %#v", env)
+	}
+
+	// Client : pas de permission cabinet.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId="+visitID, clientTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("client prefill want 403 got %d %#v", code, env)
+	}
+
+	// Visite d'un autre cabinet : ni l'acte ni le DAF ne doivent fuiter. Le
+	// endpoint n'est pas scopé par l'URL, seule la contre-vérification du
+	// practice_id l'isole.
+	otherTok := loginToken(t, api.handler, "vet.parc@petsfollow.test", "VetDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId="+visitID+"&dafId="+dafID, otherTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("cross-practice prefill %d %#v", code, env)
+	}
+	if n := len(prefillLines(t, env)); n != 0 {
+		t.Fatalf("cross-practice prefill leaked %d lines %#v", n, env)
+	}
+
+	// dafId explicite mais rattaché à une autre visite : la facture de cette
+	// consultation ne doit pas embarquer les médicaments d'une autre.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId=00000000-0000-4000-8000-000000000099&dafId="+dafID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("daf/visit mismatch %d %#v", code, env)
+	}
+	if n := len(prefillLines(t, env)); n != 0 {
+		t.Fatalf("daf of another visit must not be billed, got %d lines %#v", n, env)
+	}
+
+	// DAF repassé en brouillon : rien n'a été déduit du stock, donc rien à
+	// facturer. Le numéro repart à NULL — un brouillon numéroté est refusé en base.
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE pharmacy.daf_documents
+		SET status = 'draft', finalized_at = NULL, daf_number = NULL
+		WHERE id = $1::uuid`, dafID); err != nil {
+		t.Fatal(err)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/practices/me/invoicing/prefill?visitId="+visitID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prefill draft daf %d %#v", code, env)
+	}
+	lines = prefillLines(t, env)
+	if len(lines) != 1 || lines[0]["description"] != vtName {
+		t.Fatalf("draft daf must leave the act line alone, got %#v", lines)
+	}
+	if _, has := dataMap(t, env)["dafId"]; has {
+		t.Fatalf("draft daf must not be referenced %#v", env)
+	}
+}
+
+// restoreInvoicingConnection mémorise la connexion Billit d'un cabinet et la
+// remet en place en fin de test — sinon un cabinet de démo reste branché sur une
+// clé de test et le prochain envoi (Playwright ou démo commerciale) échoue.
+func restoreInvoicingConnection(t *testing.T, api *testAPI, practiceID string) {
+	t.Helper()
+	var partyID, secretRef, status *string
+	err := api.pool.QueryRow(context.Background(), `
+		SELECT billit_party_id, api_secret_ref, status
+		FROM invoicing.practice_connections WHERE practice_id = $1::uuid`,
+		practiceID).Scan(&partyID, &secretRef, &status)
+	existed := err == nil
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if !existed {
+			_, _ = api.pool.Exec(context.Background(),
+				`DELETE FROM invoicing.practice_connections WHERE practice_id = $1::uuid`, practiceID)
+			return
+		}
+		_, _ = api.pool.Exec(context.Background(), `
+			UPDATE invoicing.practice_connections
+			SET billit_party_id = $2, api_secret_ref = $3, status = $4
+			WHERE practice_id = $1::uuid`, practiceID, partyID, secretRef, status)
+	})
+}
+
+func prefillLines(t *testing.T, env map[string]any) []map[string]any {
+	t.Helper()
+	raw, _ := dataMap(t, env)["lines"].([]any)
+	out := make([]map[string]any, 0, len(raw))
+	for _, l := range raw {
+		m, ok := l.(map[string]any)
+		if !ok {
+			t.Fatalf("bad line %#v", l)
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+// TestVisitTypePricingValidation : un tarif ou une TVA hors bornes est refusé au
+// niveau du catalogue, sinon la facture serait rejetée plus tard par ValidateLines.
+func TestVisitTypePricingValidation(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/visit-types", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list visit types %d %#v", code, env)
+	}
+	existing, _ := env["data"].([]any)
+	items := make([]map[string]any, 0, len(existing)+1)
+	for _, raw := range existing {
+		vt, _ := raw.(map[string]any)
+		items = append(items, map[string]any{
+			"id":              vt["id"],
+			"name":            vt["name"],
+			"durationMinutes": vt["durationMinutes"],
+			"color":           vt["color"],
+			"isActive":        vt["isActive"],
+			"sortOrder":       vt["sortOrder"],
+			"priceExclCents":  vt["priceExclCents"],
+			"vatPercent":      vt["vatPercent"],
+		})
+	}
+
+	// Le PUT échoue avant toute écriture : le catalogue du seed reste intact.
+	bad := append(items, map[string]any{
+		"name": uniqueLabel("BIL9 bad price"), "durationMinutes": 30, "color": "#2A9D8F",
+		"isActive": true, "sortOrder": 98, "priceExclCents": -100, "vatPercent": 21,
+	})
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/visit-types", vetTok,
+		map[string]any{"items": bad})
+	if code != http.StatusBadRequest {
+		t.Fatalf("negative price want 400 got %d %#v", code, env)
+	}
+	if errMsgKey(env) != "invalid_price" {
+		t.Fatalf("want invalid_price got %#v", env)
+	}
+
+	bad = append(items, map[string]any{
+		"name": uniqueLabel("BIL9 bad vat"), "durationMinutes": 30, "color": "#2A9D8F",
+		"isActive": true, "sortOrder": 98, "priceExclCents": 4500, "vatPercent": 150,
+	})
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/visit-types", vetTok,
+		map[string]any{"items": bad})
+	if code != http.StatusBadRequest {
+		t.Fatalf("vat 150 want 400 got %d %#v", code, env)
+	}
+	if errMsgKey(env) != "invalid_vat_percent" {
+		t.Fatalf("want invalid_vat_percent got %#v", env)
+	}
+
+	// Un payload sans tarif (client qui ignore la facturation, ou renommage d'un
+	// type quand les champs sont masqués) ne doit pas effacer le prix enregistré.
+	if len(items) == 0 {
+		t.Skip("no visit type in seed catalogue")
+	}
+	// Tarif posé explicitement : sur un catalogue à 0 l'assertion ne prouverait rien.
+	wantID, restorePrice := items[0]["id"], items[0]["priceExclCents"]
+	wantPrice := float64(7777)
+	items[0]["priceExclCents"] = wantPrice
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/visit-types", vetTok,
+		map[string]any{"items": items})
+	if code != http.StatusOK {
+		t.Fatalf("seed price %d %#v", code, env)
+	}
+	t.Cleanup(func() {
+		items[0]["priceExclCents"] = restorePrice
+		doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/visit-types", vetTok,
+			map[string]any{"items": items})
+	})
+
+	silent := make([]map[string]any, 0, len(items))
+	for _, it := range items {
+		trimmed := map[string]any{}
+		for k, v := range it {
+			if k != "priceExclCents" && k != "vatPercent" {
+				trimmed[k] = v
+			}
+		}
+		silent = append(silent, trimmed)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/visit-types", vetTok,
+		map[string]any{"items": silent})
+	if code != http.StatusOK {
+		t.Fatalf("put without pricing %d %#v", code, env)
+	}
+	var got any
+	for _, raw := range env["data"].([]any) {
+		vt, _ := raw.(map[string]any)
+		if vt["id"] == wantID {
+			got = vt["priceExclCents"]
+		}
+	}
+	if got != wantPrice {
+		t.Fatalf("price cleared by a payload without pricing: got %v want %v", got, wantPrice)
 	}
 }
 
@@ -1192,7 +1868,7 @@ func TestInvoicingAdminMarkPartnerNotEligible(t *testing.T) {
 }
 
 func TestInvoicingAdminSaasDraft(t *testing.T) {
-	api := newTestAPI(t)
+	api := newSaasTestAPI(t)
 	email := uniqueEmail("inv-admin-saas")
 	password := "TestPass123!"
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
@@ -1391,7 +2067,7 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 }
 
 func TestInvoicingAdminSaasTargetsAndCron(t *testing.T) {
-	api := newTestAPI(t)
+	api := newSaasTestAPI(t)
 	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
 
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/invoicing/saas-targets", adminTok, nil)

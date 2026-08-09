@@ -2,14 +2,54 @@ package handlers_test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
 
+// provisionVisitTypesPractice crée un véto et un client jetables : le catalogue
+// de types de RDV se remplace en bloc, on ne le fait pas sur un cabinet de démo.
+func provisionVisitTypesPractice(t *testing.T, h http.Handler) (vetTok, clientTok string) {
+	t.Helper()
+	vetEmail := uniqueEmail("vt-vet")
+	clientEmail := uniqueEmail("vt-client")
+	const password = "TestPass123!"
+
+	code, env := doJSON(t, h, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": vetEmail, "password": password, "fullName": "Dr Types",
+		"practiceName": "Cabinet Types", "consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register vet %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	code, env = doJSON(t, h, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": strings.TrimPrefix(confirmPath, "/confirm-email?token="),
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm vet %d %#v", code, env)
+	}
+	vetTok, _ = dataMap(t, env)["accessToken"].(string)
+	if vetTok == "" {
+		t.Fatal("missing vet accessToken")
+	}
+
+	code, env = doAuthJSON(t, h, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": clientEmail, "password": password, "fullName": "Client Types",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create client %d %#v", code, env)
+	}
+	return vetTok, loginToken(t, h, clientEmail, password)
+}
+
+// Cabinet isolé : le PUT remplace tout le catalogue (upsert par id, suppression
+// des absents) et les lignes retirées ne sont pas restaurables par l'API
+// (`unknown_visit_type`). Sur vet.demo, ce test effaçait les tarifs du seed et
+// cassait le préremplissage de facture (BIL-9) pour la démo et les e2e.
 func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 	api := newTestAPI(t)
-	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
-	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok, clientTok := provisionVisitTypesPractice(t, api.handler)
 
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/visit-types", vetTok, nil)
 	if code != http.StatusOK {
@@ -48,19 +88,10 @@ func TestVisitTypesCRUDAndCreateVisit(t *testing.T) {
 		t.Fatalf("expected invalid_duration, got %d %#v", code, env)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("pets %d %#v (make seed?)", code, env)
-	}
-	pets, _ := env["data"].([]any)
-	if len(pets) == 0 {
-		t.Fatal("no pets")
-	}
-	petID, _ := pets[0].(map[string]any)["id"].(string)
+	petID := activeDemoPetID(t, api.handler, clientTok)
 
-	// Créneaux lointains + retry : l'agenda VetPlus est partagé avec le seed et
-	// avec les autres tests du paquet, qui tournent en parallèle. Une heure fixe
-	// donne un slot_taken selon l'ordre d'exécution.
+	// Créneaux lointains + retry : d'autres suites peuvent viser le même horaire.
+	// Une heure fixe donne un slot_taken selon l'ordre d'exécution.
 	book := func(label string, start time.Time, body map[string]any) (map[string]any, time.Time) {
 		t.Helper()
 		for i := range 24 {

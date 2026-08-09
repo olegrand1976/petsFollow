@@ -190,22 +190,26 @@ func (c *Client) CreateDocument(ctx context.Context, partyID, apiKey string, doc
 	return parseOrderID(body)
 }
 
-func (c *Client) SendPeppol(ctx context.Context, partyID, apiKey, externalID, country string) error {
+func (c *Client) Send(ctx context.Context, partyID, apiKey, externalID string, transport invoicing.Transport) error {
 	orderID, err := strconv.ParseInt(externalID, 10, 64)
 	if err != nil {
 		return fmt.Errorf("billit send: invalid order id %q", externalID)
 	}
-	cmd := SendCommand{OrderID: orderID, OrderIDs: []int64{orderID}}
-	// Italy uses SDI; omit Transport so Billit routes from customer Identifiers.
-	// Other supported markets: explicit Peppol.
-	if strings.ToUpper(strings.TrimSpace(country)) != "IT" {
-		cmd.Transport = "Peppol"
+	if transport == "" {
+		return fmt.Errorf("billit send: transport required (order %s)", externalID)
 	}
+	cmd := SendCommand{OrderID: orderID, OrderIDs: []int64{orderID}, TransportType: string(transport)}
 	payload, err := json.Marshal(cmd)
 	if err != nil {
 		return err
 	}
-	res, err := c.doJSON(ctx, http.MethodPost, "/v1/orders/commands/send", partyID, apiKey, payload)
+	var headers map[string]string
+	if transport.IsEInvoiceNetwork() {
+		// Refuse the silent email fallback: a network document must fail loudly
+		// so the practice can re-issue it to a particulier over SMTP.
+		headers = map[string]string{"StrictTransportType": "true"}
+	}
+	res, err := c.doJSON(ctx, http.MethodPost, "/v1/orders/commands/send", partyID, apiKey, payload, headers)
 	if err != nil {
 		return err
 	}
@@ -217,7 +221,59 @@ func (c *Client) SendPeppol(ctx context.Context, partyID, apiKey, externalID, co
 	return nil
 }
 
-func (c *Client) doJSON(ctx context.Context, method, path, partyID, apiKey string, payload []byte) (*http.Response, error) {
+// FetchStatus relit un ordre chez Billit (réconciliation d'un webhook manqué).
+// Un statut illisible ou encore en vol renvoie Terminal=false : le document
+// reste en `sending` plutôt que d'être réécrit sur une lecture douteuse.
+func (c *Client) FetchStatus(ctx context.Context, partyID, apiKey, externalID string) (invoicing.DocumentStatus, error) {
+	orderID := strings.TrimSpace(externalID)
+	if orderID == "" {
+		return invoicing.DocumentStatus{}, fmt.Errorf("billit status: empty order id")
+	}
+	res, err := c.doJSON(ctx, http.MethodGet, "/v1/orders/"+url.PathEscape(orderID), partyID, apiKey, nil)
+	if err != nil {
+		return invoicing.DocumentStatus{}, err
+	}
+	defer res.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(res.Body, 1<<20))
+	if res.StatusCode >= 300 {
+		return invoicing.DocumentStatus{}, fmt.Errorf("billit status: http_%d %s", res.StatusCode, truncate(string(body), 200))
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return invoicing.DocumentStatus{}, fmt.Errorf("billit status: invalid json: %w", err)
+	}
+	status, peppol := mapWebhookStatus(orderStatusFromDTO(raw))
+	return invoicing.DocumentStatus{
+		Status:       status,
+		PeppolStatus: peppol,
+		Terminal:     status == invoicing.StatusDelivered || status == invoicing.StatusRejected || status == invoicing.StatusCancelled,
+	}, nil
+}
+
+// orderStatusFromDTO cherche le libellé de statut d'un ordre Billit. Les noms de
+// champs varient selon la version et le canal (Peppol / SDI / SMTP) — même
+// tolérance que le parsing webhook, dont on réutilise ensuite le mapping.
+func orderStatusFromDTO(raw map[string]any) string {
+	for _, key := range []string{
+		"EInvoiceFlowState", "DeliveryStatus", "PeppolStatus", "TransportStatus",
+		"OrderStatus", "SendStatus", "Status",
+	} {
+		if s := anyString(raw[key]); s != "" {
+			return s
+		}
+	}
+	// Certaines réponses imbriquent l'état sous un objet d'information.
+	for _, key := range []string{"AdditionalMessageInformation", "MessageAdditionalInformation", "OrderMessage"} {
+		if nested, ok := raw[key].(map[string]any); ok {
+			if s := orderStatusFromDTO(nested); s != "" {
+				return s
+			}
+		}
+	}
+	return ""
+}
+
+func (c *Client) doJSON(ctx context.Context, method, path, partyID, apiKey string, payload []byte, extraHeaders ...map[string]string) (*http.Response, error) {
 	// Only retry safe GETs — POST create/send must not be replayed (duplicate Billit orders).
 	maxAttempts := 1
 	if method == http.MethodGet {
@@ -238,6 +294,11 @@ func (c *Client) doJSON(ctx context.Context, method, path, partyID, apiKey strin
 		}
 		req.Header.Set("PartyID", partyID)
 		req.Header.Set("ApiKey", apiKey)
+		for _, h := range extraHeaders {
+			for k, v := range h {
+				req.Header.Set(k, v)
+			}
+		}
 		res, err := c.httpClient.Do(req)
 		if err != nil {
 			lastErr = err

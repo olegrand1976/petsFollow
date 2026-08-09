@@ -248,7 +248,11 @@ const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const prescriptionsEnabled = computed(() => isPublicFlagOn(runtimeConfig.public.prescriptionsEnabled))
 const showDafCta = computed(() => !props.readonly && pharmacyEnabled.value && canWritePharmacy.value)
-const showInvoiceCta = computed(() => !props.readonly && invoicingUiEnabled && billitEnabled.value)
+// `clients.write` : même permission que la création de document côté /invoicing —
+// sans elle le CTA mène à un formulaire inaccessible (cas secrétaire).
+const showInvoiceCta = computed(() => (
+  !props.readonly && invoicingUiEnabled && billitEnabled.value && canPractice('clients.write')
+))
 const showPrescriptionCta = computed(() => !props.readonly && prescriptionsEnabled.value && canWriteClinical.value)
 
 const actionError = ref('')

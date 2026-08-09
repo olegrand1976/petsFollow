@@ -197,8 +197,11 @@ type ClientSummary struct {
 	BillingCity            string `json:"billingCity,omitempty"`
 	BillingPostal          string `json:"billingPostal,omitempty"`
 	BillingCountry         string `json:"billingCountry,omitempty"`
-	PetCount               int    `json:"petCount"`
-	IsWalkinPlaceholder    bool   `json:"isWalkinPlaceholder,omitempty"`
+	// BillingCustomerKind : "individual" / "business" / "" (non renseigné —
+	// la facturation déduit alors le type des identifiants fiscaux).
+	BillingCustomerKind string `json:"billingCustomerKind,omitempty"`
+	PetCount            int    `json:"petCount"`
+	IsWalkinPlaceholder bool   `json:"isWalkinPlaceholder,omitempty"`
 }
 
 type Store struct {
@@ -268,6 +271,7 @@ const clientSummarySelect = `
 		COALESCE(u.billing_vat_number,''), COALESCE(u.billing_company_number,''),
 		COALESCE(u.billing_street,''), COALESCE(u.billing_city,''),
 		COALESCE(u.billing_postal,''), COALESCE(u.billing_country,''),
+		COALESCE(u.billing_customer_kind,''),
 		COUNT(p.id)::int,
 		COALESCE(u.is_walkin_placeholder, false)`
 
@@ -276,6 +280,7 @@ const clientSummaryGroupBy = `
 		u.avatar_url, u.contact_phone, u.address, u.national_registry_number,
 		u.billing_vat_number, u.billing_company_number,
 		u.billing_street, u.billing_city, u.billing_postal, u.billing_country,
+		u.billing_customer_kind,
 		u.is_walkin_placeholder`
 
 func scanClientSummary(scan func(dest ...any) error) (ClientSummary, error) {
@@ -285,6 +290,7 @@ func scanClientSummary(scan func(dest ...any) error) (ClientSummary, error) {
 		&c.AvatarURL, &c.ContactPhone, &c.Address, &c.NationalRegistryNumber,
 		&c.BillingVATNumber, &c.BillingCompanyNumber,
 		&c.BillingStreet, &c.BillingCity, &c.BillingPostal, &c.BillingCountry,
+		&c.BillingCustomerKind,
 		&c.PetCount, &c.IsWalkinPlaceholder,
 	)
 	return c, err

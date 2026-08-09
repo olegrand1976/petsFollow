@@ -33,6 +33,10 @@ var (
 	ErrMasterNotConfigured = errors.New("saas_master_not_configured")
 	ErrSaasNotEligible     = errors.New("saas_not_eligible")
 	ErrSaasBillingDisabled = errors.New("saas_billing_disabled")
+	// ErrSaasDisabled: Flux A (SaaS LL-IT-SC → cabinet) en sommeil. La
+	// facturation de l'abonnement Pro se fait hors Billit (commercial / compta) ;
+	// le code reste en place derrière INVOICING_SAAS_ENABLED.
+	ErrSaasDisabled = errors.New("invoicing_saas_disabled")
 	// ErrGateway wraps live/mock Billit HTTP failures (mapped to HTTP 502).
 	ErrGateway = errors.New("invoicing_gateway")
 	// ErrSecrets: practice ApiKey cannot be opened (key rotation) — reconnect Billit.
@@ -68,6 +72,7 @@ type Store interface {
 	GetDocumentByIdempotency(ctx context.Context, practiceID, key string) (Document, error)
 	UpdateDocumentExternal(ctx context.Context, practiceID, docID, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time) error
 	ApplyBillitWebhookStatus(ctx context.Context, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error
+	ListSendingDocuments(ctx context.Context, cutoff time.Time, limit int) ([]SendingDoc, error)
 	InsertWebhookEvent(ctx context.Context, provider, eventType, externalID string, payload []byte) (eventID string, duplicate bool, err error)
 	MarkWebhookProcessed(ctx context.Context, eventID string, processErr string) error
 	DeleteWebhookEvent(ctx context.Context, eventID string) error
@@ -443,22 +448,22 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 	status := StatusIssued
 	peppol := ""
 	if PeppolRequired(doc.Type) {
-		country := doc.Counterparty.Country
-		if err := s.gw.SendPeppol(ctx, c.BillitPartyID, key, orderID, country); err != nil {
+		transport := ResolveTransport(doc.Counterparty)
+		if err := s.gw.Send(ctx, c.BillitPartyID, key, orderID, transport); err != nil {
 			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
 			return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
 		}
 		// Mock: gateway is synchronous — delivered + usage in one TX (same path as live webhook).
 		if s.cfg.BillitMockEnabled {
-			if err := s.store.ApplyBillitWebhookStatus(ctx, orderID, StatusDelivered, "delivered", &now, yyyymm); err != nil {
+			if err := s.store.ApplyBillitWebhookStatus(ctx, orderID, StatusDelivered, deliveredPeppolStatus(transport), &now, yyyymm); err != nil {
 				restore(orderID, prevStatus, "")
 				return Document{}, err
 			}
 			return s.store.GetDocument(ctx, practiceID, docID)
 		}
-		// Live: stay in sending until Billit webhook confirms network delivery.
+		// Live: stay in sending until Billit webhook confirms delivery.
 		status = StatusSending
-		peppol = "sending"
+		peppol = sendingPeppolStatus(transport)
 	}
 	if err := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, status, peppol, &now); err != nil {
 		if PeppolRequired(doc.Type) && !s.cfg.BillitMockEnabled {
@@ -469,6 +474,113 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 		return Document{}, err
 	}
 	return s.store.GetDocument(ctx, practiceID, docID)
+}
+
+// ReconcileResult résume un passage de réconciliation. Errors nomme la cause des
+// échecs : sans elle, une clé Billit tournée ne se lit que comme un compteur
+// `failed` constant d'un passage à l'autre.
+type ReconcileResult struct {
+	Candidates      int      `json:"candidates"`
+	Reconciled      int      `json:"reconciled"`
+	StillFlying     int      `json:"stillFlying"`
+	Failed          int      `json:"failed"`
+	Errors          []string `json:"errors,omitempty"`
+	ErrorsTruncated bool     `json:"errorsTruncated,omitempty"`
+}
+
+const (
+	maxReconcileErrors  = 20
+	maxReconcileErrLen  = 160
+	reconcileDefaultAge = 30 * time.Minute
+)
+
+// fail enregistre l'échec d'un document. Le message est tronqué : une erreur
+// passerelle transporte un extrait de réponse Billit, et ce résumé finit dans
+// les logs Cloud Scheduler.
+func (r *ReconcileResult) fail(docID, reason string) {
+	r.Failed++
+	if len(r.Errors) >= maxReconcileErrors {
+		r.ErrorsTruncated = true
+		return
+	}
+	msg := docID + ": " + reason
+	if runes := []rune(msg); len(runes) > maxReconcileErrLen {
+		msg = string(runes[:maxReconcileErrLen]) + "…"
+	}
+	r.Errors = append(r.Errors, msg)
+}
+
+// ReconcileSending relit chez Billit les documents restés en `sending` : sans ce
+// rattrapage, un webhook manqué laisse la facture en vol — et son quota
+// consommé — jusqu'au rejet automatique à 7 jours (job de rétention).
+// Ne réécrit que sur un statut terminal ; une lecture douteuse ou en erreur
+// laisse le document tel quel pour le prochain passage.
+func (s *Service) ReconcileSending(ctx context.Context, olderThan time.Duration, limit int) (ReconcileResult, error) {
+	var out ReconcileResult
+	if !s.Enabled() {
+		return out, ErrDisabled
+	}
+	if olderThan <= 0 {
+		olderThan = reconcileDefaultAge
+	}
+	docs, err := s.store.ListSendingDocuments(ctx, time.Now().UTC().Add(-olderThan), limit)
+	if err != nil {
+		return out, err
+	}
+	out.Candidates = len(docs)
+	yyyymm := currentYYYYMM()
+	now := time.Now().UTC()
+	for _, d := range docs {
+		c, ref, err := s.store.GetConnection(ctx, d.PracticeID)
+		if err != nil {
+			out.fail(d.DocumentID, "connection: "+err.Error())
+			continue
+		}
+		if c.Status != ConnActive {
+			out.fail(d.DocumentID, "connection_not_active: "+string(c.Status))
+			continue
+		}
+		key, err := OpenAPIKey(s.cfg.BillitSecretsBackend, s.cfg.BillitSecretsKey, ref)
+		if err != nil {
+			out.fail(d.DocumentID, "api_key: "+err.Error())
+			continue
+		}
+		st, err := s.gw.FetchStatus(ctx, c.BillitPartyID, key, d.BillitOrderID)
+		if err != nil {
+			out.fail(d.DocumentID, "fetch_status: "+err.Error())
+			continue
+		}
+		if !st.Terminal {
+			out.StillFlying++
+			continue
+		}
+		var sentAt *time.Time
+		if st.Status == StatusDelivered {
+			sentAt = &now
+		}
+		if err := s.store.ApplyBillitWebhookStatus(ctx, d.BillitOrderID, st.Status, st.PeppolStatus, sentAt, yyyymm); err != nil {
+			out.fail(d.DocumentID, "apply_status: "+err.Error())
+			continue
+		}
+		out.Reconciled++
+	}
+	return out, nil
+}
+
+// deliveredPeppolStatus / sendingPeppolStatus keep the audit trail honest: an
+// invoice mailed to a particulier never travelled on Peppol.
+func deliveredPeppolStatus(t Transport) string {
+	if t == TransportSMTP {
+		return EmailStatusPrefix + "delivered"
+	}
+	return "delivered"
+}
+
+func sendingPeppolStatus(t Transport) string {
+	if t == TransportSMTP {
+		return EmailStatusPrefix + "sending"
+	}
+	return "sending"
 }
 
 // issueProformaToClient emails a magic-link (handler) — no Billit Offer create.
@@ -657,6 +769,9 @@ func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error
 	enabled := s.SaasDraftEnabled()
 	for i := range items {
 		items[i].SaasDraftEnabled = enabled
+		if !s.SaasFluxEnabled() {
+			continue
+		}
 		key := fmt.Sprintf("saas:%s:%d", items[i].PracticeID, yyyymm)
 		if d, err := s.store.GetDocumentByIdempotency(ctx, items[i].PracticeID, key); err == nil {
 			items[i].SaasDocument = &SaasDocSummary{
@@ -687,6 +802,9 @@ func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int, optedI
 	if !s.Enabled() {
 		return nil, ErrDisabled
 	}
+	if !s.SaasFluxEnabled() {
+		return nil, ErrSaasDisabled
+	}
 	if limit <= 0 {
 		limit = 200
 	}
@@ -710,6 +828,9 @@ func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int, a
 	out := SaasDraftRunResult{YYYYMM: saasYYYYMM()}
 	if !s.Enabled() {
 		return out, ErrDisabled
+	}
+	if !s.SaasFluxEnabled() {
+		return out, ErrSaasDisabled
 	}
 	if !s.SaasDraftEnabled() {
 		return out, ErrMasterNotConfigured
@@ -802,6 +923,9 @@ func (s *Service) SetSaasBillingEnabled(ctx context.Context, practiceID string, 
 	if !s.Enabled() {
 		return ErrDisabled
 	}
+	if !s.SaasFluxEnabled() {
+		return ErrSaasDisabled
+	}
 	eligible, _, err := s.store.IsSaasEligible(ctx, practiceID, nil)
 	if err != nil {
 		return err
@@ -819,9 +943,15 @@ func (s *Service) MarkPartnerListed(ctx context.Context, practiceID string) erro
 	return s.store.MarkPartnerListed(ctx, practiceID)
 }
 
+// SaasFluxEnabled reports whether Flux A (facturation SaaS LL-IT-SC → cabinet)
+// is awake. Off by default: l'abonnement Pro se facture hors Billit.
+func (s *Service) SaasFluxEnabled() bool {
+	return s.cfg.InvoicingSaasEnabled
+}
+
 // SaasDraftEnabled reports whether Flux A master credentials are available (or mock defaults).
 func (s *Service) SaasDraftEnabled() bool {
-	if !s.Enabled() {
+	if !s.Enabled() || !s.SaasFluxEnabled() {
 		return false
 	}
 	party, key := s.masterCredentials()
@@ -845,6 +975,9 @@ func (s *Service) masterCredentials() (partyID, apiKey string) {
 func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID string) (Document, error) {
 	if !s.Enabled() {
 		return Document{}, ErrDisabled
+	}
+	if !s.SaasFluxEnabled() {
+		return Document{}, ErrSaasDisabled
 	}
 	partyID, apiKey := s.masterCredentials()
 	if partyID == "" || apiKey == "" {
@@ -970,6 +1103,9 @@ func (s *Service) SendSaasDocument(ctx context.Context, practiceID, docID string
 	if !s.Enabled() {
 		return Document{}, ErrDisabled
 	}
+	if !s.SaasFluxEnabled() {
+		return Document{}, ErrSaasDisabled
+	}
 	partyID, apiKey := s.masterCredentials()
 	if partyID == "" || apiKey == "" {
 		return Document{}, ErrMasterNotConfigured
@@ -1021,8 +1157,7 @@ func (s *Service) SendSaasDocument(ctx context.Context, practiceID, docID string
 		return Document{}, fmt.Errorf("%w: order_missing", ErrGateway)
 	}
 
-	country := doc.Counterparty.Country
-	if err := s.gw.SendPeppol(ctx, partyID, apiKey, orderID, country); err != nil {
+	if err := s.gw.Send(ctx, partyID, apiKey, orderID, ResolveTransport(doc.Counterparty)); err != nil {
 		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
 		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
 	}

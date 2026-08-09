@@ -1167,7 +1167,7 @@
     "relatedInvoicePlaceholder": "Выберите счёт…",
     "relatedInvoiceEmpty": "Нет доступных выпущенных / доставленных счетов — сначала отправьте счёт.",
     "relatedInvoiceRequired": "Выберите счёт, связанный с этой кредитной нотой.",
-    "prefillDafAmount": "Ориентировочная сумма без НДС {amount} € (складская цена)"
+    "prefillEstimatedAmount": "Ориентировочная сумма без НДС {amount} €"
   },
   "pharmacy": {
     "antibioticWarning": "Антибиотик",

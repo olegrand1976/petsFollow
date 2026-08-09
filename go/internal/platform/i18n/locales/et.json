@@ -158,6 +158,7 @@
     "self_referral": "Enesesoovitamine pole lubatud",
     "invalid_counterparty": "Kehtetud kliendi / maksuandmed",
     "invoicing_disabled": "Arveldamine pole saadaval",
+    "invoicing_saas_disabled": "Billiti SaaS-arveldus on välja lülitatud (arveldatakse väljaspool rakendust)",
     "invoicing_not_connected": "Arveldamine pole ühendatud",
     "connection_not_active": "Billiti ühendus pole aktiivne",
     "document_not_found": "Dokumenti ei leitud",
@@ -199,7 +200,9 @@
     "related_invoice_not_on_billit": "Seotud arvet pole Billitis veel loodud — saatke see enne",
     "be_vat_required": "Belgia KMKR number on nõutav",
     "be_vat_invalid": "Vigane Belgia KMKR number (vorming või kontrollnumbrid)",
-    "be_address_required": "Belgia jaoks on vaja täielikku aadressi (tänav, sihtnumber, linn)"
+    "be_address_required": "Belgia jaoks on vaja täielikku aadressi (tänav, sihtnumber, linn)",
+    "individual_address_required": "Eraisiku puhul on vaja täielikku aadressi (tänav, sihtnumber, linn)",
+    "individual_email_required": "Eraisiku puhul on e-post kohustuslik — arve saadetakse e-postiga"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

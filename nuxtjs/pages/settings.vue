@@ -308,12 +308,38 @@
             class="visit-type-row__color"
             :aria-label="$t('settings.calendar.visitTypeColor')"
           >
+          <template v-if="invoicingPrefillOn">
+            <input
+              v-model="vt.priceExcl"
+              type="number"
+              class="pro-input visit-type-row__price"
+              min="0"
+              step="0.01"
+              inputmode="decimal"
+              :placeholder="$t('settings.calendar.visitTypePricePlaceholder')"
+              :aria-label="$t('settings.calendar.visitTypePrice')"
+              data-testid="settings-visit-type-price"
+            >
+            <input
+              v-model.number="vt.vatPercent"
+              type="number"
+              class="pro-input visit-type-row__vat"
+              min="0"
+              max="100"
+              step="1"
+              :aria-label="$t('settings.calendar.visitTypeVat')"
+              data-testid="settings-visit-type-vat"
+            >
+          </template>
           <label class="pro-checkbox-row visit-type-row__active">
             <input v-model="vt.isActive" type="checkbox">
             <span>{{ $t('settings.calendar.visitTypeActive') }}</span>
           </label>
           <ProButton variant="ghost" type="button" @click="visitTypes.splice(idx, 1)">×</ProButton>
         </div>
+        <p v-if="invoicingPrefillOn" class="text-muted pro-mb-sm">
+          {{ $t('settings.calendar.visitTypePriceHint') }}
+        </p>
         <ProButton variant="secondary" type="button" class="pro-mb-md" data-testid="settings-visit-type-add" @click="addVisitType">
           {{ $t('settings.calendar.addVisitType') }}
         </ProButton>
@@ -509,6 +535,12 @@ import {
   normalizeDeskIdleMinutes,
 } from '~/utils/deskIdleMinutes'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
+import {
+  isValidVisitTypeVat,
+  visitTypePriceCents,
+  visitTypePriceInput,
+} from '~/utils/visit-type-pricing'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -522,6 +554,11 @@ const canManagePractice = computed(() => canPractice('practice.settings'))
 const canManageCalendar = computed(() => canPractice('calendar.manage'))
 const canMessage = computed(() => canPractice('messaging'))
 const researchFlagOn = computed(() => isPublicFlagOn(runtimeConfig.public.researchEnabled))
+// Le tarif par type de RDV ne sert qu'à pré-remplir une facture : inutile de
+// l'exposer si l'UI facturation est gelée ou Billit coupé.
+const invoicingPrefillOn = computed(() => (
+  INVOICING_UI_ENABLED && isPublicFlagOn(runtimeConfig.public.billitEnabled)
+))
 const researchOptedIn = ref(false)
 const researchStatusKnown = ref(false)
 const researchBusy = ref(false)
@@ -618,6 +655,9 @@ type VisitTypeDraft = {
   color: string
   isActive: boolean
   sortOrder: number
+  /** Tarif de l'acte en euros HTVA, saisi comme texte : '' = non tarifé. */
+  priceExcl: string
+  vatPercent: number
 }
 const visitTypes = ref<VisitTypeDraft[]>([])
 const visitTypesSaving = ref(false)
@@ -656,7 +696,22 @@ function addVisitType() {
     color: palette[visitTypes.value.length % palette.length],
     isActive: true,
     sortOrder: visitTypes.value.length,
+    priceExcl: '',
+    vatPercent: 21,
   })
+}
+
+function visitTypeFromApi(vt: any, i: number): VisitTypeDraft {
+  return {
+    id: vt.id,
+    name: vt.name || '',
+    durationMinutes: vt.durationMinutes || 30,
+    color: vt.color || '#2A9D8F',
+    isActive: vt.isActive !== false,
+    sortOrder: vt.sortOrder ?? i,
+    priceExcl: visitTypePriceInput(vt.priceExclCents),
+    vatPercent: isValidVisitTypeVat(vt.vatPercent) ? Number(vt.vatPercent) : 21,
+  }
 }
 
 async function loadCalendarSettings() {
@@ -681,14 +736,7 @@ async function loadCalendarSettings() {
     noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
     vacations.value = vacRes.data ?? vacRes ?? []
     const types = typesRes.data ?? typesRes ?? []
-    visitTypes.value = (Array.isArray(types) ? types : []).map((vt: any, i: number) => ({
-      id: vt.id,
-      name: vt.name || '',
-      durationMinutes: vt.durationMinutes || 30,
-      color: vt.color || '#2A9D8F',
-      isActive: vt.isActive !== false,
-      sortOrder: vt.sortOrder ?? i,
-    }))
+    visitTypes.value = (Array.isArray(types) ? types : []).map(visitTypeFromApi)
     scheduleError.value = ''
   }
   catch (e: any) {
@@ -717,6 +765,14 @@ async function saveVisitTypes() {
         visitTypesError.value = t('settings.calendar.visitTypeDurationInvalid')
         return
       }
+      if (visitTypePriceCents(vt.priceExcl) === null) {
+        visitTypesError.value = t('settings.calendar.visitTypePriceInvalid')
+        return
+      }
+      if (!isValidVisitTypeVat(vt.vatPercent)) {
+        visitTypesError.value = t('settings.calendar.visitTypeVatInvalid')
+        return
+      }
     }
     const res: any = await $fetch('/api/vet/visit-types', {
       method: 'PUT',
@@ -728,18 +784,13 @@ async function saveVisitTypes() {
           color: vt.color,
           isActive: vt.isActive !== false,
           sortOrder: i,
+          priceExclCents: visitTypePriceCents(vt.priceExcl) ?? 0,
+          vatPercent: isValidVisitTypeVat(vt.vatPercent) ? Number(vt.vatPercent) : 21,
         })),
       },
     })
     const items = res.data ?? res ?? []
-    visitTypes.value = (Array.isArray(items) ? items : []).map((vt: any, i: number) => ({
-      id: vt.id,
-      name: vt.name || '',
-      durationMinutes: vt.durationMinutes || 30,
-      color: vt.color || '#2A9D8F',
-      isActive: vt.isActive !== false,
-      sortOrder: vt.sortOrder ?? i,
-    }))
+    visitTypes.value = (Array.isArray(items) ? items : []).map(visitTypeFromApi)
     visitTypesSaved.value = true
   } catch (e: any) {
     visitTypesError.value = mapError(e) || t('settings.calendar.visitTypesSaveFailed')
@@ -1229,6 +1280,12 @@ async function disable2FA() {
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
+}
+.visit-type-row__price {
+  max-width: 6.5rem;
+}
+.visit-type-row__vat {
+  max-width: 4.5rem;
 }
 .visit-type-row__active {
   margin: 0;

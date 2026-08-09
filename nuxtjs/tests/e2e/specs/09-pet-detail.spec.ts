@@ -177,15 +177,23 @@ test('pet detail — CR visualisable depuis l’historique', { tag: '@p0' }, asy
     throw new Error(`mark done ${done.status}`)
   }
 
-  await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
-  await expect(page.getByTestId('pet-timeline-card')).toBeVisible({ timeout: 15000 })
-  const historyTile = page.getByTestId('pet-history-visit-report').first()
-  await expect(historyTile).toBeVisible({ timeout: 30000 })
-  await expect(historyTile).toContainText(probe)
-  await historyTile.click()
-  await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
-  await expect(page.getByTestId('visit-report-body')).toBeVisible()
+  try {
+    await loginAsVet(page)
+    await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+    await expect(page.getByTestId('pet-timeline-card')).toBeVisible({ timeout: 15000 })
+    // Ciblé par son texte, pas par sa position : l'animal de démo porte déjà des
+    // CR, et le créneau tiré au sort ne tombe pas forcément en tête de liste.
+    const historyTile = page.getByTestId('pet-history-visit-report').filter({ hasText: probe }).first()
+    await expect(historyTile).toBeVisible({ timeout: 30000 })
+    await historyTile.click()
+    await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('visit-report-body')).toBeVisible()
+  }
+  finally {
+    // Sans ça, chaque exécution laisse une visite « done » dans le futur sur
+    // l'animal de démo — bruit en démo commerciale et pollution de la suivante.
+    await fetch(`${API}/api/v1/visits/${visitId}`, { method: 'DELETE', headers }).catch(() => undefined)
+  }
 })
 
 test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }) => {
@@ -460,6 +468,15 @@ test('heartrate — durées cabinet exposées au client + BPM sur 15s', async ()
     Authorization: `Bearer ${clientTok}`,
     'Content-Type': 'application/json',
   }
+
+  // Un client provisionné par le cabinet n'a pas encore accepté les CGU : sans ce
+  // pas, toute mutation répond 403 consent_required (gate RGPD côté API).
+  const terms = await fetch(`${API}/api/v1/me/accept-terms`, {
+    method: 'POST',
+    headers: clientHeaders,
+    body: JSON.stringify({ consent: true }),
+  })
+  if (!terms.ok) throw new Error(`accept terms ${terms.status}`)
 
   const createPet = await fetch(`${API}/api/v1/pets`, {
     method: 'POST',

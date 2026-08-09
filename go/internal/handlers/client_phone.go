@@ -68,6 +68,18 @@ func normalizeBillingField(raw string, maxRunes int) (string, string) {
 	return v, ""
 }
 
+// normalizeBillingCustomerKind — vide accepté : la facturation retombe alors sur
+// la déduction par identifiant fiscal plutôt que de présumer un particulier.
+func normalizeBillingCustomerKind(raw string) (string, string) {
+	v := strings.ToLower(strings.TrimSpace(raw))
+	switch v {
+	case "", "individual", "business":
+		return v, ""
+	default:
+		return "", "billing_customer_kind_invalid"
+	}
+}
+
 func normalizeBillingCountry(raw string) (string, string) {
 	v := strings.ToUpper(strings.TrimSpace(raw))
 	if v == "" {
@@ -96,6 +108,7 @@ type patchClientReq struct {
 	BillingCity            *string `json:"billingCity"`
 	BillingPostal          *string `json:"billingPostal"`
 	BillingCountry         *string `json:"billingCountry"`
+	BillingCustomerKind    *string `json:"billingCustomerKind"`
 }
 
 func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +125,8 @@ func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
 		req.Address == nil && req.NationalRegistryNumber == nil &&
 		req.BillingVATNumber == nil && req.BillingCompanyNumber == nil &&
 		req.BillingStreet == nil && req.BillingCity == nil &&
-		req.BillingPostal == nil && req.BillingCountry == nil {
+		req.BillingPostal == nil && req.BillingCountry == nil &&
+		req.BillingCustomerKind == nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
 		return
 	}
@@ -196,6 +210,14 @@ func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		patch.BillingCountry = &v
+	}
+	if req.BillingCustomerKind != nil {
+		v, code := normalizeBillingCustomerKind(*req.BillingCustomerKind)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		patch.BillingCustomerKind = &v
 	}
 	clientID := chi.URLParam(r, "clientID")
 	client, err := a.store.UpdateClientProfileByPractice(r.Context(), id.PracticeID, clientID, patch)

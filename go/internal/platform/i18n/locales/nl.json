@@ -158,6 +158,7 @@
     "self_referral": "Zelf-doorverwijzing is niet toegestaan",
     "invalid_counterparty": "Ongeldige klant- / fiscale gegevens",
     "invoicing_disabled": "Facturatie niet beschikbaar",
+    "invoicing_saas_disabled": "Billit SaaS-facturatie uitgeschakeld (buiten de app gefactureerd)",
     "invoicing_not_connected": "Facturatie niet verbonden",
     "connection_not_active": "Billit-verbinding niet actief",
     "document_not_found": "Document niet gevonden",
@@ -199,7 +200,9 @@
     "related_invoice_not_on_billit": "Gerelateerde factuur bestaat nog niet bij Billit — stuur die eerst",
     "be_vat_required": "Belgisch btw-nummer vereist",
     "be_vat_invalid": "Ongeldig Belgisch btw-nummer (formaat of controlecijfers)",
-    "be_address_required": "Volledig adres vereist voor België (straat, postcode, stad)"
+    "be_address_required": "Volledig adres vereist voor België (straat, postcode, stad)",
+    "individual_address_required": "Volledig adres vereist voor een particulier (straat, postcode, stad)",
+    "individual_email_required": "E-mail vereist voor een particulier — de factuur wordt per e-mail verstuurd"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

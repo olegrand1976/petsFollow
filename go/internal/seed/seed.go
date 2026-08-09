@@ -92,6 +92,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedVetPlusCalendarResources(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedVisitTypes(ctx, pool); err != nil {
+		return err
+	}
 	if err := seedCarePros(ctx, pool); err != nil {
 		return err
 	}
@@ -387,6 +390,70 @@ func seedVetPlusAntenne(ctx context.Context, pool *pgxpool.Pool, st *store.Store
 		return fmt.Errorf("vetplus antenne schedule: %w", err)
 	}
 	log.Printf("VetPlus multi-sites: primary + %q", vetPlusAntenneName)
+	return nil
+}
+
+// seedVisitTypes gives each demo practice a tarifed appointment-type catalogue.
+// Sans tarif, la facture de fin de consultation repart vide en démo (BIL-9) :
+// le type de RDV est le seul endroit où vit le prix d'un acte.
+func seedVisitTypes(ctx context.Context, pool *pgxpool.Pool) error {
+	types := []struct {
+		Name     string
+		Duration int
+		Color    string
+		Cents    int
+	}{
+		{"Consultation", 30, "#2A9D8F", 4500},
+		{"Vaccination", 20, "#457B9D", 3500},
+		{"Contrôle post-op", 15, "#E9C46A", 2500},
+	}
+	rows, err := pool.Query(ctx, `
+		SELECT p.id::text FROM practice.practices p
+		WHERE NOT EXISTS (SELECT 1 FROM practice.visit_types vt WHERE vt.practice_id = p.id)`)
+	if err != nil {
+		return fmt.Errorf("visit types lookup: %w", err)
+	}
+	var practiceIDs []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
+			return err
+		}
+		practiceIDs = append(practiceIDs, id)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, practiceID := range practiceIDs {
+		for i, t := range types {
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO practice.visit_types (
+					id, practice_id, name, duration_minutes, color, is_active, sort_order,
+					price_excl_cents, vat_percent
+				) VALUES (gen_random_uuid(), $1::uuid, $2, $3, $4, true, $5, $6, 21)
+				ON CONFLICT (practice_id, name) DO NOTHING`,
+				practiceID, t.Name, t.Duration, t.Color, i, t.Cents); err != nil {
+				return fmt.Errorf("visit type %s: %w", t.Name, err)
+			}
+		}
+	}
+	if len(practiceIDs) > 0 {
+		log.Printf("visit types: catalogue tarifé pour %d cabinet(s)", len(practiceIDs))
+	}
+	// Les RDV démo antérieurs au catalogue n'ont pas de type : sans lui, le CTA
+	// Facturer en fin de consultation ne peut rien proposer en démo.
+	if _, err := pool.Exec(ctx, `
+		UPDATE visits.visits v
+		SET visit_type_id = vt.id
+		FROM practice.visit_types vt
+		WHERE vt.practice_id = v.practice_id
+		  AND vt.name = 'Consultation'
+		  AND v.visit_type_id IS NULL
+		  AND v.deleted_at IS NULL`); err != nil {
+		return fmt.Errorf("visit types backfill: %w", err)
+	}
 	return nil
 }
 
@@ -2024,7 +2091,8 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 				billing_street = '12 rue de la Loi',
 				billing_city = 'Bruxelles',
 				billing_postal = '1000',
-				billing_country = 'BE'
+				billing_country = 'BE',
+				billing_customer_kind = 'business'
 			WHERE id = $1`, clientDemoID)
 	}
 

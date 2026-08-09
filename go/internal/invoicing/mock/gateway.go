@@ -15,10 +15,14 @@ type Gateway struct {
 	seq  atomic.Int64
 	mu   sync.Mutex
 	docs map[string]invoicing.Document
+	sent map[string]invoicing.Transport
 }
 
 func New() *Gateway {
-	return &Gateway{docs: map[string]invoicing.Document{}}
+	return &Gateway{
+		docs: map[string]invoicing.Document{},
+		sent: map[string]invoicing.Transport{},
+	}
 }
 
 func (g *Gateway) EnsureParty(_ context.Context, practice invoicing.PracticeParty) (string, error) {
@@ -46,7 +50,10 @@ func (g *Gateway) CreateDocument(_ context.Context, _, _ string, doc invoicing.D
 	return id, nil
 }
 
-func (g *Gateway) SendPeppol(_ context.Context, _, _, externalID, _ string) error {
+func (g *Gateway) Send(_ context.Context, _, _, externalID string, transport invoicing.Transport) error {
+	if transport == "" {
+		return fmt.Errorf("mock send: transport required (order %s)", externalID)
+	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	doc, ok := g.docs[externalID]
@@ -57,5 +64,30 @@ func (g *Gateway) SendPeppol(_ context.Context, _, _, externalID, _ string) erro
 	doc.Status = invoicing.StatusDelivered
 	doc.PeppolStatus = "delivered"
 	g.docs[externalID] = doc
+	g.sent[externalID] = transport
 	return nil
+}
+
+// FetchStatus rejoue la lecture d'ordre côté Billit : le mock livre en synchrone,
+// donc un ordre envoyé répond `delivered`. Un ordre inconnu reste non terminal —
+// la réconciliation ne doit rien réécrire sur une lecture vide.
+func (g *Gateway) FetchStatus(_ context.Context, _, _, externalID string) (invoicing.DocumentStatus, error) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	doc, ok := g.docs[externalID]
+	if !ok || doc.Status != invoicing.StatusDelivered {
+		return invoicing.DocumentStatus{Status: invoicing.StatusSending, PeppolStatus: "unknown"}, nil
+	}
+	return invoicing.DocumentStatus{
+		Status:       invoicing.StatusDelivered,
+		PeppolStatus: "delivered",
+		Terminal:     true,
+	}, nil
+}
+
+// LastTransport exposes the channel used for an order (tests / smoke).
+func (g *Gateway) LastTransport(externalID string) invoicing.Transport {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.sent[externalID]
 }

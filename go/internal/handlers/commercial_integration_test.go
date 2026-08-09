@@ -145,7 +145,7 @@ func TestCommercialAdminCreateAndEncodeVet(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", commTok, map[string]any{
-		"practiceName": "Prospect Test", "contactName": "Dr X", "status": "new",
+		"practiceName": uniqueLabel("Prospect Test"), "contactName": "Dr X", "status": "new",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create prospect %d %#v", code, env)
@@ -263,8 +263,9 @@ func TestCommercialRBACIsolation(t *testing.T) {
 	tok1 := loginToken(t, api.handler, c1, "CommercialDemo123!")
 	tok2 := loginToken(t, api.handler, c2, "CommercialDemo123!")
 
+	onlyC1 := uniqueLabel("Only C1")
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", tok1, map[string]any{
-		"practiceName": "Only C1",
+		"practiceName": onlyC1,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("prospect %d %#v", code, env)
@@ -276,7 +277,7 @@ func TestCommercialRBACIsolation(t *testing.T) {
 	}
 	for _, item := range prospectListItems(t, env) {
 		m, _ := item.(map[string]any)
-		if m["practiceName"] == "Only C1" {
+		if m["practiceName"] == onlyC1 {
 			t.Fatal("commercial 2 must not see commercial 1 prospect")
 		}
 	}
@@ -306,8 +307,9 @@ func TestVetReferralProspect(t *testing.T) {
 	_ = commID
 
 	vetTok := loginToken(t, api.handler, vetEmail, "VetDemo123!")
+	referred := uniqueLabel("Cabinet Recommandé")
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prospects", vetTok, map[string]any{
-		"practiceName": "Cabinet Recommandé", "contactName": "Dr Y", "city": "Nantes",
+		"practiceName": referred, "contactName": "Dr Y", "city": "Nantes",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("vet referral %d %#v", code, env)
@@ -327,7 +329,7 @@ func TestVetReferralProspect(t *testing.T) {
 	found := false
 	for _, item := range prospectListItems(t, env) {
 		m := item.(map[string]any)
-		if m["practiceName"] == "Cabinet Recommandé" && m["source"] == "vet_referral" {
+		if m["practiceName"] == referred && m["source"] == "vet_referral" {
 			found = true
 		}
 	}
@@ -697,8 +699,10 @@ func TestCommercialManagerTeamVisibility(t *testing.T) {
 	repTok := loginToken(t, api.handler, repEmail, "CommercialDemo123!")
 	otherTok := loginToken(t, api.handler, otherEmail, "CommercialDemo123!")
 
+	teamProspect := uniqueLabel("Team Prospect")
+	outsideProspect := uniqueLabel("Outside Team")
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", repTok, map[string]any{
-		"practiceName": "Team Prospect", "status": "contacted",
+		"practiceName": teamProspect, "status": "contacted",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("rep prospect %d %#v", code, env)
@@ -709,7 +713,7 @@ func TestCommercialManagerTeamVisibility(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", otherTok, map[string]any{
-		"practiceName": "Outside Team",
+		"practiceName": outsideProspect,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("other prospect %d %#v", code, env)
@@ -739,10 +743,10 @@ func TestCommercialManagerTeamVisibility(t *testing.T) {
 	foundTeam, foundOutside := false, false
 	for _, item := range env["data"].([]any) {
 		m := item.(map[string]any)
-		if m["practiceName"] == "Team Prospect" {
+		if m["practiceName"] == teamProspect {
 			foundTeam = true
 		}
-		if m["practiceName"] == "Outside Team" {
+		if m["practiceName"] == outsideProspect {
 			foundOutside = true
 		}
 	}

@@ -97,6 +97,14 @@
         <h4 class="create-client-billing-title" data-testid="create-client-billing-section">{{ $t('clients.billing.title') }}</h4>
         <p class="pro-hint">{{ $t('clients.billing.hintOptional') }}</p>
         <label class="pro-field">
+          <span class="pro-field__label">{{ $t('clients.billing.customerKind') }}</span>
+          <select v-model="clientForm.billingCustomerKind" class="pro-input" data-testid="create-client-billing-customer-kind">
+            <option value="">{{ $t('clients.billing.customerKindUnset') }}</option>
+            <option value="individual">{{ $t('clients.billing.customerKindIndividual') }}</option>
+            <option value="business">{{ $t('clients.billing.customerKindBusiness') }}</option>
+          </select>
+        </label>
+        <label class="pro-field">
           <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
           <select v-model="clientForm.billingCountry" class="pro-input" data-testid="create-client-billing-country">
             <option value="">—</option>
@@ -107,12 +115,14 @@
           </select>
         </label>
         <ProInput
+          v-if="!createIsIndividual"
           v-model="clientForm.billingVatNumber"
           test-id="create-client-billing-vat"
           :label="$t('clients.billing.vatNumber')"
           :maxlength="120"
         />
         <ProInput
+          v-if="!createIsIndividual"
           v-model="clientForm.billingCompanyNumber"
           test-id="create-client-billing-company"
           :label="$t('clients.billing.companyNumber')"
@@ -390,6 +400,7 @@ const emptyClientForm = () => ({
   billingCity: '',
   billingPostal: '',
   billingCountry: '',
+  billingCustomerKind: '',
 })
 
 const createOpen = ref(false)
@@ -404,6 +415,14 @@ const linkCandidate = ref<{
   linkable?: boolean
   alreadyLinked?: boolean
 } | null>(null)
+
+// Un particulier n'a ni TVA ni n° d'entreprise : les champs disparaissent, et
+// une saisie faite avant la bascule ne part pas en douce dans la fiche.
+const createIsIndividual = computed(() => clientForm.billingCustomerKind === 'individual')
+const createFiscalIds = computed(() => ({
+  billingVatNumber: createIsIndividual.value ? '' : clientForm.billingVatNumber.trim(),
+  billingCompanyNumber: createIsIndividual.value ? '' : clientForm.billingCompanyNumber.trim(),
+}))
 
 function resetClientForm() {
   Object.assign(clientForm, emptyClientForm())
@@ -432,12 +451,13 @@ async function createClient() {
         contactPhone: clientForm.contactPhone.trim(),
         address: clientForm.address.trim(),
         nationalRegistryNumber: clientForm.nationalRegistryNumber.trim(),
-        billingVatNumber: clientForm.billingVatNumber.trim(),
-        billingCompanyNumber: clientForm.billingCompanyNumber.trim(),
+        billingVatNumber: createFiscalIds.value.billingVatNumber,
+        billingCompanyNumber: createFiscalIds.value.billingCompanyNumber,
         billingStreet: clientForm.billingStreet.trim(),
         billingCity: clientForm.billingCity.trim(),
         billingPostal: clientForm.billingPostal.trim(),
         billingCountry: clientForm.billingCountry.trim(),
+        billingCustomerKind: clientForm.billingCustomerKind,
       },
     })
     const createdId = (res?.data ?? res)?.userId as string | undefined
@@ -490,18 +510,20 @@ async function linkExistingClient() {
     if (niss) body.nationalRegistryNumber = niss
     if (firstName) body.firstName = firstName
     if (lastName) body.lastName = lastName
-    const vat = clientForm.billingVatNumber.trim()
-    const company = clientForm.billingCompanyNumber.trim()
+    const vat = createFiscalIds.value.billingVatNumber
+    const company = createFiscalIds.value.billingCompanyNumber
     const street = clientForm.billingStreet.trim()
     const city = clientForm.billingCity.trim()
     const postal = clientForm.billingPostal.trim()
     const country = clientForm.billingCountry.trim()
+    const customerKind = clientForm.billingCustomerKind
     if (vat) body.billingVatNumber = vat
     if (company) body.billingCompanyNumber = company
     if (street) body.billingStreet = street
     if (city) body.billingCity = city
     if (postal) body.billingPostal = postal
     if (country) body.billingCountry = country
+    if (customerKind) body.billingCustomerKind = customerKind
     if (Object.keys(body).length) {
       await $fetch(`/api/clients/${linkedId}`, { method: 'PATCH', body })
     }

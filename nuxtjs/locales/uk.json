@@ -1620,7 +1620,7 @@
     "relatedInvoicePlaceholder": "Виберіть рахунок…",
     "relatedInvoiceEmpty": "Немає доступних випущених / доставлених рахунків — спочатку надішліть рахунок.",
     "relatedInvoiceRequired": "Виберіть рахунок, пов'язаний із цією кредитною нотою.",
-    "prefillDafAmount": "Орієнтовна сума без ПДВ {amount} € (складська ціна)"
+    "prefillEstimatedAmount": "Орієнтовна сума без ПДВ {amount} €"
   },
   "pharmacy": {
     "antibioticWarning": "Антибіотик",

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Smoke Flux A — 1 cabinet via Billit master (live sandbox).
-# Prérequis : API live (mock off) + BILLIT_MASTER_* + seed + saas_billing_enabled.
+# ⚠ Flux A est EN SOMMEIL : l'API répond 404 invoicing_saas_disabled tant que
+# INVOICING_SAAS_ENABLED=true n'est pas posé sur l'API. Script conservé pour le
+# jour où le flux est réveillé.
+# Prérequis : API live (mock off) + INVOICING_SAAS_ENABLED=true + BILLIT_MASTER_*
+# + seed + saas_billing_enabled.
 # Usage :
 #   BILLIT_MASTER_PARTY_ID=… BILLIT_MASTER_API_KEY=… make billit-saas-master-smoke
 # Optionnel :

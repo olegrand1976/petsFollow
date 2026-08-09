@@ -240,6 +240,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerSupportRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
 	r.Post("/internal/saas-invoices/run", a.internalRunSaasInvoices)
+	r.Post("/internal/invoicing-reconcile/run", a.internalRunInvoicingReconcile)
 	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)

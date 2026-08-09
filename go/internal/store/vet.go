@@ -75,6 +75,7 @@ type ClientProfilePatch struct {
 	BillingCity            *string
 	BillingPostal          *string
 	BillingCountry         *string
+	BillingCustomerKind    *string
 }
 
 // UpdateClientProfileByPractice updates identity fields for a client linked to the practice.
@@ -99,6 +100,7 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 	city := cur.BillingCity
 	postal := cur.BillingPostal
 	country := cur.BillingCountry
+	kind := cur.BillingCustomerKind
 	if patch.ContactPhone != nil {
 		phone = strings.TrimSpace(*patch.ContactPhone)
 	}
@@ -132,6 +134,9 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 	if patch.BillingCountry != nil {
 		country = strings.ToUpper(strings.TrimSpace(*patch.BillingCountry))
 	}
+	if patch.BillingCustomerKind != nil {
+		kind = strings.ToLower(strings.TrimSpace(*patch.BillingCustomerKind))
+	}
 	fullName := strings.TrimSpace(first + " " + last)
 	if fullName == "" {
 		fullName = cur.FullName
@@ -149,13 +154,14 @@ func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, c
 			billing_street = $11,
 			billing_city = $12,
 			billing_postal = $13,
-			billing_country = $14
+			billing_country = $14,
+			billing_customer_kind = $15
 		FROM practice.practice_clients pc
 		WHERE u.id = pc.client_user_id
 			AND pc.practice_id = $1
 			AND pc.client_user_id = $2`,
 		practiceID, clientID, phone, first, last, addr, niss, fullName,
-		vat, company, street, city, postal, country)
+		vat, company, street, city, postal, country, kind)
 	if err != nil {
 		return ClientSummary{}, err
 	}

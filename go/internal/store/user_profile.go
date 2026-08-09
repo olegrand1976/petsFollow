@@ -296,6 +296,7 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 			billing_city = '',
 			billing_postal = '',
 			billing_country = '',
+			billing_customer_kind = '',
 			password_hash = NULL,
 			google_sub = NULL,
 			auth_provider = 'password',

@@ -5,16 +5,21 @@
 **Ce doc** = mise en place **technique** du mode **Integration Partner / Reseller** : 1 PartyID par cabinet, facturation Billit → LL-IT-SC, UI Pro transparente.
 
 **Livré dans le monorepo** :
-- Migrations `000085_invoicing_billit` + `000089_invoicing_webhook_idempotency` + `000094_invoicing_billit_order_unique` + `000097_invoicing_saas_source`
+- Migrations `000085_invoicing_billit` + `000089_invoicing_webhook_idempotency` + `000094_invoicing_billit_order_unique` + `000097_invoicing_saas_source` + `000165_client_billing_customer_kind` + `000166_visit_type_pricing`
 - `go/internal/invoicing` (domain multi-pays, service, secrets, gateway) + `invoicing/billit` (client HTTP, models, mapper, webhook) + `mock/`
 - `store/invoicing.go` + handlers (`invoicing.go`, `invoicing_webhook.go`) + BFF `/api/invoicing/**`
-- Page Pro `/invoicing` (tag `dev`) — connect + formulaire contrepartie BE/FR/IT/ES
+- Page Pro `/invoicing` (tag `dev`) — connect + formulaire contrepartie : bascule **Particulier / Professionnel** (`invoicing-cp-kind`, particulier par défaut) puis champs fiscaux BE/FR/IT/ES en mode professionnel
 - Webhook public `POST /api/v1/invoicing/webhooks/billit` (HMAC-SHA256 hex, header `X-Billit-Signature` ou `X-Signature`)
 - Tests : totaux / seal / `ValidateCounterparty` / mapper pays / client `httptest` / `CheckParty` complétude / webhook parse+intégration (`TestInvoicingWebhook*`) / `TestValidateBillit*` / mock connect+send
 - `make api-dev` : `BILLIT_ENABLED=true` + `BILLIT_MOCK_ENABLED=true` (opt-in ; **off** par défaut hors Make)
 - Garde-fous : `ValidateBillit()` exige `BILLIT_BASE_URL` + `BILLIT_WEBHOOK_SECRET` en live ; refuse `plain_dev` hors `DEV_SEED` ; create + claim send atomiques + plafond docs
 - Send **live** → statut `sending` ; `delivered` + usage mensuel via webhook (mock reste synchrone)
-- Transport send : `Peppol` sauf **IT** (Identifiers SDI, Transport omis)
+- Transport send : champ JSON **`Transporttype`** (et non `Transport` — toute autre orthographe est ignorée par Billit, qui retombe alors sur le canal par défaut du cabinet). Valeur résolue depuis la contrepartie par `invoicing.ResolveTransport` : `SMTP` (particulier), `SDI` (professionnel IT), `Peppol` (autres). Header `StrictTransportType: true` sur les réseaux e-invoice — Billit ne fait plus de repli email depuis février 2026, l'échec doit être explicite.
+- **Type mémorisé sur la fiche client** : `identity.users.billing_customer_kind` (migration 000165, API `billingCustomerKind` en création et PATCH client) — repris tel quel à la facturation. Vide = fiche antérieure : la déduction par identifiant fiscal (`counterpartyKind`) fait foi, pour ne pas basculer en B2C un client professionnel existant.
+- Contrepartie **particulier** (`customerKind: individual`) : ni TVA ni `Identifiers` (nettoyés à la normalisation), adresse + email **obligatoires** (`individual_address_required` / `individual_email_required`) ; `peppol_status` en `email_sending` / `email_delivered` pour ne pas laisser croire à un envoi Peppol. Billit renvoyant les mêmes libellés de statut quel que soit le transport, `ResolveWebhookPeppolStatus` repréfixe le statut entrant (`delivered` → `email_delivered`) tant que le document est marqué `email_*`. Ces valeurs sont **techniques** : la liste `/invoicing` les traduit via `invoicing.deliveryStatus.*` (helper [`invoicing-delivery-status.ts`](../nuxtjs/utils/invoicing-delivery-status.ts), canal isolé du statut de base) et garde la valeur brute en infobulle. La mention est tue quand elle répéterait le statut du document (`delivered` / `delivered`) et conservée dès qu'elle porte le canal email ou un état distinct (`stale_timeout`, `awaiting_client`, `creating_order`). Tout nouveau `peppol_status` **atteignable dans la liste d'un cabinet** doit être ajouté au catalogue des 6 locales, sinon le véto relit du technique ; `saas_draft` (écarté par `source = 'practice'`) et `accepted` (toujours redondant) en sont exclus à dessein.
+- **Réconciliation** (webhook manqué) : cron horaire `POST /api/v1/internal/invoicing-reconcile/run` + header `X-Invoicing-Reconcile-Secret` (`INVOICING_RECONCILE_SECRET`, scheduler `make gcp-invoicing-reconcile-scheduler`). Relit `GET /v1/orders/{id}` pour les documents en `sending` depuis > 30 min (`?olderThanMinutes=`, `?limit=`) et n'écrit que sur un statut **terminal** — une lecture illisible ou une panne Billit laisse le document en l'état pour le passage suivant. Réponse : `candidates` / `reconciled` / `stillFlying` / `failed` + `errors[]` (cause nommée par document, plafonné à 20 puis `errorsTruncated`) — un `failed` récurrent sans erreur nommée serait indiagnostiquable. Le rejet à 7 j reste le filet final.
+- **Lignes préremplies (BIL-9)** : `GET /api/v1/practices/me/invoicing/prefill?visitId=&dafId=` (perm `clients.write`) renvoie l'acte au tarif du type de RDV (`practice.visit_types.price_excl_cents` / `vat_percent`, migration 000166, édité dans `/settings` onglet Agenda) puis les médicaments du **DAF finalisé** de la visite tarifés via `pharmacy.medication_prices`. Le CTA de fin de consultation ne passe que `visitId` : le DAF est retrouvé côté API. Composition serveur et non navigateur — une seule requête au lieu d'un appel de prix par médicament, même permission que la création du document. Tout est best-effort : type non tarifé, DAF absent ou en brouillon → liste vide, saisie manuelle comme avant. Prix médicament inconnu → ligne à 0 **et `vatPercent` absent** de la réponse (≠ 0 %) : champ prix vide dans l'UI (`ValidateLines` refuserait l'envoi) et taux de TVA laissé au défaut du pays — sinon un cabinet italien se verrait imposer 21 %. Chaque ligne porte sa provenance (`source: visitType | daf`). Côté catalogue, `PUT /vet/visit-types` traite un `priceExclCents` **absent** comme « inchangé » (0 / 21 % à la création) : un client qui ignore la facturation n'efface pas le tarif du cabinet en renommant un type. Il n'existe pas de catalogue de prestations vétérinaires : le type de RDV est le seul ancrage d'un prix d'acte. Le endpoint n'est pas scopé par l'URL : c'est la contre-vérification du `practice_id` qui isole les cabinets, et une visite ou un `dafId` d'ailleurs répond « rien à proposer » plutôt qu'une erreur (couvert par `TestInvoicingPrefillFromConsultation`).
+- **Flux A dormant** : `INVOICING_SAAS_ENABLED` (défaut `false`) → routes admin `saas-*` et cron 404 `invoicing_saas_disabled` ; scheduler hors `setup-all-schedulers.sh`.
 - Durcissements : retry HTTP **GET only** ; CheckParty fail-closed ; webhook rate-limit 120/min ; statut inconnu → `sending`
 - Idempotence webhook : `EventID`/`eventId` uniquement (pas `Id` order) ou `sha256(body)` ; **re-apply** aussi sur duplicate (filet si Forget a échoué) ; persist order avant Peppol + restore claim si échec ; mock delivered+usage atomique ; `sending` > 7 j → `rejected` (job rétention) ; connect = Assert → CheckParty → Consume+Upsert **même TX** ; `billit_order_id` unique (mig 000094) + mock UUID
 
@@ -26,7 +31,7 @@
 | T2 | Secret hors JS | `SealAPIKey` + `HasAPISecret` only | OK ; rotation = re-complete |
 | T3 | Invoice to = partner | `invoice_to_partner` + `MarkPartnerListed` | Ops Billit + **UI** `/admin/invoicing` + API |
 | T4 | Invoice / CN / Proforma | create + send + mapper multi-pays | OK mock ; **sandbox live non prouvée** |
-| T5 | Statuts Peppol | webhook HMAC + apply + stale 7 j | **Pas de poll** ; URL webhook doit être joignable |
+| T5 | Statuts Peppol | webhook HMAC + apply + **poll horaire** (`/internal/invoicing-reconcile/run`) + stale 7 j | OK ; URL webhook doit rester joignable (le poll ne couvre que les documents > 30 min) |
 | T6 | Mock CI | `BILLIT_MOCK_ENABLED` + Playwright skip-safe | OK |
 | R1 | Master LL-IT-SC | env `BILLIT_MASTER_*` + `CreateSaasDraft` | **MVP draft** (mock defaults ; live = env) |
 | R2 | Reseller link | `BILLIT_RESELLER_REGISTER_URL` | OK (config) |
@@ -34,15 +39,16 @@
 | R4–R5 | Sandbox API + webhook | client + handler | Gate **smoke** ci-dessous |
 | R6 | Clé multi-Party | header `PartyID` sur chaque call | OK côté client |
 | BIL-7 | Admin usage / alertes | UI `/admin/invoicing` | KPI overdue partner (>7 j) + quota ≥80 % + **CSV** pending ; pas d’email auto |
-| BIL-9 | DAF → lignes facture | CTA query + `visitId` | **Pas** de mapping lignes DAF |
+| BIL-9 | Lignes préremplies acte + DAF | `GET /practices/me/invoicing/prefill?visitId=&dafId=` | Livré (`TestInvoicingPrefillFromConsultation`) — tarif de l’acte sur `practice.visit_types` |
 | NC parent | `relatedDocumentId` obligatoire (API + UI select) | OK |
-| Flux A | Facture SaaS 88 € | `saas-draft` + `saas-documents/…/send` | **Draft + send** mock ; live = webhook |
+| Flux A | Facture SaaS 88 € | `saas-draft` + `saas-documents/…/send` | **En sommeil** (`INVOICING_SAAS_ENABLED=false`) — code + tests conservés |
+| B2C | Facture cabinet → **particulier** | `customerKind: individual` → `Transporttype: SMTP` | Livré (`TestInvoicingIndividualCustomer`, Playwright I7.10 `@p0`) |
 
 ### Checklist sandbox Billit (ops — exécuter dans l’ordre)
 
 **Automatisation** : `make api-billit-live` (API mock off) puis `make billit-sandbox-smoke`  
 (`scripts/smoke-billit-sandbox.sh` — refuse si `BILLIT_MOCK_ENABLED=true`).  
-Option send live : `BILLIT_SMOKE_PARTY_ID` + `BILLIT_SMOKE_API_KEY`. Suite UI/webhook delivered = manuelle (D–F).
+Option send live : `BILLIT_SMOKE_PARTY_ID` + `BILLIT_SMOKE_API_KEY` — le smoke enchaîne alors **facture BE professionnelle** puis **facture particulier** (`Transporttype: SMTP`, refus sans email, `peppol_status=email_*`). `BILLIT_SMOKE_INDIVIDUAL_EMAIL` dirige l'envoi vers une boîte réellement relevable ; sans elle l'envoi part sur `@petsfollow.test` et seule la sortie API est vérifiable. Réception du PDF et webhook delivered = manuels (D–F).
 
 **A. Prérequis Billit (hors repo)**
 
@@ -70,6 +76,9 @@ export NUXT_PUBLIC_BILLIT_ENABLED=true
 make billit-sandbox-smoke
 # Avec Party sandbox :
 # BILLIT_SMOKE_PARTY_ID=… BILLIT_SMOKE_API_KEY=… make billit-sandbox-smoke
+# Facture particulier vers une boîte relevable (vérifier le PDF reçu) :
+# BILLIT_SMOKE_PARTY_ID=… BILLIT_SMOKE_API_KEY=… BILLIT_SMOKE_INDIVIDUAL_EMAIL=moi@exemple.be \
+#   make billit-sandbox-smoke
 ```
 
 > `make api-dev` pose `BILLIT_MOCK_ENABLED=true` **par défaut**. Pour le pilote live préférer **`make api-billit-live`** (défaut sandbox).
@@ -97,7 +106,8 @@ Prod : secrets `petsfollow-prod-billit-*` via `gcp-env-prod.sh` ; activer seulem
 3. Créer facture **BE** (TVA + adresse) → Envoyer → UI `sending`.  
 4. Attendre webhook → `delivered` ; `usageThisMonth` +1.  
 5. Rejouer le **même** body webhook → `{"status":"duplicate"}` (200).  
-6. Cas **IT** (codice xor PEC) : send OK ; vérifier payload Billit sans `Transport: Peppol`.  
+6. Cas **IT** (codice xor PEC) : send OK ; vérifier payload Billit avec `Transporttype: SDI`.  
+6 bis. Cas **particulier** : sans TVA, avec email → send OK ; payload `Transporttype: SMTP`, aucun header `StrictTransportType`. Automatisé par `make billit-sandbox-smoke` (création, refus sans email, `peppol_status=email_*`) — reste manuel : ouvrir la boîte `BILLIT_SMOKE_INDIVIDUAL_EMAIL` et vérifier expéditeur, gabarit et PDF joint.  
 7. Proforma : Émettre → `issued` ; pas de 2e send ; usage inchangé.
 
 **E. Vérifs SQL / logs**
@@ -119,7 +129,8 @@ FROM invoicing.webhook_events ORDER BY received_at DESC LIMIT 10;
 | 1 | Connect + CheckParty | `status=active` (ou `pending_kyc` puis refresh → active) |
 | 2 | Send BE | order id persisté, webhook `delivered`, usage++ |
 | 3 | Signature | 0 × 401 après envoi réel |
-| 4 | IT | pas de Transport Peppol ; delivery OK ou reject explicite |
+| 4 | IT | `Transporttype: SDI` ; delivery OK ou reject explicite |
+| 4 bis | Particulier | `Transporttype: SMTP` ; email reçu ; `peppol_status=email_*` |
 | 5 | Quota | `docs_included_monthly=1` → 2e send → 409 |
 | 6 | Invoice to partner | (ops) aucune facture Billit reçue par le mail cabinet |
 
@@ -172,7 +183,7 @@ Confirmés par écrit avec Billit sales / support :
 | R2 | Lien **Reseller** | `BILLIT_RESELLER_REGISTER_URL` |
 | R3 | Accord **Invoice to = partner** | Process : liste PartyID → Billit bascule payeur |
 | R4 | Sandbox API + doc headers `PartyID` / `ApiKey` | Client HTTP |
-| R5 | Mécanisme webhook (ou polling) statut orders | Handler + table events |
+| R5 | Mécanisme webhook (ou polling) statut orders | Handler + table events ; poll de rattrapage `GET /v1/orders/{id}` (cron horaire) |
 | R6 | Règle clé API multi-companies | Doc Billit : clé user avec accès multi-Party ; toujours header `PartyID` du cabinet |
 
 Réfs Billit :
@@ -212,10 +223,10 @@ sequenceDiagram
 
   Note over Vet,Pep: B — Émission document
   Vet->>BFF: POST document + send
-  BFF->>API: Create + SendPeppol
+  BFF->>API: Create + Send
   API->>SM: load secret
   API->>Billit: POST /v1/orders (PartyID cabinet)
-  API->>Billit: POST /v1/orders/commands/send Transport=Peppol
+  API->>Billit: POST /v1/orders/commands/send Transporttype=Peppol|SDI|SMTP
   Billit->>Pep: UBL
   Pep-->>Billit: delivery status
   Billit-->>API: webhook
@@ -349,7 +360,7 @@ CREATE TABLE invoicing.usage_monthly (
 
 `draft` → `issued` → `sending` → `delivered` | `rejected` → (`cancelled` si Billit le permet)
 
-Pro forma : s’arrête à `issued` (PDF) — **jamais** `SendPeppol`.
+Pro forma : s’arrête à `issued` (PDF) — **jamais** d'envoi Billit.
 
 ---
 
@@ -485,7 +496,7 @@ Après create : stocker `billit_order_id` ; send :
 
 - `EnsureParty` → `party_mock_<practiceShort>`  
 - `CreateDocument` → incrément ID  
-- `SendPeppol` → statut `delivered` async via goroutine ou immédiat  
+- `Send` → statut `delivered` immédiat ; le transport reçu est mémorisé (`LastTransport`)  
 - Utilisé si `BILLIT_MOCK_ENABLED=true` (CI / `make api-dev`)
 
 ---
@@ -520,7 +531,9 @@ Reprendre champs déjà présents sur `practice.practices` :
 
 Pas d’API Billit publique garantie pour basculer *Invoice to* → **outil admin + runbook**, pas automatisme fragile.
 
-### 8.4 Flux A (SaaS LL-IT-SC → cabinet)
+### 8.4 Flux A (SaaS LL-IT-SC → cabinet) — **EN SOMMEIL**
+
+> Décision produit 2026-08 : l'abonnement Pro ne se facture **pas** via Billit. Flag `INVOICING_SAAS_ENABLED` (défaut `false`) — routes admin `saas-*` et cron `/internal/saas-invoices/run` répondent 404 `invoicing_saas_disabled`, la carte Flux A disparaît de `/admin/invoicing`, et `setup-saas-invoices-scheduler.sh` est retiré de `setup-all-schedulers.sh`. Le code et les tests restent en place (`newSaasTestAPI` force le flag) ; la description ci-dessous vaut pour un éventuel réveil.
 
 **MVP livré** (draft + send Peppol master Billit + cron C1 draft-only) :
 
@@ -595,7 +608,7 @@ CI : **toujours** mock — jamais Billit live.
 
 - [x] Client HTTP (code) + mapper multi-pays  
 - [x] Create invoice + lines mapping  
-- [x] Send (Peppol / IT sans Transport) + proforma sans send  
+- [x] Send (`Transporttype` Peppol / SDI / SMTP) + proforma sans send  
 - [x] Credit note UI (sélecteur type)  
 - [x] Webhook handler + maj statuts + usage on delivered  
 - [x] Tests unit/intégration PF  
@@ -638,10 +651,10 @@ CI : **toujours** mock — jamais Billit live.
 Voir checklist détaillée en tête de doc (sections A–F). Résumé :
 
 1. `make api-billit-live` (mock off + secrets) puis `make billit-sandbox-smoke`.  
-2. Option send : `BILLIT_SMOKE_PARTY_ID` + `BILLIT_SMOKE_API_KEY` sur le smoke.  
+2. Option send : `BILLIT_SMOKE_PARTY_ID` + `BILLIT_SMOKE_API_KEY` (+ `BILLIT_SMOKE_INDIVIDUAL_EMAIL` pour relever le mail du cas particulier) sur le smoke.  
 3. URL publique → enregistrer `POST /api/v1/invoicing/webhooks/billit` chez Billit.  
 4. Pro `/invoicing` : connect → complete → facture BE → send → `sending` → webhook `delivered` + usage++.  
-5. Cas IT + contrôle Transport.  
+5. Cas IT + cas particulier : contrôler `Transporttype` (SDI / SMTP) dans le payload.  
 6. Ajuster HMAC si le header réel diffère.  
 7. Go/no-go table F avant pilote multi-cabinets.  
 8. Après bascule Invoice-to-partner : UI `/admin/invoicing` → Marquer partner.
