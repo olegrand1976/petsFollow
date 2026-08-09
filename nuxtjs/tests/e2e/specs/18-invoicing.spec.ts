@@ -385,6 +385,16 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
       test.skip(true, 'BILLIT_ENABLED off')
     }
 
+    // L'éditeur ne rend une ligne que s'il existe un type de RDV : sur un
+    // environnement non seedé (staging), le catalogue est vide et il n'y a
+    // rien à tarifer. Même garde que I7.14 juste en dessous.
+    const catalogue = await page.request.get('/api/vet/visit-types')
+    expect(catalogue.status()).toBe(200)
+    const catalogueRows = ((await catalogue.json()) as { data?: unknown[] }).data ?? []
+    if (catalogueRows.length === 0) {
+      test.skip(true, 'catalogue de types de RDV vide (make seed)')
+    }
+
     await page.goto('/settings', { waitUntil: 'networkidle' })
     await openVisitTypesSection(page)
     const priceInput = page.getByTestId('settings-visit-type-price').first()
