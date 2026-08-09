@@ -175,6 +175,7 @@
     "invalid_webhook": "Invalid webhook payload",
     "document_not_ready": "Document not ready yet — retry",
     "invoicing_gateway_error": "Electronic invoicing service error",
+    "invoicing_account_unverified": "Billit must verify your identity before any send — validate your phone number or IBAN on my.billit.be, then send the document again",
     "related_document_invalid": "Invalid related document (sending, issued, delivered or rejected invoice required)",
     "order_persist_failed": "Failed to persist Billit order — document rejected, you can retry send",
     "consultation_has_report": "Cannot cancel: a visit report has already been saved",

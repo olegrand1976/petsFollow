@@ -1202,6 +1202,7 @@
       "cancelled": "Anulada",
       "unknown": "Estado desconocido",
       "send_failed": "Fallo en el envío",
+      "account_unverified": "Cuenta Billit por verificar",
       "stale_timeout": "Sin respuesta — revisar",
       "awaiting_client": "Esperando al cliente"
     },

@@ -220,6 +220,14 @@ INVOICING_SAAS_PRICE_EUR_CENTS=8800
 
 Sandbox et Production sont **isolés** (clés API non interchangeables). Accès Production Access Point = contrat + whitelist Billit.
 
+##### Vérification d’identité du compte Billit (prérequis d’envoi)
+
+Billit refuse **tout** envoi (Peppol, SDI ou email) tant que le compte émetteur n’a pas confirmé son identité — code `YouMustConfirmYourIdentityBeforeSendinAnInvoice…` en HTTP 400. La création de l’ordre passe, seul `commands/send` est bloqué.
+
+- Levée : se connecter sur `my.sandbox.billit.be` (ou `my.billit.be` en prod) avec le compte du PartyID, puis valider **le numéro de téléphone ou l’IBAN**. Rien à redéployer ensuite.
+- Côté API : classé à part de `ErrGateway` → **409 `invoicing_account_unverified`** (et non 502), message traduit qui nomme l’action. Le document repasse `rejected` avec `peppol_status` `account_unverified` (préfixé `email_` pour un particulier) et reste renvoyable tel quel.
+- Côté e2e : `18-invoicing.spec.ts` exige ce 409 puis arrête le scénario de livraison — le compte sandbox de staging n’est pas toujours vérifié, et un 502 opaque resterait un échec.
+
 #### 2.4 Handlers / BFF
 
 | Méthode | Route Go | BFF Nuxt | Auth |
@@ -411,6 +419,7 @@ Règles :
 | Double outil (Pégase + petsFollow) | Confusion | Pitch complément ; pas de promesse « remplace PMS » |
 | Mapping TVA incorrect | Rejet Peppol / fiscal | Catalogue taux ; revue comptable pilote |
 | Fuite API keys | Sécurité | SM + audit + least privilege |
+| Compte Billit non vérifié (téléphone / IBAN) | Aucun envoi possible, cabinet bloqué sans savoir pourquoi | 409 `invoicing_account_unverified` avec la marche à suivre ; document renvoyable après validation |
 
 ---
 

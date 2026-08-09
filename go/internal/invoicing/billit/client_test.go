@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -411,6 +412,59 @@ func TestClientFetchStatus(t *testing.T) {
 			}
 			if st.Status != tc.status || st.PeppolStatus != tc.peppol || st.Terminal != tc.terminal {
 				t.Fatalf("got %+v want %s/%s terminal=%v", st, tc.status, tc.peppol, tc.terminal)
+			}
+		})
+	}
+}
+
+// Billit refuse tout envoi tant que le compte n'a pas validé téléphone ou IBAN.
+// C'est un état du compte du cabinet, pas une panne de la passerelle : le
+// classer à part est ce qui permet de dire au véto quoi faire.
+func TestSendIdentityGateIsAccountUnverified(t *testing.T) {
+	cases := []struct {
+		name       string
+		body       string
+		unverified bool
+	}{
+		{
+			name:       "identity gate",
+			body:       `{"errors":[{"Code":"YouMustConfirmYourIdentityBeforeSendinAnInvoiceYouCanDoThisByValidatingYourPhoneNumberOrIban","Description":"Pour continuer à protéger vos données personnelles…"}]}`,
+			unverified: true,
+		},
+		{
+			name:       "identity gate reworded",
+			body:       `{"Errors":[{"Code":"YouMustConfirmYourIdentityBeforeSendingAnInvoice"}]}`,
+			unverified: true,
+		},
+		{
+			name:       "recipient error stays a gateway failure",
+			body:       `{"errors":[{"Code":"ReceiverNotRegisteredOnPeppol"}]}`,
+			unverified: false,
+		},
+		{
+			name:       "unparseable body stays a gateway failure",
+			body:       `<html>gateway timeout</html>`,
+			unverified: false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			t.Cleanup(srv.Close)
+			err := billit.NewClient(srv.URL).Send(context.Background(), "p", "k", "42", invoicing.TransportSMTP)
+			if err == nil {
+				t.Fatal("expected send error")
+			}
+			if got := errors.Is(err, invoicing.ErrAccountUnverified); got != tc.unverified {
+				t.Fatalf("ErrAccountUnverified=%v want %v (err=%v)", got, tc.unverified, err)
+			}
+			// Le corps Billit reste dans l'erreur : sans lui le support ne peut
+			// pas distinguer deux refus de compte.
+			if !strings.Contains(err.Error(), "http_400") {
+				t.Fatalf("expected raw billit status in %q", err.Error())
 			}
 		})
 	}

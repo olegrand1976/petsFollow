@@ -175,6 +175,7 @@
     "invalid_webhook": "Payload webhook invalide",
     "document_not_ready": "Document pas encore prêt — réessayez",
     "invoicing_gateway_error": "Erreur du service de facturation électronique",
+    "invoicing_account_unverified": "Billit doit vérifier votre identité avant tout envoi — validez votre numéro de téléphone ou votre IBAN sur my.billit.be, puis renvoyez le document",
     "related_document_invalid": "Document lié invalide (facture en envoi, émise, livrée ou rejetée requise)",
     "order_persist_failed": "Échec d’enregistrement de la commande Billit — document rejeté, vous pouvez renvoyer",
     "consultation_has_report": "Impossible d'annuler : un compte-rendu a déjà été enregistré",

@@ -4,6 +4,20 @@ import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
 
 const STAFF_PASSWORD = 'VetDemo123!'
 
+/**
+ * Billit refuse tout envoi tant que le compte du cabinet n'a pas validé son
+ * téléphone ou son IBAN — c'est l'état du compte sandbox branché sur staging,
+ * pas une régression produit. On exige quand même que l'API le dise de façon
+ * actionnable (409 `invoicing_account_unverified`, jamais un 502 opaque) avant
+ * d'abandonner un scénario de livraison injouable ici. En mock (local, CI) le
+ * cas ne se présente pas et les assertions de livraison tournent en entier.
+ */
+async function skipIfBillitAccountUnverified(res: { status: () => number, text: () => Promise<string> }) {
+  if (res.status() !== 409) return
+  if (!(await res.text()).includes('invoicing_account_unverified')) return
+  test.skip(true, 'Compte Billit non vérifié (téléphone/IBAN) — envoi impossible sur cet environnement')
+}
+
 /** L'éditeur de types de RDV est dans l'onglet Agenda, replié par défaut. */
 async function openVisitTypesSection(page: import('@playwright/test').Page) {
   await page.getByTestId('section-tab-calendar').click()
@@ -105,6 +119,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     )
     await page.getByTestId(`invoicing-send-${docId}`).click()
     const sent = await sendRes
+    await skipIfBillitAccountUnverified(sent)
     expect(sent.status(), await sent.text()).toBe(200)
     const sentBody = await sent.json() as { data?: { status?: string, peppolStatus?: string } }
     expect(['delivered', 'sending']).toContain(sentBody.data?.status || '')
@@ -234,6 +249,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     )
     await sendBtn.click()
     const sent = await sendRes
+    await skipIfBillitAccountUnverified(sent)
     expect(sent.status(), await sent.text()).toBe(200)
     const sentBody = await sent.json() as { data?: { status?: string }, status?: string }
     // Mock → delivered sync ; staging live sandbox → sending until Peppol webhook.

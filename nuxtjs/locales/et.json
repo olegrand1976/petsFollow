@@ -1202,6 +1202,7 @@
       "cancelled": "Tühistatud",
       "unknown": "Tundmatu olek",
       "send_failed": "Saatmine ebaõnnestus",
+      "account_unverified": "Billiti konto vajab kinnitamist",
       "stale_timeout": "Vastuseta — vaja kontrollida",
       "awaiting_client": "Ootab klienti"
     },
