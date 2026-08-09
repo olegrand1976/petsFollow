@@ -283,24 +283,35 @@ const leaveDiscardText = computed(() => (
     : t('clients.consultation.leaveDiscard')
 ))
 
-function bindFlow() {
+/**
+ * Recopie les props dans le flow, sans toucher à l'état d'écran. Sur une reprise
+ * agenda, la date et l'animal sont résolus par des requêtes qui atterrissent
+ * après la première peinture : les refléter ne veut pas dire « autre
+ * consultation ».
+ */
+function syncFlowProps() {
   flowVisitId.value = props.visitId
   flowClientId.value = props.clientId
   flowPetId.value = props.petId
   flowScheduledAt.value = props.scheduledAt || ''
   flowPreserveVisit.value = !!props.preserveVisit
-  reportSaved.value = false
-  nextStepsOpen.value = false
-  nextPromptOpen.value = false
-  leavePromptOpen.value = false
-  actionError.value = ''
-  closing.value = false
   active.syncActiveVisit({
     visitId: props.visitId,
     clientId: props.clientId,
     petId: props.petId,
     keepVisit: !!props.preserveVisit,
   })
+}
+
+/** Nouvelle consultation : repartir d'un écran vierge, dialogues fermés. */
+function bindFlow() {
+  syncFlowProps()
+  reportSaved.value = false
+  nextStepsOpen.value = false
+  nextPromptOpen.value = false
+  leavePromptOpen.value = false
+  actionError.value = ''
+  closing.value = false
   void hydrateResumeSaved(props.visitId)
 }
 
@@ -328,13 +339,24 @@ async function hydrateResumeSaved(id: string) {
   }
 }
 
+// L'identité de la consultation seule justifie de tout remettre à zéro.
 watch(
-  () => [props.visitId, props.clientId, props.petId, props.scheduledAt, props.preserveVisit] as const,
+  () => [props.visitId, props.clientId] as const,
   () => {
     if (!props.visitId || !props.clientId) return
     bindFlow()
   },
   { immediate: true },
+)
+
+// Métadonnées résolues après coup : les refléter sans fermer un dialogue ouvert
+// — sinon la confirmation de fermeture disparaît sous les doigts du véto.
+watch(
+  () => [props.petId, props.scheduledAt, props.preserveVisit] as const,
+  () => {
+    if (!props.visitId || !props.clientId) return
+    syncFlowProps()
+  },
 )
 
 watch(nextStepsOpen, (v) => {
