@@ -29,12 +29,12 @@ type VisitType struct {
 }
 
 type VisitTypeInput struct {
-	ID              string   `json:"id,omitempty"`
-	Name            string   `json:"name"`
-	DurationMinutes int      `json:"durationMinutes"`
-	Color           string   `json:"color"`
-	IsActive        *bool    `json:"isActive,omitempty"`
-	SortOrder       int      `json:"sortOrder"`
+	ID              string `json:"id,omitempty"`
+	Name            string `json:"name"`
+	DurationMinutes int    `json:"durationMinutes"`
+	Color           string `json:"color"`
+	IsActive        *bool  `json:"isActive,omitempty"`
+	SortOrder       int    `json:"sortOrder"`
 	// Tarif absent du payload = inchangé (0 / 21 % à la création), et non remis à
 	// zéro : l'écran Agenda masque ces champs quand la facturation est coupée, et
 	// tout client qui ignore le tarif effacerait sinon celui du cabinet en
