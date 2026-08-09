@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
 
 help:
 	@echo "petsFollow — commandes"
@@ -158,7 +158,19 @@ flutter-dev: env
 		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID) \
 		--dart-define=CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true}
 
-test-go:
+fmt-go:
+	cd go && gofmt -w .
+
+# Miroir exact du 1er gate du job backend CI : un fichier non formaté fait tomber
+# tout le deploy staging avant même go vet.
+fmt-go-check:
+	@cd go && unformatted=$$(gofmt -l .); \
+	if [ -n "$$unformatted" ]; then \
+		echo "gofmt requis sur :"; echo "$$unformatted"; \
+		echo "→ make fmt-go"; exit 1; \
+	fi
+
+test-go: fmt-go-check
 	# -p 1 : les suites d'intégration partagent une seule base (seed tronque pendant que handlers lit).
 	cd go && GOTOOLCHAIN=local go test -p 1 ./...
 
