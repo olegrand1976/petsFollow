@@ -1202,6 +1202,7 @@
       "cancelled": "Geannuleerd",
       "unknown": "Onbekende status",
       "send_failed": "Verzenden mislukt",
+      "account_unverified": "Billit-account te verifiëren",
       "stale_timeout": "Geen antwoord — controleren",
       "awaiting_client": "Wacht op klant"
     },

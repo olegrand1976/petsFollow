@@ -216,9 +216,52 @@ func (c *Client) Send(ctx context.Context, partyID, apiKey, externalID string, t
 	defer res.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(res.Body, 1<<20))
 	if res.StatusCode >= 300 {
-		return fmt.Errorf("billit send: http_%d %s", res.StatusCode, truncate(string(body), 200))
+		sendErr := fmt.Errorf("billit send: http_%d %s", res.StatusCode, truncate(string(body), 200))
+		if isIdentityGate(body) {
+			return fmt.Errorf("%w: %v", invoicing.ErrAccountUnverified, sendErr)
+		}
+		return sendErr
 	}
 	return nil
+}
+
+// identityGateFragment marque le refus anti-abus de Billit : tant que le compte
+// n'a pas validé son téléphone ou son IBAN, tout envoi est rejeté en 400 avec le
+// code « YouMustConfirmYourIdentityBeforeSendinAnInvoice… » (la faute de frappe
+// est celle de Billit). On matche le fragment stable plutôt que le code entier,
+// qui a déjà changé de formulation.
+const identityGateFragment = "confirmyouridentity"
+
+// isIdentityGate distingue ce blocage de compte d'une erreur de document : le
+// cabinet doit agir chez Billit, réessayer à l'identique suffira ensuite.
+func isIdentityGate(body []byte) bool {
+	for _, code := range errorCodes(body) {
+		if strings.Contains(strings.ToLower(code), identityGateFragment) {
+			return true
+		}
+	}
+	return false
+}
+
+// errorCodes lit les `Code` d'une réponse d'erreur Billit. La casse du tableau
+// varie selon l'endpoint (`errors` / `Errors`), ce que le décodage JSON absorbe
+// déjà ; un corps illisible ne renvoie rien plutôt que de deviner.
+func errorCodes(body []byte) []string {
+	var payload struct {
+		Errors []struct {
+			Code string `json:"Code"`
+		} `json:"errors"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return nil
+	}
+	codes := make([]string, 0, len(payload.Errors))
+	for _, e := range payload.Errors {
+		if e.Code != "" {
+			codes = append(codes, e.Code)
+		}
+	}
+	return codes
 }
 
 // FetchStatus relit un ordre chez Billit (réconciliation d'un webhook manqué).

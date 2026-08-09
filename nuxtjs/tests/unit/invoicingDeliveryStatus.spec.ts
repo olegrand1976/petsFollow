@@ -56,6 +56,8 @@ describe('isRedundantDelivery', () => {
 
   it('garde la mention quand elle apporte le canal ou un état distinct', () => {
     expect(show('email_delivered', 'delivered')).toBe(true)
+    // Un rejet dû au compte Billit doit rester lisible sur une ligne `rejected`.
+    expect(show('email_account_unverified', 'rejected')).toBe(true)
     expect(show('stale_timeout', 'sending')).toBe(true)
     expect(show('awaiting_client', 'issued')).toBe(true)
     expect(show('creating_order', 'draft')).toBe(true)
@@ -75,7 +77,7 @@ describe('isRedundantDelivery', () => {
  */
 const GO_STATUSES = [
   'creating_order', 'sending', 'delivered', 'rejected',
-  'cancelled', 'unknown', 'send_failed', 'stale_timeout',
+  'cancelled', 'unknown', 'send_failed', 'account_unverified', 'stale_timeout',
   'awaiting_client',
 ]
 

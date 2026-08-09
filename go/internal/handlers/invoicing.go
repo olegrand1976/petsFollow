@@ -622,6 +622,10 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusConflict, "saas_billing_disabled", "saas_billing_disabled")
 	case errors.Is(err, invoicing.ErrSecrets):
 		writeErr(w, r, http.StatusConflict, "invoicing_secrets_mismatch", "invoicing_secrets_mismatch")
+	case errors.Is(err, invoicing.ErrAccountUnverified):
+		// 409 et pas 502 : le service répond, c'est le compte du cabinet qui
+		// bloque. Le véto peut le débloquer seul puis renvoyer le document.
+		writeErr(w, r, http.StatusConflict, "invoicing_account_unverified", "invoicing_account_unverified")
 	case errors.Is(err, invoicing.ErrGateway):
 		detail := strings.TrimPrefix(err.Error(), invoicing.ErrGateway.Error())
 		detail = strings.TrimPrefix(detail, ": ")

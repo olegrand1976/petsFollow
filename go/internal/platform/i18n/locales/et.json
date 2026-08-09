@@ -175,6 +175,7 @@
     "invalid_webhook": "Kehtetu webhooki sisu",
     "document_not_ready": "Dokument pole veel valmis — proovige uuesti",
     "invoicing_gateway_error": "Elektroonilise arvelduse teenuse viga",
+    "invoicing_account_unverified": "Billit peab enne saatmist teie isiku tuvastama — kinnitage oma telefoninumber või IBAN aadressil my.billit.be ja saatke dokument uuesti",
     "related_document_invalid": "Seotud dokument kehtetu (nõutav saatmisel, väljastatud, kohale toimetatud või tagasi lükatud arve)",
     "order_persist_failed": "Billit tellimuse salvestamine ebaõnnestus — dokument lükati tagasi, saate uuesti saata",
     "consultation_has_report": "Tühistamine pole võimalik: visiidiraport on juba salvestatud",

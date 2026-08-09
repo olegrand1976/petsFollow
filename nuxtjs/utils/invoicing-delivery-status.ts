@@ -26,6 +26,9 @@ const KNOWN = new Set([
   'cancelled',
   'unknown',
   'send_failed',
+  // Refus de compte Billit (identité non validée) : à distinguer d'un échec
+  // technique, le cabinet a une action à faire avant de renvoyer.
+  'account_unverified',
   'stale_timeout',
   // Proforma envoyée au client : le document est `issued`, l'attente n'est dite qu'ici.
   'awaiting_client',

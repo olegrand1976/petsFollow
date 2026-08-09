@@ -39,6 +39,11 @@ var (
 	ErrSaasDisabled = errors.New("invoicing_saas_disabled")
 	// ErrGateway wraps live/mock Billit HTTP failures (mapped to HTTP 502).
 	ErrGateway = errors.New("invoicing_gateway")
+	// ErrAccountUnverified: garde-fou anti-abus Billit — le compte du cabinet
+	// doit valider son téléphone ou son IBAN avant tout envoi. Distinct de
+	// ErrGateway : rien n'est parti, le document reste renvoyable tel quel une
+	// fois la vérification faite chez Billit, et le véto peut agir lui-même.
+	ErrAccountUnverified = errors.New("invoicing_account_unverified")
 	// ErrSecrets: practice ApiKey cannot be opened (key rotation) — reconnect Billit.
 	ErrSecrets = errors.New("invoicing_secrets_mismatch")
 	// ErrRelatedInvoiceNotOnBillit: credit note linked to an invoice never created on Billit.
@@ -450,8 +455,7 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 	if PeppolRequired(doc.Type) {
 		transport := ResolveTransport(doc.Counterparty)
 		if err := s.gw.Send(ctx, c.BillitPartyID, key, orderID, transport); err != nil {
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
-			return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+			return Document{}, s.recordSendFailure(ctx, practiceID, docID, orderID, transport, err)
 		}
 		// Mock: gateway is synchronous — delivered + usage in one TX (same path as live webhook).
 		if s.cfg.BillitMockEnabled {
@@ -581,6 +585,30 @@ func sendingPeppolStatus(t Transport) string {
 		return EmailStatusPrefix + "sending"
 	}
 	return "sending"
+}
+
+// failedPeppolStatus applique la même règle aux échecs : « Échec de l'envoi »
+// sur une facture de particulier parle du mail, pas du réseau Peppol.
+func failedPeppolStatus(t Transport, reason string) string {
+	if t == TransportSMTP {
+		return EmailStatusPrefix + reason
+	}
+	return reason
+}
+
+// recordSendFailure trace le refus puis rend l'erreur telle que l'API doit la
+// présenter. Le refus d'identité du compte Billit garde sa sentinelle (409, le
+// cabinet peut agir) là où toute autre panne devient ErrGateway (502).
+func (s *Service) recordSendFailure(ctx context.Context, practiceID, docID, orderID string, transport Transport, err error) error {
+	reason := "send_failed"
+	if errors.Is(err, ErrAccountUnverified) {
+		reason = "account_unverified"
+	}
+	_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, failedPeppolStatus(transport, reason), nil)
+	if errors.Is(err, ErrAccountUnverified) {
+		return err
+	}
+	return fmt.Errorf("%w: %v", ErrGateway, err)
 }
 
 // issueProformaToClient emails a magic-link (handler) — no Billit Offer create.
@@ -1157,9 +1185,9 @@ func (s *Service) SendSaasDocument(ctx context.Context, practiceID, docID string
 		return Document{}, fmt.Errorf("%w: order_missing", ErrGateway)
 	}
 
-	if err := s.gw.Send(ctx, partyID, apiKey, orderID, ResolveTransport(doc.Counterparty)); err != nil {
-		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
-		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+	transport := ResolveTransport(doc.Counterparty)
+	if err := s.gw.Send(ctx, partyID, apiKey, orderID, transport); err != nil {
+		return Document{}, s.recordSendFailure(ctx, practiceID, docID, orderID, transport, err)
 	}
 	now := time.Now().UTC()
 	if s.cfg.BillitMockEnabled {

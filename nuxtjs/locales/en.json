@@ -1202,6 +1202,7 @@
       "cancelled": "Cancelled",
       "unknown": "Unknown status",
       "send_failed": "Sending failed",
+      "account_unverified": "Billit account to verify",
       "stale_timeout": "No response — needs a check",
       "awaiting_client": "Waiting for client"
     },

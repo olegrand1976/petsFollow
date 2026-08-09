@@ -175,6 +175,7 @@
     "invalid_webhook": "Ongeldige webhook-payload",
     "document_not_ready": "Document nog niet klaar — opnieuw proberen",
     "invoicing_gateway_error": "Fout in de elektronische facturatiedienst",
+    "invoicing_account_unverified": "Billit moet uw identiteit verifiëren voor elke verzending — valideer uw telefoonnummer of IBAN op my.billit.be en verzend het document opnieuw",
     "related_document_invalid": "Ongeldig gerelateerd document (verzending, uitgegeven, geleverd of afgewezen factuur vereist)",
     "order_persist_failed": "Opslaan Billit-order mislukt — document afgewezen, opnieuw verzenden mogelijk",
     "consultation_has_report": "Annuleren niet mogelijk: er is al een verslag opgeslagen",
