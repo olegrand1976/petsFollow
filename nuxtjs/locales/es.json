@@ -3781,7 +3781,12 @@
     "saveResources": "Guardar recursos",
     "resourcesSaved": "Recursos actualizados.",
     "prevDay": "Día anterior",
-    "nextDay": "Día siguiente"
+    "nextDay": "Día siguiente",
+    "improveReportAdvanced": "Mejorar IA avanzada",
+    "reportImprovingAdvanced": "Mejora IA avanzada en curso…",
+    "reportImprovingAdvancedWait": "Conectando con agentes…",
+    "reportImprovedAdvanced": "Informe mejorado (IA avanzada).",
+    "reportImproveAdvancedFailed": "Falló la mejora IA avanzada."
   },
   "manager": {
     "dashboard": {

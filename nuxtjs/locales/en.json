@@ -3781,7 +3781,12 @@
     "saveResources": "Save resources",
     "resourcesSaved": "Resources updated.",
     "prevDay": "Previous day",
-    "nextDay": "Next day"
+    "nextDay": "Next day",
+    "improveReportAdvanced": "Advanced AI improve",
+    "reportImprovingAdvanced": "Advanced AI improvement in progress…",
+    "reportImprovingAdvancedWait": "Connecting to agents…",
+    "reportImprovedAdvanced": "Report improved (advanced AI).",
+    "reportImproveAdvancedFailed": "Advanced AI improvement failed."
   },
   "manager": {
     "dashboard": {

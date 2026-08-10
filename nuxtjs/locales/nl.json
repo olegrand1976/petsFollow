@@ -3781,7 +3781,12 @@
     "saveResources": "Resources opslaan",
     "resourcesSaved": "Resources bijgewerkt.",
     "prevDay": "Vorige dag",
-    "nextDay": "Volgende dag"
+    "nextDay": "Volgende dag",
+    "improveReportAdvanced": "Geavanceerde AI-verbetering",
+    "reportImprovingAdvanced": "Geavanceerde AI-verbetering bezig…",
+    "reportImprovingAdvancedWait": "Verbinden met agents…",
+    "reportImprovedAdvanced": "Verslag verbeterd (geavanceerde AI).",
+    "reportImproveAdvancedFailed": "Geavanceerde AI-verbetering mislukt."
   },
   "manager": {
     "dashboard": {

@@ -3247,7 +3247,12 @@
     "saveResources": "Salva risorse",
     "resourcesSaved": "Risorse aggiornate.",
     "prevDay": "Giorno precedente",
-    "nextDay": "Giorno successivo"
+    "nextDay": "Giorno successivo",
+    "improveReportAdvanced": "Migliora IA avanzata",
+    "reportImprovingAdvanced": "Miglioramento IA avanzato in corso…",
+    "reportImprovingAdvancedWait": "Connessione agli agenti…",
+    "reportImprovedAdvanced": "Referto migliorato (IA avanzata).",
+    "reportImproveAdvancedFailed": "Miglioramento IA avanzato non riuscito."
   },
   "commissions": {
     "title": "Le mie ricompense",

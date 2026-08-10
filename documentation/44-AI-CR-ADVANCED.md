@@ -72,8 +72,8 @@ Service **multi-apps** (petsFollow, Vantura, futures) — repo dédié [`../crew
 |---------|------|------|
 | `GET` | `/health` | IAM Cloud Run (ID token) ; local = none |
 | `GET` | `/openapi.json` | IAM Cloud Run ; local = none |
-| `POST` | `/v1/tasks/submit` | IAM + `X-Crew-Secret` (+ `X-Crew-API-Version: 1`) |
-| `GET` | `/v1/tasks/{id}/events` | **501** (Phase 3 SSE) |
+| `GET` | `/v1/tasks/{id}/events` | IAM + secret — SSE (Phase 3) |
+| `POST` | `/v1/tasks/submit` | IAM + `X-Crew-Secret` (+ `X-Crew-API-Version: 1`) ; `"async": true` → 202 |
 
 Boot fail-closed : `CREW_SHARED_SECRET` obligatoire sauf `ALLOW_INSECURE_AUTH=true` (local only).
 
@@ -114,10 +114,23 @@ Cloud Run : `crewai-orchestrator-staging` · région `europe-west9` · **minScal
 2. Smoke : `CREWAI_BASE_URL=<url> CREWAI_SHARED_SECRET=… CREWAI_USE_ID_TOKEN=true make crewai-smoke`
 3. RAG live optionnel : monter `RAG_REINDEX_SECRET` sur l’orchestrateur (`RAG_REINDEX_SECRET_SM=petsfollow-rag-reindex-secret`) une fois le secret SM créé
 
+## Phase 3 livrée — SSE Agent Loader + improve-advanced
+
+### Flux
+
+1. `POST /api/v1/visits/{visitID}/report/improve-advanced` → `rag.improve_runs` + CrewAI `async=true` → **202** `{ runId }`
+2. `GET …/improve-advanced/{runId}/events` → SSE (`step` / `warning` / `final` / `error` / `ping`)
+3. `POST …/improve-advanced/{runId}/cancel` → best-effort
+4. BFF flat : `/api/visits/{id}/report-improve-advanced` (+ `/…/{runId}/events` stream, `/cancel`)
+5. UI : bouton `visit-report-improve-advanced` (flag Nuxt) + `ProAgentLoader`
+
+Orchestrateur : `GET /v1/tasks/{id}/events` (SSE) ; submit avec `"async": true` → 202 `running`.
+
+**Ops V1** : le hub SSE côté API Go est **in-proc** ; si l’EventSource atterrit sur une autre instance Cloud Run, le client **poll** `rag.improve_runs` jusqu’au statut terminal (pas de live thought cross-instance). Orchestrateur staging : `max-instances=1` (bus SSE mémoire). Prod multi-instance → Redis/PubSub plus tard.
+
 ### Suites suivantes
 
-- Phase 3 : SSE Agent Loader
-- Phase 4 : bouton « Améliorer IA avancé » + exports
+- Phase 4 : exports PDF/MD/clipboard + polish usage
 - Phase 5 : recette
 
 Voir aussi [`32-MODULE-IA-CR.md`](32-MODULE-IA-CR.md) (CR IA synchrone conservé).

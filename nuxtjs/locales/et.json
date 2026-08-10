@@ -3781,7 +3781,12 @@
     "saveResources": "Salvesta ressursid",
     "resourcesSaved": "Ressursid uuendatud.",
     "prevDay": "Eelmine päev",
-    "nextDay": "Järgmine päev"
+    "nextDay": "Järgmine päev",
+    "improveReportAdvanced": "Täiustatud AI-parandus",
+    "reportImprovingAdvanced": "Täiustatud AI-parandus käib…",
+    "reportImprovingAdvancedWait": "Agentidega ühendamine…",
+    "reportImprovedAdvanced": "Aruanne paranenud (täiustatud AI).",
+    "reportImproveAdvancedFailed": "Täiustatud AI-parandus ebaõnnestus."
   },
   "manager": {
     "dashboard": {

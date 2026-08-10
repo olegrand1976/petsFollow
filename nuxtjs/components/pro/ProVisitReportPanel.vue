@@ -147,13 +147,24 @@
                 </select>
               </label>
               <ProButton
-                :disabled="reportBusy || hydrating || !canImprove"
+                :disabled="reportBusy || hydrating || !canImprove || advancedImproveInFlight"
                 :loading="reportBusy && improveInFlight"
                 test-id="visit-report-improve"
                 @click="improveVisitReport"
               >
                 <ProIcon name="auto_awesome" :size="16" />
                 {{ $t('calendar.improveReport') }}
+              </ProButton>
+              <ProButton
+                v-if="aiCrAdvancedEnabled"
+                variant="secondary"
+                :disabled="reportBusy || hydrating || !canImprove || improveInFlight"
+                :loading="reportBusy && advancedImproveInFlight"
+                test-id="visit-report-improve-advanced"
+                @click="improveVisitReportAdvanced"
+              >
+                <ProIcon name="psychology" :size="16" />
+                {{ $t('calendar.improveReportAdvanced') }}
               </ProButton>
             </div>
           </header>
@@ -169,6 +180,12 @@
               <strong>{{ $t('calendar.reportImproving') }}</strong>
             </div>
           </div>
+          <ProAgentLoader
+            v-if="advancedImproveInFlight"
+            :title="$t('calendar.reportImprovingAdvanced')"
+            :waiting-label="$t('calendar.reportImprovingAdvancedWait')"
+            :steps="advancedSteps"
+          />
           <p
             v-if="!readonly && !viewingPeerReport"
             class="pro-hint visit-report-pane__ai-hint"
@@ -424,6 +441,9 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { mapError } = useApiError()
 const { formatDate } = useFormatters()
+const runtimeConfig = useRuntimeConfig()
+const aiCrAdvancedEnabled = computed(() => Boolean(runtimeConfig.public.aiCrAdvancedEnabled))
+const { start: startAdvancedImprove, stop: stopAdvancedImprove } = useAdvancedImproveStream()
 
 const reportBody = ref('')
 const reportPersistedBody = ref('')
@@ -435,6 +455,8 @@ const reportIsReference = ref(false)
 const reportBusy = ref(false)
 const saveInFlight = ref(false)
 const improveInFlight = ref(false)
+const advancedImproveInFlight = ref(false)
+const advancedSteps = ref<{ agent: string; label: string; at?: string }[]>([])
 /** True while Stop→transcribe or file upload transcription is in flight. */
 const transcribeInFlight = ref(false)
 const qualityBusy = ref(false)
@@ -779,6 +801,7 @@ defineExpose({ forceSave, flushForSuspend, isDirty, currentBody, isDictating })
 
 async function improveVisitReport() {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+  if (advancedImproveInFlight.value) return
   const sourceRaw = reportTranscript.value.trim() || reportBody.value.trim()
   if (!sourceRaw) return
   applyDatePrefixIfNeeded()
@@ -821,6 +844,67 @@ async function improveVisitReport() {
     if (putSucceeded) emit('saved', 'improve')
   } finally {
     improveInFlight.value = false
+    reportBusy.value = false
+  }
+}
+
+async function improveVisitReportAdvanced() {
+  if (!aiCrAdvancedEnabled.value) return
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+  if (improveInFlight.value || advancedImproveInFlight.value) return
+  const sourceRaw = reportTranscript.value.trim() || reportBody.value.trim()
+  if (!sourceRaw) return
+  applyDatePrefixIfNeeded()
+  reportBusy.value = true
+  advancedImproveInFlight.value = true
+  advancedSteps.value = []
+  reportMsg.value = ''
+  let putSucceeded = false
+  try {
+    const putRes: any = await $fetch(`/api/visits/${props.visitId}/report`, {
+      method: 'PUT',
+      body: {
+        bodyText: normalizeReportText(reportBody.value),
+        transcriptText: normalizeReportText(reportTranscript.value),
+      },
+    })
+    applyReportPayload(putRes.data ?? putRes)
+    putSucceeded = true
+    let finalReport = ''
+    await startAdvancedImprove(
+      props.visitId,
+      {
+        sourceText: normalizeReportText(sourceRaw),
+        targetLocale: targetLocale.value || 'auto',
+      },
+      {
+        onStep: (step) => {
+          if (step?.agent && step?.label) advancedSteps.value = [...advancedSteps.value, step]
+        },
+        onFinal: (report) => { finalReport = report || '' },
+        onError: (code) => { reportMsg.value = mapError({ data: { error: code } }) },
+      },
+    )
+    if (finalReport.trim()) {
+      reportBody.value = finalReport
+      reportImproved.value = finalReport
+      showAiQualityBar.value = true
+      reportMsg.value = t('calendar.reportImprovedAdvanced')
+      // Re-fetch to sync persisted improvedText from API.
+      const getRes: any = await $fetch(`/api/visits/${props.visitId}/report`)
+      applyReportPayload(getRes.data ?? getRes)
+      void loadVisitReports(props.visitId)
+      emit('saved', 'improve')
+    } else if (!reportMsg.value) {
+      reportMsg.value = t('calendar.reportImproveAdvancedFailed')
+      if (putSucceeded) emit('saved', 'improve')
+    }
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+    if (putSucceeded) emit('saved', 'improve')
+  } finally {
+    stopAdvancedImprove()
+    advancedImproveInFlight.value = false
     reportBusy.value = false
   }
 }

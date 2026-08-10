@@ -48,10 +48,11 @@ type AiCrModule struct {
 type AiCrUsageKind string
 
 const (
-	AiCrUsageTranscribe AiCrUsageKind = "transcribe"
-	AiCrUsageImprove    AiCrUsageKind = "improve"
-	AiCrUsageFinalize   AiCrUsageKind = "finalize"
-	AiCrUsageError      AiCrUsageKind = "error"
+	AiCrUsageTranscribe      AiCrUsageKind = "transcribe"
+	AiCrUsageImprove         AiCrUsageKind = "improve"
+	AiCrUsageImproveAdvanced AiCrUsageKind = "improve_advanced"
+	AiCrUsageFinalize        AiCrUsageKind = "finalize"
+	AiCrUsageError           AiCrUsageKind = "error"
 )
 
 type AiCrROI struct {

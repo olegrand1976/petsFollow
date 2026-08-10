@@ -26,6 +26,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/crewai"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
@@ -51,6 +52,8 @@ type API struct {
 	pusher      fcm.Pusher
 	sms         sms.Sender
 	gemini      *gemini.Client
+	crewai      *crewai.Client
+	improveHub  *improveRunHub
 	vamreg      *pharmacy.VamregDeclarer
 	vamregAFMPS *pharmacy.VamregAFMPSClient
 	vamregQ     VamregEnqueuer
@@ -96,6 +99,14 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
 		g.EmbeddingModel = cfg.GeminiEmbeddingModel
 	}
+	var crew *crewai.Client
+	if strings.TrimSpace(cfg.CrewAIBaseURL) != "" {
+		crew = &crewai.Client{
+			BaseURL:    cfg.CrewAIBaseURL,
+			Secret:     cfg.CrewAISharedSecret,
+			UseIDToken: cfg.CrewAIUseIDToken,
+		}
+	}
 	var inv *invoicing.Service
 	if cfg.BillitEnabled {
 		var gw invoicing.Gateway
@@ -113,6 +124,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	}
 	a := &API{
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, sms: smsSender, gemini: g,
+		crewai: crew, improveHub: newImproveRunHub(),
 		vamreg: vamregDecl, vamregAFMPS: vamregAFMPS, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
 		afsca:               afsca.NewClient(),
 		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
@@ -408,6 +420,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
 		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)
+		pr.Post("/visits/{visitID}/report/improve-advanced", a.improveVisitReportAdvanced)
+		pr.Get("/visits/{visitID}/report/improve-advanced/{runID}/events", a.improveVisitReportAdvancedEvents)
+		pr.Post("/visits/{visitID}/report/improve-advanced/{runID}/cancel", a.cancelVisitReportAdvanced)
 		pr.Post("/visits/{visitID}/report/transcribe", a.transcribeVisitReport)
 		pr.Patch("/visits/{visitID}/report/reference", a.patchVisitReportReference)
 		pr.Get("/messaging/threads", a.listThreads)
