@@ -203,7 +203,12 @@
     "be_vat_invalid": "Numéro de TVA belge invalide (format ou clé de contrôle)",
     "be_address_required": "Adresse complète requise pour la Belgique (rue, code postal, ville)",
     "individual_address_required": "Adresse complète requise pour un particulier (rue, code postal, ville)",
-    "individual_email_required": "Email requis pour un particulier — la facture lui est envoyée par email"
+    "individual_email_required": "Email requis pour un particulier — la facture lui est envoyée par email",
+    "rag_unsupported_format": "Format non supporté (PDF, TXT ou Markdown)",
+    "ai_cr_advanced_disabled": "Module CR IA avancé désactivé",
+    "rag_duplicate": "Document déjà présent (même contenu)",
+    "rag_not_pending": "Document non en attente de validation",
+    "rag_locked": "Document indexé — suppression réservée à l’admin"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

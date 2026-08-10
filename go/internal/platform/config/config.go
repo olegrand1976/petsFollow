@@ -126,6 +126,12 @@ type Config struct {
 	VetNewsSecret string
 	// ClientAIEnabled enables Flutter client AI (CR explain + triage 24/7) — default off, tag dev.
 	ClientAIEnabled bool
+	// AiCrAdvancedEnabled enables multi-agent CR improve + RAG knowledge base — default off, tag dev.
+	AiCrAdvancedEnabled bool
+	// GeminiEmbeddingModel is used for RAG chunk embeddings (768-dim).
+	GeminiEmbeddingModel string
+	// RagReindexSecret protects POST /internal/rag/reindex.
+	RagReindexSecret string
 	// SMSEnabled enables transactional client SMS via Telnyx (visit confirm/reminder/reschedule) — default off, tag dev.
 	SMSEnabled bool
 	// SMSDryRun logs SMS instead of calling Telnyx (default true until live credentials).
@@ -225,6 +231,7 @@ func Load() Config {
 		GeminiModel:             envOr("GEMINI_MODEL", "gemini-3.6-flash"),
 		GeminiLiteModel:         envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
 		GeminiLiveModel:         envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
+		GeminiEmbeddingModel:    envOr("GEMINI_EMBEDDING_MODEL", "text-embedding-004"),
 		PitchAnalyzerSecret:     envOr("PITCH_ANALYZER_SECRET", ""),
 		ProductDigestSecret:     envOr("PRODUCT_DIGEST_SECRET", ""),
 		VertexProject:           envOr("VERTEX_PROJECT", ""),
@@ -263,6 +270,8 @@ func Load() Config {
 		VetNewsEnabled:          envBool("VET_NEWS_ENABLED"),
 		VetNewsSecret:           envOr("VET_NEWS_SECRET", ""),
 		ClientAIEnabled:         envBool("CLIENT_AI_ENABLED"),
+		AiCrAdvancedEnabled:     envBool("AI_CR_ADVANCED_ENABLED"),
+		RagReindexSecret:        envOr("RAG_REINDEX_SECRET", ""),
 
 		// SMS transactionnel (Telnyx) : off par défaut ; dry-run tant que les creds live ne sont pas montés.
 		SMSEnabled:                  envBool("SMS_ENABLED"),

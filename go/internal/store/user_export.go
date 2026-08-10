@@ -24,6 +24,18 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			FROM practice.ai_cr_usage_events e WHERE e.user_id = $1`,
 		"aiCrFeedback": `SELECT COALESCE(jsonb_agg(to_jsonb(f) ORDER BY f.created_at), '[]'::jsonb)
 			FROM practice.ai_cr_feedback f WHERE f.user_id = $1`,
+		"ragDocumentsUploaded": `SELECT COALESCE(jsonb_agg(
+			jsonb_build_object(
+				'id', d.id,
+				'scope', d.scope,
+				'practiceId', d.practice_id,
+				'title', d.title,
+				'filename', d.filename,
+				'mimeType', d.mime_type,
+				'status', d.status,
+				'createdAt', d.created_at
+			) ORDER BY d.created_at), '[]'::jsonb)
+			FROM rag.documents d WHERE d.uploaded_by = $1`,
 		"pets": `SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.created_at), '[]'::jsonb)
 			FROM pets.pets p WHERE p.owner_user_id = $1`,
 		"heartRateSessions": `SELECT COALESCE(jsonb_agg(to_jsonb(h) ORDER BY h.started_at), '[]'::jsonb)

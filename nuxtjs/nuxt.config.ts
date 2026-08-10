@@ -53,6 +53,8 @@ export default defineNuxtConfig({
       researchEnabled: publicFeatureFlag('NUXT_PUBLIC_RESEARCH_ENABLED'),
       /** Veille news multi-sources — mirror VET_NEWS_ENABLED. */
       vetNewsEnabled: publicFeatureFlag('NUXT_PUBLIC_VET_NEWS_ENABLED'),
+      /** CR IA avancé + RAG — mirror AI_CR_ADVANCED_ENABLED. */
+      aiCrAdvancedEnabled: publicFeatureFlag('NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED'),
       /** Multi-sites UI (CRUD lieux) — rétrocompatible mono-site sans flag. */
       sitesUiEnabled: publicFeatureFlag('NUXT_PUBLIC_SITES_UI_ENABLED'),
     },

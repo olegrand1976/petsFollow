@@ -96,7 +96,8 @@
     "commercialEmails": "Sent emails",
     "commercialAgenda": "Agenda",
     "managerAgenda": "Team agenda",
-    "nouveautes": "What's new"
+    "nouveautes": "What's new",
+    "adminRag": "RAG library"
   },
   "auth": {
     "login": {
@@ -363,7 +364,8 @@
       "profile": "Profile",
       "calendar": "Schedule",
       "notifications": "Notifications",
-      "account": "Account"
+      "account": "Account",
+      "rag": "Document library"
     },
     "avatar": {
       "title": "Profile photo",
@@ -553,7 +555,22 @@
         "description": "Terms of use and privacy policy."
       }
     },
-    "aclDenied": "You cannot edit the practice profile. Contact the reference veterinarian."
+    "aclDenied": "You cannot edit the practice profile. Contact the reference veterinarian.",
+    "rag": {
+      "title": "Document library (RAG)",
+      "description": "Upload practice guides. They stay inactive until an admin approves them.",
+      "moderationHint": "Pending status: unused by AI until admin approval.",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Submit for review",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "empty": "No documents submitted",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colDate": "Date",
+      "download": "Download"
+    }
   },
   "share": {
     "petTitle": "Share pet record",
@@ -2277,6 +2294,43 @@
       "groupsLoadError": "Could not load / update groups.",
       "enableDataroom": "Enable Data room",
       "disableDataroom": "Disable Data room"
+    },
+    "rag": {
+      "newUpload": "Add document",
+      "uploadTitle": "Platform upload",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Index",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "confirmDelete": "Delete this document and its embeddings?",
+      "empty": "No RAG documents",
+      "filterStatus": "Status",
+      "statusAll": "All",
+      "approve": "Approve",
+      "reject": "Reject",
+      "colDate": "Date",
+      "colTitle": "Title",
+      "colScope": "Scope",
+      "colStatus": "Status",
+      "colChunks": "Chunks",
+      "scopePlatform": "Platform",
+      "scopePractice": "Practice",
+      "title": "RAG document library",
+      "subtitle": "Guides and datasheets for advanced AI visit reports (platform corpus + practice upload moderation).",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "indexing": "Indexing",
+        "ready": "Ready",
+        "failed": "Failed"
+      },
+      "disabledTitle": "Module disabled",
+      "disabledHint": "Enable AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED to manage the RAG library.",
+      "download": "Download",
+      "reindex": "Reindex",
+      "reindexDone": "Reindex finished: {indexed} indexed, {failed} failed."
     }
   },
   "commissions": {

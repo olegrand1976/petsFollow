@@ -1,6 +1,7 @@
 services:
   db:
-    image: postgres:16
+    # pgvector required for rag.* (AI CR advanced knowledge base).
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: petsfollow
       POSTGRES_PASSWORD: petsfollow

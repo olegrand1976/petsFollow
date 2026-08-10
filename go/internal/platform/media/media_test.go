@@ -131,6 +131,12 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"compendium-imports/",
 		"compendium-imports/job1.pdf",
 		"Compendium-Imports/x",
+		// Base documentaire RAG (guides) — privée, stream auth uniquement.
+		"rag-docs",
+		"rag-docs/",
+		"rag-docs/platform/d1.pdf",
+		"rag-docs/practice-id/d1.txt",
+		"Rag-Docs/x",
 		// Documents du dossier animal (PDF d'analyses, radios) — PHI.
 		"documents/p1/a.pdf",
 		// Le suffixe -v2 ne doit pas rouvrir le partage de consultation.
@@ -183,6 +189,7 @@ func TestSensitiveUploadNoPublicURL(t *testing.T) {
 		"documents/p1/analyse.pdf",
 		"pitch-sims/s1/call.webm",
 		"consultation-shares-v2/t1/report.pdf",
+		"rag-docs/platform/guide.pdf",
 	} {
 		url, err = st.Upload(nil, key, bytes.NewReader(pdf), int64(len(pdf)), "application/pdf")
 		if err != nil {

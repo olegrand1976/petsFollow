@@ -57,3 +57,4 @@ Les steps `j75_convert` / `j85_urgency` / `j90_last` (conversion payante) sont *
 - Checkout Stripe cabinet
 - SPIFF commercial auto sur « convert IA »
 - Playbook public anonymisé
+- CR IA **avancé** multi-agents + RAG — voir [`44-AI-CR-ADVANCED.md`](44-AI-CR-ADVANCED.md)

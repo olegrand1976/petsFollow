@@ -28,7 +28,9 @@ type Client struct {
 	APIKey     string
 	Model      string // pitch turn/stream/coach (agentic)
 	LiteModel  string // import mapping + analyzer (high throughput)
-	HTTPClient *http.Client
+	// EmbeddingModel used by EmbedTexts (RAG). Empty → text-embedding-004.
+	EmbeddingModel  string
+	HTTPClient      *http.Client
 	// MediaHTTPClient is used for binary media generateContent (PDF extract).
 	// Falls back to HTTPClient when nil.
 	MediaHTTPClient *http.Client

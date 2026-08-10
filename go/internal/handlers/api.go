@@ -74,6 +74,14 @@ type API struct {
 	failNextPetStudyInsert bool
 	// googleIDTokenValidator — nil = live OIDC. Set via TestSetGoogleIDTokenValidator (tests only).
 	googleIDTokenValidator func(ctx context.Context, rawToken, clientID string) (GoogleIDTokenClaims, error)
+	// ragEmbedder — nil = use a.gemini. Set via TestSetRAGEmbedder (tests only).
+	ragEmbedder gemini.Embedder
+	// ragPDFExtract — nil = use a.gemini. Set via TestSetRAGPDFExtract (tests only).
+	ragPDFExtract ragPDFExtractor
+}
+
+type ragPDFExtractor interface {
+	ExtractPlainTextFromPDF(ctx context.Context, data []byte) (string, error)
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher, smsSender sms.Sender) *API {
@@ -86,6 +94,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	var g *gemini.Client
 	if cfg.GeminiAPIKey != "" {
 		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
+		g.EmbeddingModel = cfg.GeminiEmbeddingModel
 	}
 	var inv *invoicing.Service
 	if cfg.BillitEnabled {
@@ -247,6 +256,8 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/research-etl/run", a.internalRunResearchETL)
 	r.Post("/internal/visit-reminders/run", a.internalRunVisitReminders)
 	r.Post("/internal/vet-news/run", a.internalRunVetNews)
+	r.Post("/internal/rag/reindex", a.internalRAGReindex)
+	r.Post("/internal/rag/search", a.internalRAGSearch)
 	a.registerPprofRoutes(r)
 
 	r.Group(func(pr chi.Router) {
@@ -260,6 +271,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPharmacyDAFRoutes(pr)
 		a.registerPharmacyProtocolRoutes(pr)
 		a.registerPrescriptionRoutes(pr)
+		a.registerRAGPracticeRoutes(pr)
 		a.registerPacsRoutes(pr)
 		a.registerResearchRoutes(pr)
 		a.registerSpeciesRoutes(pr)

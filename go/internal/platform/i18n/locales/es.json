@@ -203,7 +203,12 @@
     "be_vat_invalid": "NIF/IVA belga no válido (formato o dígitos de control)",
     "be_address_required": "Dirección completa obligatoria para Bélgica (calle, CP, ciudad)",
     "individual_address_required": "Dirección completa obligatoria para un particular (calle, CP, ciudad)",
-    "individual_email_required": "Correo electrónico obligatorio para un particular: la factura se envía por email"
+    "individual_email_required": "Correo electrónico obligatorio para un particular: la factura se envía por email",
+    "rag_unsupported_format": "Formato no admitido (PDF, TXT o Markdown)",
+    "ai_cr_advanced_disabled": "Módulo CR IA avanzado desactivado",
+    "rag_duplicate": "El documento ya existe (mismo contenido)",
+    "rag_not_pending": "El documento no está pendiente de validación",
+    "rag_locked": "Documento indexado — solo admin puede borrar"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

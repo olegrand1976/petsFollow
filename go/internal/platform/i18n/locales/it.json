@@ -203,7 +203,12 @@
     "be_vat_invalid": "Partita IVA belga non valida (formato o cifre di controllo)",
     "be_address_required": "Indirizzo completo obbligatorio per il Belgio (via, CAP, città)",
     "individual_address_required": "Indirizzo completo obbligatorio per un privato (via, CAP, città)",
-    "individual_email_required": "Email obbligatoria per un privato: la fattura viene inviata via email"
+    "individual_email_required": "Email obbligatoria per un privato: la fattura viene inviata via email",
+    "rag_unsupported_format": "Formato non supportato (PDF, TXT o Markdown)",
+    "ai_cr_advanced_disabled": "Modulo CR IA avanzato disattivato",
+    "rag_duplicate": "Documento già presente (stesso contenuto)",
+    "rag_not_pending": "Documento non in attesa di validazione",
+    "rag_locked": "Documento indicizzato — eliminazione solo admin"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

@@ -52,6 +52,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		a.registerCompendiumImportRoutes(pr)
 		a.registerAFMPSImportRoutes(pr)
 		a.registerStripeCatalogRoutes(pr)
+		a.registerRAGAdminRoutes(pr)
 	})
 }
 
@@ -616,6 +617,7 @@ func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
 		"prescriptionsEnabled":    a.cfg.PrescriptionsEnabled,
 		"pacsEnabled":             a.cfg.PacsEnabled,
 		"researchEnabled":         a.cfg.ResearchEnabled,
+		"aiCrAdvancedEnabled":     a.cfg.AiCrAdvancedEnabled,
 		"billitEnabled":           a.cfg.BillitEnabled,
 		"billitMockEnabled":       a.cfg.BillitMockEnabled,
 		"mlmOrgEnabled":           a.cfg.MLMOrgEnabled,

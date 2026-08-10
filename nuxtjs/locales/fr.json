@@ -96,7 +96,8 @@
     "commercialEmails": "Emails envoyés",
     "commercialAgenda": "Agenda",
     "managerAgenda": "Agenda équipe",
-    "nouveautes": "Nouveautés"
+    "nouveautes": "Nouveautés",
+    "adminRag": "Base RAG"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1072,7 +1073,8 @@
       "profile": "Profil",
       "calendar": "Agenda",
       "notifications": "Notifications",
-      "account": "Compte"
+      "account": "Compte",
+      "rag": "Base documentaire"
     },
     "avatar": {
       "title": "Photo de profil",
@@ -1262,7 +1264,22 @@
         "description": "Conditions d’utilisation et politique de confidentialité."
       }
     },
-    "aclDenied": "Vous n’avez pas le droit de modifier la fiche cabinet. Contactez le vétérinaire de référence."
+    "aclDenied": "Vous n’avez pas le droit de modifier la fiche cabinet. Contactez le vétérinaire de référence.",
+    "rag": {
+      "title": "Base documentaire (RAG)",
+      "description": "Déposez des guides cabinet. Ils restent inactifs jusqu’à validation admin.",
+      "moderationHint": "Statut « en attente » : non utilisé par l’IA tant que l’admin n’a pas approuvé.",
+      "fieldTitle": "Titre",
+      "file": "Fichier (PDF, TXT, Markdown)",
+      "uploadSubmit": "Soumettre pour validation",
+      "uploadFailed": "Échec de l’upload",
+      "actionFailed": "Action impossible",
+      "empty": "Aucun document soumis",
+      "colTitle": "Titre",
+      "colStatus": "Statut",
+      "colDate": "Date",
+      "download": "Télécharger"
+    }
   },
   "share": {
     "petTitle": "Partager le dossier",
@@ -2986,6 +3003,43 @@
       "groupsLoadError": "Impossible de charger / mettre à jour les groupes.",
       "enableDataroom": "Activer Data room",
       "disableDataroom": "Désactiver Data room"
+    },
+    "rag": {
+      "title": "Base documentaire RAG",
+      "subtitle": "Guides et fiches techniques pour l’IA CR avancée (corpus plateforme + validation des ajouts cabinet).",
+      "newUpload": "Ajouter un document",
+      "uploadTitle": "Upload plateforme",
+      "fieldTitle": "Titre",
+      "file": "Fichier (PDF, TXT, Markdown)",
+      "uploadSubmit": "Indexer",
+      "uploadFailed": "Échec de l’upload",
+      "actionFailed": "Action impossible",
+      "confirmDelete": "Supprimer ce document et ses embeddings ?",
+      "empty": "Aucun document RAG",
+      "filterStatus": "Statut",
+      "statusAll": "Tous",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "colDate": "Date",
+      "colTitle": "Titre",
+      "colScope": "Périmètre",
+      "colStatus": "Statut",
+      "colChunks": "Chunks",
+      "scopePlatform": "Plateforme",
+      "scopePractice": "Cabinet",
+      "status": {
+        "pending": "En attente",
+        "approved": "Approuvé",
+        "rejected": "Rejeté",
+        "indexing": "Indexation",
+        "ready": "Prêt",
+        "failed": "Échec"
+      },
+      "disabledTitle": "Module désactivé",
+      "disabledHint": "Activez AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED pour gérer la base RAG.",
+      "download": "Télécharger",
+      "reindex": "Réindexer",
+      "reindexDone": "Réindexation terminée : {indexed} indexé(s), {failed} échec(s)."
     }
   },
   "calendar": {

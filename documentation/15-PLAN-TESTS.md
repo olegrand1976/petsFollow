@@ -199,6 +199,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
 | C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
 | C2.23 | P1 | Nouveau client / identification | Placeholder système par cabinet ; RDV/walk-in sur « Nouveau client » + « Nouvel animal » ; **téléphone de rappel** obligatoire sur la visite (`callbackPhone`) ; gate Identifier avant CR ; create ou existing+confirm | Go `TestWalkin*` (refus sans tél.) ; placeholders immuables (PATCH/login 403/401) ; finalize/DAF/facture bloqués tant que non identifié ; UC-VP-12 |
+| C2.24 | P1 | RAG base documentaire (tag `dev`) | Flag `AI_CR_ADVANCED_ENABLED` : upload admin → **202** `indexing` → `ready` ; upload cabinet → `pending` invisible au search jusqu’à approve ; download admin + practice (isolation cross-cabinet) ; `POST /admin/rag/reindex` ; reject purge source | Go `TestRAG*` ; UI `/admin/rag` + Settings « Base documentaire » ; doc [44](44-AI-CR-ADVANCED.md) |
 
 ### C3 — Calendrier & RDV
 

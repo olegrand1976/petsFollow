@@ -203,7 +203,12 @@
     "be_vat_invalid": "Ongeldig Belgisch btw-nummer (formaat of controlecijfers)",
     "be_address_required": "Volledig adres vereist voor België (straat, postcode, stad)",
     "individual_address_required": "Volledig adres vereist voor een particulier (straat, postcode, stad)",
-    "individual_email_required": "E-mail vereist voor een particulier — de factuur wordt per e-mail verstuurd"
+    "individual_email_required": "E-mail vereist voor een particulier — de factuur wordt per e-mail verstuurd",
+    "rag_unsupported_format": "Niet-ondersteund formaat (PDF, TXT of Markdown)",
+    "ai_cr_advanced_disabled": "Geavanceerde AI CR-module uitgeschakeld",
+    "rag_duplicate": "Document bestaat al (zelfde inhoud)",
+    "rag_not_pending": "Document wacht niet op validatie",
+    "rag_locked": "Geïndexeerd document — enkel admin mag verwijderen"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

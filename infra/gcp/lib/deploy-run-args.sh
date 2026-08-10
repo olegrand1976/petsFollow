@@ -76,8 +76,8 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
-  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled client_ai_enabled
-  local sms_enabled
+  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled vet_news_enabled client_ai_enabled
+  local ai_cr_advanced_enabled sms_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -96,6 +96,7 @@ pf_write_api_env_file() {
     research_enabled="${RESEARCH_ENABLED:-true}"
     vet_news_enabled="${VET_NEWS_ENABLED:-true}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
+    ai_cr_advanced_enabled="${AI_CR_ADVANCED_ENABLED:-true}"
     sms_enabled="${SMS_ENABLED:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
@@ -125,6 +126,7 @@ pf_write_api_env_file() {
     research_enabled="${RESEARCH_ENABLED:-false}"
     vet_news_enabled="${VET_NEWS_ENABLED:-false}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-false}"
+    ai_cr_advanced_enabled="${AI_CR_ADVANCED_ENABLED:-false}"
     sms_enabled="${SMS_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
@@ -175,6 +177,7 @@ PACS_ENABLED: "${pacs_enabled}"
 RESEARCH_ENABLED: "${research_enabled}"
 VET_NEWS_ENABLED: "${vet_news_enabled}"
 CLIENT_AI_ENABLED: "${client_ai_enabled}"
+AI_CR_ADVANCED_ENABLED: "${ai_cr_advanced_enabled}"
 SMS_ENABLED: "${sms_enabled}"
 # Envoi SMS : dry-run FORCÉ (staging + prod) tant que TELNYX_API_KEY / la clé
 # publique webhook ne sont pas montées en Secret Manager. Passer à false est un
@@ -192,6 +195,7 @@ LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
 GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
+GEMINI_EMBEDDING_MODEL: "${GEMINI_EMBEDDING_MODEL:-text-embedding-004}"
 GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 EOF
   if [[ -n "${VAMREG_BASE_URL:-}" ]]; then
@@ -231,7 +235,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub vet_news_pub sites_pub
+  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub vet_news_pub sites_pub ai_cr_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -243,6 +247,7 @@ pf_write_frontend_env_file() {
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-true}"
     vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-true}"
     sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-true}"
+    ai_cr_pub="${NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED:-true}"
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-true}"
     else
@@ -256,6 +261,7 @@ pf_write_frontend_env_file() {
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-}"
     vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-}"
     sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-}"
+    ai_cr_pub="${NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED:-}"
   fi
   if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PHARMACY_ENABLED: \"true\"
@@ -283,6 +289,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$sites_pub" == "true" || "$sites_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_SITES_UI_ENABLED: \"true\"
+"
+  fi
+  if [[ "$ai_cr_pub" == "true" || "$ai_cr_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED: \"true\"
 "
   fi
   cat >"$path" <<EOF
@@ -352,6 +362,8 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ETL_SECRET research-etl-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ANON_SALT research-anon-salt)"
   secrets="${secrets}$(pf_api_mount_job_secret VET_NEWS_SECRET vet-news-secret)"
+  # Sans ce secret, /internal/rag/reindex et /internal/rag/search répondent 401.
+  secrets="${secrets}$(pf_api_mount_job_secret RAG_REINDEX_SECRET rag-reindex-secret)"
   # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
   # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.
   if gcloud secrets versions access latest \

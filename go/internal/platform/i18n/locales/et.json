@@ -203,7 +203,12 @@
     "be_vat_invalid": "Vigane Belgia KMKR number (vorming või kontrollnumbrid)",
     "be_address_required": "Belgia jaoks on vaja täielikku aadressi (tänav, sihtnumber, linn)",
     "individual_address_required": "Eraisiku puhul on vaja täielikku aadressi (tänav, sihtnumber, linn)",
-    "individual_email_required": "Eraisiku puhul on e-post kohustuslik — arve saadetakse e-postiga"
+    "individual_email_required": "Eraisiku puhul on e-post kohustuslik — arve saadetakse e-postiga",
+    "rag_unsupported_format": "Toetamata vorming (PDF, TXT või Markdown)",
+    "ai_cr_advanced_disabled": "Täiustatud AI CR moodul on keelatud",
+    "rag_duplicate": "Dokument on juba olemas (sama sisu)",
+    "rag_not_pending": "Dokument ei oota kinnitust",
+    "rag_locked": "Indekseeritud dokument — kustutada saab ainult admin"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

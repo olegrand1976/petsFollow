@@ -96,7 +96,8 @@
     "commercialEmails": "Saadetud e-kirjad",
     "commercialAgenda": "Kalender",
     "managerAgenda": "Meeskonna kalender",
-    "nouveautes": "Uudised"
+    "nouveautes": "Uudised",
+    "adminRag": "RAG teadmistebaas"
   },
   "auth": {
     "login": {
@@ -363,7 +364,8 @@
       "profile": "Profiil",
       "calendar": "Kalender",
       "notifications": "Teavitused",
-      "account": "Konto"
+      "account": "Konto",
+      "rag": "Dokumendid"
     },
     "avatar": {
       "title": "Profiilifoto",
@@ -553,7 +555,22 @@
         "description": "Kasutustingimused ja privaatsuspoliitika."
       }
     },
-    "aclDenied": "Teil pole õigust kabineti profiili muuta. Võtke ühendust peaveterinaariga."
+    "aclDenied": "Teil pole õigust kabineti profiili muuta. Võtke ühendust peaveterinaariga.",
+    "rag": {
+      "title": "Dokumendibaas (RAG)",
+      "description": "Upload practice guides. They stay inactive until an admin approves them.",
+      "moderationHint": "Pending status: unused by AI until admin approval.",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Submit for review",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "empty": "No documents submitted",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colDate": "Date",
+      "download": "Laadi alla"
+    }
   },
   "share": {
     "petTitle": "Jaga lemmiklooma kaarti",
@@ -2277,6 +2294,43 @@
       "groupsLoadError": "Could not load / update groups.",
       "enableDataroom": "Enable Data room",
       "disableDataroom": "Disable Data room"
+    },
+    "rag": {
+      "newUpload": "Add document",
+      "uploadTitle": "Platform upload",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Index",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "confirmDelete": "Delete this document and its embeddings?",
+      "empty": "No RAG documents",
+      "filterStatus": "Status",
+      "statusAll": "All",
+      "approve": "Approve",
+      "reject": "Reject",
+      "colDate": "Date",
+      "colTitle": "Title",
+      "colScope": "Scope",
+      "colStatus": "Status",
+      "colChunks": "Chunks",
+      "scopePlatform": "Platform",
+      "scopePractice": "Practice",
+      "title": "Dokumendibaas (RAG)",
+      "subtitle": "Guides and datasheets for advanced AI visit reports (platform corpus + practice upload moderation).",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "indexing": "Indexing",
+        "ready": "Ready",
+        "failed": "Failed"
+      },
+      "disabledTitle": "Moodul on keelatud",
+      "disabledHint": "RAG haldamiseks lülitage sisse AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED.",
+      "download": "Laadi alla",
+      "reindex": "Taasindekseeri",
+      "reindexDone": "Taasindekseerimine valmis: {indexed} indekseeritud, {failed} ebaõnnestunud."
     }
   },
   "commissions": {

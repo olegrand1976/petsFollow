@@ -33,5 +33,6 @@ V1 = brouillons + preview fiche PDF + pré-remplissage IA depuis CR. Ne pas pré
 - **Research** `/research` (+ `/admin/research` opt-ins) — `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` — doc [`42-RESEARCH.md`](documentation/42-RESEARCH.md)
 - **Veille news** widget dashboard — `VET_NEWS_ENABLED` / `NUXT_PUBLIC_VET_NEWS_ENABLED` — ingest multi-sources (`POST /internal/vet-news/run`, `make gcp-vet-news-scheduler`)
 - **Client AI** (Flutter client) vulgarisation CR + triage 24/7 — `CLIENT_AI_ENABLED` (+ `--dart-define=CLIENT_AI_ENABLED` ; staging Cloud Run on, prod opt-in) — doc [`43-CLIENT-AI.md`](documentation/43-CLIENT-AI.md)
+- **CR IA avancé + RAG** `/admin/rag` + Paramètres cabinet — `AI_CR_ADVANCED_ENABLED` / `NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED` — doc [`44-AI-CR-ADVANCED.md`](documentation/44-AI-CR-ADVANCED.md) (pgvector ; ajouts cabinet soumis à validation admin)
 
 Retirer le badge `nav.tagDev` **uniquement** au passage GA (décision produit explicite).

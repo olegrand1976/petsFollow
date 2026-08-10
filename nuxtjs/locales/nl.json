@@ -96,7 +96,8 @@
     "commercialEmails": "Verzonden e-mails",
     "commercialAgenda": "Agenda",
     "managerAgenda": "Teamagenda",
-    "nouveautes": "Nieuwigheden"
+    "nouveautes": "Nieuwigheden",
+    "adminRag": "RAG-bibliotheek"
   },
   "auth": {
     "login": {
@@ -363,7 +364,8 @@
       "profile": "Profiel",
       "calendar": "Agenda",
       "notifications": "Meldingen",
-      "account": "Account"
+      "account": "Account",
+      "rag": "Documentatie"
     },
     "avatar": {
       "title": "Profielfoto",
@@ -553,7 +555,22 @@
         "description": "Gebruiksvoorwaarden en privacybeleid."
       }
     },
-    "aclDenied": "U mag het praktijkprofiel niet wijzigen. Neem contact op met de referentieveterinair."
+    "aclDenied": "U mag het praktijkprofiel niet wijzigen. Neem contact op met de referentieveterinair.",
+    "rag": {
+      "title": "RAG-documentatie",
+      "description": "Upload practice guides. They stay inactive until an admin approves them.",
+      "moderationHint": "Pending status: unused by AI until admin approval.",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Submit for review",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "empty": "No documents submitted",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colDate": "Date",
+      "download": "Downloaden"
+    }
   },
   "share": {
     "petTitle": "Dossier delen",
@@ -2277,6 +2294,43 @@
       "groupsLoadError": "Could not load / update groups.",
       "enableDataroom": "Enable Data room",
       "disableDataroom": "Disable Data room"
+    },
+    "rag": {
+      "newUpload": "Add document",
+      "uploadTitle": "Platform upload",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Index",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "confirmDelete": "Delete this document and its embeddings?",
+      "empty": "No RAG documents",
+      "filterStatus": "Status",
+      "statusAll": "All",
+      "approve": "Approve",
+      "reject": "Reject",
+      "colDate": "Date",
+      "colTitle": "Title",
+      "colScope": "Scope",
+      "colStatus": "Status",
+      "colChunks": "Chunks",
+      "scopePlatform": "Platform",
+      "scopePractice": "Practice",
+      "title": "RAG-documentatie",
+      "subtitle": "Guides and datasheets for advanced AI visit reports (platform corpus + practice upload moderation).",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "indexing": "Indexing",
+        "ready": "Ready",
+        "failed": "Failed"
+      },
+      "disabledTitle": "Module uitgeschakeld",
+      "disabledHint": "Zet AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED aan om de RAG-bibliotheek te beheren.",
+      "download": "Downloaden",
+      "reindex": "Herindexeren",
+      "reindexDone": "Herindexering klaar: {indexed} geïndexeerd, {failed} mislukt."
     }
   },
   "commissions": {

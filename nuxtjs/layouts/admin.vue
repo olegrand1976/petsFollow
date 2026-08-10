@@ -87,6 +87,9 @@ const navItems = computed<ProNavItem[]>(() => {
     { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: t('nav.section.salesForce') },
     aiFlowsNavItem(t('nav.aiFlows'), t('nav.section.ai')),
     { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
+    ...(isPublicFlagOn(runtimeConfig.public.aiCrAdvancedEnabled)
+      ? [{ to: '/admin/rag', label: t('nav.adminRag'), icon: 'menu_book', section: t('nav.section.ai'), tag: t('nav.tagDev') }]
+      : []),
     { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: t('nav.section.ai') },
     { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments', section: t('nav.section.billing') },
     ...(billitOn.value

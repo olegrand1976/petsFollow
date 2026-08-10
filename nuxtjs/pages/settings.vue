@@ -521,6 +521,80 @@
         <ProLegalFooter />
       </ProAccordionSection>
     </div>
+
+    <div
+      v-show="activeTab === 'rag'"
+      role="tabpanel"
+      aria-labelledby="tab-rag"
+      data-testid="settings-tab-rag"
+    >
+      <ProAccordionSection
+        :title="$t('settings.rag.title')"
+        :description="$t('settings.rag.description')"
+        :open="true"
+        data-testid="settings-rag"
+      >
+        <ProBadge variant="warning" data-testid="settings-rag-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
+        <p class="pro-hint pro-mb-md">{{ $t('settings.rag.moderationHint') }}</p>
+        <form class="pro-form pro-mb-lg" @submit.prevent="uploadRagDoc">
+          <div class="pro-field">
+            <label class="pro-label" for="settings-rag-title">{{ $t('settings.rag.fieldTitle') }}</label>
+            <input id="settings-rag-title" v-model="ragTitle" type="text" class="pro-input" data-testid="settings-rag-title">
+          </div>
+          <div class="pro-field">
+            <label class="pro-label" for="settings-rag-file">{{ $t('settings.rag.file') }}</label>
+            <input
+              id="settings-rag-file"
+              type="file"
+              accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+              class="pro-input"
+              data-testid="settings-rag-file"
+              @change="onRagFile"
+            >
+          </div>
+          <p v-if="ragUploadError" class="pro-hint pro-hint--error" data-testid="settings-rag-upload-error">{{ ragUploadError }}</p>
+          <ProButton type="submit" test-id="settings-rag-upload" :disabled="ragUploading || !ragFile">
+            {{ $t('settings.rag.uploadSubmit') }}
+          </ProButton>
+        </form>
+        <ProTable :empty="!ragDocs.length" :empty-title="$t('settings.rag.empty')">
+          <thead>
+            <tr>
+              <th>{{ $t('settings.rag.colTitle') }}</th>
+              <th>{{ $t('settings.rag.colStatus') }}</th>
+              <th>{{ $t('settings.rag.colDate') }}</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in ragDocs" :key="d.id" data-testid="settings-rag-row">
+              <td>{{ d.title || d.filename }}</td>
+              <td>{{ ragStatusLabel(d.status) }}</td>
+              <td>{{ d.createdAt?.substring(0, 16)?.replace('T', ' ') }}</td>
+              <td class="pro-flex-gap">
+                <ProButton
+                  v-if="canDownloadRag(d)"
+                  variant="ghost"
+                  test-id="settings-rag-download"
+                  @click="downloadRagDoc(d)"
+                >
+                  {{ $t('settings.rag.download') }}
+                </ProButton>
+                <ProButton
+                  v-if="d.status === 'pending' || d.status === 'rejected' || d.status === 'failed'"
+                  variant="ghost"
+                  test-id="settings-rag-delete"
+                  :disabled="ragBusyId === d.id"
+                  @click="deleteRagDoc(d)"
+                >
+                  {{ $t('common.delete') }}
+                </ProButton>
+              </td>
+            </tr>
+          </tbody>
+        </ProTable>
+      </ProAccordionSection>
+    </div>
   </div>
 </template>
 
@@ -554,6 +628,7 @@ const canManagePractice = computed(() => canPractice('practice.settings'))
 const canManageCalendar = computed(() => canPractice('calendar.manage'))
 const canMessage = computed(() => canPractice('messaging'))
 const researchFlagOn = computed(() => isPublicFlagOn(runtimeConfig.public.researchEnabled))
+const aiCrAdvancedOn = computed(() => isPublicFlagOn(runtimeConfig.public.aiCrAdvancedEnabled))
 // Le tarif par type de RDV ne sert qu'à pré-remplir une facture : inutile de
 // l'exposer si l'UI facturation est gelée ou Billit coupé.
 const invoicingPrefillOn = computed(() => (
@@ -564,6 +639,86 @@ const researchStatusKnown = ref(false)
 const researchBusy = ref(false)
 const researchSaved = ref(false)
 const researchError = ref('')
+
+type SettingsRagDoc = {
+  id: string
+  title?: string
+  filename?: string
+  status: string
+  createdAt?: string
+}
+const ragDocs = ref<SettingsRagDoc[]>([])
+const ragFile = ref<File | null>(null)
+const ragTitle = ref('')
+const ragUploading = ref(false)
+const ragUploadError = ref('')
+const ragBusyId = ref('')
+
+function onRagFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  ragFile.value = input.files?.[0] ?? null
+}
+
+function ragStatusLabel(s: string) {
+  const key = `admin.rag.status.${s}`
+  const translated = t(key)
+  return translated === key ? s : translated
+}
+
+/** Reject purges the source blob — hide download when no file remains. */
+function canDownloadRag(d: SettingsRagDoc) {
+  return d.status === 'pending'
+    || d.status === 'ready'
+    || d.status === 'failed'
+    || d.status === 'indexing'
+}
+
+function downloadRagDoc(d: SettingsRagDoc) {
+  const a = document.createElement('a')
+  a.href = `/api/practices/me/rag/documents/${d.id}/download`
+  a.rel = 'noopener'
+  a.download = d.filename || d.title || 'document'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+
+async function loadRagDocs() {
+  if (!aiCrAdvancedOn.value) return
+  const res: any = await $fetch('/api/practices/me/rag/documents')
+  ragDocs.value = res.data ?? res ?? []
+}
+
+async function uploadRagDoc() {
+  if (!ragFile.value) return
+  ragUploading.value = true
+  ragUploadError.value = ''
+  try {
+    const fd = new FormData()
+    fd.append('file', ragFile.value)
+    if (ragTitle.value.trim()) fd.append('title', ragTitle.value.trim())
+    await $fetch('/api/practices/me/rag/documents', { method: 'POST', body: fd })
+    ragFile.value = null
+    ragTitle.value = ''
+    await loadRagDocs()
+  } catch (e: any) {
+    ragUploadError.value = e?.data?.error?.message || e?.message || t('settings.rag.uploadFailed')
+  } finally {
+    ragUploading.value = false
+  }
+}
+
+async function deleteRagDoc(d: SettingsRagDoc) {
+  ragBusyId.value = d.id
+  try {
+    await $fetch(`/api/practices/me/rag/documents/${d.id}`, { method: 'DELETE' })
+    await loadRagDocs()
+  } catch (e: any) {
+    ragUploadError.value = e?.data?.error?.message || e?.message || t('settings.rag.actionFailed')
+  } finally {
+    ragBusyId.value = ''
+  }
+}
 
 const headerLinksLoaded = ref(false)
 const headerLinksCatalog = ref<HeaderLinkCatalogRow[]>([])
@@ -590,6 +745,9 @@ const settingsTabs = computed(() => {
   }
   if (canMessage.value) {
     tabs.push({ id: 'notifications', label: t('settings.tabs.notifications') })
+  }
+  if (aiCrAdvancedOn.value && canManagePractice.value) {
+    tabs.push({ id: 'rag', label: t('settings.tabs.rag') })
   }
   tabs.push({ id: 'account', label: t('settings.tabs.account') })
   return tabs
@@ -859,6 +1017,10 @@ onMounted(async () => {
       const me = await fetchUser(true)
       avatarUrl.value = me?.avatarUrl || ''
     } catch { /* ignore */ }
+  }
+
+  if (aiCrAdvancedOn.value && canManagePractice.value) {
+    void loadRagDocs().catch(() => {})
   }
 
   if (canManagePractice.value) {

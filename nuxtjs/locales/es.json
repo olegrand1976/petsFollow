@@ -96,7 +96,8 @@
     "commercialEmails": "Emails enviados",
     "commercialAgenda": "Agenda",
     "managerAgenda": "Agenda del equipo",
-    "nouveautes": "Novedades"
+    "nouveautes": "Novedades",
+    "adminRag": "Base RAG"
   },
   "auth": {
     "login": {
@@ -363,7 +364,8 @@
       "profile": "Perfil",
       "calendar": "Agenda",
       "notifications": "Notificaciones",
-      "account": "Cuenta"
+      "account": "Cuenta",
+      "rag": "Documentación"
     },
     "avatar": {
       "title": "Foto de perfil",
@@ -553,7 +555,22 @@
         "description": "Condiciones de uso y política de privacidad."
       }
     },
-    "aclDenied": "No puede editar la ficha del centro. Contacte al veterinario de referencia."
+    "aclDenied": "No puede editar la ficha del centro. Contacte al veterinario de referencia.",
+    "rag": {
+      "title": "Base documental (RAG)",
+      "description": "Upload practice guides. They stay inactive until an admin approves them.",
+      "moderationHint": "Pending status: unused by AI until admin approval.",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Submit for review",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "empty": "No documents submitted",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colDate": "Date",
+      "download": "Descargar"
+    }
   },
   "share": {
     "petTitle": "Compartir expediente",
@@ -2277,6 +2294,43 @@
       "groupsLoadError": "Could not load / update groups.",
       "enableDataroom": "Enable Data room",
       "disableDataroom": "Disable Data room"
+    },
+    "rag": {
+      "newUpload": "Add document",
+      "uploadTitle": "Platform upload",
+      "fieldTitle": "Title",
+      "file": "File (PDF, TXT, Markdown)",
+      "uploadSubmit": "Index",
+      "uploadFailed": "Upload failed",
+      "actionFailed": "Action failed",
+      "confirmDelete": "Delete this document and its embeddings?",
+      "empty": "No RAG documents",
+      "filterStatus": "Status",
+      "statusAll": "All",
+      "approve": "Approve",
+      "reject": "Reject",
+      "colDate": "Date",
+      "colTitle": "Title",
+      "colScope": "Scope",
+      "colStatus": "Status",
+      "colChunks": "Chunks",
+      "scopePlatform": "Platform",
+      "scopePractice": "Practice",
+      "title": "Base documental (RAG)",
+      "subtitle": "Guides and datasheets for advanced AI visit reports (platform corpus + practice upload moderation).",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "indexing": "Indexing",
+        "ready": "Ready",
+        "failed": "Failed"
+      },
+      "disabledTitle": "Módulo desactivado",
+      "disabledHint": "Active AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED para gestionar la base RAG.",
+      "download": "Descargar",
+      "reindex": "Reindexar",
+      "reindexDone": "Reindexación terminada: {indexed} indexado(s), {failed} fallido(s)."
     }
   },
   "commissions": {

@@ -203,7 +203,12 @@
     "be_vat_invalid": "Invalid Belgian VAT number (format or check digits)",
     "be_address_required": "Full address required for Belgium (street, postal code, city)",
     "individual_address_required": "Full address required for an individual (street, postal code, city)",
-    "individual_email_required": "Email required for an individual — the invoice is delivered by email"
+    "individual_email_required": "Email required for an individual — the invoice is delivered by email",
+    "rag_unsupported_format": "Unsupported format (PDF, TXT or Markdown)",
+    "ai_cr_advanced_disabled": "Advanced AI CR module disabled",
+    "rag_duplicate": "Document already exists (same content)",
+    "rag_not_pending": "Document is not pending review",
+    "rag_locked": "Indexed document — admin deletion only"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",
