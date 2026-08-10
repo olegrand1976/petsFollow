@@ -12,8 +12,9 @@ test('page produits affiche Pro Web, Pro Light et les plans clients TTC', async 
   await expect(page.getByTestId('products-solution-proLight')).toBeVisible()
   // SaaS Pro HT
   await expect(page.getByText(/69/).first()).toBeVisible()
-  // Plans clients TTC — FR: "3,50 €" · EN: "€3.50"
-  await expect(page.getByText(/€?\s*3[,.]50\s*€?/).first()).toBeVisible()
-  await expect(page.getByText(/€?\s*35\b/).first()).toBeVisible()
-  await expect(page.getByText(/€?\s*95\b/).first()).toBeVisible()
+  // Plans clients TTC — scope to products page (avoid hidden site <option> matching /35/)
+  const products = page.getByTestId('products-page')
+  await expect(products.getByText(/€?\s*3[,.]50\s*€?/)).toBeVisible()
+  await expect(products.getByText(/35\s*€|€\s*35\b/)).toBeVisible()
+  await expect(products.getByText(/95\s*€|€\s*95\b/)).toBeVisible()
 })

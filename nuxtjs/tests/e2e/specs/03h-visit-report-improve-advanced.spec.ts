@@ -101,9 +101,10 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
       resolveEvents = null
     }
 
-    await page.route('**/api/visits/*/report-improve-advanced', async (route) => {
+    // Anchor on end-of-path so …/events is not swallowed by this route + continue().
+    await page.route(/\/api\/visits\/[^/]+\/report-improve-advanced$/, async (route) => {
       if (route.request().method() !== 'POST') {
-        await route.continue()
+        await route.fallback()
         return
       }
       await route.fulfill({
@@ -113,7 +114,7 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
       })
     })
 
-    await page.route('**/api/visits/*/report-improve-advanced/*/events', async (route) => {
+    await page.route(/\/api\/visits\/[^/]+\/report-improve-advanced\/[^/]+\/events$/, async (route) => {
       await eventsGate
       const sse = [
         'id: 1\nevent: step\ndata: {"agent":"tri","label":"Extraction"}\n\n',
@@ -133,9 +134,9 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
     })
 
     // After SSE final, UI re-fetches GET report — return improved payload.
-    await page.route(`**/api/visits/${visitId}/report`, async (route) => {
+    await page.route(new RegExp(`/api/visits/${visitId}/report$`), async (route) => {
       if (route.request().method() !== 'GET') {
-        await route.continue()
+        await route.fallback()
         return
       }
       await route.fulfill({
@@ -155,6 +156,11 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
       })
     })
 
+    const sawThreeSteps = page.waitForFunction(() => {
+      const ol = document.querySelector('[data-testid="visit-report-advanced-steps"]')
+      return Boolean(ol && ol.querySelectorAll('li').length >= 3)
+    }, { timeout: 20000 })
+
     try {
       await advancedBtn.click()
       await expect(page.getByTestId('visit-report-advanced-improving')).toBeVisible({ timeout: 10000 })
@@ -164,8 +170,7 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
       releaseEvents()
     }
 
-    await expect(page.getByTestId('visit-report-advanced-steps')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('visit-report-advanced-steps').locator('li')).toHaveCount(3, { timeout: 10000 })
+    await sawThreeSteps
     await expect(page.getByTestId('visit-report-advanced-improving')).toHaveCount(0, { timeout: 15000 })
     await expect(page.getByTestId('visit-report-body')).toHaveValue(improved, { timeout: 15000 })
     await expect(page.getByTestId('visit-report-quality')).toBeVisible({ timeout: 10000 })
