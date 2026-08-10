@@ -128,6 +128,12 @@ Orchestrateur : `GET /v1/tasks/{id}/events` (SSE) ; submit avec `"async": true` 
 
 **Ops V1** : le hub SSE côté API Go est **in-proc** ; si l’EventSource atterrit sur une autre instance Cloud Run, le client **poll** `rag.improve_runs` jusqu’au statut terminal (pas de live thought cross-instance). Orchestrateur staging : `max-instances=1` (bus SSE mémoire). Prod multi-instance → Redis/PubSub plus tard.
 
+### Clôture Phase 3
+
+- **RGPD** : export `GET /me/export` → clé `ragImproveRuns` ; tombstone Pro (`DeleteProAccount`) purge `rag.improve_runs` (les CR `visit_reports` restent).
+- **E2E** : Playwright `@p1` `03h-visit-report-improve-advanced.spec.ts` (mocks POST + SSE, pas de CrewAI live).
+- **Smoke ops** (manuel) : `CREWAI_BASE_URL=… CREWAI_SHARED_SECRET=… CREWAI_USE_ID_TOKEN=true make crewai-smoke`.
+
 ### Suites suivantes
 
 - Phase 4 : exports PDF/MD/clipboard + polish usage

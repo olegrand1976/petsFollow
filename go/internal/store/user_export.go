@@ -36,6 +36,22 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 				'createdAt', d.created_at
 			) ORDER BY d.created_at), '[]'::jsonb)
 			FROM rag.documents d WHERE d.uploaded_by = $1`,
+		// Agent-run audit (steps/citations may contain PHI from CR improve-advanced).
+		"ragImproveRuns": `SELECT COALESCE(jsonb_agg(
+			jsonb_build_object(
+				'id', r.id,
+				'visitId', r.visit_id,
+				'reportId', r.report_id,
+				'practiceId', r.practice_id,
+				'status', r.status,
+				'steps', r.steps,
+				'citations', r.citations,
+				'errorCode', r.error_code,
+				'latencyMs', r.latency_ms,
+				'createdAt', r.created_at,
+				'completedAt', r.completed_at
+			) ORDER BY r.created_at), '[]'::jsonb)
+			FROM rag.improve_runs r WHERE r.user_id = $1`,
 		"pets": `SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.created_at), '[]'::jsonb)
 			FROM pets.pets p WHERE p.owner_user_id = $1`,
 		"heartRateSessions": `SELECT COALESCE(jsonb_agg(to_jsonb(h) ORDER BY h.started_at), '[]'::jsonb)

@@ -311,3 +311,103 @@ func TestRGPDDeleteClientRedactsPharmacyJobAudit(t *testing.T) {
 		t.Fatalf("client_user_id must be cleared, got %v", clientLeft)
 	}
 }
+
+// Export includes ragImproveRuns; Pro tombstone purges them (CR visit_reports stay).
+func TestRGPDImproveRunsExportAndProPurge(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	adminTok := ensureAdminToken(t, api)
+	_, _, commTok := createCommercial(t, api, adminTok, "rgpd-ir", "RGPD IR Comm")
+
+	vetEmail := uniqueEmail("rgpd-ir-v")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr RGPD IR",
+		"practiceName": "Cab RGPD IR",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode vet %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+	if vetID == "" {
+		t.Fatalf("missing vet userId %#v", env)
+	}
+	vetTok := loginToken(t, api.handler, vetEmail, "VetDemo123!")
+
+	var practiceID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT practice_id::text FROM identity.users WHERE id = $1`, vetID).Scan(&practiceID); err != nil || practiceID == "" {
+		t.Fatalf("practice for vet: %v %q", err, practiceID)
+	}
+
+	clientID := insertVerifiedUser(t, api, string(kernel.RoleClient), uniqueEmail("rgpd-ir-c"), "ClientDemo123!", "Cli IR", nil)
+	petID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, payment_status)
+		VALUES ($1, $2, $3, 'IRPet', 'dog', 'mix', 'pending_payment')`, petID, practiceID, clientID); err != nil {
+		t.Fatalf("insert pet: %v", err)
+	}
+	visitID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO visits.visits (id, pet_id, practice_id, site_id, scheduled_at, status, notes, source, created_at)
+		VALUES ($1, $2, $3,
+			(SELECT id FROM practice.sites WHERE practice_id = $3::uuid AND is_primary LIMIT 1),
+			NOW(), 'confirmed', 'rgpd improve run', 'vet', NOW())`,
+		visitID, petID, practiceID); err != nil {
+		t.Fatalf("insert visit: %v", err)
+	}
+
+	st := store.New(api.pool)
+	rep, err := st.EnsureVisitReport(ctx, visitID, vetID)
+	if err != nil {
+		t.Fatalf("EnsureVisitReport: %v", err)
+	}
+	run, err := st.CreateImproveRun(ctx, visitID, rep.ID, practiceID, vetID)
+	if err != nil {
+		t.Fatalf("CreateImproveRun: %v", err)
+	}
+	if err := st.AppendImproveRunStep(ctx, run.ID, map[string]any{"agent": "tri", "label": "phi-step"}); err != nil {
+		t.Fatalf("AppendImproveRunStep: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("export %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	runs, ok := data["ragImproveRuns"].([]any)
+	if !ok || len(runs) == 0 {
+		t.Fatalf("export missing ragImproveRuns: %#v", data["ragImproveRuns"])
+	}
+	found := false
+	for _, raw := range runs {
+		m, _ := raw.(map[string]any)
+		if str(m["id"]) == run.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("export ragImproveRuns missing run %s: %#v", run.ID, runs)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me vet %d %#v", code, env)
+	}
+	var n int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM rag.improve_runs WHERE user_id = $1`, vetID).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("improve_runs after pro tombstone count=%d want 0", n)
+	}
+	var reportLeft int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM visits.visit_reports WHERE id = $1`, rep.ID).Scan(&reportLeft); err != nil {
+		t.Fatal(err)
+	}
+	if reportLeft != 1 {
+		t.Fatalf("visit_reports should remain after pro tombstone, count=%d", reportLeft)
+	}
+}

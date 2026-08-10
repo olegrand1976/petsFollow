@@ -336,6 +336,10 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	if err := redactPharmacyUserDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
+	// CR clinical rows stay; purge multi-agent audit trails (steps/citations PHI).
+	if _, err := tx.Exec(ctx, `DELETE FROM rag.improve_runs WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
 
