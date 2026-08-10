@@ -1651,7 +1651,9 @@ watch(
 }
 
 .pro-visit-report--fill .visit-report-pane {
-  overflow: hidden;
+  /* Scroll plutôt que rognage : les blocs optionnels empilés sous l'éditeur
+     (export, barre qualité, feedback IA, sources citées) s'additionnent. */
+  overflow-y: auto;
   min-height: 0;
   height: 100%;
 }
@@ -1674,7 +1676,10 @@ watch(
 /* TipTap root (was .pro-md-report before rich editor migration). */
 .pro-visit-report--fill :deep(.pro-rich-report) {
   flex: 1 1 auto;
-  min-height: 0;
+  /* Plancher : les blocs optionnels empilés dans le pane (barre d'export,
+     barre qualité, feedback IA, sources citées) écrasaient l'éditeur à 0 px —
+     CR inéditable. Le pane ci-dessus prend le scroll à la place. */
+  min-height: 8rem;
   display: flex;
   flex-direction: column;
   min-width: 0;
