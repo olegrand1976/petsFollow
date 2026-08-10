@@ -3788,7 +3788,15 @@
     "reportImprovedAdvanced": "Verslag verbeterd (geavanceerde AI).",
     "reportImproveAdvancedFailed": "Geavanceerde AI-verbetering mislukt.",
     "reportImproveAdvancedCancel": "Annuleren",
-    "reportImproveAdvancedCancelled": "Geavanceerde AI-verbetering geannuleerd."
+    "reportImproveAdvancedCancelled": "Geavanceerde AI-verbetering geannuleerd.",
+    "reportCopyMd": "MD kopiëren",
+    "reportDownloadMd": "MD downloaden",
+    "reportDownloadPdf": "PDF downloaden",
+    "reportCopiedMd": "Verslag gekopieerd.",
+    "reportDownloadedMd": "Markdown-bestand gedownload.",
+    "reportDownloadedPdf": "PDF gedownload.",
+    "reportOpenedPdf": "PDF geopend.",
+    "reportCitationsTitle": "RAG-bronnen"
   },
   "manager": {
     "dashboard": {

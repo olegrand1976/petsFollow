@@ -115,12 +115,12 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
+		a.writeVisitReportData(w, r, report)
 		return
 	}
 	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
 	if errors.Is(err, store.ErrNotFound) {
-		httpx.WriteData(w, http.StatusOK, store.VisitReport{
+		a.writeVisitReportData(w, r, store.VisitReport{
 			VisitID: visitID, AuthorUserID: id.UserID, Status: "none",
 		})
 		return
@@ -129,7 +129,7 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
+	a.writeVisitReportData(w, r, report)
 }
 
 func (a *API) listVisitReports(w http.ResponseWriter, r *http.Request) {

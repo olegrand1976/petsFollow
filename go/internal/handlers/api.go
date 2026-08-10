@@ -417,6 +417,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
 		pr.Get("/visits/{visitID}/reports", a.listVisitReports)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)
+		pr.Get("/visits/{visitID}/report/pdf", a.getVisitReportPDF)
 		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
 		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)

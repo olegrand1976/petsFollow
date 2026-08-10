@@ -3298,7 +3298,15 @@
     "reportImprovedAdvanced": "Compte-rendu amélioré (IA avancée).",
     "reportImproveAdvancedFailed": "Échec de l'amélioration IA avancée.",
     "reportImproveAdvancedCancel": "Annuler",
-    "reportImproveAdvancedCancelled": "Amélioration IA avancée annulée."
+    "reportImproveAdvancedCancelled": "Amélioration IA avancée annulée.",
+    "reportCopyMd": "Copier MD",
+    "reportDownloadMd": "Télécharger MD",
+    "reportDownloadPdf": "Télécharger PDF",
+    "reportCopiedMd": "Compte-rendu copié.",
+    "reportDownloadedMd": "Fichier Markdown téléchargé.",
+    "reportDownloadedPdf": "PDF téléchargé.",
+    "reportOpenedPdf": "PDF ouvert.",
+    "reportCitationsTitle": "Sources RAG"
   },
   "commissions": {
     "title": "Mes rétributions",

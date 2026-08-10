@@ -136,7 +136,70 @@ Orchestrateur : `GET /v1/tasks/{id}/events` (SSE) ; submit avec `"async": true` 
 
 ### Suites suivantes
 
-- Phase 4 : exports PDF/MD/clipboard + polish usage
-- Phase 5 : recette
+- Phases 1–4 : **livrées** (voir sections ci-dessus).
+- Phase 5 : **livrée** — runbook ops + checklist recette + C2.28 (pas de badge GA : tag `dev` conservé).
+
+### Phase 4 — Exports CR
+
+| Surface | Détail |
+|---------|--------|
+| API | `GET /api/v1/visits/{visitID}/report/pdf` — auth + `canManageVisit` ; PDF branded (`consultationpdf.BuildPDF`) ; attachment |
+| GET report | champ optionnel `lastImproveCitations` (dernier `improve_runs` `completed`, flag advanced on) |
+| BFF | `/api/visits/{visitId}/report-pdf` (`proxyBinary`) |
+| UI | `visit-report-copy-md` / `download-md` / `download-pdf` + liste `visit-report-citations` |
+| Utils | `nuxtjs/utils/visit-report-export.ts` |
+
+## Phase 5 livrée — Recette, runbook & DoD
+
+Tag **`dev`** inchangé jusqu’à décision GA explicite. Pas d’use case commercial dédié (règle modules tag `dev`) : la démo VetPro reste sur **Améliorer (IA)** classique ([`UC-VP-04`](../useCase/01-vetpro/UC-VP-04-nouvelle-consultation.md)).
+
+### Runbook ops
+
+| Action | Commande / détail |
+|--------|-------------------|
+| Flags | API `AI_CR_ADVANCED_ENABLED` · Nuxt `NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED` (staging on ; **prod off** par défaut) |
+| Secrets API | `CREWAI_BASE_URL`, `CREWAI_SHARED_SECRET`, `CREWAI_USE_ID_TOKEN` · `RAG_REINDEX_SECRET` |
+| Smoke orchestrateur | `CREWAI_BASE_URL=… CREWAI_SHARED_SECRET=… CREWAI_USE_ID_TOKEN=true make crewai-smoke` |
+| Deploy orchestrateur | `cd ../crewai-orchestrator && bash infra/gcp/deploy-staging.sh` (`max-instances=1`) |
+| Rollback immédiat | flags advanced → `false` / retirer env Nuxt (BFF 404 `*_disabled`, bouton masqué) — improve classique inchangé |
+| Extension Cloud SQL | `CREATE EXTENSION IF NOT EXISTS vector;` (one-shot) |
+
+### Dette connue (hors V1)
+
+- Hub SSE API **in-proc** + poll DB cross-instance ; Redis/PubSub plus tard.
+- Cancel CrewAI remote best-effort (statut DB `cancelled` côté petsFollow).
+- Monitoring GCP (p50/p95, tokens, budget) : pas de dashboard dédié — s’appuyer sur logs Cloud Run + table `rag.improve_runs` (`latency_ms`, `error_code`, `status`).
+
+### Checklist recette staging (C2.28)
+
+Jouer sur un cabinet seed (`vet.demo`) avec flag on + au moins un doc RAG `ready` (platform ou practice approved).
+
+| # | Jeu | Attendu |
+|---|-----|---------|
+| 1 | Notes synthétiques → **Améliorer IA avancé** | ≥3 steps loader → CR éditable ; **pas** auto-finalize |
+| 2 | Improve **classique** après / à côté | Toujours OK (non-régression) |
+| 3 | RAG hit (posologie dans corpus) | Citation visible (`visit-report-citations`) ou section références |
+| 4 | RAG miss / query hors corpus | Warning ou absence de dose inventée |
+| 5 | Doc cabinet `pending` | Absent du search / des citations |
+| 6 | Locale `nl` ou `auto` | Corps / titres cohérents |
+| 7 | Exports | Copy MD · download MD · PDF (`report-pdf`) |
+| 8 | Kill-switch flag off | Bouton avancé masqué ; POST → 404 |
+| 9 | Ops | `make crewai-smoke` green sur staging |
+
+### Protocole praticiens (go-live soft)
+
+1. 10 CR réels **anonymisés** (pas de PHI en ticket / Slack).
+2. Score utilité (1–5) + noter si édition manuelle avant finalize.
+3. Critère soft : **≥ 80 %** « utilisables avec retouches mineures ».
+4. Sign-off : date + auteur dans le ticket ops / note de release (pas de merge GA sans ça).
+
+### Auto (filet)
+
+```bash
+cd go && go test ./internal/handlers/ -run 'TestImproveAdvanced|TestVisitReportPDF|TestRAG' -count=1
+cd nuxtjs && npm test -- tests/unit/visit-report-export.spec.ts tests/unit/locales-parity.spec.ts
+# e2e P1 (API + Nuxt up) :
+cd nuxtjs && npx playwright test tests/e2e/specs/03h-visit-report-improve-advanced.spec.ts tests/e2e/specs/03i-visit-report-export.spec.ts
+```
 
 Voir aussi [`32-MODULE-IA-CR.md`](32-MODULE-IA-CR.md) (CR IA synchrone conservé).

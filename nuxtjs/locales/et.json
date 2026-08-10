@@ -3788,7 +3788,15 @@
     "reportImprovedAdvanced": "Aruanne paranenud (täiustatud AI).",
     "reportImproveAdvancedFailed": "Täiustatud AI-parandus ebaõnnestus.",
     "reportImproveAdvancedCancel": "Tühista",
-    "reportImproveAdvancedCancelled": "Täiustatud AI-parandus tühistati."
+    "reportImproveAdvancedCancelled": "Täiustatud AI-parandus tühistati.",
+    "reportCopyMd": "Kopeeri MD",
+    "reportDownloadMd": "Laadi MD alla",
+    "reportDownloadPdf": "Laadi PDF alla",
+    "reportCopiedMd": "Aruanne kopeeritud.",
+    "reportDownloadedMd": "Markdown-fail allalaaditud.",
+    "reportDownloadedPdf": "PDF allalaaditud.",
+    "reportOpenedPdf": "PDF avatud.",
+    "reportCitationsTitle": "RAG allikad"
   },
   "manager": {
     "dashboard": {

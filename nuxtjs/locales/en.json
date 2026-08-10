@@ -3788,7 +3788,15 @@
     "reportImprovedAdvanced": "Report improved (advanced AI).",
     "reportImproveAdvancedFailed": "Advanced AI improvement failed.",
     "reportImproveAdvancedCancel": "Cancel",
-    "reportImproveAdvancedCancelled": "Advanced AI improvement cancelled."
+    "reportImproveAdvancedCancelled": "Advanced AI improvement cancelled.",
+    "reportCopyMd": "Copy MD",
+    "reportDownloadMd": "Download MD",
+    "reportDownloadPdf": "Download PDF",
+    "reportCopiedMd": "Report copied.",
+    "reportDownloadedMd": "Markdown file downloaded.",
+    "reportDownloadedPdf": "PDF downloaded.",
+    "reportOpenedPdf": "PDF opened.",
+    "reportCitationsTitle": "RAG sources"
   },
   "manager": {
     "dashboard": {

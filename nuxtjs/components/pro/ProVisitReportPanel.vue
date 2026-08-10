@@ -213,6 +213,56 @@
             </template>
           </ClientOnly>
           <div
+            v-if="reportBody.trim() && !viewingPeerReport"
+            class="pro-flex-gap visit-report-export"
+            data-testid="visit-report-export"
+          >
+            <ProButton
+              variant="ghost"
+              :disabled="reportBusy || hydrating || exportBusy"
+              test-id="visit-report-copy-md"
+              @click="copyReportMarkdown"
+            >
+              <ProIcon name="content_copy" :size="16" />
+              {{ $t('calendar.reportCopyMd') }}
+            </ProButton>
+            <ProButton
+              variant="ghost"
+              :disabled="reportBusy || hydrating || exportBusy"
+              test-id="visit-report-download-md"
+              @click="downloadReportMarkdown"
+            >
+              <ProIcon name="download" :size="16" />
+              {{ $t('calendar.reportDownloadMd') }}
+            </ProButton>
+            <ProButton
+              variant="ghost"
+              :disabled="reportBusy || hydrating || exportBusy"
+              :loading="exportBusy"
+              test-id="visit-report-download-pdf"
+              @click="downloadReportPdf"
+            >
+              <ProIcon name="picture_as_pdf" :size="16" />
+              {{ $t('calendar.reportDownloadPdf') }}
+            </ProButton>
+          </div>
+          <div
+            v-if="aiCrAdvancedEnabled && lastImproveCitations.length && !viewingPeerReport"
+            class="visit-report-citations"
+            data-testid="visit-report-citations"
+          >
+            <h4 class="visit-report-citations__title">{{ $t('calendar.reportCitationsTitle') }}</h4>
+            <ul class="visit-report-citations__list">
+              <li
+                v-for="(cite, idx) in lastImproveCitations"
+                :key="`cite-${idx}`"
+                data-testid="visit-report-citation-item"
+              >
+                {{ cite }}
+              </li>
+            </ul>
+          </div>
+          <div
             v-if="showAiQualityBar"
             class="visit-report-quality"
             data-testid="visit-report-quality"
@@ -397,6 +447,11 @@ import { normalizeReportText } from '~/utils/safeMarkdown'
 import { canonicalizeReportMarkdown } from '~/utils/reportRichText'
 import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
+import {
+  copyVisitReportMarkdown,
+  downloadVisitReportMarkdown,
+  openVisitReportPdfBlob,
+} from '~/utils/visit-report-export'
 
 export type VisitReportAuthor = {
   id?: string
@@ -454,7 +509,9 @@ const reportPersistedTranscript = ref('')
 const reportImproved = ref('')
 const reportStatus = ref('')
 const reportIsReference = ref(false)
+const lastImproveCitations = ref<string[]>([])
 const reportBusy = ref(false)
+const exportBusy = ref(false)
 const saveInFlight = ref(false)
 const improveInFlight = ref(false)
 const advancedImproveInFlight = ref(false)
@@ -582,6 +639,19 @@ function applyDatePrefixIfNeeded() {
   reportBody.value = `${prefix}\n\n${body}`
 }
 
+function normalizeCitations(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((item) => {
+      if (typeof item === 'string') return item.trim()
+      if (item && typeof item === 'object' && 'title' in item) {
+        return String((item as { title?: unknown }).title || '').trim()
+      }
+      return ''
+    })
+    .filter(Boolean)
+}
+
 function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   const mapped = mapVisitReportFields(data)
   reportBody.value = mapped.bodyText
@@ -591,6 +661,7 @@ function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
   reportIsReference.value = mapped.isReference
+  lastImproveCitations.value = normalizeCitations(data?.lastImproveCitations)
 }
 
 function reportHasContent(author: VisitReportAuthor | null | undefined) {
@@ -617,6 +688,55 @@ function applyPeerReport(author: VisitReportAuthor) {
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
   reportIsReference.value = mapped.isReference
+  lastImproveCitations.value = []
+}
+
+async function copyReportMarkdown() {
+  if (!reportBody.value.trim() || exportBusy.value) return
+  try {
+    await copyVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value))
+    reportMsg.value = t('calendar.reportCopiedMd')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  }
+}
+
+function downloadReportMarkdown() {
+  if (!reportBody.value.trim() || exportBusy.value) return
+  try {
+    downloadVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value), 'cr')
+    reportMsg.value = t('calendar.reportDownloadedMd')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  }
+}
+
+async function downloadReportPdf() {
+  if (!props.visitId || !reportBody.value.trim() || exportBusy.value) return
+  exportBusy.value = true
+  reportMsg.value = ''
+  try {
+    // Persist current body so PDF matches the editor (attachment uses stored report).
+    if (dirty.value && !reportLocked.value && !props.readonly && !viewingPeerReport.value) {
+      await $fetch(`/api/visits/${props.visitId}/report`, {
+        method: 'PUT',
+        body: {
+          bodyText: normalizeReportText(reportBody.value),
+          transcriptText: normalizeReportText(reportTranscript.value),
+        },
+      })
+      reportPersistedBody.value = reportBody.value
+      reportPersistedTranscript.value = reportTranscript.value
+    }
+    const mode = await openVisitReportPdfBlob(props.visitId)
+    reportMsg.value = mode === 'download'
+      ? t('calendar.reportDownloadedPdf')
+      : t('calendar.reportOpenedPdf')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    exportBusy.value = false
+  }
 }
 
 async function loadVisitReports(visitId: string) {
@@ -1279,6 +1399,32 @@ watch(
   border: 1px dashed var(--pf-vet-border);
   border-radius: var(--pf-vet-radius, 8px);
   background: var(--pf-vet-bg, #f8fafc);
+}
+
+.visit-report-export {
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+
+.visit-report-citations {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-bg, #f8fafc);
+}
+
+.visit-report-citations__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--pf-vet-primary);
+}
+
+.visit-report-citations__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  color: var(--pf-vet-muted, #6b7280);
 }
 
 .visit-report-reference {

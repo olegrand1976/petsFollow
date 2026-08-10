@@ -31,9 +31,11 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 4. Écran CR split (workspace unique) :
    - **Gauche — Notes / dictée** : écrire ou dicter (consentement audio) / importer un fichier.
    - **Droite — Compte-rendu** : **Améliorer (IA)** (source = notes si présentes, sinon le CR) ou éditer manuellement ; aperçu markdown après IA.
+   - (**Hors démo commerciale** — tag `dev`) **Améliorer IA avancé** + exports MD/PDF : module multi-agents / RAG, pas présenté en pitch tant que non GA — voir [`documentation/44-AI-CR-ADVANCED.md`](../../documentation/44-AI-CR-ADVANCED.md).
    - **Annuler les modifications** (footer panel) restaure le dernier enregistrement **sans** fermer la consultation ; **Annuler** (footer workspace) quitte la consult (confirm leave).
    - Historique des versions (replié) : transcription d’origine → proposition IA → dernière version enregistrée ; restore vers la bonne pane.
    - **Enregistrer** (ou Finaliser).
+   - Exports (copy / MD / PDF) disponibles dès brouillon si contenu CR.
 5. Hub post-CR : CTA **DAF** (wizard `/daf/nouveau` prérempli `visitId`) / **Facturer** / **Consignes** (si flags) — pas de panneau traitements in-workspace ; parcours DAF détaillé → [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md).
 6. Choisir :
    - **Créer un DAF & Facturer** → wizard si besoin, sinon finalize inline puis **Facturer** (`mode=fromDaf`, lignes + montant estimé mock).
@@ -53,6 +55,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - Hub CTA **DAF** → wizard avec `visitId` ; finalize FEFO + déduction stock dans le wizard (jamais silencieux à la clôture CR).
 - E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · leave-save · dirty post-save · CTA DAF/facture · hub sans traitements in-workspace · détail RDV agenda → visite conservée).
 - E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).
+- Réf. module avancé (hors pitch) : C2.24–C2.28 · doc [44](../../documentation/44-AI-CR-ADVANCED.md).
 
 ## Checklist
 

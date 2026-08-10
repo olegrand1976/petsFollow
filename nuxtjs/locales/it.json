@@ -3254,7 +3254,15 @@
     "reportImprovedAdvanced": "Referto migliorato (IA avanzata).",
     "reportImproveAdvancedFailed": "Miglioramento IA avanzato non riuscito.",
     "reportImproveAdvancedCancel": "Annulla",
-    "reportImproveAdvancedCancelled": "Miglioramento IA avanzato annullato."
+    "reportImproveAdvancedCancelled": "Miglioramento IA avanzato annullato.",
+    "reportCopyMd": "Copia MD",
+    "reportDownloadMd": "Scarica MD",
+    "reportDownloadPdf": "Scarica PDF",
+    "reportCopiedMd": "Referto copiato.",
+    "reportDownloadedMd": "File Markdown scaricato.",
+    "reportDownloadedPdf": "PDF scaricato.",
+    "reportOpenedPdf": "PDF aperto.",
+    "reportCitationsTitle": "Fonti RAG"
   },
   "commissions": {
     "title": "Le mie ricompense",

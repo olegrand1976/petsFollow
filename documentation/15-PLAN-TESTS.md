@@ -202,6 +202,8 @@ Compte : `vet.demo@petsfollow.test`
 | C2.24 | P1 | RAG base documentaire (tag `dev`) | Flag `AI_CR_ADVANCED_ENABLED` : upload admin → **202** `indexing` → `ready` ; upload cabinet → `pending` invisible au search jusqu’à approve ; download admin + practice (isolation cross-cabinet) ; `POST /admin/rag/reindex` ; reject purge source | Go `TestRAG*` ; UI `/admin/rag` + Settings « Base documentaire » ; doc [44](44-AI-CR-ADVANCED.md) |
 | C2.25 | P1 | CrewAI partagé (Phase 2) | Client Go `platform/crewai` + `make crewai-smoke` (skip si `CREWAI_BASE_URL` vide) ; workflows `staging_smoke_test` / `petsfollow_cr_improve` ; tool RAG via `/internal/rag/search` ; auth fail-closed + IAM ID token staging | Go `TestClient*` (headers/403/workflow) · `TestLoadCrewAIEnv` · `TestCrewAIStagingDeployGuard` ; orchestrateur `test_secrets_match*` · 503 sans secret · draft Gemini non écrasé · deploy static IAM ; doc [44](44-AI-CR-ADVANCED.md) |
 | C2.26 | P1 | Améliorer IA avancé SSE (Phase 3) | Flag on : bouton `visit-report-improve-advanced` → 202 `runId` → SSE ≥3 `step` + `final` → body CR mis à jour ; flag off → 404 + bouton masqué ; `run_in_progress` 409 ; improve classique inchangé | Go mock CrewAI + hub SSE ; orchestrateur async+SSE ; Playwright `03h-visit-report-improve-advanced.spec.ts` (@p1, mocks BFF) ; RGPD export `ragImproveRuns` + purge tombstone Pro ; doc [44](44-AI-CR-ADVANCED.md) |
+| C2.27 | P1 | Exports CR PDF/MD/clipboard (Phase 4) | Toolbar `visit-report-export` : copy MD · download MD · PDF via `GET …/report/pdf` (BFF `report-pdf`) ; GET report enrichi `lastImproveCitations` si run avancé completed | Go `TestVisitReportPDF` ; Vitest `visit-report-export.spec.ts` ; Playwright `03i-visit-report-export.spec.ts` (@p1) ; doc [44](44-AI-CR-ADVANCED.md) |
+| C2.28 | P1 | Recette module CR IA avancé (Phase 5) | Staging flag on : smoke `make crewai-smoke` ; parcours UI live (advanced + classique + exports + kill-switch) ; protocole 10 CR anonymisés (≥80 % utilisables) avant GA | Manuel + runbook [44](44-AI-CR-ADVANCED.md) § Phase 5 ; auto = C2.24–C2.27 |
 
 ### C3 — Calendrier & RDV
 
@@ -891,6 +893,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `03c-consultations-history` | Historique `/consultations` : liste walk-in + RDV avec CR + filtre + ouvrir CR → fiche `/consultations/{id}` + soft-delete + **durée audio / player** + badge draft DAF | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons · Finaliser → hub direct | `@p1` |
+| `03h-visit-report-improve-advanced` | Améliorer IA avancé SSE (mocks BFF) | `@p1` |
+| `03i-visit-report-export` | Exports CR copy MD + PDF (mock BFF) | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |

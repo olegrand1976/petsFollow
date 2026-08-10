@@ -263,7 +263,8 @@
         "Deep-links DAF / Billit cohérents avec le contexte consultation ; visitId persisté sur le document. Lignes préremplies acte + DAF, prix à compléter seulement si un médicament n’a pas de tarif catalogue. CTA libellé DAF (≠ module prescriptions).",
         "Hub CTA DAF → wizard avec visitId ; finalize FEFO + déduction stock dans le wizard (jamais silencieux à la clôture CR).",
         "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · leave-save · dirty post-save · CTA DAF/facture · hub sans traitements in-workspace · détail RDV agenda → visite conservée).",
-        "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
+        "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape).",
+        "Réf. module avancé (hors pitch) : C2.24–C2.28 · doc 44."
       ],
       "checklist": [
         "CTA liste clients",

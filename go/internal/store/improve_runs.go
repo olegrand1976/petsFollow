@@ -142,6 +142,19 @@ func (s *Store) CancelImproveRun(ctx context.Context, runID string) error {
 	return nil
 }
 
+// LatestCompletedImproveRunForReport returns the newest completed run for a report (citations polish).
+func (s *Store) LatestCompletedImproveRunForReport(ctx context.Context, reportID string) (ImproveRun, error) {
+	row := s.pool.QueryRow(ctx, `
+		SELECT id::text, visit_id::text, report_id::text, practice_id::text, user_id::text,
+		       status::text, crew_task_id, steps, citations, error_code, latency_ms,
+		       created_at, updated_at, completed_at
+		FROM rag.improve_runs
+		WHERE report_id = $1::uuid AND status = 'completed'
+		ORDER BY completed_at DESC NULLS LAST, created_at DESC
+		LIMIT 1`, reportID)
+	return scanImproveRun(row)
+}
+
 type improveRunScanner interface {
 	Scan(dest ...any) error
 }

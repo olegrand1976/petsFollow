@@ -3788,7 +3788,15 @@
     "reportImprovedAdvanced": "Informe mejorado (IA avanzada).",
     "reportImproveAdvancedFailed": "Falló la mejora IA avanzada.",
     "reportImproveAdvancedCancel": "Cancelar",
-    "reportImproveAdvancedCancelled": "Mejora IA avanzada cancelada."
+    "reportImproveAdvancedCancelled": "Mejora IA avanzada cancelada.",
+    "reportCopyMd": "Copiar MD",
+    "reportDownloadMd": "Descargar MD",
+    "reportDownloadPdf": "Descargar PDF",
+    "reportCopiedMd": "Informe copiado.",
+    "reportDownloadedMd": "Archivo Markdown descargado.",
+    "reportDownloadedPdf": "PDF descargado.",
+    "reportOpenedPdf": "PDF abierto.",
+    "reportCitationsTitle": "Fuentes RAG"
   },
   "manager": {
     "dashboard": {
