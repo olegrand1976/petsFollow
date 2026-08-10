@@ -1,4 +1,4 @@
-import { proxyApi } from '../../../../utils/api'
+import { proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const visitId = getRouterParam(event, 'visitId')

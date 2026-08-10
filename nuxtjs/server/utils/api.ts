@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { createError } from 'h3'
+import { createError, getRequestHeader, sendStream, setResponseHeaders, setResponseStatus } from 'h3'
 import { authCookieSecure } from '../../utils/authCookieSecure'
 
 /** Aligné sur JWT_REFRESH_TTL (30 jours). */
@@ -398,4 +398,61 @@ export async function proxyBinary(
       throw toProxyError(retryErr)
     }
   }
+}
+
+/**
+ * Proxy SSE GET with one refresh+retry on 401 — keeps the upstream body as a
+ * stream (do not buffer). Used by improve-advanced Agent Loader.
+ */
+export async function proxySSE(event: H3Event, path: string) {
+  const url = `${apiBase()}${path}`
+  const lastEventId = getRequestHeader(event, 'last-event-id')
+  const extra: Record<string, string> = { Accept: 'text/event-stream' }
+  if (lastEventId) extra['Last-Event-ID'] = lastEventId
+
+  const fetchOnce = async (accessToken?: string) => {
+    const headers = accessToken
+      ? bearerHeaders(event, accessToken, extra)
+      : { ...apiHeaders(event), ...extra }
+    const res = await fetch(url, { method: 'GET', headers })
+    if (!res.ok || !res.body) {
+      let payload: any = null
+      try {
+        payload = await res.json()
+      } catch { /* non-JSON upstream */ }
+      throw createError({
+        statusCode: res.status || 502,
+        statusMessage: payload?.error?.message || payload?.message || res.statusText || 'sse_upstream',
+        data: payload?.error || payload || { code: 'upstream_error', message: `upstream_${res.status || 502}` },
+      })
+    }
+    return res
+  }
+
+  let res: Response
+  try {
+    res = await fetchOnce()
+  } catch (e: any) {
+    if (!isUnauthorized(e)) {
+      if (e?.statusCode) throw e
+      throw toProxyError(e)
+    }
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
+    try {
+      res = await fetchOnce(outcome.pair.accessToken)
+    } catch (retryErr: any) {
+      if (retryErr?.statusCode) throw retryErr
+      throw toProxyError(retryErr)
+    }
+  }
+
+  setResponseStatus(event, 200)
+  setResponseHeaders(event, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  })
+  return sendStream(event, res.body as ReadableStream)
 }
