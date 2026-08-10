@@ -161,14 +161,14 @@ func (s *Store) LatestCompletedImproveRunForReport(ctx context.Context, reportID
 
 // ImproveRunStats aggregates advanced improve runs for admin ops.
 type ImproveRunStats struct {
-	Days          int            `json:"days"`
-	Total         int            `json:"total"`
-	ByStatus      map[string]int `json:"byStatus"`
-	LatencyP50Ms  float64        `json:"latencyP50Ms"`
-	LatencyP95Ms  float64        `json:"latencyP95Ms"`
-	CancelRate    float64        `json:"cancelRate"`
-	ErrorRate     float64        `json:"errorRate"`
-	AvgRagHitCount float64       `json:"avgRagHitCount"`
+	Days           int            `json:"days"`
+	Total          int            `json:"total"`
+	ByStatus       map[string]int `json:"byStatus"`
+	LatencyP50Ms   float64        `json:"latencyP50Ms"`
+	LatencyP95Ms   float64        `json:"latencyP95Ms"`
+	CancelRate     float64        `json:"cancelRate"`
+	ErrorRate      float64        `json:"errorRate"`
+	AvgRagHitCount float64        `json:"avgRagHitCount"`
 }
 
 func (s *Store) ImproveRunStats(ctx context.Context, days int) (ImproveRunStats, error) {

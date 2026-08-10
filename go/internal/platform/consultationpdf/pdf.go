@@ -258,7 +258,7 @@ func StripMarkdown(s string) string {
 }
 
 var (
-	reRAGSectionATX = regexp.MustCompile(`(?is)\n{0,2}#{1,6}\s*(Références\s*RAG|References\s*RAG|RAG\s*(sources|references|bronnen|fuentes|fonti|allikad)|Sources\s*RAG)\s*\n[\s\S]*$`)
+	reRAGSectionATX   = regexp.MustCompile(`(?is)\n{0,2}#{1,6}\s*(Références\s*RAG|References\s*RAG|RAG\s*(sources|references|bronnen|fuentes|fonti|allikad)|Sources\s*RAG)\s*\n[\s\S]*$`)
 	reRAGSectionPlain = regexp.MustCompile(`(?is)\n{1,2}(Références|References|Bronnen|Fuentes|Fonti|Allikad)\s*:?\s*\n(?:\s*[-*•].*\n?)+\s*$`)
 )
 

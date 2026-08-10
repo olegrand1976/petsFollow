@@ -107,7 +107,6 @@ func (a *API) SetRedis(c *redisx.Client) {
 	}
 }
 
-
 func (a *API) SetOrthancClientForTest(c *orthancClient) {
 	a.orthancClient = c
 }
