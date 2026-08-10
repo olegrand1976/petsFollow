@@ -16,17 +16,20 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/crewai"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/redisx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
 const improveHubTTL = 5 * time.Minute
 
-// improveRunHub buffers SSE frames for browser clients (single-instance OK for V1 —
-// after process restart clients fall back to DB replay via streamImproveRunFromDB).
+// improveRunHub buffers SSE frames for browser clients.
+// With Redis: frames are always PUBLISHed (cross-instance live SSE); in-proc
+// buffer remains for same-instance subscribers and CancelFunc map.
 type improveRunHub struct {
 	mu      sync.Mutex
 	runs    map[string]*improveRunChannel
 	cancels map[string]context.CancelFunc
+	redis   *redisx.Client
 }
 
 type improveRunChannel struct {
@@ -44,11 +47,38 @@ type sseFrame struct {
 	Data json.RawMessage
 }
 
+type improveHubWire struct {
+	ID   string          `json:"id"`
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+	Done bool            `json:"done,omitempty"`
+}
+
 func newImproveRunHub() *improveRunHub {
 	return &improveRunHub{
 		runs:    map[string]*improveRunChannel{},
 		cancels: map[string]context.CancelFunc{},
 	}
+}
+
+func (h *improveRunHub) setRedis(c *redisx.Client) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.redis = c
+}
+
+func (h *improveRunHub) redisClient() *redisx.Client {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.redis
+}
+
+func (h *improveRunHub) hubChannel(runID string) string {
+	return "improve-hub:" + runID
+}
+
+func (h *improveRunHub) cancelChannel(runID string) string {
+	return "improve-cancel:" + runID
 }
 
 func (h *improveRunHub) sweepLocked(now time.Time) {
@@ -80,8 +110,28 @@ func (h *improveRunHub) open(runID string) {
 
 func (h *improveRunHub) registerCancel(runID string, cancel context.CancelFunc) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
 	h.cancels[runID] = cancel
+	rdb := h.redis
+	h.mu.Unlock()
+	if rdb == nil {
+		return
+	}
+	// Cross-instance cancel signal → invoke local CancelFunc.
+	go func() {
+		ctx, stop := context.WithTimeout(context.Background(), improveHubTTL)
+		defer stop()
+		ch := rdb.Subscribe(ctx, h.cancelChannel(runID))
+		if ch == nil {
+			return
+		}
+		select {
+		case <-ctx.Done():
+		case _, ok := <-ch:
+			if ok {
+				h.cancel(runID)
+			}
+		}
+	}()
 }
 
 func (h *improveRunHub) clearCancel(runID string) {
@@ -100,37 +150,59 @@ func (h *improveRunHub) cancel(runID string) {
 	}
 }
 
+func (h *improveRunHub) publishCancelSignal(runID string) {
+	rdb := h.redisClient()
+	if rdb == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_ = rdb.Publish(ctx, h.cancelChannel(runID), "1")
+}
+
 func (h *improveRunHub) publish(runID, typ string, data any) {
 	b, _ := json.Marshal(data)
 	h.mu.Lock()
 	ch := h.runs[runID]
 	h.mu.Unlock()
-	if ch == nil {
-		return
+	id := "0"
+	if ch != nil {
+		ch.mu.Lock()
+		id = fmt.Sprintf("%d", len(ch.events)+1)
+		ch.events = append(ch.events, sseFrame{ID: id, Type: typ, Data: b})
+		wait := ch.wait
+		ch.wait = make(chan struct{})
+		ch.mu.Unlock()
+		close(wait)
 	}
-	ch.mu.Lock()
-	id := fmt.Sprintf("%d", len(ch.events)+1)
-	ch.events = append(ch.events, sseFrame{ID: id, Type: typ, Data: b})
-	wait := ch.wait
-	ch.wait = make(chan struct{})
-	ch.mu.Unlock()
-	close(wait)
+	// Always fan-out to Redis when available (even if local channel missing).
+	if rdb := h.redisClient(); rdb != nil {
+		wire, _ := json.Marshal(improveHubWire{ID: id, Type: typ, Data: b})
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		_ = rdb.Publish(ctx, h.hubChannel(runID), string(wire))
+		cancel()
+	}
 }
 
 func (h *improveRunHub) complete(runID string) {
 	h.mu.Lock()
 	ch := h.runs[runID]
 	h.mu.Unlock()
-	if ch == nil {
-		return
+	if ch != nil {
+		ch.mu.Lock()
+		ch.done = true
+		ch.completed = time.Now()
+		wait := ch.wait
+		ch.wait = make(chan struct{})
+		ch.mu.Unlock()
+		close(wait)
 	}
-	ch.mu.Lock()
-	ch.done = true
-	ch.completed = time.Now()
-	wait := ch.wait
-	ch.wait = make(chan struct{})
-	ch.mu.Unlock()
-	close(wait)
+	if rdb := h.redisClient(); rdb != nil {
+		wire, _ := json.Marshal(improveHubWire{Type: "ping", Data: json.RawMessage(`{"done":true}`), Done: true})
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		_ = rdb.Publish(ctx, h.hubChannel(runID), string(wire))
+		cancel()
+	}
 }
 
 func (h *improveRunHub) get(runID string) *improveRunChannel {
@@ -138,6 +210,10 @@ func (h *improveRunHub) get(runID string) *improveRunChannel {
 	defer h.mu.Unlock()
 	h.sweepLocked(time.Now())
 	return h.runs[runID]
+}
+
+func (h *improveRunHub) hasRedis() bool {
+	return h.redisClient() != nil
 }
 
 func (a *API) improveVisitReportAdvanced(w http.ResponseWriter, r *http.Request) {
@@ -255,9 +331,11 @@ func (a *API) runImproveAdvanced(
 		if a.improveRunWasCancelled(bg, runID) {
 			return
 		}
-		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, nil, "crewai_submit_failed", int(time.Since(start).Milliseconds()))
+		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, nil, nil, "crewai_submit_failed", int(time.Since(start).Milliseconds()))
 		a.improveHub.publish(runID, "error", map[string]any{"errorCode": "crewai_submit_failed"})
 		a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageError)
+		fmt.Printf("improve-advanced run_id=%s practice_id=%s status=failed error_code=crewai_submit_failed latency_ms=%d\n",
+			runID, practiceID, int(time.Since(start).Milliseconds()))
 		return
 	}
 	_ = a.store.UpdateImproveRunCrewTask(bg, runID, out.TaskID)
@@ -273,12 +351,14 @@ func (a *API) runImproveAdvanced(
 
 	var finalMarkdown string
 	var citations any
+	var metrics any
 	failed := false
 	errorCode := ""
 	cancelled := false
 	for ev := range events {
 		if a.improveRunWasCancelled(bg, runID) {
 			cancelled = true
+			a.improveHub.cancel(runID)
 			break
 		}
 		switch ev.Type {
@@ -293,8 +373,9 @@ func (a *API) runImproveAdvanced(
 			var payload struct {
 				Report string `json:"report"`
 				Result struct {
-					Markdown  string `json:"markdown"`
-					Citations any    `json:"citations"`
+					Markdown    string `json:"markdown"`
+					Citations   any    `json:"citations"`
+					RagHitCount int    `json:"ragHitCount"`
 				} `json:"result"`
 			}
 			_ = json.Unmarshal(ev.Data, &payload)
@@ -303,6 +384,9 @@ func (a *API) runImproveAdvanced(
 				finalMarkdown = strings.TrimSpace(payload.Result.Markdown)
 			}
 			citations = payload.Result.Citations
+			if payload.Result.RagHitCount > 0 {
+				metrics = map[string]any{"ragHitCount": payload.Result.RagHitCount}
+			}
 			a.improveHub.publish(runID, "final", map[string]any{"report": finalMarkdown})
 		case "error":
 			failed = true
@@ -348,8 +432,10 @@ func (a *API) runImproveAdvanced(
 		if errorCode == "" {
 			errorCode = "empty_result"
 		}
-		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, citations, errorCode, latency)
+		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, citations, metrics, errorCode, latency)
 		a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageError)
+		fmt.Printf("improve-advanced run_id=%s practice_id=%s status=failed error_code=%s latency_ms=%d\n",
+			runID, practiceID, errorCode, latency)
 		return
 	}
 
@@ -363,15 +449,25 @@ func (a *API) runImproveAdvanced(
 		if a.improveRunWasCancelled(bg, runID) {
 			return
 		}
-		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, citations, "persist_failed", latency)
+		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, citations, metrics, "persist_failed", latency)
 		a.improveHub.publish(runID, "error", map[string]any{"errorCode": "persist_failed"})
 		a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageError)
+		fmt.Printf("improve-advanced run_id=%s practice_id=%s status=failed error_code=persist_failed latency_ms=%d\n",
+			runID, practiceID, latency)
 		return
 	}
-	if err := a.store.CompleteImproveRun(bg, runID, store.ImproveRunCompleted, citations, "", latency); err != nil {
+	if err := a.store.CompleteImproveRun(bg, runID, store.ImproveRunCompleted, citations, metrics, "", latency); err != nil {
 		// Already cancelled / terminal elsewhere.
 		return
 	}
+	ragHits := 0
+	if m, ok := metrics.(map[string]any); ok {
+		if n, ok := m["ragHitCount"].(int); ok {
+			ragHits = n
+		}
+	}
+	fmt.Printf("improve-advanced run_id=%s practice_id=%s status=completed latency_ms=%d rag_hit_count=%d\n",
+		runID, practiceID, latency, ragHits)
 	a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageImproveAdvanced)
 }
 
@@ -406,6 +502,10 @@ func (a *API) improveVisitReportAdvancedEvents(w http.ResponseWriter, r *http.Re
 	}
 	ch := a.improveHub.get(runID)
 	if ch == nil {
+		if a.improveHub.hasRedis() {
+			a.streamImproveRunFromRedis(w, r, run)
+			return
+		}
 		// Process restart / late join — synthesize from DB steps + terminal status.
 		a.streamImproveRunFromDB(w, r, run)
 		return
@@ -464,6 +564,140 @@ func (a *API) improveVisitReportAdvancedEvents(w http.ResponseWriter, r *http.Re
 			flusher.Flush()
 		}
 	}
+}
+
+func (a *API) streamImproveRunFromRedis(w http.ResponseWriter, r *http.Request, run store.ImproveRun) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "sse_unsupported")
+		return
+	}
+	rdb := a.improveHub.redisClient()
+	if rdb == nil {
+		a.streamImproveRunFromDB(w, r, run)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	// Replay steps already persisted, then live Redis frames until done.
+	var steps []map[string]any
+	_ = json.Unmarshal(run.Steps, &steps)
+	for i, step := range steps {
+		b, _ := json.Marshal(step)
+		fmt.Fprintf(w, "id: db-%d\nevent: step\ndata: %s\n\n", i+1, string(b))
+		flusher.Flush()
+	}
+	switch run.Status {
+	case store.ImproveRunCompleted, store.ImproveRunFailed, store.ImproveRunCancelled:
+		code := "ok"
+		if run.Status == store.ImproveRunFailed {
+			code = run.ErrorCode
+			if code == "" {
+				code = "failed"
+			}
+		} else if run.Status == store.ImproveRunCancelled {
+			code = "cancelled"
+		}
+		if run.Status == store.ImproveRunCompleted {
+			fmt.Fprintf(w, "event: final\ndata: {\"report\":\"\"}\n\n")
+		} else {
+			fmt.Fprintf(w, "event: error\ndata: {\"errorCode\":%q}\n\n", code)
+		}
+		fmt.Fprintf(w, "event: ping\ndata: {\"done\":true}\n\n")
+		flusher.Flush()
+		return
+	}
+
+	ctx := r.Context()
+	sub := rdb.Subscribe(ctx, a.improveHub.hubChannel(run.ID))
+	if sub == nil {
+		a.streamImproveRunFromDB(w, r, run)
+		return
+	}
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-sub:
+			if !ok {
+				a.pollImproveRunTerminal(w, flusher, run.ID)
+				return
+			}
+			var wire improveHubWire
+			if err := json.Unmarshal([]byte(msg), &wire); err != nil {
+				continue
+			}
+			if wire.Done || wire.Type == "ping" {
+				data := wire.Data
+				if len(data) == 0 {
+					data = json.RawMessage(`{"done":true}`)
+				}
+				fmt.Fprintf(w, "event: ping\ndata: %s\n\n", string(data))
+				flusher.Flush()
+				if wire.Done || strings.Contains(string(data), `"done":true`) {
+					return
+				}
+				continue
+			}
+			id := wire.ID
+			if id == "" {
+				id = "r"
+			}
+			fmt.Fprintf(w, "id: %s\nevent: %s\ndata: %s\n\n", id, wire.Type, string(wire.Data))
+			flusher.Flush()
+			if wire.Type == "final" || wire.Type == "error" {
+				fmt.Fprintf(w, "event: ping\ndata: {\"done\":true}\n\n")
+				flusher.Flush()
+				return
+			}
+		case <-ticker.C:
+			cur, err := a.store.GetImproveRun(ctx, run.ID)
+			if err != nil {
+				continue
+			}
+			if cur.Status == store.ImproveRunCompleted || cur.Status == store.ImproveRunFailed || cur.Status == store.ImproveRunCancelled {
+				a.emitTerminalFromRun(w, flusher, cur)
+				return
+			}
+			fmt.Fprintf(w, "event: ping\ndata: {}\n\n")
+			flusher.Flush()
+		}
+	}
+}
+
+func (a *API) pollImproveRunTerminal(w http.ResponseWriter, flusher http.Flusher, runID string) {
+	cur, err := a.store.GetImproveRun(context.Background(), runID)
+	if err != nil {
+		fmt.Fprintf(w, "event: error\ndata: {\"errorCode\":\"run_missing\"}\n\n")
+		fmt.Fprintf(w, "event: ping\ndata: {\"done\":true}\n\n")
+		flusher.Flush()
+		return
+	}
+	a.emitTerminalFromRun(w, flusher, cur)
+}
+
+func (a *API) emitTerminalFromRun(w http.ResponseWriter, flusher http.Flusher, run store.ImproveRun) {
+	switch run.Status {
+	case store.ImproveRunCompleted:
+		fmt.Fprintf(w, "event: final\ndata: {\"report\":\"\"}\n\n")
+	case store.ImproveRunCancelled:
+		fmt.Fprintf(w, "event: error\ndata: {\"errorCode\":\"cancelled\"}\n\n")
+	default:
+		code := run.ErrorCode
+		if code == "" {
+			code = "failed"
+		}
+		fmt.Fprintf(w, "event: error\ndata: {\"errorCode\":%q}\n\n", code)
+	}
+	fmt.Fprintf(w, "event: ping\ndata: {\"done\":true}\n\n")
+	flusher.Flush()
 }
 
 func (a *API) streamImproveRunFromDB(w http.ResponseWriter, r *http.Request, run store.ImproveRun) {
@@ -573,6 +807,14 @@ func (a *API) cancelVisitReportAdvanced(w http.ResponseWriter, r *http.Request) 
 	}
 	// Stop the worker before/while it may still be streaming — prevents late persist.
 	a.improveHub.cancel(runID)
+	a.improveHub.publishCancelSignal(runID)
+	if crewID := strings.TrimSpace(run.CrewTaskID); crewID != "" && a.crewai != nil && a.crewai.Configured() {
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		if err := a.crewai.CancelTask(ctx, crewID); err != nil {
+			fmt.Printf("improve-advanced cancel crew task %s: %v\n", crewID, err)
+		}
+		cancel()
+	}
 	a.improveHub.publish(runID, "error", map[string]any{"errorCode": "cancelled"})
 	a.improveHub.complete(runID)
 	httpx.WriteData(w, http.StatusOK, map[string]any{"runId": runID, "status": "cancelled"})

@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -47,6 +48,7 @@ func (a *API) registerRAGAdminRoutes(pr chi.Router) {
 	pr.Delete("/admin/rag/documents/{id}", a.adminDeleteRAGDocument)
 	pr.Get("/admin/rag/documents/{id}/download", a.adminDownloadRAGDocument)
 	pr.Post("/admin/rag/reindex", a.adminRAGReindex)
+	pr.Get("/admin/rag/improve-stats", a.adminImproveRunStats)
 }
 
 func (a *API) registerRAGPracticeRoutes(pr chi.Router) {
@@ -131,6 +133,27 @@ func (a *API) adminListRAGDocuments(w http.ResponseWriter, r *http.Request) {
 		docs = []store.RAGDocument{}
 	}
 	httpx.WriteData(w, http.StatusOK, docs)
+}
+
+func (a *API) adminImproveRunStats(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	if !a.requireAiCrAdvancedEnabled(w, r) {
+		return
+	}
+	days := 7
+	if raw := strings.TrimSpace(r.URL.Query().Get("days")); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil {
+			days = n
+		}
+	}
+	stats, err := a.store.ImproveRunStats(r.Context(), days)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, stats)
 }
 
 func (a *API) adminUploadRAGDocument(w http.ResponseWriter, r *http.Request) {

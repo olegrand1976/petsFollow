@@ -105,6 +105,36 @@ func TestClientSendsAPIVersionAndSecret(t *testing.T) {
 	}
 }
 
+func TestClientCancelTask(t *testing.T) {
+	var gotPath string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/tasks/", func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		if r.Method != http.MethodPost || !strings.HasSuffix(r.URL.Path, "/cancel") {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		if r.Header.Get(crewai.SecretHeader) != "sekrit" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"taskId":"t-cancel","status":"cancelled"}`))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	c := &crewai.Client{BaseURL: srv.URL, Secret: "sekrit"}
+	if err := c.CancelTask(context.Background(), "t-cancel"); err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/v1/tasks/t-cancel/cancel" {
+		t.Fatalf("path %q", gotPath)
+	}
+	if err := c.CancelTask(context.Background(), ""); err == nil {
+		t.Fatal("empty task id")
+	}
+}
+
 func TestClientForbidden(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)

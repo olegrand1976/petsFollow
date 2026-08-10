@@ -2995,7 +2995,13 @@
       "disabledHint": "Attiva AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED per gestire la base RAG.",
       "download": "Scarica",
       "reindex": "Reindicizza",
-      "reindexDone": "Reindicizzazione terminata: {indexed} indicizzato/i, {failed} fallito/i."
+      "reindexDone": "Reindicizzazione terminata: {indexed} indicizzato/i, {failed} fallito/i.",
+      "improveStatsTitle": "Run improve avanzato (7 g)",
+      "improveStatsHint": "Latenze e tassi cancel/error da rag.improve_runs (nessun corpo clinico).",
+      "statsTotal": "run",
+      "statsCancel": "annullamenti",
+      "statsError": "errori",
+      "statsLoading": "Caricamento stats…"
     }
   },
   "calendar": {
@@ -3262,7 +3268,8 @@
     "reportDownloadedMd": "File Markdown scaricato.",
     "reportDownloadedPdf": "PDF scaricato.",
     "reportOpenedPdf": "PDF aperto.",
-    "reportCitationsTitle": "Fonti RAG"
+    "reportCitationsTitle": "Fonti RAG",
+    "reportStripCitations": "Senza citazioni RAG"
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -3901,6 +3908,9 @@
     "internal": "Errore interno del server",
     "not_ready": "Servizio non pronto",
     "generic": "Si è verificato un errore",
+    "clipboard_unavailable": "Copia non riuscita: gli appunti non sono disponibili",
+    "report_empty": "Il referto è vuoto",
+    "pdf_failed": "Generazione del PDF non riuscita",
     "pet_not_in_practice": "L'animale non è collegato a questo studio",
     "assignee_busy": "Questo professionista ha già un appuntamento in questo slot",
     "room_busy": "Questa sala è già occupata in questo slot",

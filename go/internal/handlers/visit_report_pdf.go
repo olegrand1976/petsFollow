@@ -63,6 +63,13 @@ func (a *API) getVisitReportPDF(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "report_empty")
 		return
 	}
+	if q := strings.TrimSpace(r.URL.Query().Get("stripCitations")); q == "1" || strings.EqualFold(q, "true") {
+		body = consultationpdf.StripCitations(body)
+		if strings.TrimSpace(body) == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "report_empty")
+			return
+		}
+	}
 
 	pet, err := a.store.GetPet(r.Context(), visit.PetID)
 	if err != nil {

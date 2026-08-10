@@ -2330,7 +2330,13 @@
       "disabledHint": "RAG haldamiseks lülitage sisse AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED.",
       "download": "Laadi alla",
       "reindex": "Taasindekseeri",
-      "reindexDone": "Taasindekseerimine valmis: {indexed} indekseeritud, {failed} ebaõnnestunud."
+      "reindexDone": "Taasindekseerimine valmis: {indexed} indekseeritud, {failed} ebaõnnestunud.",
+      "improveStatsTitle": "Täiustatud improve käigud (7 p)",
+      "improveStatsHint": "Latentsus ning cancel/error rag.improve_runs-ist (ilma kliinilise tekstita).",
+      "statsTotal": "käiku",
+      "statsCancel": "tühistamisi",
+      "statsError": "vigu",
+      "statsLoading": "Statistika laadimine…"
     }
   },
   "commissions": {
@@ -2923,6 +2929,9 @@
     "internal": "Sisemine serveri viga",
     "not_ready": "Teenus ei ole valmis",
     "generic": "Ilmnes viga",
+    "clipboard_unavailable": "Kopeerimine ebaõnnestus: lõikelaud pole saadaval",
+    "report_empty": "Visiidi aruanne on tühi",
+    "pdf_failed": "PDF-i loomine ebaõnnestus",
     "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga",
     "assignee_busy": "Sellel praktikul on selles ajavahemikus juba vastuvõtt",
     "room_busy": "See ruum on selles ajavahemikus juba hõivatud",
@@ -3796,7 +3805,8 @@
     "reportDownloadedMd": "Markdown-fail allalaaditud.",
     "reportDownloadedPdf": "PDF allalaaditud.",
     "reportOpenedPdf": "PDF avatud.",
-    "reportCitationsTitle": "RAG allikad"
+    "reportCitationsTitle": "RAG allikad",
+    "reportStripCitations": "Ilma RAG viideteta"
   },
   "manager": {
     "dashboard": {

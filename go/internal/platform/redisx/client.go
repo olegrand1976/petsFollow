@@ -82,3 +82,42 @@ func (c *Client) LRange(ctx context.Context, k string, start, stop int64) ([]str
 	}
 	return c.rdb.LRange(ctx, c.key(k), start, stop).Result()
 }
+
+// Publish sends a message on a Redis Pub/Sub channel (prefixed).
+func (c *Client) Publish(ctx context.Context, channel, payload string) error {
+	if c == nil || c.rdb == nil {
+		return nil
+	}
+	return c.rdb.Publish(ctx, c.key(channel), payload).Err()
+}
+
+// Subscribe listens on a Redis channel until ctx is done. Caller must drain ch.
+// Returns nil channel when Redis is unavailable.
+func (c *Client) Subscribe(ctx context.Context, channel string) <-chan string {
+	if c == nil || c.rdb == nil {
+		return nil
+	}
+	pubsub := c.rdb.Subscribe(ctx, c.key(channel))
+	out := make(chan string, 32)
+	go func() {
+		defer close(out)
+		defer func() { _ = pubsub.Close() }()
+		ch := pubsub.Channel()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg, ok := <-ch:
+				if !ok || msg == nil {
+					return
+				}
+				select {
+				case out <- msg.Payload:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}()
+	return out
+}

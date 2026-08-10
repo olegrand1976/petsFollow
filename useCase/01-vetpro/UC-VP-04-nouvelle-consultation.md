@@ -31,7 +31,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 4. Écran CR split (workspace unique) :
    - **Gauche — Notes / dictée** : écrire ou dicter (consentement audio) / importer un fichier.
    - **Droite — Compte-rendu** : **Améliorer (IA)** (source = notes si présentes, sinon le CR) ou éditer manuellement ; aperçu markdown après IA.
-   - (**Hors démo commerciale** — tag `dev`) **Améliorer IA avancé** + exports MD/PDF : module multi-agents / RAG, pas présenté en pitch tant que non GA — voir [`documentation/44-AI-CR-ADVANCED.md`](../../documentation/44-AI-CR-ADVANCED.md).
+   - (**Hors démo commerciale** — tag `dev`) **Améliorer IA avancé** : module multi-agents / RAG, pas présenté en pitch tant que non GA — voir [`documentation/44-AI-CR-ADVANCED.md`](../../documentation/44-AI-CR-ADVANCED.md). Les exports MD/PDF, eux, sont ouverts à tous les vétos (rien d'IA) : seule la liste des sources citées dépend du flag.
    - **Annuler les modifications** (footer panel) restaure le dernier enregistrement **sans** fermer la consultation ; **Annuler** (footer workspace) quitte la consult (confirm leave).
    - Historique des versions (replié) : transcription d’origine → proposition IA → dernière version enregistrée ; restore vers la bonne pane.
    - **Enregistrer** (ou Finaliser).

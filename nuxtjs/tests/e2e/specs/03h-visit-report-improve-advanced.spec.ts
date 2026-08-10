@@ -78,10 +78,22 @@ const advancedFlagOn = (() => {
 test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
   test.skip(!advancedFlagOn, 'NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED off')
 
+  // Le CR est persisté : le job de rétention n'annule que les walk-ins sans CR,
+  // donc sans ce nettoyage chaque exécution laisse une consultation sur le
+  // client de démo. Hook plutôt que `finally` — le corps du test est déjà imbriqué.
+  let createdVisitId = ''
+  test.afterEach(async ({ page }) => {
+    if (!createdVisitId) return
+    const id = createdVisitId
+    createdVisitId = ''
+    await page.request.delete(`/api/visits/${id}`).catch(() => undefined)
+  })
+
   test('bouton avancé → loader steps → final appliqué au body', async ({ page }) => {
     test.setTimeout(120000)
     await loginAsVet(page)
     const visitId = await openConsultationReport(page)
+    createdVisitId = visitId
 
     const advancedBtn = page.getByTestId('visit-report-improve-advanced')
     await expect(advancedBtn).toBeVisible({ timeout: 15000 })

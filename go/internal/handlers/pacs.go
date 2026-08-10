@@ -102,7 +102,11 @@ func (a *API) orthanc() *orthancClient {
 
 func (a *API) SetRedis(c *redisx.Client) {
 	a.redis = c
+	if a.improveHub != nil {
+		a.improveHub.setRedis(c)
+	}
 }
+
 
 func (a *API) SetOrthancClientForTest(c *orthancClient) {
 	a.orthancClient = c

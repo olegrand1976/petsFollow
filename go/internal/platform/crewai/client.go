@@ -215,6 +215,40 @@ func (c *Client) StreamEvents(ctx context.Context, taskID string, out chan<- Str
 	return readSSE(ctx, res.Body, out)
 }
 
+// CancelTask POSTs /v1/tasks/{taskID}/cancel (best-effort remote stop).
+func (c *Client) CancelTask(ctx context.Context, taskID string) error {
+	if !c.Configured() {
+		return fmt.Errorf("crewai_not_configured")
+	}
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return fmt.Errorf("task_id_required")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base()+"/v1/tasks/"+taskID+"/cancel", nil)
+	if err != nil {
+		return err
+	}
+	if err := c.authorize(ctx, req); err != nil {
+		return err
+	}
+	res, err := c.http().Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(res.Body, 4096))
+	if res.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("crewai_task_not_found")
+	}
+	if res.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("crewai_unauthorized")
+	}
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return fmt.Errorf("crewai_http_%d: %s", res.StatusCode, strings.TrimSpace(string(raw)))
+	}
+	return nil
+}
+
 func readSSE(ctx context.Context, r io.Reader, out chan<- StreamEvent) error {
 	br := bufio.NewReader(r)
 	var id, evType string

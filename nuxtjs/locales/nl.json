@@ -2330,7 +2330,13 @@
       "disabledHint": "Zet AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED aan om de RAG-bibliotheek te beheren.",
       "download": "Downloaden",
       "reindex": "Herindexeren",
-      "reindexDone": "Herindexering klaar: {indexed} geïndexeerd, {failed} mislukt."
+      "reindexDone": "Herindexering klaar: {indexed} geïndexeerd, {failed} mislukt.",
+      "improveStatsTitle": "Geavanceerde improve-runs (7 d)",
+      "improveStatsHint": "Latency en cancel/error-rates uit rag.improve_runs (geen klinische tekst).",
+      "statsTotal": "runs",
+      "statsCancel": "annuleringen",
+      "statsError": "fouten",
+      "statsLoading": "Stats laden…"
     }
   },
   "commissions": {
@@ -2923,6 +2929,9 @@
     "internal": "Interne serverfout",
     "not_ready": "Service niet gereed",
     "generic": "Er is een fout opgetreden",
+    "clipboard_unavailable": "Kopiëren mislukt: het klembord is niet beschikbaar",
+    "report_empty": "Het bezoekverslag is leeg",
+    "pdf_failed": "PDF genereren mislukt",
     "pet_not_in_practice": "Dier hoort niet bij deze praktijk",
     "assignee_busy": "Deze dierenarts heeft al een afspraak in dit tijdslot",
     "room_busy": "Deze ruimte is al bezet in dit tijdslot",
@@ -3796,7 +3805,8 @@
     "reportDownloadedMd": "Markdown-bestand gedownload.",
     "reportDownloadedPdf": "PDF gedownload.",
     "reportOpenedPdf": "PDF geopend.",
-    "reportCitationsTitle": "RAG-bronnen"
+    "reportCitationsTitle": "RAG-bronnen",
+    "reportStripCitations": "Zonder RAG-bronnen"
   },
   "manager": {
     "dashboard": {

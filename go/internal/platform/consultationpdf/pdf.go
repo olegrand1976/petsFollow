@@ -257,6 +257,23 @@ func StripMarkdown(s string) string {
 	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
+var (
+	reRAGSectionATX = regexp.MustCompile(`(?is)\n{0,2}#{1,6}\s*(Références\s*RAG|References\s*RAG|RAG\s*(sources|references|bronnen|fuentes|fonti|allikad)|Sources\s*RAG)\s*\n[\s\S]*$`)
+	reRAGSectionPlain = regexp.MustCompile(`(?is)\n{1,2}(Références|References|Bronnen|Fuentes|Fonti|Allikad)\s*:?\s*\n(?:\s*[-*•].*\n?)+\s*$`)
+)
+
+// StripCitations removes trailing RAG reference sections from CR markdown (patient export).
+func StripCitations(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	s = strings.ReplaceAll(s, "\r", "\n")
+	s = reRAGSectionATX.ReplaceAllString(s, "")
+	s = reRAGSectionPlain.ReplaceAllString(s, "")
+	for strings.Contains(s, "\n\n\n") {
+		s = strings.ReplaceAll(s, "\n\n\n", "\n\n")
+	}
+	return strings.TrimSpace(s)
+}
+
 // sanitizePDFText normalise la ponctuation typographique que certains lecteurs
 // PDF mobiles rendent mal. La police est UTF-8 (cf. platform/pdffont), donc les
 // lettres non latines — cyrillique inclus — passent telles quelles via IsPrint.

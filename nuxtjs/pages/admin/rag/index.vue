@@ -29,6 +29,34 @@
     />
 
     <template v-else>
+      <ProCard class="pro-mb-lg" data-testid="admin-rag-improve-stats">
+        <h3 class="pro-mb-sm">{{ $t('admin.rag.improveStatsTitle') }}</h3>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.rag.improveStatsHint') }}</p>
+        <div v-if="improveStats" class="pro-flex-gap" style="flex-wrap:wrap;gap:1rem">
+          <div data-testid="admin-rag-stats-total">
+            <strong>{{ improveStats.total }}</strong>
+            <span class="pro-hint"> {{ $t('admin.rag.statsTotal') }}</span>
+          </div>
+          <div data-testid="admin-rag-stats-p50">
+            <strong>{{ Math.round(improveStats.latencyP50Ms) }}ms</strong>
+            <span class="pro-hint"> p50</span>
+          </div>
+          <div data-testid="admin-rag-stats-p95">
+            <strong>{{ Math.round(improveStats.latencyP95Ms) }}ms</strong>
+            <span class="pro-hint"> p95</span>
+          </div>
+          <div data-testid="admin-rag-stats-cancel">
+            <strong>{{ Math.round((improveStats.cancelRate || 0) * 100) }}%</strong>
+            <span class="pro-hint"> {{ $t('admin.rag.statsCancel') }}</span>
+          </div>
+          <div data-testid="admin-rag-stats-error">
+            <strong>{{ Math.round((improveStats.errorRate || 0) * 100) }}%</strong>
+            <span class="pro-hint"> {{ $t('admin.rag.statsError') }}</span>
+          </div>
+        </div>
+        <p v-else class="pro-hint">{{ $t('admin.rag.statsLoading') }}</p>
+      </ProCard>
+
       <ProCard v-if="showUpload" class="pro-mb-lg" data-testid="admin-rag-upload-card">
         <h3 class="pro-mb-md">{{ $t('admin.rag.uploadTitle') }}</h3>
         <form class="pro-form" @submit.prevent="upload">
@@ -156,6 +184,13 @@ type RagDoc = {
 }
 
 const docs = ref<RagDoc[]>([])
+const improveStats = ref<{
+  total: number
+  latencyP50Ms: number
+  latencyP95Ms: number
+  cancelRate: number
+  errorRate: number
+} | null>(null)
 const showUpload = ref(false)
 const file = ref<File | null>(null)
 const title = ref('')
@@ -234,6 +269,16 @@ async function load() {
   const res: any = await $fetch(`/api/admin/rag/documents${q}`)
   docs.value = res.data ?? res ?? []
   maybePoll()
+  void loadImproveStats()
+}
+
+async function loadImproveStats() {
+  try {
+    const res: any = await $fetch('/api/admin/rag/improve-stats?days=7')
+    improveStats.value = res.data ?? res
+  } catch {
+    improveStats.value = null
+  }
 }
 
 async function upload() {

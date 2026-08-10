@@ -166,9 +166,18 @@ Tag **`dev`** inchangé jusqu’à décision GA explicite. Pas d’use case comm
 
 ### Dette connue (hors V1)
 
-- Hub SSE API **in-proc** + poll DB cross-instance ; Redis/PubSub plus tard.
-- Cancel CrewAI remote best-effort (statut DB `cancelled` côté petsFollow).
-- Monitoring GCP (p50/p95, tokens, budget) : pas de dashboard dédié — s’appuyer sur logs Cloud Run + table `rag.improve_runs` (`latency_ms`, `error_code`, `status`).
+~~Hub SSE API in-proc~~ · ~~Cancel CrewAI remote~~ · ~~Monitoring léger~~ · ~~Strip citations export~~ — **clôturée** (voir § Dette technique).
+
+### Dette technique (clôturée)
+
+| Item | Livré |
+|------|--------|
+| Strip citations export | `?stripCitations=1` + checkbox UI (défaut on) |
+| Cancel Crew remote | `POST /v1/tasks/{id}/cancel` + `CancelTask` Go |
+| Hub Redis | PUBLISH frames + cancel signal ; SSE Redis si hub local absent |
+| Monitoring | `metrics jsonb` (`ragHitCount`) · logs structurés · `GET /admin/rag/improve-stats` |
+
+Cloud Monitoring custom metrics / alertes budget = hors code (ops ultérieur).
 
 ### Checklist recette staging (C2.28)
 

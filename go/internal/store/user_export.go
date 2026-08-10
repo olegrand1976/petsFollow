@@ -48,6 +48,7 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 				'citations', r.citations,
 				'errorCode', r.error_code,
 				'latencyMs', r.latency_ms,
+				'metrics', r.metrics,
 				'createdAt', r.created_at,
 				'completedAt', r.completed_at
 			) ORDER BY r.created_at), '[]'::jsonb)

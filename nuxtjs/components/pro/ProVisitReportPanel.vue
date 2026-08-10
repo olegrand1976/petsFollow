@@ -217,6 +217,15 @@
             class="pro-flex-gap visit-report-export"
             data-testid="visit-report-export"
           >
+            <label class="pro-checkbox-label visit-report-export__strip" data-testid="visit-report-strip-citations">
+              <input
+                v-model="exportStripCitations"
+                type="checkbox"
+                class="pro-checkbox"
+                data-testid="visit-report-strip-citations-check"
+              >
+              {{ $t('calendar.reportStripCitations') }}
+            </label>
             <ProButton
               variant="ghost"
               :disabled="reportBusy || hydrating || exportBusy"
@@ -450,6 +459,7 @@ import { useActiveConsultation } from '~/composables/useActiveConsultation'
 import {
   copyVisitReportMarkdown,
   downloadVisitReportMarkdown,
+  normalizeReportCitations,
   openVisitReportPdfBlob,
 } from '~/utils/visit-report-export'
 
@@ -510,6 +520,7 @@ const reportImproved = ref('')
 const reportStatus = ref('')
 const reportIsReference = ref(false)
 const lastImproveCitations = ref<string[]>([])
+const exportStripCitations = ref(true)
 const reportBusy = ref(false)
 const exportBusy = ref(false)
 const saveInFlight = ref(false)
@@ -639,19 +650,6 @@ function applyDatePrefixIfNeeded() {
   reportBody.value = `${prefix}\n\n${body}`
 }
 
-function normalizeCitations(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return []
-  return raw
-    .map((item) => {
-      if (typeof item === 'string') return item.trim()
-      if (item && typeof item === 'object' && 'title' in item) {
-        return String((item as { title?: unknown }).title || '').trim()
-      }
-      return ''
-    })
-    .filter(Boolean)
-}
-
 function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   const mapped = mapVisitReportFields(data)
   reportBody.value = mapped.bodyText
@@ -661,7 +659,7 @@ function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
   reportIsReference.value = mapped.isReference
-  lastImproveCitations.value = normalizeCitations(data?.lastImproveCitations)
+  lastImproveCitations.value = normalizeReportCitations(data?.lastImproveCitations)
 }
 
 function reportHasContent(author: VisitReportAuthor | null | undefined) {
@@ -694,7 +692,9 @@ function applyPeerReport(author: VisitReportAuthor) {
 async function copyReportMarkdown() {
   if (!reportBody.value.trim() || exportBusy.value) return
   try {
-    await copyVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value))
+    await copyVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value), {
+      stripCitations: exportStripCitations.value,
+    })
     reportMsg.value = t('calendar.reportCopiedMd')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -704,7 +704,9 @@ async function copyReportMarkdown() {
 function downloadReportMarkdown() {
   if (!reportBody.value.trim() || exportBusy.value) return
   try {
-    downloadVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value), 'cr')
+    downloadVisitReportMarkdown(canonicalizeReportMarkdown(reportBody.value), 'cr', {
+      stripCitations: exportStripCitations.value,
+    })
     reportMsg.value = t('calendar.reportDownloadedMd')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -728,7 +730,9 @@ async function downloadReportPdf() {
       reportPersistedBody.value = reportBody.value
       reportPersistedTranscript.value = reportTranscript.value
     }
-    const mode = await openVisitReportPdfBlob(props.visitId)
+    const mode = await openVisitReportPdfBlob(props.visitId, {
+      stripCitations: exportStripCitations.value,
+    })
     reportMsg.value = mode === 'download'
       ? t('calendar.reportDownloadedPdf')
       : t('calendar.reportOpenedPdf')
@@ -1404,6 +1408,12 @@ watch(
 .visit-report-export {
   flex-wrap: wrap;
   margin-top: 0.35rem;
+  align-items: center;
+}
+
+.visit-report-export__strip {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .visit-report-citations {

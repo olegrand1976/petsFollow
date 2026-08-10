@@ -49,9 +49,22 @@ func TestVisitReportPDF(t *testing.T) {
 
 	path := "/api/v1/visits/" + visitID + "/report/pdf"
 
+	// Aucun CR encore écrit : refus distinct du CR vide, sinon le message affiché
+	// au véto (« Compte-rendu introuvable » vs « vide ») ne veut plus rien dire.
 	code, body, hdr := doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
-	if code != 404 && code != 400 {
-		t.Fatalf("missing/empty report want 404/400 got %d %s", code, body)
+	if code != http.StatusNotFound || !strings.Contains(string(body), "report_not_found") {
+		t.Fatalf("no report yet: want 404 report_not_found, got %d %s", code, body)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": "   ",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put empty report %d %#v", code, env)
+	}
+	code, body, _ = doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
+	if code != http.StatusBadRequest || !strings.Contains(string(body), "report_empty") {
+		t.Fatalf("empty report: want 400 report_empty, got %d %s", code, body)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
@@ -99,7 +112,7 @@ func TestVisitReportPDF(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateImproveRun: %v", err)
 	}
-	if err := st.CompleteImproveRun(ctx, run.ID, store.ImproveRunCompleted, []string{"Guide BSAVA: cough"}, "", 12); err != nil {
+	if err := st.CompleteImproveRun(ctx, run.ID, store.ImproveRunCompleted, []string{"Guide BSAVA: cough"}, map[string]any{"ragHitCount": 1}, "", 12); err != nil {
 		t.Fatalf("CompleteImproveRun: %v", err)
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/report", vetTok, nil)
@@ -107,8 +120,24 @@ func TestVisitReportPDF(t *testing.T) {
 		t.Fatalf("get report %d %#v", code, env)
 	}
 	cites, _ := asMap(env["data"])["lastImproveCitations"].([]any)
-	first, _ := cites[0].(string)
-	if len(cites) == 0 || !strings.Contains(first, "BSAVA") {
-		t.Fatalf("citations %#v", asMap(env["data"])["lastImproveCitations"])
+	if len(cites) == 0 {
+		t.Fatalf("citations absentes: %#v", asMap(env["data"])["lastImproveCitations"])
 	}
+	if first, _ := cites[0].(string); !strings.Contains(first, "BSAVA") {
+		t.Fatalf("citations %#v", cites)
+	}
+
+	// Export patient : stripCitations retire la section références RAG du PDF.
+	withRefs := "## Anamnèse\n\nToux.\n\n## Références RAG\n\n- Guide BSAVA: cough\n"
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": withRefs,
+	})
+	if code != 200 {
+		t.Fatalf("put report refs %d %#v", code, env)
+	}
+	code, body, _ = doAuthBytes(t, api.handler, http.MethodGet, path+"?stripCitations=1", vetTok)
+	if code != 200 || !strings.HasPrefix(string(body), "%PDF") {
+		t.Fatalf("pdf stripCitations %d %s", code, body)
+	}
+	// PDF binaire : on vérifie juste que l'export ne plante pas ; strip unitaire = consultationpdf.TestStripCitations.
 }

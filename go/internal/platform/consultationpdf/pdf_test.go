@@ -122,3 +122,14 @@ func TestBuildPDFCyrillic(t *testing.T) {
 		}
 	}
 }
+
+func TestStripCitations(t *testing.T) {
+	in := "## Motif\n\nToux 3j\n\n## Références RAG\n\n- Guide BSAVA: cough\n"
+	got := StripCitations(in)
+	if strings.Contains(got, "Références") || strings.Contains(got, "BSAVA") {
+		t.Fatalf("citations remain: %q", got)
+	}
+	if !strings.Contains(got, "Toux") {
+		t.Fatalf("body lost: %q", got)
+	}
+}

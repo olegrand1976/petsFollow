@@ -268,6 +268,29 @@ func TestRAGDownloadAndReindex(t *testing.T) {
 	_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/rag/documents/"+docID, adminTok, nil)
 }
 
+func TestAdminImproveRunStats(t *testing.T) {
+	t.Setenv("AI_CR_ADVANCED_ENABLED", "true")
+	api := newTestAPI(t)
+	if !ragSchemaReady(t, api) {
+		return
+	}
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/rag/improve-stats?days=7", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("improve-stats %d %#v", code, env)
+	}
+	data := asMap(env["data"])
+	if _, ok := data["total"]; !ok {
+		t.Fatalf("missing total %#v", data)
+	}
+	if _, ok := data["byStatus"]; !ok {
+		t.Fatalf("missing byStatus %#v", data)
+	}
+	if _, ok := data["latencyP50Ms"]; !ok {
+		t.Fatalf("missing latencyP50Ms %#v", data)
+	}
+}
+
 func waitRAGReady(t *testing.T, api *testAPI, adminTok, docID string) map[string]any {
 	t.Helper()
 	deadline := time.Now().Add(5 * time.Second)

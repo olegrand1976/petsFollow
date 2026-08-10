@@ -2330,7 +2330,13 @@
       "disabledHint": "Active AI_CR_ADVANCED_ENABLED / NUXT_PUBLIC_AI_CR_ADVANCED_ENABLED para gestionar la base RAG.",
       "download": "Descargar",
       "reindex": "Reindexar",
-      "reindexDone": "Reindexación terminada: {indexed} indexado(s), {failed} fallido(s)."
+      "reindexDone": "Reindexación terminada: {indexed} indexado(s), {failed} fallido(s).",
+      "improveStatsTitle": "Runs mejora avanzada (7 d)",
+      "improveStatsHint": "Latencias y tasas cancel/error desde rag.improve_runs (sin cuerpos clínicos).",
+      "statsTotal": "runs",
+      "statsCancel": "cancelaciones",
+      "statsError": "errores",
+      "statsLoading": "Cargando stats…"
     }
   },
   "commissions": {
@@ -2923,6 +2929,9 @@
     "internal": "Error interno del servidor",
     "not_ready": "Servicio no disponible",
     "generic": "Se ha producido un error",
+    "clipboard_unavailable": "No se pudo copiar: el portapapeles no está disponible",
+    "report_empty": "El informe de visita está vacío",
+    "pdf_failed": "Error al generar el PDF",
     "pet_not_in_practice": "El animal no está vinculado a esta clínica",
     "assignee_busy": "Este profesional ya tiene una cita en este horario",
     "room_busy": "Esta sala ya está ocupada en este horario",
@@ -3796,7 +3805,8 @@
     "reportDownloadedMd": "Archivo Markdown descargado.",
     "reportDownloadedPdf": "PDF descargado.",
     "reportOpenedPdf": "PDF abierto.",
-    "reportCitationsTitle": "Fuentes RAG"
+    "reportCitationsTitle": "Fuentes RAG",
+    "reportStripCitations": "Sin citas RAG"
   },
   "manager": {
     "dashboard": {
