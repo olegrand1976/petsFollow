@@ -88,8 +88,8 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
 
     const notes = `E2E advanced notes ${Date.now()}`
     const improvedMarker = `E2E advanced improved ${Date.now()}`
-    // TipTap round-trip may drop ATX ## headings — assert on unique body text.
-    const improved = `## Anamnèse / motif\n\n${improvedMarker}`
+    // Plain text — TipTap canonicalize drops ATX ## headings from the mirror value.
+    const improved = `Anamnèse / motif\n\n${improvedMarker}`
     await page.getByTestId('visit-report-transcript').fill(notes)
     await expect(advancedBtn).toBeEnabled()
 

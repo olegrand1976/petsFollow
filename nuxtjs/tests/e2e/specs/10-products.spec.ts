@@ -12,10 +12,10 @@ test('page produits affiche Pro Web, Pro Light et les plans clients TTC', async 
   await expect(pro.getByRole('heading', { level: 2 })).toContainText(/Web/i)
   await expect(page.getByTestId('products-solution-proLight')).toBeVisible()
   // Scope all price asserts to products-page (avoid hidden site <option> timestamps).
-  // SaaS Pro HTVA — 834,71 € / an (legacy /69/ matched site options).
-  await expect(products.getByText(/834[,.]71/)).toBeVisible()
+  // SaaS Pro HTVA — appears on hero + table; take the proComplete card price.
+  await expect(page.getByTestId('products-solution-proComplete').getByText(/834[,.]71/).first()).toBeVisible()
   // Plans clients TTC — FR: "3,50 €" · "35 €" · "95 €"
-  await expect(products.getByText(/€?\s*3[,.]50\s*€?/)).toBeVisible()
-  await expect(products.getByText(/35\s*€|€\s*35\b/)).toBeVisible()
-  await expect(products.getByText(/95\s*€|€\s*95\b/)).toBeVisible()
+  await expect(products.getByText(/€?\s*3[,.]50\s*€?/).first()).toBeVisible()
+  await expect(products.getByText(/35\s*€|€\s*35\b/).first()).toBeVisible()
+  await expect(products.getByText(/95\s*€|€\s*95\b/).first()).toBeVisible()
 })
