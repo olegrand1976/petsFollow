@@ -158,13 +158,31 @@ flutter-dev: env
 		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID) \
 		--dart-define=CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true}
 
+# Version Go du gate CI (setup-go dans .github/workflows/ci.yml). gofmt change de
+# règles d'une version à l'autre : appeler le gofmt du PATH laisse passer en local
+# ce que la CI refuse (et inversement), d'où les blocages répétés du deploy staging.
+GO_CI_VERSION ?= 1.26.0
+
+# Pose le gofmt de GO_CI_VERSION dans $$gofmt (toolchain téléchargée et mise en
+# cache par Go). Repli bruyant sur le PATH si elle n'est pas récupérable (hors ligne).
+define pf_resolve_gofmt
+goroot="$$(GOTOOLCHAIN=go$(GO_CI_VERSION) go env GOROOT 2>/dev/null)"; \
+gofmt="$$goroot/bin/gofmt"; \
+if [ -z "$$goroot" ] || [ ! -x "$$gofmt" ]; then \
+	echo "⚠ toolchain go$(GO_CI_VERSION) indisponible — repli sur le gofmt du PATH (peut diverger de la CI)"; \
+	gofmt=gofmt; \
+fi
+endef
+
 fmt-go:
-	cd go && gofmt -w .
+	@cd go && $(pf_resolve_gofmt); \
+	"$$gofmt" -w .
 
 # Miroir exact du 1er gate du job backend CI : un fichier non formaté fait tomber
 # tout le deploy staging avant même go vet.
 fmt-go-check:
-	@cd go && unformatted=$$(gofmt -l .); \
+	@cd go && $(pf_resolve_gofmt); \
+	unformatted=$$("$$gofmt" -l .); \
 	if [ -n "$$unformatted" ]; then \
 		echo "gofmt requis sur :"; echo "$$unformatted"; \
 		echo "→ make fmt-go"; exit 1; \
