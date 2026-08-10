@@ -214,7 +214,7 @@ func (a *API) improveVisitReportAdvanced(w http.ResponseWriter, r *http.Request)
 	}
 	a.improveHub.open(run.ID)
 	a.improveHub.publish(run.ID, "step", map[string]any{
-		"agent": "orchestrator", "label": "Démarrage multi-agents", "at": time.Now().UTC().Format(time.RFC3339),
+		"agent": "orchestrator", "label": "Starting multi-agent run", "at": time.Now().UTC().Format(time.RFC3339),
 	})
 
 	runCtx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
@@ -359,7 +359,7 @@ func (a *API) runImproveAdvanced(
 	}
 
 	improved := gemini.NormalizeVisitReportText(finalMarkdown)
-	if _, err := a.store.UpdateVisitReportImproved(bg, reportID, improved); err != nil {
+	if _, err := a.store.UpdateVisitReportImprovedIfRunActive(bg, reportID, runID, improved); err != nil {
 		if a.improveRunWasCancelled(bg, runID) {
 			return
 		}

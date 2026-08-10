@@ -3786,7 +3786,9 @@
     "reportImprovingAdvanced": "Advanced AI improvement in progress…",
     "reportImprovingAdvancedWait": "Connecting to agents…",
     "reportImprovedAdvanced": "Report improved (advanced AI).",
-    "reportImproveAdvancedFailed": "Advanced AI improvement failed."
+    "reportImproveAdvancedFailed": "Advanced AI improvement failed.",
+    "reportImproveAdvancedCancel": "Cancel",
+    "reportImproveAdvancedCancelled": "Advanced AI improvement cancelled."
   },
   "manager": {
     "dashboard": {

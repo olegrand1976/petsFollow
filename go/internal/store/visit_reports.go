@@ -172,6 +172,30 @@ func (s *Store) UpdateVisitReportImproved(ctx context.Context, reportID, improve
 	return r, err
 }
 
+// UpdateVisitReportImprovedIfRunActive persists improved text only while the
+// improve-advanced run is still queued/running — blocks cancel races.
+func (s *Store) UpdateVisitReportImprovedIfRunActive(ctx context.Context, reportID, runID, improved string) (VisitReport, error) {
+	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
+		UPDATE visits.visit_reports vr
+		SET improved_text = $2, body_text = $2, updated_at = NOW()
+		FROM rag.improve_runs ir
+		WHERE vr.id = $1::uuid
+		  AND vr.status = 'draft'
+		  AND ir.id = $3::uuid
+		  AND ir.report_id = vr.id
+		  AND ir.status IN ('queued', 'running')
+		RETURNING vr.id::text, vr.visit_id::text, vr.author_user_id::text, vr.status, COALESCE(vr.body_text,''),
+			COALESCE(vr.audio_url,''), COALESCE(vr.audio_object_key,''), COALESCE(vr.audio_duration_sec, 0),
+			COALESCE(vr.transcript_text,''),
+			COALESCE(vr.improved_text,''), COALESCE(vr.is_reference, false), vr.client_audio_consent_at,
+			vr.created_at, vr.updated_at, vr.finalized_at`,
+		reportID, improved, runID))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VisitReport{}, ErrNotFound
+	}
+	return r, err
+}
+
 func (s *Store) FinalizeVisitReport(ctx context.Context, reportID string) (VisitReport, error) {
 	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
 		UPDATE visits.visit_reports

@@ -3786,7 +3786,9 @@
     "reportImprovingAdvanced": "Geavanceerde AI-verbetering bezig…",
     "reportImprovingAdvancedWait": "Verbinden met agents…",
     "reportImprovedAdvanced": "Verslag verbeterd (geavanceerde AI).",
-    "reportImproveAdvancedFailed": "Geavanceerde AI-verbetering mislukt."
+    "reportImproveAdvancedFailed": "Geavanceerde AI-verbetering mislukt.",
+    "reportImproveAdvancedCancel": "Annuleren",
+    "reportImproveAdvancedCancelled": "Geavanceerde AI-verbetering geannuleerd."
   },
   "manager": {
     "dashboard": {

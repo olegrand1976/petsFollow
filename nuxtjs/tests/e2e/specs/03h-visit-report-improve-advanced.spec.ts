@@ -158,6 +158,7 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
     try {
       await advancedBtn.click()
       await expect(page.getByTestId('visit-report-advanced-improving')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByTestId('visit-report-advanced-cancel')).toBeVisible()
     }
     finally {
       releaseEvents()

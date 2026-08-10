@@ -185,6 +185,8 @@
             :title="$t('calendar.reportImprovingAdvanced')"
             :waiting-label="$t('calendar.reportImprovingAdvancedWait')"
             :steps="advancedSteps"
+            :cancel-label="$t('calendar.reportImproveAdvancedCancel')"
+            @cancel="cancelAdvancedImprove"
           />
           <p
             v-if="!readonly && !viewingPeerReport"
@@ -443,7 +445,7 @@ const { mapError } = useApiError()
 const { formatDate } = useFormatters()
 const runtimeConfig = useRuntimeConfig()
 const aiCrAdvancedEnabled = computed(() => Boolean(runtimeConfig.public.aiCrAdvancedEnabled))
-const { start: startAdvancedImprove, stop: stopAdvancedImprove } = useAdvancedImproveStream()
+const { start: startAdvancedImprove, stop: stopAdvancedImprove, cancelRemote: cancelAdvancedImproveRemote } = useAdvancedImproveStream()
 
 const reportBody = ref('')
 const reportPersistedBody = ref('')
@@ -882,7 +884,14 @@ async function improveVisitReportAdvanced() {
           if (step?.agent && step?.label) advancedSteps.value = [...advancedSteps.value, step]
         },
         onFinal: (report) => { finalReport = report || '' },
-        onError: (code) => { reportMsg.value = mapError({ data: { error: code } }) },
+        onError: (code) => {
+          if (code === 'cancelled') {
+            reportMsg.value = t('calendar.reportImproveAdvancedCancelled')
+          }
+          else {
+            reportMsg.value = mapError({ data: { error: code } })
+          }
+        },
       },
     )
     if (finalReport.trim()) {
@@ -907,6 +916,11 @@ async function improveVisitReportAdvanced() {
     advancedImproveInFlight.value = false
     reportBusy.value = false
   }
+}
+
+async function cancelAdvancedImprove() {
+  if (!advancedImproveInFlight.value) return
+  await cancelAdvancedImproveRemote()
 }
 
 async function submitAiQuality(good: boolean) {
@@ -1167,6 +1181,9 @@ async function discardDictation() {
 }
 
 onBeforeUnmount(() => {
+  if (advancedImproveInFlight.value) {
+    void cancelAdvancedImproveRemote()
+  }
   // Desk suspend already ran flushForSuspend (stop+transcribe). Don't discard mid-flight.
   const { suspendDiscard } = useActiveConsultation()
   if (suspendDiscard.value) {
@@ -1179,6 +1196,9 @@ onBeforeUnmount(() => {
 watch(
   () => props.visitId,
   async (id, prev) => {
+    if (prev && advancedImproveInFlight.value) {
+      await cancelAdvancedImproveRemote()
+    }
     if (prev && dictating.value) {
       await discardDictation()
     }

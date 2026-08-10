@@ -3252,7 +3252,9 @@
     "reportImprovingAdvanced": "Miglioramento IA avanzato in corso…",
     "reportImprovingAdvancedWait": "Connessione agli agenti…",
     "reportImprovedAdvanced": "Referto migliorato (IA avanzata).",
-    "reportImproveAdvancedFailed": "Miglioramento IA avanzato non riuscito."
+    "reportImproveAdvancedFailed": "Miglioramento IA avanzato non riuscito.",
+    "reportImproveAdvancedCancel": "Annulla",
+    "reportImproveAdvancedCancelled": "Miglioramento IA avanzato annullato."
   },
   "commissions": {
     "title": "Le mie ricompense",

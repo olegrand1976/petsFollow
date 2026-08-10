@@ -3786,7 +3786,9 @@
     "reportImprovingAdvanced": "Mejora IA avanzada en curso…",
     "reportImprovingAdvancedWait": "Conectando con agentes…",
     "reportImprovedAdvanced": "Informe mejorado (IA avanzada).",
-    "reportImproveAdvancedFailed": "Falló la mejora IA avanzada."
+    "reportImproveAdvancedFailed": "Falló la mejora IA avanzada.",
+    "reportImproveAdvancedCancel": "Cancelar",
+    "reportImproveAdvancedCancelled": "Mejora IA avanzada cancelada."
   },
   "manager": {
     "dashboard": {

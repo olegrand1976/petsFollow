@@ -3786,7 +3786,9 @@
     "reportImprovingAdvanced": "Täiustatud AI-parandus käib…",
     "reportImprovingAdvancedWait": "Agentidega ühendamine…",
     "reportImprovedAdvanced": "Aruanne paranenud (täiustatud AI).",
-    "reportImproveAdvancedFailed": "Täiustatud AI-parandus ebaõnnestus."
+    "reportImproveAdvancedFailed": "Täiustatud AI-parandus ebaõnnestus.",
+    "reportImproveAdvancedCancel": "Tühista",
+    "reportImproveAdvancedCancelled": "Täiustatud AI-parandus tühistati."
   },
   "manager": {
     "dashboard": {

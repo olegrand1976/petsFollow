@@ -9,13 +9,40 @@ export type AdvancedImproveHandlers = {
 
 /**
  * Starts an advanced improve run and consumes SSE via EventSource (cookies).
+ * cancelRemote() POSTs cancel then settles the in-flight promise (unmount / Annuler).
  */
 export function useAdvancedImproveStream() {
   let es: EventSource | null = null
+  let activeVisitId: string | null = null
+  let activeRunId: string | null = null
+  let intentionalClose = false
+  let finish: ((code?: string) => void) | null = null
 
   function stop() {
     es?.close()
     es = null
+  }
+
+  function clearActive() {
+    activeVisitId = null
+    activeRunId = null
+    finish = null
+  }
+
+  async function cancelRemote() {
+    const visitId = activeVisitId
+    const runId = activeRunId
+    intentionalClose = true
+    if (visitId && runId) {
+      try {
+        await $fetch(`/api/visits/${visitId}/report-improve-advanced/${runId}/cancel`, {
+          method: 'POST',
+        })
+      } catch { /* best-effort */ }
+    }
+    finish?.('cancelled')
+    stop()
+    clearActive()
   }
 
   async function start(
@@ -23,7 +50,13 @@ export function useAdvancedImproveStream() {
     body: { sourceText?: string; targetLocale?: string },
     handlers: AdvancedImproveHandlers = {},
   ) {
-    stop()
+    if (activeRunId) {
+      await cancelRemote()
+    } else {
+      stop()
+    }
+    intentionalClose = false
+
     const res = await $fetch<{ data?: { runId?: string }; runId?: string }>(
       `/api/visits/${visitId}/report-improve-advanced`,
       { method: 'POST', body },
@@ -31,22 +64,19 @@ export function useAdvancedImproveStream() {
     const runId = res?.data?.runId || res?.runId
     if (!runId) throw new Error('run_id_missing')
 
-    await new Promise<void>((resolve, reject) => {
+    activeVisitId = visitId
+    activeRunId = runId
+
+    await new Promise<void>((resolve) => {
       let settled = false
-      const settleOk = () => {
+      finish = (code?: string) => {
         if (settled) return
         settled = true
-        handlers.onDone?.()
+        if (code) handlers.onError?.(code)
+        else handlers.onDone?.()
         stop()
+        clearActive()
         resolve()
-      }
-      const settleErr = (code: string, asReject = false) => {
-        if (settled) return
-        settled = true
-        handlers.onError?.(code)
-        stop()
-        if (asReject) reject(new Error(code))
-        else resolve()
       }
 
       es = new EventSource(`/api/visits/${visitId}/report-improve-advanced/${runId}/events`)
@@ -63,31 +93,29 @@ export function useAdvancedImproveStream() {
         } catch { /* ignore */ }
       })
       es.addEventListener('error', (ev) => {
-        // Named SSE "error" events are MessageEvent with data; native network errors are not.
         if (ev instanceof MessageEvent && typeof ev.data === 'string' && ev.data.length > 0) {
           try {
             const data = JSON.parse(ev.data || '{}') as { errorCode?: string }
-            settleErr(data.errorCode || 'error')
+            finish?.(data.errorCode || 'error')
           } catch {
-            settleErr('error')
+            finish?.('error')
           }
           return
         }
-        // After stop()/success, closing EventSource fires a native error — ignore if settled.
-        if (settled) return
+        if (intentionalClose || settled) return
         if (es && es.readyState === EventSource.CLOSED) {
-          settleErr('sse_closed', true)
+          finish?.('sse_closed')
         }
       })
       es.addEventListener('ping', (ev) => {
         try {
           const data = JSON.parse((ev as MessageEvent).data || '{}') as { done?: boolean }
-          if (data.done) settleOk()
+          if (data.done) finish?.()
         } catch { /* ignore */ }
       })
     })
     return runId
   }
 
-  return { start, stop }
+  return { start, stop, cancelRemote, get activeRunId() { return activeRunId } }
 }

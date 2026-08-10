@@ -21,6 +21,14 @@
       </ol>
       <p v-else class="pro-hint">{{ waitingLabel }}</p>
     </div>
+    <ProButton
+      v-if="cancelLabel"
+      variant="ghost"
+      test-id="visit-report-advanced-cancel"
+      @click="emit('cancel')"
+    >
+      {{ cancelLabel }}
+    </ProButton>
   </div>
 </template>
 
@@ -31,7 +39,10 @@ defineProps<{
   title: string
   waitingLabel: string
   steps: AgentStep[]
+  cancelLabel?: string
 }>()
+
+const emit = defineEmits<{ cancel: [] }>()
 </script>
 
 <style scoped>
@@ -41,12 +52,16 @@ defineProps<{
   align-items: flex-start;
   padding: 0.75rem 1rem;
   border-radius: var(--pf-radius-md, 8px);
-  background: color-mix(in srgb, var(--pf-vet-primary, #0d9488) 8%, transparent);
-  margin-bottom: 0.75rem;
+  background: var(--pf-vet-surface-2, #f4f7f6);
+  border: 1px solid var(--pf-vet-border, #d7e0dd);
 }
 .pro-agent-loader__icon {
   flex-shrink: 0;
-  color: var(--pf-vet-primary, #0d9488);
+  color: var(--pf-vet-primary, #0d7377);
+}
+.pro-agent-loader__body {
+  flex: 1;
+  min-width: 0;
 }
 .pro-agent-loader__steps {
   margin: 0.35rem 0 0;
@@ -55,6 +70,6 @@ defineProps<{
 }
 .pro-agent-loader__agent {
   font-weight: 600;
-  text-transform: capitalize;
+  font-family: var(--pf-font-mono, monospace);
 }
 </style>

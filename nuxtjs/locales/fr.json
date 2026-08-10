@@ -3296,7 +3296,9 @@
     "reportImprovingAdvanced": "Amélioration IA avancée en cours…",
     "reportImprovingAdvancedWait": "Connexion aux agents…",
     "reportImprovedAdvanced": "Compte-rendu amélioré (IA avancée).",
-    "reportImproveAdvancedFailed": "Échec de l'amélioration IA avancée."
+    "reportImproveAdvancedFailed": "Échec de l'amélioration IA avancée.",
+    "reportImproveAdvancedCancel": "Annuler",
+    "reportImproveAdvancedCancelled": "Amélioration IA avancée annulée."
   },
   "commissions": {
     "title": "Mes rétributions",
