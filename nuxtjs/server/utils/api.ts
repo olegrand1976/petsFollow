@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { createError, getRequestHeader, sendStream, setResponseHeaders, setResponseStatus } from 'h3'
+import { createError } from 'h3'
 import { authCookieSecure } from '../../utils/authCookieSecure'
 
 /** Aligné sur JWT_REFRESH_TTL (30 jours). */
