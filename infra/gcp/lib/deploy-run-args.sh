@@ -77,7 +77,7 @@ pf_write_api_env_file() {
   local redis_addr
   local billing_mock
   local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled vet_news_enabled client_ai_enabled
-  local ai_cr_advanced_enabled sms_enabled
+  local ai_cr_advanced_enabled sms_enabled crewai_base_url crewai_use_id_token
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -98,6 +98,8 @@ pf_write_api_env_file() {
     client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
     ai_cr_advanced_enabled="${AI_CR_ADVANCED_ENABLED:-true}"
     sms_enabled="${SMS_ENABLED:-true}"
+    crewai_base_url="${CREWAI_BASE_URL:-${CREWAI_STAGING_URL:-https://crewai-orchestrator-staging-a7ako2njea-od.a.run.app}}"
+    crewai_use_id_token="${CREWAI_USE_ID_TOKEN:-true}"
     # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
     if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
       pacs_enabled="${PACS_ENABLED:-true}"
@@ -128,6 +130,8 @@ pf_write_api_env_file() {
     client_ai_enabled="${CLIENT_AI_ENABLED:-false}"
     ai_cr_advanced_enabled="${AI_CR_ADVANCED_ENABLED:-false}"
     sms_enabled="${SMS_ENABLED:-false}"
+    crewai_base_url="${CREWAI_BASE_URL:-}"
+    crewai_use_id_token="${CREWAI_USE_ID_TOKEN:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_base_url="${BILLIT_BASE_URL:-https://api.billit.be}"
@@ -196,6 +200,8 @@ GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
 GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
 GEMINI_EMBEDDING_MODEL: "${GEMINI_EMBEDDING_MODEL:-text-embedding-004}"
+CREWAI_BASE_URL: "${crewai_base_url}"
+CREWAI_USE_ID_TOKEN: "${crewai_use_id_token}"
 GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 EOF
   if [[ -n "${VAMREG_BASE_URL:-}" ]]; then
@@ -364,6 +370,16 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret VET_NEWS_SECRET vet-news-secret)"
   # Sans ce secret, /internal/rag/reindex et /internal/rag/search répondent 401.
   secrets="${secrets}$(pf_api_mount_job_secret RAG_REINDEX_SECRET rag-reindex-secret)"
+  # Shared CrewAI orchestrator (X-Crew-Secret). Prefer petsfollow-prefixed job secret;
+  # fallback legacy CREWAI_WEBHOOK_SECRET_STAGING is mounted via CREWAI_SHARED_SECRET_SM override.
+  secrets="${secrets}$(pf_api_mount_job_secret CREWAI_SHARED_SECRET crewai-shared-secret)"
+  if [[ -n "${CREWAI_SHARED_SECRET_SM:-}" ]] && pf_sm_has_secret "${CREWAI_SHARED_SECRET_SM}"; then
+    secrets="${secrets},CREWAI_SHARED_SECRET=${CREWAI_SHARED_SECRET_SM}:latest"
+  elif [[ "${PETSFOLLOW_GCP_ENV:-}" != "prod" ]] && gcloud secrets versions access latest \
+    --secret=CREWAI_WEBHOOK_SECRET_STAGING --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    # Staging shared secret used by the platform orchestrator (multi-app).
+    secrets="${secrets},CREWAI_SHARED_SECRET=CREWAI_WEBHOOK_SECRET_STAGING:latest"
+  fi
   # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
   # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.
   if gcloud secrets versions access latest \

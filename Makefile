@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke crewai-smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
 
 help:
 	@echo "petsFollow — commandes"
@@ -209,6 +209,10 @@ test: test-go test-nuxt test-flutter
 
 smoke:
 	@bash scripts/smoke-test.sh
+
+# Shared CrewAI orchestrator smoke (skip if CREWAI_BASE_URL empty).
+crewai-smoke:
+	@bash scripts/crewai-smoke.sh
 
 smoke-prod:
 	SMOKE_PROFILE=prod PETSFOLLOW_API_URL=$${PETSFOLLOW_API_URL:-https://api.petsfollow.app} bash scripts/smoke-test.sh

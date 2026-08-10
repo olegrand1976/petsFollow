@@ -69,3 +69,22 @@ func TestGoModTargets126(t *testing.T) {
 		t.Error("go/go.mod must pin a go1.26.x toolchain")
 	}
 }
+
+// TestCrewAIStagingDeployGuard locks Phase-2 wiring: staging URL + IAM ID token
+// + shared secret mount (fail-closed path for the shared orchestrator).
+func TestCrewAIStagingDeployGuard(t *testing.T) {
+	content := readRepoFile(t, "infra/gcp/lib/deploy-run-args.sh")
+	for _, want := range []string{
+		"CREWAI_BASE_URL",
+		"CREWAI_USE_ID_TOKEN",
+		"crewai_use_id_token",
+		"CREWAI_USE_ID_TOKEN:-true",
+		"CREWAI_SHARED_SECRET",
+		"CREWAI_WEBHOOK_SECRET_STAGING",
+		"crewai-orchestrator-staging",
+	} {
+		if !strings.Contains(content, want) {
+			t.Errorf("infra/gcp/lib/deploy-run-args.sh missing %q", want)
+		}
+	}
+}

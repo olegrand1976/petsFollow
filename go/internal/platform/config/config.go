@@ -132,6 +132,12 @@ type Config struct {
 	GeminiEmbeddingModel string
 	// RagReindexSecret protects POST /internal/rag/reindex.
 	RagReindexSecret string
+	// CrewAIBaseURL is the shared orchestrator Cloud Run URL (empty = client disabled).
+	CrewAIBaseURL string
+	// CrewAISharedSecret is sent as X-Crew-Secret (matches CREW_SHARED_SECRET on orchestrator).
+	CrewAISharedSecret string
+	// CrewAIUseIDToken attaches a Google ID token for Cloud Run IAM invoker.
+	CrewAIUseIDToken bool
 	// SMSEnabled enables transactional client SMS via Telnyx (visit confirm/reminder/reschedule) — default off, tag dev.
 	SMSEnabled bool
 	// SMSDryRun logs SMS instead of calling Telnyx (default true until live credentials).
@@ -272,6 +278,9 @@ func Load() Config {
 		ClientAIEnabled:         envBool("CLIENT_AI_ENABLED"),
 		AiCrAdvancedEnabled:     envBool("AI_CR_ADVANCED_ENABLED"),
 		RagReindexSecret:        envOr("RAG_REINDEX_SECRET", ""),
+		CrewAIBaseURL:           envOr("CREWAI_BASE_URL", ""),
+		CrewAISharedSecret:      envOr("CREWAI_SHARED_SECRET", ""),
+		CrewAIUseIDToken:        envBool("CREWAI_USE_ID_TOKEN"),
 
 		// SMS transactionnel (Telnyx) : off par défaut ; dry-run tant que les creds live ne sont pas montés.
 		SMSEnabled:                  envBool("SMS_ENABLED"),

@@ -57,14 +57,65 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### Tests
 
 ```bash
-cd go && go test ./internal/rag/ ./internal/platform/gemini/ -count=1
+cd go && go test ./internal/rag/ ./internal/platform/gemini/ ./internal/platform/crewai/ -count=1
 cd go && go test ./internal/handlers/ -run 'TestRAG' -count=1
 cd nuxtjs && npm test -- tests/unit/locales-parity.spec.ts
 ```
 
+## Phase 2 livrée — Orchestrateur CrewAI partagé + client Go
+
+Service **multi-apps** (petsFollow, Vantura, futures) — repo dédié [`../crewai-orchestrator`](../../crewai-orchestrator/README.md) (hors monorepo petsFollow).
+
+### Contrat
+
+| Méthode | Path | Auth |
+|---------|------|------|
+| `GET` | `/health` | IAM Cloud Run (ID token) ; local = none |
+| `GET` | `/openapi.json` | IAM Cloud Run ; local = none |
+| `POST` | `/v1/tasks/submit` | IAM + `X-Crew-Secret` (+ `X-Crew-API-Version: 1`) |
+| `GET` | `/v1/tasks/{id}/events` | **501** (Phase 3 SSE) |
+
+Boot fail-closed : `CREW_SHARED_SECRET` obligatoire sauf `ALLOW_INSECURE_AUTH=true` (local only).
+
+Envelope :
+
+```json
+{
+  "workflow": "petsfollow_cr_improve",
+  "tenant": "petsfollow",
+  "correlationId": "uuid",
+  "payload": { "sourceText": "...", "targetLocale": "fr", "practiceId": "", "countryCode": "BE" }
+}
+```
+
+Workflows : `staging_smoke_test` · `petsfollow_cr_improve` (Tri → Clinicien+RAG → Rédacteur) · `vantura_credit_stub`.
+
+Tool RAG : orchestrateur → `POST {PETSFOLLOW_API_BASE}/api/v1/internal/rag/search` + `X-Rag-Reindex-Secret` (pas de DSN Postgres dans le crew).
+
+### Client petsFollow
+
+- Package [`go/internal/platform/crewai`](../go/internal/platform/crewai/client.go) : `Health`, `SubmitTask` (+ ID token IAM si `CREWAI_USE_ID_TOKEN`)
+- Env API : `CREWAI_BASE_URL`, `CREWAI_SHARED_SECRET`, `CREWAI_USE_ID_TOKEN`
+- Staging : URL orchestrateur + `CREWAI_USE_ID_TOKEN=true` par défaut dans `deploy-run-args.sh`
+- Smoke : `make crewai-smoke` (skip si URL vide ; ID token si `CREWAI_USE_ID_TOKEN`)
+- Deploy : secret monté depuis `petsfollow-*-crewai-shared-secret` ou fallback staging `CREWAI_WEBHOOK_SECRET_STAGING`
+
+### Deploy orchestrateur staging
+
+```bash
+cd ../crewai-orchestrator && bash infra/gcp/deploy-staging.sh
+```
+
+Cloud Run : `crewai-orchestrator-staging` · région `europe-west9` · **minScale=0** · **IAM-only** + secret obligatoire.
+
+### Clôture ops Phase 2
+
+1. `bash infra/gcp/deploy-staging.sh` (repo orchestrateur)
+2. Smoke : `CREWAI_BASE_URL=<url> CREWAI_SHARED_SECRET=… CREWAI_USE_ID_TOKEN=true make crewai-smoke`
+3. RAG live optionnel : monter `RAG_REINDEX_SECRET` sur l’orchestrateur (`RAG_REINDEX_SECRET_SM=petsfollow-rag-reindex-secret`) une fois le secret SM créé
+
 ### Suites suivantes
 
-- Phase 2 : client CrewAI GCP + smoke com
 - Phase 3 : SSE Agent Loader
 - Phase 4 : bouton « Améliorer IA avancé » + exports
 - Phase 5 : recette
