@@ -12,7 +12,7 @@ type VamregRefLister interface {
 	ListPharmaceuticalForms(ctx context.Context) ([]VamregCodeLabel, error)
 }
 
-// VamregRefKind constants mirrored by store (avoid import cycle).
+// VamregRefKind values stored in pharmacy.vamreg_ref_codes.kind.
 const (
 	VamregRefKindTargetSpecies      = "target_species"
 	VamregRefKindIndication         = "indication"

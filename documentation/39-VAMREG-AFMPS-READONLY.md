@@ -77,10 +77,12 @@ curl -X POST "$API/api/v1/internal/pharmacy/vamreg-ref-sync" \
 # apply : {"dryRun":false}
 ```
 
-Persiste `target_species` / `indication` / `pharmaceutical_form` dans `pharmacy.vamreg_ref_codes`.  
+Persiste `target_species` / `indication` / `pharmaceutical_form` dans `pharmacy.vamreg_ref_codes` (apply **atomique** ; refuse une liste vide pour ne pas wipe la table).  
 Lecture cabinet : `GET /vet/pharmacy/vamreg-refs?kind=target_species` (perm `pharmacy.read`).
 
-Provisionnement staging / attach Cloud Run :
+Ops : **pas de Cloud Scheduler** pour ce job (manuel / curl). Monter `PHARMACY_VAMREG_REF_SYNC_SECRET` (`petsfollow-pharmacy-vamreg-ref-sync-secret`) sur l’API si besoin ; sans secret → 401. La clé listes AFMPS reste `VAMREG_AFMPS_API_KEY`.
+
+Provisionnement staging / attach Cloud Run (clé AFMPS readonly) :
 
 ```bash
 ./infra/gcp/setup-vamreg-afmps-secret.sh /chemin/vers/cle --attach-run

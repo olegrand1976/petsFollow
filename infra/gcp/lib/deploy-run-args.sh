@@ -364,6 +364,8 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret INVOICING_RECONCILE_SECRET invoicing-reconcile-secret)"
   # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.
   secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_EXPIRY_SECRET pharmacy-expiry-secret)"
+  # Sync listes VAMReg readonly (manuel, pas de scheduler) — sans secret → 401 sur vamreg-ref-sync.
+  secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_VAMREG_REF_SYNC_SECRET pharmacy-vamreg-ref-sync-secret)"
   # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ETL_SECRET research-etl-secret)"
   secrets="${secrets}$(pf_api_mount_job_secret RESEARCH_ANON_SALT research-anon-salt)"

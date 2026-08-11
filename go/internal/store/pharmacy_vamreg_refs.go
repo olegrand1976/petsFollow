@@ -2,18 +2,22 @@ package store
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 )
 
-// VamregRefKind values stored in pharmacy.vamreg_ref_codes.kind.
+// VamregRefKind values — aliases of pharmacy constants (single source of truth).
 const (
-	VamregRefKindTargetSpecies      = "target_species"
-	VamregRefKindIndication         = "indication"
-	VamregRefKindPharmaceuticalForm = "pharmaceutical_form"
+	VamregRefKindTargetSpecies      = pharmacy.VamregRefKindTargetSpecies
+	VamregRefKindIndication         = pharmacy.VamregRefKindIndication
+	VamregRefKindPharmaceuticalForm = pharmacy.VamregRefKindPharmaceuticalForm
 )
+
+// ErrVamregRefEmptyList — refuse DELETE+INSERT that would wipe a kind (AFMPS glitch / empty payload).
+var ErrVamregRefEmptyList = errors.New("vamreg_ref_empty_list")
 
 // VamregRefCode is a synced AFMPS readonly list entry.
 type VamregRefCode struct {
@@ -34,41 +38,90 @@ type VamregRefSyncResult struct {
 	Sample   map[string][]VamregRefCode `json:"sample,omitempty"`
 }
 
-// UpsertVamregRefCodes replaces codes for the given kind with the provided rows (full refresh per kind).
-func (s *Store) UpsertVamregRefCodes(ctx context.Context, kind string, rows []pharmacy.VamregCodeLabel) (int, error) {
-	kind = strings.TrimSpace(kind)
-	if kind == "" {
-		return 0, ErrValidation
-	}
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback(ctx)
+var vamregRefRequiredKinds = []string{
+	VamregRefKindTargetSpecies,
+	VamregRefKindIndication,
+	VamregRefKindPharmaceuticalForm,
+}
 
-	if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.vamreg_ref_codes WHERE kind = $1`, kind); err != nil {
-		return 0, err
-	}
-	n := 0
-	now := time.Now().UTC()
+// dedupeVamregCodeLabels keeps the first non-empty code (trimmed); drops blanks / duplicates.
+func dedupeVamregCodeLabels(rows []pharmacy.VamregCodeLabel) []pharmacy.VamregCodeLabel {
+	seen := make(map[string]struct{}, len(rows))
+	out := make([]pharmacy.VamregCodeLabel, 0, len(rows))
 	for _, r := range rows {
 		code := strings.TrimSpace(r.Code)
 		if code == "" {
 			continue
 		}
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO pharmacy.vamreg_ref_codes (kind, code, label_en, label_nl, label_fr, deprecated, synced_at)
-			VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-			kind, code, strings.TrimSpace(r.En), strings.TrimSpace(r.Nl), strings.TrimSpace(r.Fr), r.Deprecated, now,
-		); err != nil {
-			return 0, err
+		if _, ok := seen[code]; ok {
+			continue
 		}
-		n++
+		seen[code] = struct{}{}
+		out = append(out, pharmacy.VamregCodeLabel{
+			Code:       code,
+			En:         strings.TrimSpace(r.En),
+			Nl:         strings.TrimSpace(r.Nl),
+			Fr:         strings.TrimSpace(r.Fr),
+			Deprecated: r.Deprecated,
+		})
+	}
+	return out
+}
+
+// ValidateVamregRefLists ensures every required kind has at least one code after dedupe.
+func ValidateVamregRefLists(lists map[string][]pharmacy.VamregCodeLabel) error {
+	if lists == nil {
+		return ErrVamregRefEmptyList
+	}
+	for _, kind := range vamregRefRequiredKinds {
+		if len(dedupeVamregCodeLabels(lists[kind])) == 0 {
+			return ErrVamregRefEmptyList
+		}
+	}
+	return nil
+}
+
+// ReplaceVamregRefLists atomically refreshes all required kinds (all-or-nothing).
+// Refuses empty lists so a bad AFMPS response cannot wipe pharmacy.vamreg_ref_codes.
+func (s *Store) ReplaceVamregRefLists(ctx context.Context, lists map[string][]pharmacy.VamregCodeLabel) (map[string]int, error) {
+	if err := ValidateVamregRefLists(lists); err != nil {
+		return nil, err
+	}
+	prepared := make(map[string][]pharmacy.VamregCodeLabel, len(vamregRefRequiredKinds))
+	for _, kind := range vamregRefRequiredKinds {
+		prepared[kind] = dedupeVamregCodeLabels(lists[kind])
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	now := time.Now().UTC()
+	upserted := make(map[string]int, len(prepared))
+	for _, kind := range vamregRefRequiredKinds {
+		rows := prepared[kind]
+		if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.vamreg_ref_codes WHERE kind = $1`, kind); err != nil {
+			return nil, err
+		}
+		n := 0
+		for _, r := range rows {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO pharmacy.vamreg_ref_codes (kind, code, label_en, label_nl, label_fr, deprecated, synced_at)
+				VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+				kind, r.Code, r.En, r.Nl, r.Fr, r.Deprecated, now,
+			); err != nil {
+				return nil, err
+			}
+			n++
+		}
+		upserted[kind] = n
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return 0, err
+		return nil, err
 	}
-	return n, nil
+	return upserted, nil
 }
 
 // ListVamregRefCodes returns codes for a kind (active first).

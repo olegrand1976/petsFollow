@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -25,7 +27,7 @@ func (a *API) listPharmacyVamregRefs(w http.ResponseWriter, r *http.Request) {
 	}
 	kind := strings.TrimSpace(r.URL.Query().Get("kind"))
 	switch kind {
-	case store.VamregRefKindTargetSpecies, store.VamregRefKindIndication, store.VamregRefKindPharmaceuticalForm:
+	case pharmacy.VamregRefKindTargetSpecies, pharmacy.VamregRefKindIndication, pharmacy.VamregRefKindPharmaceuticalForm:
 	default:
 		writeErr(w, r, http.StatusBadRequest, "validation_error", "kind_required")
 		return
@@ -68,17 +70,26 @@ func (a *API) internalPharmacyVamregRefSync(w http.ResponseWriter, r *http.Reque
 
 	lists, err := pharmacy.FetchVamregRefLists(r.Context(), a.vamregAFMPS)
 	if err != nil {
-		writeErr(w, r, http.StatusBadGateway, "vamreg_afmps_error", err.Error())
+		fmt.Printf("pharmacy vamreg-ref-sync: afmps fetch failed: %v\n", err)
+		writeErr(w, r, http.StatusBadGateway, "vamreg_afmps_error", "vamreg_afmps_error")
+		return
+	}
+	if err := store.ValidateVamregRefLists(lists); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "vamreg_ref_empty_list", "vamreg_ref_empty_list")
 		return
 	}
 
 	result := store.VamregRefSyncResult{
-		DryRun:   dryRun,
-		Fetched:  map[string]int{},
-		Upserted: map[string]int{},
-		Sample:   map[string][]store.VamregRefCode{},
+		DryRun:  dryRun,
+		Fetched: map[string]int{},
+		Sample:  map[string][]store.VamregRefCode{},
 	}
-	for kind, rows := range lists {
+	for _, kind := range []string{
+		pharmacy.VamregRefKindTargetSpecies,
+		pharmacy.VamregRefKindIndication,
+		pharmacy.VamregRefKindPharmaceuticalForm,
+	} {
+		rows := lists[kind]
 		result.Fetched[kind] = len(rows)
 		sample := make([]store.VamregRefCode, 0, 3)
 		for i, row := range rows {
@@ -90,18 +101,23 @@ func (a *API) internalPharmacyVamregRefSync(w http.ResponseWriter, r *http.Reque
 			})
 		}
 		result.Sample[kind] = sample
-		if dryRun {
-			continue
-		}
-		n, uerr := a.store.UpsertVamregRefCodes(r.Context(), kind, rows)
-		if uerr != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+	}
+
+	if dryRun {
+		httpx.WriteData(w, http.StatusOK, result)
+		return
+	}
+
+	upserted, uerr := a.store.ReplaceVamregRefLists(r.Context(), lists)
+	if uerr != nil {
+		if errors.Is(uerr, store.ErrVamregRefEmptyList) {
+			writeErr(w, r, http.StatusBadRequest, "vamreg_ref_empty_list", "vamreg_ref_empty_list")
 			return
 		}
-		result.Upserted[kind] = n
+		fmt.Printf("pharmacy vamreg-ref-sync: replace failed: %v\n", uerr)
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
 	}
-	if dryRun {
-		result.Upserted = nil
-	}
+	result.Upserted = upserted
 	httpx.WriteData(w, http.StatusOK, result)
 }
