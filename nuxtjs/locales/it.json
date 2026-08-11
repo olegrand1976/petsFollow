@@ -2919,6 +2919,7 @@
       "colCnk": "CNK",
       "colSuggestedCnk": "CNK suggerito",
       "colName": "Name",
+      "colPage": "Pag. PDF",
       "colLab": "Lab",
       "colAtc": "ATC",
       "colForm": "Form",
@@ -2957,7 +2958,10 @@
       "retryExtract": "Rilanciare l’estrazione",
       "previewHint": "Le righe valide restano in attesa fino al controllo umano (confermare, verificare il CNK via catalogo AFMPS, o correggere CNK/nome).",
       "confirmReady": "Conferma {count} riga/e in attesa",
-      "confirmRow": "Conferma"
+      "confirmRow": "Conferma",
+      "pageHint": "Apri il PDF a pagina {page} per completare la scheda",
+      "manualHint": "Riga incompleta o poco legibile: i campi recuperati restano visibili. Usa il n° di pagina PDF per correggere/completare a mano, poi Conferma.",
+      "fixFromPage": "Completare manualmente (PDF p.{page})"
     },
     "afmps": {
       "title": "AFMPS CSV import",

@@ -2254,6 +2254,7 @@
       "colCnk": "CNK",
       "colSuggestedCnk": "Voorgestelde CNK",
       "colName": "Name",
+      "colPage": "PDF-pagina",
       "colLab": "Lab",
       "colAtc": "ATC",
       "colForm": "Form",
@@ -2292,7 +2293,10 @@
       "retryExtract": "Extractie opnieuw starten",
       "previewHint": "Geldige rijen blijven in afwachting tot menselijke controle (bevestigen, CNK via AFMPS-catalogus controleren, of CNK/naam corrigeren).",
       "confirmReady": "{count} wachtende rij(en) bevestigen",
-      "confirmRow": "Bevestigen"
+      "confirmRow": "Bevestigen",
+      "pageHint": "Open de PDF op pagina {page} om de fiche te vervolledigen",
+      "manualHint": "Onvolledige of moeilijk leesbare regel: teruggevonden velden blijven zichtbaar. Gebruik het PDF-paginanummer om manueel te corrigeren/aan te vullen, daarna Bevestigen.",
+      "fixFromPage": "Manueel aanvullen (PDF p.{page})"
     },
     "afmps": {
       "title": "AFMPS CSV import",

@@ -2254,6 +2254,7 @@
       "colCnk": "CNK",
       "colSuggestedCnk": "CNK sugerido",
       "colName": "Name",
+      "colPage": "Pág. PDF",
       "colLab": "Lab",
       "colAtc": "ATC",
       "colForm": "Form",
@@ -2292,7 +2293,10 @@
       "retryExtract": "Reintentar extracción",
       "previewHint": "Las filas válidas quedan pendientes hasta el control humano (confirmar, verificar CNK vía catálogo AFMPS, o corregir CNK/nombre).",
       "confirmReady": "Confirmar {count} fila(s) pendiente(s)",
-      "confirmRow": "Confirmar"
+      "confirmRow": "Confirmar",
+      "pageHint": "Abra el PDF en la página {page} para completar la ficha",
+      "manualHint": "Línea incompleta o poco legible: los campos recuperados siguen visibles. Use el nº de página PDF para corregir/completar a mano y luego Confirmar.",
+      "fixFromPage": "Completar manualmente (PDF p.{page})"
     },
     "afmps": {
       "title": "AFMPS CSV import",

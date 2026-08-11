@@ -2254,6 +2254,7 @@
       "colCnk": "CNK",
       "colSuggestedCnk": "Soovitatud CNK",
       "colName": "Name",
+      "colPage": "PDF lk",
       "colLab": "Lab",
       "colAtc": "ATC",
       "colForm": "Form",
@@ -2292,7 +2293,10 @@
       "retryExtract": "Käivita eraldamine uuesti",
       "previewHint": "Kehtivad read jäävad ootele kuni inimkontrollini (kinnita, kontrolli CNK AFMPS kataloogi kaudu või paranda CNK/nimi).",
       "confirmReady": "Kinnita {count} ootel rida",
-      "confirmRow": "Kinnita"
+      "confirmRow": "Kinnita",
+      "pageHint": "Ava PDF lehel {page}, et kirje käsitsi lõpetada",
+      "manualHint": "Puudulik või halvasti loetav rida: taastatud väljad jäävad nähtavaks. Kasuta PDF-lehe numbrit käsitsi parandamiseks/täiendamiseks, seejärel Kinnita.",
+      "fixFromPage": "Täida käsitsi (PDF lk {page})"
     },
     "afmps": {
       "title": "AFMPS CSV import",
