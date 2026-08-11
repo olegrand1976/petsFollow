@@ -61,7 +61,7 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **`--update-secrets` / redeploy** API pour remonter `:latest` (sinon 401 jusqu’à nouvelle révision).
 3. Cron (1er du mois 05:00 Brussels, `0 5 1 * *`) → `POST /api/v1/internal/afmps-import/run` + `X-Afmps-Import-Secret`.
 4. Ticket system + email `OPS_NOTIFY_EMAIL` → ouvrir `/admin/afmps-imports/{id}` pour gates 2–3.
-5. Skip auto si un job `validated`/`reviewed`/`blocked` est encore ouvert, ou si le checksum = dernier commit.
+5. Skip auto si un job `validated`/`reviewed`/`blocked` est encore ouvert, ou si le checksum SHA-256 du fichier = dernier commit (**hash avant parse**, UTF-8 BOM ignoré — pas de re-parse du pack inchangé).
 6. Local : `MEDIA_LOCAL_DIR` doit pointer vers la racine uploads du monorepo (ex. `$PWD/data/uploads`) — le défaut `./data/uploads` est relatif au cwd du process (`go/` via `make api-dev`).
 
 **Staging (2026-08-11)** : objet GCS déposé · secret + job Scheduler `petsfollow-afmps-import` · API remountée · premier catalogue commité (`completed`, ~2738 CNK). Re-run mensuel = skip `unchanged_checksum` tant que le fichier n’a pas changé.

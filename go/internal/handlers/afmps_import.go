@@ -318,22 +318,25 @@ func (a *API) internalAfmpsImportRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, report, parseErr := pharmacy.ParseAndValidateAFMPSCSV(bytes.NewReader(data), filename)
+	// Hash before full parse: monthly re-runs with the same pack must not burn CPU/timeout.
+	checksum := pharmacy.AFMPSChecksum(data)
 	if prev, err := a.store.LatestCompletedAFMPSChecksum(r.Context()); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
-	} else if prev != "" && prev == report.ChecksumSHA256 && !report.Blocked {
+	} else if prev != "" && prev == checksum {
 		a.notifyAfmpsImportOps(r.Context(), "unchanged_checksum",
 			fmt.Sprintf("Checksum AFMPS identique au dernier commit (%s) — rien à faire.", prev[:min(12, len(prev))]),
 			"/admin/afmps-imports", "")
 		httpx.WriteData(w, http.StatusOK, map[string]any{
 			"skipped":        true,
 			"reason":         "unchanged_checksum",
-			"checksumSha256": report.ChecksumSHA256,
+			"checksumSha256": checksum,
 			"objectKey":      objectKey,
 		})
 		return
 	}
+
+	rows, report, parseErr := pharmacy.ParseAndValidateAFMPSCSV(bytes.NewReader(data), filename)
 
 	job, err := a.store.CreateAFMPSImportFromParsed(r.Context(), "", filename, rows, report)
 	if err != nil {

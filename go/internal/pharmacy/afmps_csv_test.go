@@ -84,6 +84,26 @@ func TestParseAndValidateAFMPSCSV_HardErrorRate(t *testing.T) {
 	}
 }
 
+func TestAFMPSChecksum_StripsBOM(t *testing.T) {
+	body := []byte("cnk;name\n1234567;Med\n")
+	withBOM := append([]byte{0xEF, 0xBB, 0xBF}, body...)
+	if AFMPSChecksum(body) != AFMPSChecksum(withBOM) {
+		t.Fatalf("BOM must not change checksum: %s vs %s", AFMPSChecksum(body), AFMPSChecksum(withBOM))
+	}
+	_, repNoBOM, err := ParseAndValidateAFMPSCSV(strings.NewReader(string(body)), "a.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, repBOM, err := ParseAndValidateAFMPSCSV(strings.NewReader(string(withBOM)), "b.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repNoBOM.ChecksumSHA256 != repBOM.ChecksumSHA256 || repNoBOM.ChecksumSHA256 != AFMPSChecksum(body) {
+		t.Fatalf("report checksum mismatch: noBOM=%s bom=%s helper=%s",
+			repNoBOM.ChecksumSHA256, repBOM.ChecksumSHA256, AFMPSChecksum(body))
+	}
+}
+
 func TestStripATCCode(t *testing.T) {
 	if got := StripATCCode("QG02AD90 - description"); got != "QG02AD90" {
 		t.Fatalf("%q", got)

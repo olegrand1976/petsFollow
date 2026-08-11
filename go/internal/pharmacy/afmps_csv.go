@@ -75,7 +75,7 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 	rep := AFMPSValidateReport{
 		Filename:       strings.TrimSpace(filename),
 		FileBytes:      len(raw),
-		ChecksumSHA256: sha256Hex(raw),
+		ChecksumSHA256: AFMPSChecksum(raw),
 	}
 	if len(raw) == 0 {
 		rep.Blocked = true
@@ -88,7 +88,7 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 		return nil, rep, fmt.Errorf("file_too_large")
 	}
 
-	raw = bytes.TrimPrefix(raw, []byte{0xEF, 0xBB, 0xBF})
+	raw = bytes.TrimPrefix(raw, utf8BOM)
 	firstLine := raw
 	if before, _, ok := bytes.Cut(raw, []byte{'\n'}); ok {
 		firstLine = before
@@ -210,8 +210,13 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 	return out, rep, nil
 }
 
-func sha256Hex(b []byte) string {
-	sum := sha256.Sum256(b)
+// utf8BOM is stripped before hashing/parsing so packs with/without BOM share one checksum.
+var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
+
+// AFMPSChecksum returns lowercase hex SHA-256 of CSV bytes after stripping a UTF-8 BOM.
+// Used for persist + cron skip-before-parse (same bytes as post-BOM parse input).
+func AFMPSChecksum(raw []byte) string {
+	sum := sha256.Sum256(bytes.TrimPrefix(raw, utf8BOM))
 	return hex.EncodeToString(sum[:])
 }
 

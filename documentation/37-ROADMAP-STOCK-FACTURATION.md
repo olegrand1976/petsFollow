@@ -183,7 +183,7 @@ flowchart TB
   P5 --> P6
 ```
 
-**Priorité actuelle** : attendre P0 pour 2.F / 4.A–B–E / Phase 5 · **P0-2 Billit reseller** → S5 → Phase 3 (aucun code facture DAF tant que credentials absents). S6 staging clôturé (PR #3 + re-seed job + smoke).  
+**Priorité actuelle** : 2.F **staging** catalogue ✅ · **prod** AFMPS + P0-1 VAMReg write / **P0-2 Billit reseller** → S5 → Phase 3 · Phase 4.A–B–E / Phase 5 après P0 restants. S6 staging clôturé.  
 **Facturation** : dès P0-2 → S5 → Phase 3.
 
 ---
