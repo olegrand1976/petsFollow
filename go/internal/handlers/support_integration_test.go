@@ -108,14 +108,16 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 		t.Fatalf("expected in_progress after reply, got %#v", ticketAfter["status"])
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
-		"status": "done",
-	})
-	if code != http.StatusOK {
-		t.Fatalf("patch status %d %#v", code, env)
-	}
-	if dataMap(t, env)["status"] != "done" {
-		t.Fatalf("expected done: %#v", env)
+	for _, st := range []string{"to_test", "done"} {
+		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+			"status": st,
+		})
+		if code != http.StatusOK {
+			t.Fatalf("patch status %s %d %#v", st, code, env)
+		}
+		if dataMap(t, env)["status"] != st {
+			t.Fatalf("expected %s: %#v", st, env)
+		}
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
@@ -447,14 +449,16 @@ func TestSupportTicketNotifySoftFail(t *testing.T) {
 		t.Fatalf("missing ticket id: %#v", env)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
-		"status": "to_test",
-	})
-	if code != http.StatusOK {
-		t.Fatalf("patch status with failing SMTP %d %#v", code, env)
-	}
-	if dataMap(t, env)["status"] != "to_test" {
-		t.Fatalf("expected to_test: %#v", env)
+	for _, st := range []string{"in_progress", "to_test"} {
+		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+			"status": st,
+		})
+		if code != http.StatusOK {
+			t.Fatalf("patch status %s with failing SMTP %d %#v", st, code, env)
+		}
+		if dataMap(t, env)["status"] != st {
+			t.Fatalf("expected %s: %#v", st, env)
+		}
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/support/tickets/"+ticketID+"/replies", adminTok, map[string]any{
