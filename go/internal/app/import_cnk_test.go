@@ -35,3 +35,19 @@ func TestParseCNKCSVComma(t *testing.T) {
 		t.Fatalf("%#v", rows)
 	}
 }
+
+func TestParseImportCNKArgsGates(t *testing.T) {
+	t.Parallel()
+	_, err := parseImportCNKArgs([]string{"import-cnk", "--mark-reviewed", "--job=abc"})
+	if err != nil {
+		t.Fatalf("mark-reviewed without file: %v", err)
+	}
+	_, err = parseImportCNKArgs([]string{"import-cnk", "--commit", "--job=abc", "--confirm=IMPORT_AFMPS"})
+	if err != nil {
+		t.Fatalf("commit without file: %v", err)
+	}
+	_, err = parseImportCNKArgs([]string{"import-cnk", "--validate"})
+	if err == nil || !strings.Contains(err.Error(), "--file=") {
+		t.Fatalf("validate without file want --file= err, got %v", err)
+	}
+}

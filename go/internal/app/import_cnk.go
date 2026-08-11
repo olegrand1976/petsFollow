@@ -27,14 +27,13 @@ func ImportCNKOnly(ctx context.Context, cfg config.Config, args []string) error 
 		return err
 	}
 
+	// Connect only — no db.Migrate. Gates 2–3 are DML and must work with the
+	// app role (petsfollow_app). Schema changes belong to the migrate job.
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
 	defer pool.Close()
-	if err := db.Migrate(ctx, pool); err != nil {
-		return fmt.Errorf("migrate: %w", err)
-	}
 	st := store.New(pool)
 
 	switch {

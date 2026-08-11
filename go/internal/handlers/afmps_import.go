@@ -69,7 +69,7 @@ func (a *API) adminCreateAFMPSImport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "empty_file")
 		return
 	}
-	if len(data) > pharmacy.MaxAFMPSCSVBytes {
+	if int64(len(data)) > pharmacy.MaxAFMPSCSVBytes {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "file_too_large")
 		return
 	}
@@ -306,7 +306,7 @@ func (a *API) internalAfmpsImportRun(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	if len(data) > pharmacy.MaxAFMPSCSVBytes {
+	if int64(len(data)) > pharmacy.MaxAFMPSCSVBytes {
 		a.notifyAfmpsImportOps(r.Context(), "file_too_large",
 			fmt.Sprintf("CSV AFMPS trop volumineux (>%d MiB) : %s", pharmacy.MaxAFMPSCSVBytes>>20, objectKey),
 			"/admin/afmps-imports", "")

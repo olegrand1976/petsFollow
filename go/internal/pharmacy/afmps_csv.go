@@ -14,13 +14,15 @@ import (
 )
 
 const (
-	MaxAFMPSCSVBytes     = 100 << 20 // 100 MiB
 	AFMPSHardErrorMaxPct = 5.0
 	// AFMPSConfirmPhrase is the gate-3 confirmation (CLI: quote or use IMPORT_AFMPS).
 	AFMPSConfirmPhrase = "IMPORT AFMPS"
 	// DefaultAFMPSImportObjectKey is the controlled GCS/local object for monthly gate-1 sync.
 	DefaultAFMPSImportObjectKey = "afmps-imports/latest.csv"
 )
+
+// MaxAFMPSCSVBytes is the hard limit for admin upload / cron gate 1 (overridable in tests).
+var MaxAFMPSCSVBytes int64 = 100 << 20 // 100 MiB
 
 // Belgian CNK is typically 7 digits; allow 6–8 to absorb leading-zero variants.
 var cnkDigitsRe = regexp.MustCompile(`^\d{6,8}$`)
@@ -82,7 +84,7 @@ func ParseAndValidateAFMPSCSV(r io.Reader, filename string) ([]AFMPSParsedRow, A
 		rep.BlockReason = "empty_file"
 		return nil, rep, fmt.Errorf("empty_file")
 	}
-	if len(raw) > MaxAFMPSCSVBytes {
+	if int64(len(raw)) > MaxAFMPSCSVBytes {
 		rep.Blocked = true
 		rep.BlockReason = "file_too_large"
 		return nil, rep, fmt.Errorf("file_too_large")

@@ -7,6 +7,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
@@ -370,6 +372,127 @@ func TestInternalAfmpsImportRunUnchangedChecksum(t *testing.T) {
 	data, _ := out["data"].(map[string]any)
 	if data["skipped"] != true || data["reason"] != "unchanged_checksum" {
 		t.Fatalf("want unchanged_checksum %#v", data)
+	}
+}
+
+func TestInternalAfmpsImportRunEmptyFile(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("AFMPS_IMPORT_SECRET", "test-afmps-import-secret")
+	t.Setenv("AFMPS_IMPORT_OBJECT_KEY", "afmps-imports/empty.csv")
+	api := newTestAPI(t)
+	dir := t.TempDir()
+	bundle, err := media.New(config.Config{MediaLocalDir: dir, APIPublicURL: "http://localhost:8291"})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+	clearOpenAFMPSJobsForCronTest(t, api)
+	// media.Upload rejects size 0 — plant an empty object like a bad GCS put.
+	emptyPath := filepath.Join(dir, "afmps-imports", "empty.csv")
+	if err := os.MkdirAll(filepath.Dir(emptyPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(emptyPath, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/afmps-import/run", bytes.NewBufferString(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Afmps-Import-Secret", "test-afmps-import-secret")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("run %d %s", rec.Code, rec.Body.String())
+	}
+	var env map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &env)
+	data, _ := env["data"].(map[string]any)
+	if data["skipped"] != true || data["reason"] != "empty_file" {
+		t.Fatalf("want empty_file %#v", data)
+	}
+}
+
+func TestInternalAfmpsImportRunFileTooLarge(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("AFMPS_IMPORT_SECRET", "test-afmps-import-secret")
+	t.Setenv("AFMPS_IMPORT_OBJECT_KEY", "afmps-imports/huge.csv")
+	prev := pharmacy.MaxAFMPSCSVBytes
+	pharmacy.MaxAFMPSCSVBytes = 32
+	t.Cleanup(func() { pharmacy.MaxAFMPSCSVBytes = prev })
+
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{MediaLocalDir: t.TempDir(), APIPublicURL: "http://localhost:8291"})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+	clearOpenAFMPSJobsForCronTest(t, api)
+	payload := bytes.Repeat([]byte("a"), int(pharmacy.MaxAFMPSCSVBytes)+1)
+	if _, err := bundle.Store.Upload(context.Background(), "afmps-imports/huge.csv", bytes.NewReader(payload), int64(len(payload)), "text/csv"); err != nil {
+		t.Fatalf("upload huge: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/afmps-import/run", bytes.NewBufferString(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Afmps-Import-Secret", "test-afmps-import-secret")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("run %d %s", rec.Code, rec.Body.String())
+	}
+	var env map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &env)
+	data, _ := env["data"].(map[string]any)
+	if data["skipped"] != true || data["reason"] != "file_too_large" {
+		t.Fatalf("want file_too_large %#v", data)
+	}
+}
+
+func TestInternalAfmpsImportRunSkipBlockedOpen(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("AFMPS_IMPORT_SECRET", "test-afmps-import-secret")
+	t.Setenv("AFMPS_IMPORT_OBJECT_KEY", "afmps-imports/latest.csv")
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{MediaLocalDir: t.TempDir(), APIPublicURL: "http://localhost:8291"})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	clearOpenAFMPSJobsForCronTest(t, api)
+
+	csv := "cnk;name\n;Empty CNK\nabc;Bad\n"
+	code, env := doAFMPSUpload(t, api.handler, adminTok, []byte(csv), "blocked-cron.csv")
+	if code != http.StatusUnprocessableEntity {
+		t.Fatalf("want 422 blocked upload got %d %#v", code, env)
+	}
+	jobID, _ := env["data"].(map[string]any)["job"].(map[string]any)["id"].(string)
+	if jobID == "" {
+		t.Fatalf("missing blocked job id %#v", env)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pharmacy.afmps_import_jobs WHERE id = $1`, jobID)
+	})
+
+	okCSV := "Nom;Forme pharmaceutique;Conditionnement;Code CNK;Firme;Numéro d'autorisation;Commercialisé;Code ATC;Usage Humain/Vétérinaire\n" +
+		"AFMPS Blocked Skip;Gélule;10;2888666;Lab;BE-V4;Oui;QJ01CA04;Usage vétérinaire\n"
+	if _, err := bundle.Store.Upload(context.Background(), "afmps-imports/latest.csv", bytes.NewReader([]byte(okCSV)), int64(len(okCSV)), "text/csv"); err != nil {
+		t.Fatalf("upload: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/afmps-import/run", bytes.NewBufferString(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Afmps-Import-Secret", "test-afmps-import-secret")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("run %d %s", rec.Code, rec.Body.String())
+	}
+	var out map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	data, _ := out["data"].(map[string]any)
+	if data["skipped"] != true || data["reason"] != "pending_job" {
+		t.Fatalf("want pending_job skip for blocked open %#v", data)
 	}
 }
 
