@@ -25,11 +25,12 @@
             data-testid="admin-afmps-file"
             required
             @change="onFile"
+            @input="onFile"
           >
         </div>
         <p v-if="uploadError" class="pro-hint pro-hint--error" data-testid="admin-afmps-upload-error">{{ uploadError }}</p>
         <div class="pro-flex-gap">
-          <ProButton type="submit" test-id="admin-afmps-upload" :disabled="uploading || !file">
+          <ProButton type="submit" test-id="admin-afmps-upload" :disabled="uploading">
             {{ $t('admin.afmps.uploadSubmit') }}
           </ProButton>
         </div>
@@ -129,12 +130,18 @@ async function removeJob (j: { id: string; filename?: string; status?: string })
 }
 
 async function upload () {
-  if (!file.value) return
+  const input = document.getElementById('afmps-file') as HTMLInputElement | null
+  const picked = file.value ?? input?.files?.[0] ?? null
+  if (!picked) {
+    uploadError.value = t('admin.afmps.uploadFailed')
+    return
+  }
+  file.value = picked
   uploading.value = true
   uploadError.value = ''
   try {
     const fd = new FormData()
-    fd.append('file', file.value)
+    fd.append('file', picked)
     const res: any = await $fetch('/api/admin/afmps-imports', { method: 'POST', body: fd })
     const id = res?.data?.job?.id ?? res?.job?.id ?? res?.data?.id
     if (id) {

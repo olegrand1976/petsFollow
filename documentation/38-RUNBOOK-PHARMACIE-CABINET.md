@@ -82,6 +82,7 @@ go run ./cmd/petsfollow-api import-cnk \
 ```
 
 `--dry-run` = alias de `--validate`. Pas d’upsert direct `--file` sans job.
+
 ## Smoke local
 
 ```bash

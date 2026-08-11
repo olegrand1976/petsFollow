@@ -313,7 +313,7 @@ Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 | D9 | P1 | Commissions commercial | Idem commercial | `/admin/commercial-commissions` |
 | D10 | P2 | SPIFF mix bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
-| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` (flag pharmacy) | Page liste + badge `dev` ; extract + **matching CNK AFMPS** (PDF sans CNK) + pending→confirm→commit ; DELETE job · e2e `21-compendium-admin` · Go `TestCompendiumImportFlow` / `Delete` / `CNKMatch` |
+| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` (flag pharmacy) | Page liste + badge `dev` ; extract + **matching CNK AFMPS** (PDF sans CNK) + **lookup-cnk manuel** (catalogue `ref_medications`) + pending→confirm→commit ; DELETE job · e2e `21-compendium-admin` · Go `TestCompendiumImportFlow` / `Delete` / `CNKMatch` / `LookupCNK` |
 | D11c | P1 | Import AFMPS CSV | Nav admin → `/admin/afmps-imports` (flag pharmacy) | Page liste + badge `dev` ; **e2e UI** triple contrôle validate→reviewed→commit (`23-afmps-admin` + fixture `afmps-mini.csv`) ; filtre collisions ; meta JSON merge · Go `TestAFMPSImportTripleGate` / `Gate1Blocked` / `MetaMerge` · unit `pharmacy/afmps_csv_test` · runbook `38` § Import AFMPS |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |
@@ -540,7 +540,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h (`TestPharmacyDAFPetDispensesAndDrafts` stale>1h + e2e `03c` badge mock + `09` `pet-daf-dispenses`) ; événement dossier client post-finalize |
 | C7.18 | P1 | UI journal mouvements + waste reasons + settings/prix | `/stock` cartes `stock-movements` / `stock-settings` / `stock-pricing` | Vitest `pharmacy-stock.spec.ts` ; e2e shell `17` ; API `GET …/movements` enrichie CNK/nom |
 | C7.19 | P1 | Dépôts multi-sites + fiche `/medicaments` | UI `stock-deposits` ; select réception si ≥2 dépôts sinon hint ; `GET …/medications/{id}` + withdrawal + lots `?medicationId=` | e2e `17` hint→create 2e dépôt→select+filtre ; Go `TestPharmacyFoodChainAndWithdrawal` assert GET medication overlay |
-| C7.20 | P1 | AFMPS admin triple contrôle UI | `/admin/afmps-imports` upload mini-CSV → revue → commit (sans deactivate-missing) | e2e `23-afmps-admin` ; fixture `tests/e2e/fixtures/afmps-mini.csv` ; runbook `38` |
+| C7.20 | P1 | AFMPS admin triple contrôle UI | `/admin/afmps-imports` : input fichier UI + gate1 BFF (même endpoint) → revue → commit (sans deactivate-missing) | e2e `23-afmps-admin` ; fixture `tests/e2e/fixtures/afmps-mini.csv` ; runbook `38` |
 
 **Consignes** (tag `dev`, code `/prescriptions`) : fiche consignes client sous flag `PRESCRIPTIONS_ENABLED` — UI label **Consignes** + badge `nav.tagDev` ; `care_advice` + `visit_id` ; pré-remplissage IA `POST …/suggest-from-visit` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). **≠ ordonnance légale** (papier carbone hors app). Pas de useCase commercial tant que tag `dev`.
 
