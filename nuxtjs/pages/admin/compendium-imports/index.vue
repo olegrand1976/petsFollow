@@ -77,9 +77,11 @@
                 variant="ghost"
                 test-id="admin-compendium-delete"
                 :disabled="deletingId === j.id || j.status === 'extracting' || j.status === 'committing'"
+                :aria-label="$t('admin.compendium.delete')"
+                :title="$t('admin.compendium.delete')"
                 @click="removeJob(j)"
               >
-                {{ $t('admin.compendium.delete') }}
+                <ProIcon name="delete" :size="18" />
               </ProButton>
             </td>
           </tr>
