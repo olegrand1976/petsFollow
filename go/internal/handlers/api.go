@@ -158,6 +158,9 @@ func (a *API) TestSetMedia(m media.Store) { a.media = m }
 // TestSetOpsNotifyEmail sets OPS_NOTIFY_EMAIL (integration tests only).
 func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
+// TestSetSupportInboxEmail sets SUPPORT_INBOX_EMAIL (integration tests only).
+func (a *API) TestSetSupportInboxEmail(addr string) { a.cfg.SupportInboxEmail = addr }
+
 // TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
 func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
 

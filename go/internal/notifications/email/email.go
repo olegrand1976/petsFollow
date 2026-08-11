@@ -1078,6 +1078,67 @@ func (n *Notifier) SendSupportTicketReply(to, locale, fullName, subjectLine, rep
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendSupportTicketCreatedAck confirms ticket creation to the reporter.
+func (n *Notifier) SendSupportTicketCreatedAck(to, locale, fullName, subjectLine, ticketID, siteURL string) error {
+	if strings.TrimSpace(to) == "" {
+		return nil
+	}
+	vars := map[string]string{
+		"fullName": fullName,
+		"subject":  subjectLine,
+		"ticketId": ticketID,
+	}
+	subject := mustT(locale, "emails.support_ticket_created_ack_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.support_ticket_created_ack_tagline"),
+		Preheader:       mustT(locale, "emails.support_ticket_created_ack_preheader", vars),
+		Greeting:        mustT(locale, "emails.support_ticket_created_ack_greeting", vars),
+		Intro:           mustT(locale, "emails.support_ticket_created_ack_intro", vars),
+		Detail:          mustT(locale, "emails.support_ticket_created_ack_detail", vars),
+		CTALabel:        mustT(locale, "emails.support_ticket_created_ack_cta"),
+		CTAURL:          siteURL,
+		Disclaimer:      mustT(locale, "emails.support_ticket_created_ack_disclaimer"),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+		Brand:           n.brandURLs(),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
+// SendSupportTicketStatusChanged notifies ops or the creator of a status transition.
+func (n *Notifier) SendSupportTicketStatusChanged(to, locale, fullName, subjectLine, ticketID, fromLabel, toLabel, changedByName, detailURL string) error {
+	if strings.TrimSpace(to) == "" {
+		return nil
+	}
+	vars := map[string]string{
+		"fullName":      fullName,
+		"subject":       subjectLine,
+		"ticketId":      ticketID,
+		"fromStatus":    fromLabel,
+		"toStatus":      toLabel,
+		"changedByName": changedByName,
+	}
+	subject := mustT(locale, "emails.support_ticket_status_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.support_ticket_status_tagline"),
+		Preheader:       mustT(locale, "emails.support_ticket_status_preheader", vars),
+		Greeting:        mustT(locale, "emails.support_ticket_status_greeting", vars),
+		Intro:           mustT(locale, "emails.support_ticket_status_intro", vars),
+		Detail:          mustT(locale, "emails.support_ticket_status_detail", vars),
+		CTALabel:        mustT(locale, "emails.support_ticket_status_cta"),
+		CTAURL:          detailURL,
+		Disclaimer:      mustT(locale, "emails.support_ticket_status_disclaimer"),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+		Brand:           n.brandURLs(),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendVetLeadNotify alerts ops/commercial that a client suggested a vet not on the platform.
 func (n *Notifier) SendVetLeadNotify(to, clientName, clientEmail, vetEmail, vetPhone, vetName, practiceName string) error {
 	if strings.TrimSpace(to) == "" {

@@ -66,6 +66,6 @@ Métriques, users, payments, commissions véto & commercial, SPIFF commercial, i
 - Bouton **Support** dans `ProTopbar` (tous rôles Pro) + entrées Flutter (Settings / AppBar).
 - `POST /api/v1/support/tickets` avec diagnostics (console, HAR-lite, session, config, fenêtre 15 min).
 - Inbox admin `/admin/support` : liste (filtres statut/source/`q`), détail, flux statut `open` (reçu) → `in_progress` → `to_test` → `done` (+ `closed` abandonné), **historique des changements** (date + auteur), commentaires append-only, pièces jointes privées (stream auth).
-- Email ops à `SUPPORT_INBOX_EMAIL` (défaut `barbara@petsfollow.app`) à la création.
+- **Mails** : nouveau ticket → `SUPPORT_INBOX_EMAIL` + users avec profil `admin`/`dev` (hors `*@petsfollow.test`, indépendant du profil actif) + ack créateur ; changement de statut (PATCH ou auto `open→in_progress` à la 1ʳᵉ reply) → inbox + profils `admin` + créateur. SMTP async soft-fail.
 - **RGPD** : export `supportTickets` (subject, message, **diagnostics**, replies, statusHistory, métadonnées PJ) ; anonymisation sur `DELETE /me` (client/pro) — donc aussi via le job rétention 3 ans (`POST /internal/retention/run`), qui réutilise les mêmes chemins purge/tombstone.
 - Inbox admin : filtre statut + recherche texte (`q`) sur sujet / email / nom.

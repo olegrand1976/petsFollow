@@ -435,10 +435,11 @@ func (s *Store) listSupportTicketAttachments(ctx context.Context, ticketID strin
 
 // UpdateSupportTicketStatus records an effective status change. The optional form
 // keeps legacy callers compiling while new callers must provide the actor ID.
-func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string, changedBy ...string) (SupportTicket, error) {
+// previous is the status before the update (equal to ticket.Status when unchanged).
+func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string, changedBy ...string) (SupportTicket, string, error) {
 	status = strings.TrimSpace(status)
 	if !validSupportStatuses[status] {
-		return SupportTicket{}, ErrValidation
+		return SupportTicket{}, "", ErrValidation
 	}
 	actorID := ""
 	if len(changedBy) > 0 {
@@ -447,7 +448,7 @@ func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return SupportTicket{}, err
+		return SupportTicket{}, "", err
 	}
 	defer tx.Rollback(ctx)
 
@@ -465,45 +466,47 @@ func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return SupportTicket{}, ErrNotFound
+			return SupportTicket{}, "", ErrNotFound
 		}
-		return SupportTicket{}, err
+		return SupportTicket{}, "", err
 	}
 	ticket.CreatedBy = createdBy
+	previous := ticket.Status
 	if ticket.Status == status {
 		if err := tx.Commit(ctx); err != nil {
-			return SupportTicket{}, err
+			return SupportTicket{}, "", err
 		}
-		return ticket, nil
+		return ticket, previous, nil
 	}
 
-	previous := ticket.Status
 	if err := tx.QueryRow(ctx, `
 		UPDATE ops.support_tickets
 		SET status = $2, updated_at = NOW()
 		WHERE id = $1
 		RETURNING status, updated_at`, id, status,
 	).Scan(&ticket.Status, &ticket.UpdatedAt); err != nil {
-		return SupportTicket{}, err
+		return SupportTicket{}, "", err
 	}
 	if err := insertSupportStatusEventTx(ctx, tx, id, &previous, status, actorID); err != nil {
-		return SupportTicket{}, err
+		return SupportTicket{}, "", err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return SupportTicket{}, err
+		return SupportTicket{}, "", err
 	}
-	return ticket, nil
+	return ticket, previous, nil
 }
 
-func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, body string) (SupportTicketReply, SupportTicket, error) {
+// AddSupportTicketReply appends an admin comment. previousStatus is the ticket
+// status before the reply (open→in_progress may advance it).
+func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, body string) (SupportTicketReply, SupportTicket, string, error) {
 	body = strings.TrimSpace(body)
 	if body == "" || utf8.RuneCountInString(body) > MaxSupportReplyLen {
-		return SupportTicketReply{}, SupportTicket{}, ErrValidation
+		return SupportTicketReply{}, SupportTicket{}, "", ErrValidation
 	}
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return SupportTicketReply{}, SupportTicket{}, err
+		return SupportTicketReply{}, SupportTicket{}, "", err
 	}
 	defer tx.Rollback(ctx)
 
@@ -521,11 +524,12 @@ func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, b
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return SupportTicketReply{}, SupportTicket{}, ErrNotFound
+			return SupportTicketReply{}, SupportTicket{}, "", ErrNotFound
 		}
-		return SupportTicketReply{}, SupportTicket{}, err
+		return SupportTicketReply{}, SupportTicket{}, "", err
 	}
 	ticket.CreatedBy = createdBy
+	previousStatus := ticket.Status
 
 	if ticket.Status == SupportStatusOpen {
 		previous := ticket.Status
@@ -535,10 +539,10 @@ func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, b
 			WHERE id = $1
 			RETURNING status, updated_at`, ticketID, SupportStatusInProgress,
 		).Scan(&ticket.Status, &ticket.UpdatedAt); err != nil {
-			return SupportTicketReply{}, SupportTicket{}, err
+			return SupportTicketReply{}, SupportTicket{}, "", err
 		}
 		if err := insertSupportStatusEventTx(ctx, tx, ticketID, &previous, ticket.Status, authorID); err != nil {
-			return SupportTicketReply{}, SupportTicket{}, err
+			return SupportTicketReply{}, SupportTicket{}, "", err
 		}
 	}
 
@@ -549,12 +553,12 @@ func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, b
 		RETURNING id, ticket_id, author_id, body, created_at`,
 		ticketID, authorID, body,
 	).Scan(&reply.ID, &reply.TicketID, &reply.AuthorID, &reply.Body, &reply.CreatedAt); err != nil {
-		return SupportTicketReply{}, SupportTicket{}, err
+		return SupportTicketReply{}, SupportTicket{}, "", err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return SupportTicketReply{}, SupportTicket{}, err
+		return SupportTicketReply{}, SupportTicket{}, "", err
 	}
-	return reply, ticket, nil
+	return reply, ticket, previousStatus, nil
 }
 
 func (s *Store) CreateSupportTicketAttachment(ctx context.Context, in CreateSupportTicketAttachmentInput) (SupportTicketAttachment, error) {
@@ -778,4 +782,58 @@ func (s *Store) SupportTicketStats(ctx context.Context) (SupportTicketStats, err
 		return out, err
 	}
 	return out, nil
+}
+
+// SupportOpsRecipient is an admin/dev mailbox for support fan-out emails.
+type SupportOpsRecipient struct {
+	UserID string
+	Email  string
+	Name   string
+	Locale string
+	Role   string
+}
+
+// ListSupportOpsRecipients returns users who have an admin and/or DEV profile
+// (independent of the currently active users.role after profile switch), with a
+// real mailbox (skips empty, *.petsfollow.test, and tombstone addresses).
+func (s *Store) ListSupportOpsRecipients(ctx context.Context) ([]SupportOpsRecipient, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT u.id::text,
+			u.email,
+			COALESCE(u.full_name, ''),
+			COALESCE(NULLIF(TRIM(u.preferred_locale), ''), 'fr'),
+			CASE
+				WHEN EXISTS (
+					SELECT 1 FROM identity.profiles p
+					WHERE p.user_id = u.id AND p.role = 'admin'
+				) THEN 'admin'
+				ELSE 'dev'
+			END
+		FROM identity.users u
+		WHERE EXISTS (
+			SELECT 1 FROM identity.profiles p
+			WHERE p.user_id = u.id AND p.role IN ('admin', 'dev')
+		)
+		  AND u.email IS NOT NULL AND TRIM(u.email) <> ''
+		  AND LOWER(u.email) NOT LIKE '%@petsfollow.test'
+		  AND LOWER(u.email) NOT LIKE '%@deleted.petsfollow.invalid'
+		ORDER BY 5, u.email`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := []SupportOpsRecipient{}
+	for rows.Next() {
+		var r SupportOpsRecipient
+		if err := rows.Scan(&r.UserID, &r.Email, &r.Name, &r.Locale, &r.Role); err != nil {
+			return nil, err
+		}
+		r.Email = strings.TrimSpace(r.Email)
+		if r.Email == "" {
+			continue
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
 }

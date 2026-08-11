@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"path"
 	"strconv"
@@ -15,6 +17,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func (a *API) registerSupportRoutes(r chi.Router) {
@@ -101,22 +104,11 @@ func (a *API) createSupportTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if a.notifier != nil {
-		to := strings.TrimSpace(a.cfg.SupportInboxEmail)
-		adminURL := strings.TrimRight(a.cfg.ProPublicSiteURL, "/") + "/admin/support/" + ticket.ID
-		msgPreview := ticket.Message
-		if len([]rune(msgPreview)) > 2000 {
-			msgPreview = string([]rune(msgPreview)[:2000]) + "…"
-		}
-		fullName := id.Email
-		if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil && strings.TrimSpace(u.FullName) != "" {
-			fullName = u.FullName
-		}
-		_ = a.notifier.SendSupportTicketOps(
-			to, "fr", ticket.ID, ticket.Subject,
-			fullName, id.Email, string(id.Role), ticket.Source, msgPreview, adminURL,
-		)
+	fullName := id.Email
+	if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil && strings.TrimSpace(u.FullName) != "" {
+		fullName = u.FullName
 	}
+	a.notifySupportTicketCreated(r.Context(), ticket, fullName, id.Email, string(id.Role))
 
 	httpx.WriteData(w, http.StatusCreated, ticket)
 }
@@ -198,7 +190,7 @@ func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	ticket, err := a.store.UpdateSupportTicketStatus(r.Context(), id, req.Status, admin.UserID)
+	ticket, previous, err := a.store.UpdateSupportTicketStatus(r.Context(), id, req.Status, admin.UserID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
@@ -210,6 +202,9 @@ func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
+	}
+	if previous != ticket.Status {
+		a.notifySupportTicketStatusChanged(r.Context(), ticket, previous, ticket.Status, admin.UserID)
 	}
 	httpx.WriteData(w, http.StatusOK, ticket)
 }
@@ -229,7 +224,7 @@ func (a *API) adminReplySupportTicket(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	reply, ticket, err := a.store.AddSupportTicketReply(r.Context(), ticketID, admin.UserID, req.Body)
+	reply, ticket, previousStatus, err := a.store.AddSupportTicketReply(r.Context(), ticketID, admin.UserID, req.Body)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
@@ -254,15 +249,15 @@ func (a *API) adminReplySupportTicket(w http.ResponseWriter, r *http.Request) {
 			if name == "" {
 				name = u.Email
 			}
-			ctaURL := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
-			switch ticket.Source {
-			case store.SupportSourceFlutterClient, store.SupportSourceFlutterProLight:
-				if dl := strings.TrimSpace(a.cfg.PetsAppDownloadURL); dl != "" {
-					ctaURL = dl
-				}
-			}
-			_ = a.notifier.SendSupportTicketReply(u.Email, locale, name, ticket.Subject, strings.TrimSpace(req.Body), ctaURL)
+			n := a.notifier
+			to, subj, body, cta := u.Email, ticket.Subject, strings.TrimSpace(req.Body), a.supportCreatorCTAURL(ticket)
+			go func() {
+				_ = n.SendSupportTicketReply(to, locale, name, subj, body, cta)
+			}()
 		}
+	}
+	if previousStatus != ticket.Status {
+		a.notifySupportTicketStatusChanged(r.Context(), ticket, previousStatus, ticket.Status, admin.UserID)
 	}
 
 	httpx.WriteData(w, http.StatusCreated, map[string]any{
@@ -358,4 +353,175 @@ func (a *API) adminDownloadSupportAttachment(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Disposition", `inline; filename="`+filename+`"`)
 	w.Header().Set("Cache-Control", "private, no-store")
 	_, _ = io.Copy(w, rc)
+}
+
+func supportStatusLabel(locale, status string) string {
+	key := "emails.support_status_" + strings.TrimSpace(status)
+	label := i18n.T(locale, key, nil)
+	if label == key {
+		return i18n.T(locale, "emails.support_status_unknown", nil)
+	}
+	return label
+}
+
+func (a *API) supportAdminURL(ticketID string) string {
+	return strings.TrimRight(a.cfg.ProPublicSiteURL, "/") + "/admin/support/" + ticketID
+}
+
+func (a *API) supportCreatorCTAURL(ticket store.SupportTicket) string {
+	ctaURL := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
+	switch ticket.Source {
+	case store.SupportSourceFlutterClient, store.SupportSourceFlutterProLight:
+		if dl := strings.TrimSpace(a.cfg.PetsAppDownloadURL); dl != "" {
+			return dl
+		}
+	}
+	return ctaURL
+}
+
+// supportOpsRecipients returns SUPPORT_INBOX_EMAIL ∪ users with an admin[/dev]
+// profile (demo *@petsfollow.test skipped by the store). Deduped by email.
+func (a *API) supportOpsRecipients(ctx context.Context, includeDev bool) []store.SupportOpsRecipient {
+	seen := map[string]struct{}{}
+	out := []store.SupportOpsRecipient{}
+	add := func(email, name, locale, role string) {
+		email = strings.TrimSpace(email)
+		if email == "" {
+			return
+		}
+		key := strings.ToLower(email)
+		if _, ok := seen[key]; ok {
+			return
+		}
+		seen[key] = struct{}{}
+		if strings.TrimSpace(locale) == "" {
+			locale = "fr"
+		}
+		if strings.TrimSpace(name) == "" {
+			name = email
+		}
+		out = append(out, store.SupportOpsRecipient{
+			Email:  email,
+			Name:   name,
+			Locale: locale,
+			Role:   role,
+		})
+	}
+
+	add(a.cfg.SupportInboxEmail, "Support", "fr", string(kernel.RoleAdmin))
+
+	recs, err := a.store.ListSupportOpsRecipients(ctx)
+	if err != nil {
+		log.Printf("support ops recipients: %v", err)
+		return out
+	}
+	for _, r := range recs {
+		role := strings.TrimSpace(r.Role)
+		if role == string(kernel.RoleAdmin) || (includeDev && role == string(kernel.RoleDev)) {
+			add(r.Email, r.Name, r.Locale, role)
+		}
+	}
+	return out
+}
+
+func (a *API) notifySupportTicketCreated(ctx context.Context, ticket store.SupportTicket, fullName, emailAddr, role string) {
+	if a.notifier == nil {
+		return
+	}
+	n := a.notifier
+	adminURL := a.supportAdminURL(ticket.ID)
+	creatorCTA := a.supportCreatorCTAURL(ticket)
+	msgPreview := ticket.Message
+	if len([]rune(msgPreview)) > 2000 {
+		msgPreview = string([]rune(msgPreview)[:2000]) + "…"
+	}
+	ops := a.supportOpsRecipients(ctx, true)
+	subject := ticket.Subject
+	ticketID := ticket.ID
+	source := ticket.Source
+	creatorEmail := strings.TrimSpace(emailAddr)
+	locale := strings.TrimSpace(ticket.Locale)
+	if locale == "" {
+		locale = "fr"
+	}
+	name := strings.TrimSpace(fullName)
+	if name == "" {
+		name = creatorEmail
+	}
+	// Soft-fail ops/ack async — never block ticket create on SMTP fan-out.
+	go func() {
+		for _, r := range ops {
+			_ = n.SendSupportTicketOps(
+				r.Email, r.Locale, ticketID, subject,
+				fullName, emailAddr, role, source, msgPreview, adminURL,
+			)
+		}
+		if creatorEmail == "" {
+			return
+		}
+		_ = n.SendSupportTicketCreatedAck(
+			creatorEmail, locale, name, subject, ticketID, creatorCTA,
+		)
+	}()
+}
+
+func (a *API) notifySupportTicketStatusChanged(ctx context.Context, ticket store.SupportTicket, fromStatus, toStatus, changedByUserID string) {
+	if a.notifier == nil || fromStatus == toStatus {
+		return
+	}
+	n := a.notifier
+	changedByName := changedByUserID
+	if u, err := a.store.GetUserByID(ctx, changedByUserID); err == nil {
+		if strings.TrimSpace(u.FullName) != "" {
+			changedByName = u.FullName
+		} else if strings.TrimSpace(u.Email) != "" {
+			changedByName = u.Email
+		}
+	}
+
+	adminURL := a.supportAdminURL(ticket.ID)
+	creatorCTA := a.supportCreatorCTAURL(ticket)
+	subject := ticket.Subject
+	ticketID := ticket.ID
+	ops := a.supportOpsRecipients(ctx, false)
+
+	type dest struct {
+		email, locale, name, detailURL string
+	}
+	seen := map[string]struct{}{}
+	dests := make([]dest, 0, len(ops)+1)
+	for _, r := range ops {
+		key := strings.ToLower(r.Email)
+		seen[key] = struct{}{}
+		dests = append(dests, dest{email: r.Email, locale: r.Locale, name: r.Name, detailURL: adminURL})
+	}
+	if ticket.CreatedBy != nil {
+		if u, err := a.store.GetUserByID(ctx, *ticket.CreatedBy); err == nil && strings.TrimSpace(u.Email) != "" {
+			key := strings.ToLower(strings.TrimSpace(u.Email))
+			if _, ok := seen[key]; !ok {
+				locale := u.PreferredLocale
+				if locale == "" {
+					locale = "fr"
+				}
+				name := u.FullName
+				if name == "" {
+					name = u.Email
+				}
+				dests = append(dests, dest{email: u.Email, locale: locale, name: name, detailURL: creatorCTA})
+			}
+		}
+	}
+	if len(dests) == 0 {
+		return
+	}
+
+	go func() {
+		for _, d := range dests {
+			_ = n.SendSupportTicketStatusChanged(
+				d.email, d.locale, d.name, subject, ticketID,
+				supportStatusLabel(d.locale, fromStatus), supportStatusLabel(d.locale, toStatus),
+				changedByName, d.detailURL,
+			)
+		}
+	}()
 }

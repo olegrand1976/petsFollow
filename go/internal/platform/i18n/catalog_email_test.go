@@ -160,6 +160,28 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"emails.support_ticket_reply_detail",
 		"emails.support_ticket_reply_cta",
 		"emails.support_ticket_reply_disclaimer",
+		"emails.support_ticket_created_ack_subject",
+		"emails.support_ticket_created_ack_tagline",
+		"emails.support_ticket_created_ack_preheader",
+		"emails.support_ticket_created_ack_greeting",
+		"emails.support_ticket_created_ack_intro",
+		"emails.support_ticket_created_ack_detail",
+		"emails.support_ticket_created_ack_cta",
+		"emails.support_ticket_created_ack_disclaimer",
+		"emails.support_ticket_status_subject",
+		"emails.support_ticket_status_tagline",
+		"emails.support_ticket_status_preheader",
+		"emails.support_ticket_status_greeting",
+		"emails.support_ticket_status_intro",
+		"emails.support_ticket_status_detail",
+		"emails.support_ticket_status_cta",
+		"emails.support_ticket_status_disclaimer",
+		"emails.support_status_open",
+		"emails.support_status_in_progress",
+		"emails.support_status_to_test",
+		"emails.support_status_done",
+		"emails.support_status_closed",
+		"emails.support_status_unknown",
 		"emails.journey.unsubscribe",
 	}
 	vars := map[string]string{
@@ -169,6 +191,7 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"schedule": "dimanche 08:00",
 		"ticketId": "abc", "subject": "Bug", "email": "a@b.c", "role": "vet", "source": "nuxt_pro",
 		"message": "oops", "replyBody": "fix soon",
+		"fromStatus": "Reçu", "toStatus": "Corrigé", "changedByName": "Admin Demo",
 	}
 	for _, loc := range Supported {
 		for _, key := range keys {

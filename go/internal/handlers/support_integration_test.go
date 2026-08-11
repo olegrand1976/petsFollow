@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -407,5 +408,48 @@ func TestSupportTicketStatusWorkflowAndAttachments(t *testing.T) {
 	api.handler.ServeHTTP(rec, req)
 	if rec.Code == http.StatusOK {
 		t.Fatalf("vet must not download support attachment, got 200")
+	}
+}
+
+func TestSupportTicketNotifySoftFail(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetSupportInboxEmail("ops-support@example.invalid")
+	api.api.TestReplaceNotifier(email.NewNotifierAuth(
+		"smtp.invalid.petsfollow", 587, "support@petsfollow.test",
+		"smtp-user", "", "http://localhost:3002", "https://ll-it-sc.be",
+	))
+
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/support/tickets", vetTok, map[string]any{
+		"source":      "nuxt_pro",
+		"subject":     "Notify soft-fail",
+		"message":     "SMTP down must not block create",
+		"diagnostics": map[string]any{},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create with failing SMTP %d %#v", code, env)
+	}
+	ticketID, _ := dataMap(t, env)["id"].(string)
+	if ticketID == "" {
+		t.Fatalf("missing ticket id: %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+		"status": "to_test",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("patch status with failing SMTP %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "to_test" {
+		t.Fatalf("expected to_test: %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/support/tickets/"+ticketID+"/replies", adminTok, map[string]any{
+		"body": "Comment despite SMTP fail",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("reply with failing SMTP %d %#v", code, env)
 	}
 }
