@@ -177,13 +177,18 @@
           </p>
         </div>
         <div class="med-detail__badges">
-          <ProBadge v-if="detail.cnk" variant="success" data-testid="medicaments-detail-afmps">
+          <ProBadge
+            v-if="sourceKind === 'afmps'"
+            variant="success"
+            data-testid="medicaments-detail-afmps"
+          >
             {{ $t('pharmacy.medicaments.badgeAfmps') }}
           </ProBadge>
-          <ProBadge v-if="sourceKind === 'afmps'" variant="neutral" data-testid="medicaments-detail-source-afmps">
-            {{ $t('pharmacy.medicaments.sourceAfmps') }}
-          </ProBadge>
-          <ProBadge v-else-if="sourceKind === 'compendium'" variant="neutral" data-testid="medicaments-detail-source-compendium">
+          <ProBadge
+            v-else-if="sourceKind === 'compendium'"
+            variant="neutral"
+            data-testid="medicaments-detail-source-compendium"
+          >
             {{ $t('pharmacy.medicaments.sourceCompendium') }}
           </ProBadge>
           <ProBadge v-if="detail.isAntibiotic" variant="warning">{{ $t('pharmacy.antibioticWarning') }}</ProBadge>

@@ -216,6 +216,22 @@ func TestPharmacyMedicationListByLetter(t *testing.T) {
 	if !foundSrc {
 		t.Fatalf("expected list row with afmpsSource %#v", env)
 	}
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/medications?letter=A", clientTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("client list should be forbidden, got %d", code)
+	}
+}
+
+func TestPharmacyMedicationListByLetterDisabled(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "false")
+	api := newTestAPI(t)
+	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/medications?letter=A", tok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("expected 404 when disabled, got %d %#v", code, env)
+	}
 }
 
 func toFloat(v any) float64 {
