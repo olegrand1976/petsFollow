@@ -2302,7 +2302,11 @@
       "fixFromPage": "Manueel aanvullen (PDF p.{page})",
       "resumeExtract": "Extractie hervatten",
       "restartExtract": "Opnieuw beginnen",
-      "resumeHint": "Hervatten vanaf chunk {done}/{total} (reeds geëxtraheerde rijen blijven)."
+      "resumeHint": "Hervatten vanaf chunk {done}/{total} (reeds geëxtraheerde rijen blijven).",
+      "colStrength": "Sterkte",
+      "viewerTitle": "Bron-PDF",
+      "viewerHint": "Klik een rij om de pagina te synchroniseren. De viewer navigeert via #page=N.",
+      "openPdfTab": "Openen in nieuw tabblad"
     },
     "afmps": {
       "title": "AFMPS CSV import",

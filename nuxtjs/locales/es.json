@@ -2302,7 +2302,11 @@
       "fixFromPage": "Completar manualmente (PDF p.{page})",
       "resumeExtract": "Reanudar extracción",
       "restartExtract": "Empezar de nuevo",
-      "resumeHint": "Se puede reanudar desde el chunk {done}/{total} (se conservan las filas ya extraídas)."
+      "resumeHint": "Se puede reanudar desde el chunk {done}/{total} (se conservan las filas ya extraídas).",
+      "colStrength": "Concentración",
+      "viewerTitle": "PDF fuente",
+      "viewerHint": "Pulse una fila para sincronizar la página. El visor navega con #page=N.",
+      "openPdfTab": "Abrir en pestaña"
     },
     "afmps": {
       "title": "AFMPS CSV import",

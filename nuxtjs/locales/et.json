@@ -2302,7 +2302,11 @@
       "fixFromPage": "Täida käsitsi (PDF lk {page})",
       "resumeExtract": "Jätka ekstrakti",
       "restartExtract": "Alusta otsast",
-      "resumeHint": "Võib jätkata chunkist {done}/{total} (juba eraldatud read säilivad)."
+      "resumeHint": "Võib jätkata chunkist {done}/{total} (juba eraldatud read säilivad).",
+      "colStrength": "Tugevus",
+      "viewerTitle": "Allika PDF",
+      "viewerHint": "Klõpsake real, et sünkroonida leht. Vaataja liigub #page=N kaudu.",
+      "openPdfTab": "Ava uuel vahekaardil"
     },
     "afmps": {
       "title": "AFMPS CSV import",

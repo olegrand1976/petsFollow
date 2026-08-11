@@ -23,7 +23,7 @@ export function buildCsp(apiBaseEnv = process.env.NUXT_PUBLIC_API_BASE): string 
     `connect-src 'self'${connectApi} https://accounts.google.com/gsi/`,
     // Audio des comptes rendus (stream authentifié via API).
     `media-src 'self' blob:${mediaApi}`,
-    'frame-src https://accounts.google.com/gsi/',
+    'frame-src \'self\' https://accounts.google.com/gsi/',
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

@@ -70,8 +70,14 @@
             <td>{{ j.extractPct ?? 0 }}%</td>
             <td>{{ j.reviewPct ?? 0 }}%</td>
             <td class="pro-flex-gap">
-              <NuxtLink :to="`/admin/compendium-imports/${j.id}`" class="pro-link">
-                {{ $t('admin.compendium.open') }}
+              <NuxtLink
+                :to="`/admin/compendium-imports/${j.id}`"
+                class="pro-btn pro-btn--ghost"
+                data-testid="admin-compendium-open"
+                :aria-label="$t('admin.compendium.open')"
+                :title="$t('admin.compendium.open')"
+              >
+                <ProIcon name="visibility" :size="18" />
               </NuxtLink>
               <ProButton
                 variant="ghost"
