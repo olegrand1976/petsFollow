@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/crewai"
 )
@@ -114,6 +115,86 @@ func TestClientSendsAPIVersionAndSecret(t *testing.T) {
 		if h.Get(crewai.SecretHeader) != "sekrit" {
 			t.Fatalf("%s: secret %q", name, h.Get(crewai.SecretHeader))
 		}
+	}
+}
+
+func TestWaitReadyColdStartThenOK(t *testing.T) {
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		if calls == 1 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	coldStarts := 0
+	c := &crewai.Client{BaseURL: srv.URL, Secret: "sekrit"}
+	if err := c.WaitReady(context.Background(), 10*time.Second, func() { coldStarts++ }); err != nil {
+		t.Fatal(err)
+	}
+	if coldStarts != 1 {
+		t.Fatalf("onColdStart calls = %d", coldStarts)
+	}
+	if calls < 2 {
+		t.Fatalf("health calls = %d", calls)
+	}
+}
+
+func TestWaitReadyWarmSkipsColdStart(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	}))
+	t.Cleanup(srv.Close)
+	coldStarts := 0
+	c := &crewai.Client{BaseURL: srv.URL, Secret: "sekrit"}
+	if err := c.WaitReady(context.Background(), 5*time.Second, func() { coldStarts++ }); err != nil {
+		t.Fatal(err)
+	}
+	if coldStarts != 0 {
+		t.Fatalf("warm instance must not report cold start (%d)", coldStarts)
+	}
+}
+
+func TestWaitReadyAuthErrorFailsFast(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	t.Cleanup(srv.Close)
+	coldStarts := 0
+	c := &crewai.Client{BaseURL: srv.URL, Secret: "wrong"}
+	startedAt := time.Now()
+	err := c.WaitReady(context.Background(), 30*time.Second, func() { coldStarts++ })
+	if err == nil || !strings.Contains(err.Error(), "crewai_health_403") {
+		t.Fatalf("got %v", err)
+	}
+	if coldStarts != 0 {
+		t.Fatalf("auth error must not report cold start (%d)", coldStarts)
+	}
+	if time.Since(startedAt) > 5*time.Second {
+		t.Fatal("auth error must fail fast, not burn the budget")
+	}
+}
+
+func TestWaitReadyBudgetExhausted(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	t.Cleanup(srv.Close)
+	c := &crewai.Client{BaseURL: srv.URL, Secret: "sekrit"}
+	err := c.WaitReady(context.Background(), 300*time.Millisecond, nil)
+	if err == nil || !strings.Contains(err.Error(), "crewai_unavailable") {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestWaitReadyNotConfigured(t *testing.T) {
+	c := &crewai.Client{}
+	if err := c.WaitReady(context.Background(), time.Second, nil); err == nil {
+		t.Fatal("expected error")
 	}
 }
 

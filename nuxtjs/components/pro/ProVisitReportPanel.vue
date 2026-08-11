@@ -186,6 +186,7 @@
             :waiting-label="$t('calendar.reportImprovingAdvancedWait')"
             :steps="advancedSteps"
             :cancel-label="$t('calendar.reportImproveAdvancedCancel')"
+            :status-label="advancedStatusLabel"
             @cancel="cancelAdvancedImprove"
           />
           <p
@@ -456,6 +457,7 @@ import { normalizeReportText } from '~/utils/safeMarkdown'
 import { canonicalizeReportMarkdown } from '~/utils/reportRichText'
 import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
+import type { AdvancedImproveState } from '~/composables/useAdvancedImproveStream'
 import {
   copyVisitReportMarkdown,
   downloadVisitReportMarkdown,
@@ -527,6 +529,23 @@ const saveInFlight = ref(false)
 const improveInFlight = ref(false)
 const advancedImproveInFlight = ref(false)
 const advancedSteps = ref<{ agent: string; label: string; at?: string }[]>([])
+/** État SSE `status` du run avancé + phase locale `starting` (avant le 1er événement). */
+type AdvancedUiState = 'starting' | AdvancedImproveState | ''
+const advancedStatus = ref<AdvancedUiState>('')
+const advancedStatusLabel = computed(() => {
+  const state = advancedStatus.value
+  switch (state) {
+    case 'starting': return t('calendar.reportImproveAdvancedStatusStarting')
+    case 'crew_warming': return t('calendar.reportImproveAdvancedStatusWarming')
+    case 'crew_ready': return t('calendar.reportImproveAdvancedStatusReady')
+    case 'running': return t('calendar.reportImproveAdvancedStatusRunning')
+    case '': return ''
+    default: {
+      const exhaustive: never = state
+      return exhaustive
+    }
+  }
+})
 /** True while Stop→transcribe or file upload transcription is in flight. */
 const transcribeInFlight = ref(false)
 const qualityBusy = ref(false)
@@ -984,6 +1003,7 @@ async function improveVisitReportAdvanced() {
   reportBusy.value = true
   advancedImproveInFlight.value = true
   advancedSteps.value = []
+  advancedStatus.value = 'starting'
   reportMsg.value = ''
   let putSucceeded = false
   try {
@@ -1007,10 +1027,14 @@ async function improveVisitReportAdvanced() {
         onStep: (step) => {
           if (step?.agent && step?.label) advancedSteps.value = [...advancedSteps.value, step]
         },
+        onStatus: (state) => { advancedStatus.value = state },
         onFinal: (report) => { finalReport = report || '' },
         onError: (code) => {
           if (code === 'cancelled') {
             reportMsg.value = t('calendar.reportImproveAdvancedCancelled')
+          }
+          else if (code === 'crewai_unavailable') {
+            reportMsg.value = t('calendar.reportImproveAdvancedUnavailable')
           }
           else {
             reportMsg.value = mapError({ data: { error: code } })
@@ -1038,6 +1062,7 @@ async function improveVisitReportAdvanced() {
   } finally {
     stopAdvancedImprove()
     advancedImproveInFlight.value = false
+    advancedStatus.value = ''
     reportBusy.value = false
   }
 }

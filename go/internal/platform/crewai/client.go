@@ -97,6 +97,77 @@ func (c *Client) Health(ctx context.Context) error {
 	return nil
 }
 
+// permanentHealthErr reports auth/config failures (401/403) that no amount of
+// retrying will fix — fail fast instead of burning the warm-up budget.
+func permanentHealthErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := err.Error()
+	return strings.Contains(s, "crewai_health_401") ||
+		strings.Contains(s, "crewai_health_403") ||
+		strings.Contains(s, "crewai_unauthorized")
+}
+
+// WaitReady polls GET /health until the Cloud Run instance answers (minScale=0
+// → cold start). The first probe is short; if it fails, onColdStart is invoked
+// once and longer probes follow until success, ctx cancel, or budget exhausted
+// (→ crewai_unavailable). Cloud Run holds the request while the instance boots,
+// so a generous per-attempt timeout doubles as the wake-up wait.
+func (c *Client) WaitReady(ctx context.Context, budget time.Duration, onColdStart func()) error {
+	if !c.Configured() {
+		return fmt.Errorf("crewai_not_configured")
+	}
+	deadline := time.Now().Add(budget)
+	attempt := func(timeout time.Duration) error {
+		actx, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
+		return c.Health(actx)
+	}
+	err := attempt(2 * time.Second)
+	if err == nil {
+		return nil
+	}
+	if permanentHealthErr(err) {
+		return err
+	}
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if onColdStart != nil {
+		onColdStart()
+	}
+	for {
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return fmt.Errorf("crewai_unavailable")
+		}
+		perAttempt := 20 * time.Second
+		if remaining < perAttempt {
+			perAttempt = remaining
+		}
+		err = attempt(perAttempt)
+		if err == nil {
+			return nil
+		}
+		if permanentHealthErr(err) {
+			return err
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		const pause = 2 * time.Second
+		if time.Until(deadline) <= pause {
+			return fmt.Errorf("crewai_unavailable")
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pause):
+		}
+	}
+}
+
 // SubmitRequest is the multi-app task envelope.
 type SubmitRequest struct {
 	Workflow      string         `json:"workflow"`

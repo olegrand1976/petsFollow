@@ -22,6 +22,11 @@ import (
 
 const improveHubTTL = 5 * time.Minute
 
+// crewWarmupBudget bounds the wait for the CrewAI Cloud Run instance
+// (minScale=0 → cold start) before submitting the task. Var: shortened in
+// integration tests via TestSetCrewWarmupBudget.
+var crewWarmupBudget = 90 * time.Second
+
 // improveRunHub buffers SSE frames for browser clients.
 // With Redis: frames are always PUBLISHed (cross-instance live SSE); in-proc
 // buffer remains for same-instance subscribers and CancelFunc map.
@@ -315,6 +320,24 @@ func (a *API) runImproveAdvanced(
 	defer a.improveHub.complete(runID)
 	bg := context.Background()
 
+	// minScale=0 — make sure the orchestrator instance is up before submitting.
+	if err := a.waitCrewReady(ctx, bg, runID); err != nil {
+		if a.improveRunWasCancelled(bg, runID) {
+			return
+		}
+		if errors.Is(ctx.Err(), context.Canceled) {
+			_ = a.store.CancelImproveRun(bg, runID)
+			return
+		}
+		latency := int(time.Since(start).Milliseconds())
+		_ = a.store.CompleteImproveRun(bg, runID, store.ImproveRunFailed, nil, nil, "crewai_unavailable", latency)
+		a.improveHub.publish(runID, "error", map[string]any{"errorCode": "crewai_unavailable"})
+		a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageError)
+		fmt.Printf("improve-advanced run_id=%s practice_id=%s status=failed error_code=crewai_unavailable latency_ms=%d err=%v\n",
+			runID, practiceID, latency, err)
+		return
+	}
+
 	out, err := a.crewai.SubmitTask(ctx, crewai.SubmitRequest{
 		Workflow:      crewai.WorkflowCRImprove,
 		Tenant:        crewai.TenantPetsFollow,
@@ -339,6 +362,7 @@ func (a *API) runImproveAdvanced(
 		return
 	}
 	_ = a.store.UpdateImproveRunCrewTask(bg, runID, out.TaskID)
+	a.publishImproveStatus(bg, runID, "running", "Agents running")
 
 	events := make(chan crewai.StreamEvent, 16)
 	var streamErr error
@@ -471,6 +495,50 @@ func (a *API) runImproveAdvanced(
 	a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageImproveAdvanced)
 }
 
+// publishImproveStatus persists a control step (with stable `state`) and fans
+// out SSE `status` + `step` so live clients and DB/Redis late joiners stay aligned.
+func (a *API) publishImproveStatus(bg context.Context, runID, state, label string) {
+	step := map[string]any{
+		"agent": "orchestrator",
+		"label": label,
+		"state": state,
+		"at":    time.Now().UTC().Format(time.RFC3339),
+	}
+	_ = a.store.AppendImproveRunStep(bg, runID, step)
+	a.improveHub.publish(runID, "status", map[string]any{"state": state})
+	a.improveHub.publish(runID, "step", step)
+}
+
+// waitCrewReady wakes the CrewAI Cloud Run instance (minScale=0) and streams
+// the wait as SSE: `status` events (crew_warming / crew_ready — translated by
+// the UI) + persisted `step` frames so late joiners / DB fallback replay them.
+func (a *API) waitCrewReady(ctx, bg context.Context, runID string) error {
+	err := a.crewai.WaitReady(ctx, crewWarmupBudget, func() {
+		a.publishImproveStatus(bg, runID, "crew_warming", "Waking AI instance (cold start)")
+	})
+	if err != nil {
+		return err
+	}
+	a.publishImproveStatus(bg, runID, "crew_ready", "AI instance ready — submitting task")
+	return nil
+}
+
+// writeImprovePersistedStep replays a stored step and, when it carries a control
+// `state`, also emits the matching `status` event (DB/Redis late-join path).
+func writeImprovePersistedStep(w http.ResponseWriter, flusher http.Flusher, id string, step map[string]any) {
+	if state, ok := step["state"].(string); ok {
+		switch state {
+		case "crew_warming", "crew_ready", "running":
+			b, _ := json.Marshal(map[string]any{"state": state})
+			fmt.Fprintf(w, "event: status\ndata: %s\n\n", string(b))
+			flusher.Flush()
+		}
+	}
+	b, _ := json.Marshal(step)
+	fmt.Fprintf(w, "id: %s\nevent: step\ndata: %s\n\n", id, string(b))
+	flusher.Flush()
+}
+
 func (a *API) improveRunWasCancelled(ctx context.Context, runID string) bool {
 	cur, err := a.store.GetImproveRun(ctx, runID)
 	return err == nil && cur.Status == store.ImproveRunCancelled
@@ -588,9 +656,7 @@ func (a *API) streamImproveRunFromRedis(w http.ResponseWriter, r *http.Request, 
 	var steps []map[string]any
 	_ = json.Unmarshal(run.Steps, &steps)
 	for i, step := range steps {
-		b, _ := json.Marshal(step)
-		fmt.Fprintf(w, "id: db-%d\nevent: step\ndata: %s\n\n", i+1, string(b))
-		flusher.Flush()
+		writeImprovePersistedStep(w, flusher, fmt.Sprintf("db-%d", i+1), step)
 	}
 	switch run.Status {
 	case store.ImproveRunCompleted, store.ImproveRunFailed, store.ImproveRunCancelled:
@@ -719,9 +785,7 @@ func (a *API) streamImproveRunFromDB(w http.ResponseWriter, r *http.Request, run
 		var steps []map[string]any
 		_ = json.Unmarshal(run.Steps, &steps)
 		for i := sent; i < len(steps); i++ {
-			b, _ := json.Marshal(steps[i])
-			fmt.Fprintf(w, "id: %d\nevent: step\ndata: %s\n\n", i+1, string(b))
-			flusher.Flush()
+			writeImprovePersistedStep(w, flusher, fmt.Sprintf("%d", i+1), steps[i])
 		}
 		sent = len(steps)
 
@@ -828,4 +892,9 @@ func (a *API) TestSetAiCrAdvancedEnabled(v bool) {
 // TestSetCrewAI injects a CrewAI client (integration tests).
 func (a *API) TestSetCrewAI(c *crewai.Client) {
 	a.crewai = c
+}
+
+// TestSetCrewWarmupBudget shortens the warm-up wait (integration tests).
+func (a *API) TestSetCrewWarmupBudget(d time.Duration) {
+	crewWarmupBudget = d
 }

@@ -8,6 +8,14 @@
     <ProIcon name="auto_awesome" :size="24" class="pro-agent-loader__icon" />
     <div class="pro-agent-loader__body">
       <strong>{{ title }}</strong>
+      <p
+        v-if="statusLabel"
+        class="pro-agent-loader__status"
+        data-testid="visit-report-advanced-status"
+      >
+        <span class="pro-agent-loader__spinner" aria-hidden="true" />
+        {{ statusLabel }}
+      </p>
       <ol v-if="steps.length" class="pro-agent-loader__steps" data-testid="visit-report-advanced-steps">
         <li
           v-for="(s, i) in steps"
@@ -19,7 +27,7 @@
           — {{ s.label }}
         </li>
       </ol>
-      <p v-else class="pro-hint">{{ waitingLabel }}</p>
+      <p v-else-if="!statusLabel" class="pro-hint">{{ waitingLabel }}</p>
     </div>
     <ProButton
       v-if="cancelLabel"
@@ -40,6 +48,8 @@ defineProps<{
   waitingLabel: string
   steps: AgentStep[]
   cancelLabel?: string
+  /** Explication de l'état courant (réveil instance, envoi, agents en cours). */
+  statusLabel?: string
 }>()
 
 const emit = defineEmits<{ cancel: [] }>()
@@ -62,6 +72,33 @@ const emit = defineEmits<{ cancel: [] }>()
 .pro-agent-loader__body {
   flex: 1;
   min-width: 0;
+}
+.pro-agent-loader__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: var(--pf-vet-primary, #0d7377);
+}
+.pro-agent-loader__spinner {
+  flex-shrink: 0;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--pf-vet-border, #d7e0dd);
+  border-top-color: var(--pf-vet-primary, #0d7377);
+  border-radius: 50%;
+  animation: pro-agent-loader-spin 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pro-agent-loader__spinner {
+    animation-duration: 2s;
+  }
+}
+@keyframes pro-agent-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .pro-agent-loader__steps {
   margin: 0.35rem 0 0;

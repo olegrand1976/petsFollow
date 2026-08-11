@@ -126,6 +126,26 @@ Cloud Run : `crewai-orchestrator-staging` · région `europe-west9` · **minScal
 
 Orchestrateur : `GET /v1/tasks/{id}/events` (SSE) ; submit avec `"async": true` → 202 `running`.
 
+### Warm-up minScale=0 (contrôleur d'états)
+
+L'orchestrateur Cloud Run tourne en **minScale=0** : au premier improve
+l'instance peut être froide. Avant le `SubmitTask`, l'API Go attend la
+disponibilité via `crewai.WaitReady` (probe `/health` courte puis probes
+longues, budget **90 s** dans le timeout global 4 min) et diffuse l'attente en
+SSE :
+
+| Événement | Data | UI (`ProAgentLoader`, `visit-report-advanced-status`) |
+|-----------|------|------|
+| `status` | `{"state":"crew_warming"}` | « Réveil de l'instance IA (démarrage à la demande)… » — émis seulement si la 1re probe échoue |
+| `status` | `{"state":"crew_ready"}` | « Instance IA prête — envoi de la tâche… » |
+| `status` | `{"state":"running"}` | « Agents en cours d'exécution… » (après 202 submit) |
+| `error` | `{"errorCode":"crewai_unavailable"}` | Budget épuisé — run `failed`, message dédié + retry manuel |
+
+Les phases warming/ready sont aussi persistées comme `step`
+(`AppendImproveRunStep`) : le fallback DB / Redis cross-instance les rejoue.
+Côté UI, la phase locale `starting` s'affiche dès le clic (avant le premier
+événement SSE).
+
 **Ops V1** : le hub SSE côté API Go est **in-proc** ; si l’EventSource atterrit sur une autre instance Cloud Run, le client **poll** `rag.improve_runs` jusqu’au statut terminal (pas de live thought cross-instance). Orchestrateur staging : `max-instances=1` (bus SSE mémoire). Prod multi-instance → Redis/PubSub plus tard.
 
 ### Clôture Phase 3

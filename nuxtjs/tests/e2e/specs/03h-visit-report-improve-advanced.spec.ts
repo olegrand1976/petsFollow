@@ -131,6 +131,9 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
     await page.route(/\/api\/visits\/[^/]+\/report-improve-advanced\/[^/]+\/events$/, async (route) => {
       await eventsGate
       const sse = [
+        'event: status\ndata: {"state":"crew_warming"}\n\n',
+        'event: status\ndata: {"state":"crew_ready"}\n\n',
+        'event: status\ndata: {"state":"running"}\n\n',
         'id: 1\nevent: step\ndata: {"agent":"tri","label":"Extraction"}\n\n',
         'id: 2\nevent: step\ndata: {"agent":"clinicien","label":"RAG"}\n\n',
         'id: 3\nevent: step\ndata: {"agent":"redacteur","label":"Sections"}\n\n',
@@ -178,6 +181,8 @@ test.describe('CR improve-advanced SSE (C2.26)', { tag: '@p1' }, () => {
     try {
       await advancedBtn.click()
       await expect(page.getByTestId('visit-report-advanced-improving')).toBeVisible({ timeout: 10000 })
+      // Contrôleur d'états : phase locale `starting` visible tant que le SSE est gated.
+      await expect(page.getByTestId('visit-report-advanced-status')).toBeVisible()
       await expect(page.getByTestId('visit-report-advanced-cancel')).toBeVisible()
     }
     finally {
