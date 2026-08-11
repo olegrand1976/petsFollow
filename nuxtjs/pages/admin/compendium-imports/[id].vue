@@ -46,6 +46,7 @@
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-preview">
         <h3 class="pro-mb-md">{{ $t('admin.compendium.previewTitle') }}</h3>
         <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.manualHint') }}</p>
         <p
           v-if="refCatalogCount === 0 && job.status === 'extracted'"
           class="pro-hint pro-hint--error pro-mb-md"
@@ -67,6 +68,7 @@
           <thead>
             <tr>
               <th>#</th>
+              <th>{{ $t('admin.compendium.colPage') }}</th>
               <th>{{ $t('admin.compendium.colCnk') }}</th>
               <th>{{ $t('admin.compendium.colSuggestedCnk') }}</th>
               <th>{{ $t('admin.compendium.colName') }}</th>
@@ -77,19 +79,34 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :key="row.id">
+            <tr
+              v-for="row in rows"
+              :key="row.id"
+              :class="{ 'compendium-row--needs-manual': row.status === 'error' }"
+              :data-testid="row.status === 'error' ? 'admin-compendium-row-error' : undefined"
+            >
               <td>{{ row.rowNumber }}</td>
               <td>
+                <span
+                  class="compendium-page"
+                  data-testid="admin-compendium-row-page"
+                  :title="$t('admin.compendium.pageHint', { page: row.sourcePage ?? '—' })"
+                >
+                  {{ row.sourcePage ?? '—' }}
+                </span>
+              </td>
+              <td>
                 <input
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="rowEditable(row)"
                   v-model="row.cnk"
                   class="pro-input"
+                  :placeholder="$t('admin.compendium.colCnk')"
                   @change="patchRow(row, { cnk: row.cnk })"
                 >
                 <span v-else>{{ row.cnk }}</span>
               </td>
               <td>
-                <template v-if="row.status !== 'upserted' && row.status !== 'excluded' && candidates(row).length">
+                <template v-if="rowEditable(row) && candidates(row).length">
                   <select
                     class="pro-input"
                     data-testid="admin-compendium-cnk-candidates"
@@ -111,22 +128,44 @@
               </td>
               <td>
                 <input
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="rowEditable(row)"
                   v-model="row.name"
                   class="pro-input"
+                  :placeholder="$t('admin.compendium.colName')"
                   @change="patchRow(row, { name: row.name })"
                 >
                 <span v-else>{{ row.name }}</span>
               </td>
-              <td>{{ row.manufacturer || '—' }}</td>
-              <td>{{ row.pharmaceuticalForm || '—' }}</td>
+              <td>
+                <input
+                  v-if="rowEditable(row)"
+                  v-model="row.manufacturer"
+                  class="pro-input"
+                  :placeholder="$t('admin.compendium.colLab')"
+                  @change="patchRow(row, { manufacturer: row.manufacturer })"
+                >
+                <span v-else>{{ row.manufacturer || '—' }}</span>
+              </td>
+              <td>
+                <input
+                  v-if="rowEditable(row)"
+                  v-model="row.pharmaceuticalForm"
+                  class="pro-input"
+                  :placeholder="$t('admin.compendium.colForm')"
+                  @change="patchRow(row, { pharmaceuticalForm: row.pharmaceuticalForm })"
+                >
+                <span v-else>{{ row.pharmaceuticalForm || '—' }}</span>
+              </td>
               <td>
                 <ProBadge :variant="rowStatusVariant(row.status)">{{ statusLabel(row.status) }}</ProBadge>
                 <span v-if="row.errorCode" class="pro-hint"> {{ row.errorCode }}</span>
+                <p v-if="row.status === 'error' && row.sourcePage" class="pro-hint">
+                  {{ $t('admin.compendium.fixFromPage', { page: row.sourcePage }) }}
+                </p>
               </td>
               <td>
                 <ProButton
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="row.status === 'pending' || row.status === 'error'"
                   variant="ghost"
                   test-id="admin-compendium-lookup-cnk"
                   :disabled="busy || lookingUpId === row.id || !row.name"
@@ -135,21 +174,23 @@
                   {{ $t('admin.compendium.lookupCnk') }}
                 </ProButton>
                 <ProButton
-                  v-if="row.status === 'pending' && row.suggestedCnk && !row.cnk"
+                  v-if="(row.status === 'pending' || row.status === 'error') && row.suggestedCnk && !row.cnk"
                   variant="ghost"
                   @click="patchRow(row, { cnk: row.suggestedCnk })"
                 >
                   {{ $t('admin.compendium.acceptSuggested') }}
                 </ProButton>
                 <ProButton
-                  v-if="row.status === 'pending' && row.cnk"
+                  v-if="canConfirmRow(row)"
                   variant="ghost"
+                  test-id="admin-compendium-confirm-row"
+                  :disabled="busy"
                   @click="patchRow(row, { name: row.name, cnk: row.cnk })"
                 >
                   {{ $t('admin.compendium.confirmRow') }}
                 </ProButton>
                 <ProButton
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="rowEditable(row)"
                   variant="ghost"
                   @click="patchRow(row, { excluded: true })"
                 >
@@ -202,6 +243,16 @@ const lookupMsg = ref<Record<string, string>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending' && r.cnk).length)
+
+function rowEditable (row: any) {
+  return row?.status !== 'upserted' && row?.status !== 'excluded'
+}
+
+function canConfirmRow (row: any) {
+  if (!rowEditable(row)) return false
+  if (row.status !== 'pending' && row.status !== 'error') return false
+  return Boolean(String(row.cnk || '').trim() && String(row.name || '').trim())
+}
 
 function candidates (row: any): Array<{ cnk: string; name: string; score?: number }> {
   const raw = row?.matchCandidates
@@ -378,5 +429,12 @@ onBeforeUnmount(() => stopPoll())
 }
 .compendium-bar__fill--review {
   background: var(--pf-vet-primary);
+}
+.compendium-page {
+  font-family: var(--pf-font-mono, ui-monospace, monospace);
+  font-weight: 600;
+}
+.compendium-row--needs-manual td {
+  background: color-mix(in srgb, var(--pf-vet-alert) 8%, transparent);
 }
 </style>

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -377,13 +378,14 @@ func (s *Store) DeleteCompendiumImportJob(ctx context.Context, id string) (pdfOb
 }
 
 type PatchCompendiumRowInput struct {
-	CNK                *string
-	Name               *string
-	ATCCode            *string
-	PharmaceuticalForm *string
-	PackSize           *string
-	IsAntibiotic       *bool
-	Excluded           *bool
+	CNK                *string `json:"cnk"`
+	Name               *string `json:"name"`
+	Manufacturer       *string `json:"manufacturer"`
+	ATCCode            *string `json:"atcCode"`
+	PharmaceuticalForm *string `json:"pharmaceuticalForm"`
+	PackSize           *string `json:"packSize"`
+	IsAntibiotic       *bool   `json:"isAntibiotic"`
+	Excluded           *bool   `json:"excluded"`
 }
 
 func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID string, in PatchCompendiumRowInput) (CompendiumImportRow, error) {
@@ -428,6 +430,9 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	if in.Name != nil {
 		r.Name = strings.TrimSpace(*in.Name)
 	}
+	if in.Manufacturer != nil {
+		r.Manufacturer = strings.TrimSpace(*in.Manufacturer)
+	}
 	if in.ATCCode != nil {
 		r.ATCCode = strings.TrimSpace(*in.ATCCode)
 	}
@@ -462,11 +467,11 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 
 	_, err = tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_rows
-		SET cnk = $3, name = $4, atc_code = $5, pharmaceutical_form = $6, pack_size = $7,
-		    is_antibiotic = $8, status = $9,
-		    error_code = NULLIF($10,''), error_message = NULLIF($11,'')
+		SET cnk = $3, name = $4, manufacturer = $5, atc_code = $6, pharmaceutical_form = $7, pack_size = $8,
+		    is_antibiotic = $9, status = $10,
+		    error_code = NULLIF($11,''), error_message = NULLIF($12,'')
 		WHERE id = $1 AND job_id = $2`,
-		rowID, jobID, r.CNK, r.Name, r.ATCCode, r.PharmaceuticalForm, r.PackSize,
+		rowID, jobID, r.CNK, r.Name, r.Manufacturer, r.ATCCode, r.PharmaceuticalForm, r.PackSize,
 		r.IsAntibiotic, r.Status, r.ErrorCode, r.ErrorMessage,
 	)
 	if err != nil {
@@ -510,12 +515,20 @@ func (s *Store) GetCompendiumImportRow(ctx context.Context, jobID, rowID string)
 	return r, nil
 }
 
-// ApplyCompendiumRowMatch refreshes AFMPS catalogue suggestions after a manual lookup.
-// Reclassifies via ClassifyAfterMatch (does not promote to ready). Locked for upserted rows.
-func (s *Store) ApplyCompendiumRowMatch(ctx context.Context, jobID, rowID string, match pharmacy.CNKMatchResult) (CompendiumImportRow, error) {
+// LookupCompendiumCNKResult is the outcome of a manual AFMPS-catalogue CNK lookup.
+type LookupCompendiumCNKResult struct {
+	Row      CompendiumImportRow
+	CNKFound *bool // set only when verifyCNK was non-empty
+}
+
+// LookupCompendiumImportRowCNK locks the row, rematches against pharmacy.ref_medications,
+// and updates suggestions without promoting to ready.
+// Refuses ready/upserted/excluded (ErrConflict). Catalogue search uses locked row fields.
+func (s *Store) LookupCompendiumImportRowCNK(ctx context.Context, jobID, rowID, verifyCNK string) (LookupCompendiumCNKResult, error) {
+	verifyCNK = strings.TrimSpace(verifyCNK)
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return CompendiumImportRow{}, err
+		return LookupCompendiumCNKResult{}, err
 	}
 	defer tx.Rollback(ctx)
 
@@ -537,65 +550,133 @@ func (s *Store) ApplyCompendiumRowMatch(ctx context.Context, jobID, rowID string
 		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
 	)
 	if err == pgx.ErrNoRows {
-		return r, ErrNotFound
+		return LookupCompendiumCNKResult{}, ErrNotFound
 	}
 	if err != nil {
-		return r, err
+		return LookupCompendiumCNKResult{}, err
 	}
 	r.RawJSON = raw
 	r.MatchCandidates = cands
-	if r.Status == "upserted" || r.Status == "excluded" {
-		return r, ErrConflict
+	if r.Status == "ready" || r.Status == "upserted" || r.Status == "excluded" {
+		return LookupCompendiumCNKResult{}, ErrConflict
 	}
 
-	m := pharmacy.ExtractedMedication{
-		CNK:                r.CNK,
-		Name:               r.Name,
-		Manufacturer:       r.Manufacturer,
-		ActiveSubstance:    r.ActiveSubstance,
-		ATCCode:            r.ATCCode,
-		PharmaceuticalForm: r.PharmaceuticalForm,
-		PackSize:           r.PackSize,
-		IsAntibiotic:       r.IsAntibiotic,
-		SourcePage:         r.SourcePage,
-	}
-	classified, status, code, msg := pharmacy.ClassifyAfterMatch(m, match)
-	r.CNK = classified.CNK
-	r.Status = status
-	r.ErrorCode = code
-	r.ErrorMessage = msg
-	r.SuggestedCNK = match.SuggestedCNK
-	candsRaw, _ := json.Marshal(match.Candidates)
-	if len(match.Candidates) == 0 {
-		candsRaw = []byte("[]")
-	}
-	r.MatchCandidates = candsRaw
-	var scorePtr *float64
-	if match.Score > 0 || match.SuggestedCNK != "" {
-		sc := match.Score
-		scorePtr = &sc
-	}
-	r.MatchScore = scorePtr
+	var cnkFound *bool
+	match := pharmacy.CNKMatchResult{}
+	preserveExisting := false
 
-	_, err = tx.Exec(ctx, `
-		UPDATE pharmacy.compendium_import_rows
-		SET cnk = $3, suggested_cnk = NULLIF($4,''), match_score = $5,
-		    match_candidates = $6::jsonb,
-		    status = $7, error_code = NULLIF($8,''), error_message = NULLIF($9,'')
-		WHERE id = $1 AND job_id = $2`,
-		rowID, jobID, r.CNK, r.SuggestedCNK, scorePtr, string(candsRaw),
-		r.Status, r.ErrorCode, r.ErrorMessage,
-	)
-	if err != nil {
-		return r, err
+	if verifyCNK != "" {
+		ref, gerr := s.GetRefMedicationByCNK(ctx, verifyCNK)
+		if gerr != nil && !errors.Is(gerr, ErrNotFound) {
+			return LookupCompendiumCNKResult{}, gerr
+		}
+		found := gerr == nil
+		cnkFound = &found
+		if found {
+			match = pharmacy.CNKMatchResult{
+				SuggestedCNK: ref.CNK,
+				Score:        1,
+				Candidates: []pharmacy.CNKMatchCandidate{{
+					CNK:                ref.CNK,
+					Name:               ref.Name,
+					PharmaceuticalForm: ref.PharmaceuticalForm,
+					PackSize:           ref.PackSize,
+					Score:              1,
+				}},
+				AutoFill: strings.TrimSpace(r.CNK) == "",
+			}
+		}
 	}
-	if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
-		return r, err
+
+	if verifyCNK == "" || (cnkFound != nil && !*cnkFound) {
+		if strings.TrimSpace(r.Name) == "" {
+			if verifyCNK != "" && cnkFound != nil && !*cnkFound {
+				preserveExisting = true
+			}
+		} else {
+			hits, searchErr := s.SearchRefMedications(ctx, r.Name, 10)
+			if searchErr != nil {
+				return LookupCompendiumCNKResult{}, searchErr
+			}
+			refs := make([]pharmacy.RefMedMatchInput, 0, len(hits))
+			for _, h := range hits {
+				refs = append(refs, pharmacy.RefMedMatchInput{
+					CNK:                h.CNK,
+					Name:               h.Name,
+					PharmaceuticalForm: h.PharmaceuticalForm,
+					PackSize:           h.PackSize,
+				})
+			}
+			nameMatch := pharmacy.SuggestCNK(pharmacy.ExtractedMedication{
+				CNK:                r.CNK,
+				Name:               r.Name,
+				Manufacturer:       r.Manufacturer,
+				PharmaceuticalForm: r.PharmaceuticalForm,
+				PackSize:           r.PackSize,
+			}, refs)
+			if verifyCNK != "" && cnkFound != nil && !*cnkFound {
+				nameMatch.AutoFill = false
+				if len(nameMatch.Candidates) == 0 {
+					preserveExisting = true
+				}
+			}
+			if !preserveExisting {
+				match = nameMatch
+			}
+		}
 	}
+
+	if !preserveExisting {
+		m := pharmacy.ExtractedMedication{
+			CNK:                r.CNK,
+			Name:               r.Name,
+			Manufacturer:       r.Manufacturer,
+			ActiveSubstance:    r.ActiveSubstance,
+			ATCCode:            r.ATCCode,
+			PharmaceuticalForm: r.PharmaceuticalForm,
+			PackSize:           r.PackSize,
+			IsAntibiotic:       r.IsAntibiotic,
+			SourcePage:         r.SourcePage,
+		}
+		classified, status, code, msg := pharmacy.ClassifyAfterMatch(m, match)
+		r.CNK = classified.CNK
+		r.Status = status
+		r.ErrorCode = code
+		r.ErrorMessage = msg
+		r.SuggestedCNK = match.SuggestedCNK
+		candsRaw, _ := json.Marshal(match.Candidates)
+		if len(match.Candidates) == 0 {
+			candsRaw = []byte("[]")
+		}
+		r.MatchCandidates = candsRaw
+		var scorePtr *float64
+		if match.Score > 0 || match.SuggestedCNK != "" {
+			sc := match.Score
+			scorePtr = &sc
+		}
+		r.MatchScore = scorePtr
+
+		_, err = tx.Exec(ctx, `
+			UPDATE pharmacy.compendium_import_rows
+			SET cnk = $3, suggested_cnk = NULLIF($4,''), match_score = $5,
+			    match_candidates = $6::jsonb,
+			    status = $7, error_code = NULLIF($8,''), error_message = NULLIF($9,'')
+			WHERE id = $1 AND job_id = $2`,
+			rowID, jobID, r.CNK, r.SuggestedCNK, scorePtr, string(candsRaw),
+			r.Status, r.ErrorCode, r.ErrorMessage,
+		)
+		if err != nil {
+			return LookupCompendiumCNKResult{}, err
+		}
+		if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
+			return LookupCompendiumCNKResult{}, err
+		}
+	}
+
 	if err := tx.Commit(ctx); err != nil {
-		return r, err
+		return LookupCompendiumCNKResult{}, err
 	}
-	return r, nil
+	return LookupCompendiumCNKResult{Row: r, CNKFound: cnkFound}, nil
 }
 
 func refreshCompendiumJobCountsTx(ctx context.Context, tx pgx.Tx, jobID string) error {

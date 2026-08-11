@@ -320,7 +320,12 @@ func (a *API) runCompendiumExtract(jobID string) {
 		}
 		if err != nil {
 			log.Printf("compendium extract %s: gemini chunk %d/%d p%d-%d: %v", jobID, i+1, len(chunks), start, end, err)
-			_ = a.store.FailCompendiumImportJob(failCtx, jobID, "extract_failed")
+			// Persist a short reason so /admin UI is actionable (not just "extract_failed").
+			msg := fmt.Sprintf("extract_failed chunk %d/%d p%d-%d: %v", i+1, len(chunks), start, end, err)
+			if len(msg) > 400 {
+				msg = msg[:400] + "…"
+			}
+			_ = a.store.FailCompendiumImportJob(failCtx, jobID, msg)
 			return
 		}
 		meds = append(meds, chunkMeds...)
@@ -446,80 +451,12 @@ func (a *API) adminLookupCompendiumRowCNK(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	row, err := a.store.GetCompendiumImportRow(r.Context(), jobID, rowID)
-	if errors.Is(err, store.ErrNotFound) {
-		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
-		return
-	}
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if row.Status == "upserted" || row.Status == "excluded" {
-		writeErr(w, r, http.StatusConflict, "conflict", "row_locked")
-		return
-	}
-
 	verifyCNK := ""
 	if body.CNK != nil {
 		verifyCNK = strings.TrimSpace(*body.CNK)
 	}
-	var cnkFound *bool
-	match := pharmacy.CNKMatchResult{}
 
-	if verifyCNK != "" {
-		ref, gerr := a.store.GetRefMedicationByCNK(r.Context(), verifyCNK)
-		found := gerr == nil
-		cnkFound = &found
-		if found {
-			match = pharmacy.CNKMatchResult{
-				SuggestedCNK: ref.CNK,
-				Score:        1,
-				Candidates: []pharmacy.CNKMatchCandidate{{
-					CNK:                ref.CNK,
-					Name:               ref.Name,
-					PharmaceuticalForm: ref.PharmaceuticalForm,
-					PackSize:           ref.PackSize,
-					Score:              1,
-				}},
-				// Prefill only when the row has no CNK yet (human typed verify stays as-is via ClassifyAfterMatch).
-				AutoFill: strings.TrimSpace(row.CNK) == "",
-			}
-		}
-	}
-
-	// Name rematch against local AFMPS catalogue when verify missed or no CNK to check.
-	if (verifyCNK == "" || (cnkFound != nil && !*cnkFound)) && strings.TrimSpace(row.Name) != "" {
-		hits, searchErr := a.store.SearchRefMedications(r.Context(), row.Name, 10)
-		if searchErr != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		refs := make([]pharmacy.RefMedMatchInput, 0, len(hits))
-		for _, h := range hits {
-			refs = append(refs, pharmacy.RefMedMatchInput{
-				CNK:                h.CNK,
-				Name:               h.Name,
-				PharmaceuticalForm: h.PharmaceuticalForm,
-				PackSize:           h.PackSize,
-				Manufacturer:       manufacturerFromAFMPSMeta(h.AFMPSMeta),
-			})
-		}
-		nameMatch := pharmacy.SuggestCNK(pharmacy.ExtractedMedication{
-			CNK:                row.CNK,
-			Name:               row.Name,
-			Manufacturer:       row.Manufacturer,
-			PharmaceuticalForm: row.PharmaceuticalForm,
-			PackSize:           row.PackSize,
-		}, refs)
-		if verifyCNK != "" && cnkFound != nil && !*cnkFound {
-			// Keep name suggestions for the human, but do not autofill a different CNK.
-			nameMatch.AutoFill = false
-		}
-		match = nameMatch
-	}
-
-	updated, err := a.store.ApplyCompendiumRowMatch(r.Context(), jobID, rowID, match)
+	result, err := a.store.LookupCompendiumImportRowCNK(r.Context(), jobID, rowID, verifyCNK)
 	if errors.Is(err, store.ErrNotFound) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 		return
@@ -533,9 +470,9 @@ func (a *API) adminLookupCompendiumRowCNK(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	payload := map[string]any{"row": updated}
-	if cnkFound != nil {
-		payload["cnkFound"] = *cnkFound
+	payload := map[string]any{"row": result.Row}
+	if result.CNKFound != nil {
+		payload["cnkFound"] = *result.CNKFound
 	}
 	httpx.WriteData(w, http.StatusOK, payload)
 }

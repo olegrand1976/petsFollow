@@ -457,8 +457,11 @@ func TestCompendiumLookupCNK(t *testing.T) {
 	if sug, _ := rowOut["suggestedCnk"].(string); sug != cnk {
 		t.Fatalf("suggested after name lookup %#v", rowOut)
 	}
+	if data["cnkFound"] != nil {
+		t.Fatalf("cnkFound should be omitted on name-only lookup %#v", data)
+	}
 
-	// Exact CNK verify (found)
+	// Exact CNK verify (found) — row may already have autofilled CNK from rematch
 	code, env = doAuthJSON(t, api.handler, http.MethodPost,
 		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok,
 		map[string]any{"cnk": cnk})
@@ -470,11 +473,18 @@ func TestCompendiumLookupCNK(t *testing.T) {
 		t.Fatalf("cnkFound want true %#v", data)
 	}
 	rowOut, _ = data["row"].(map[string]any)
-	if rowOut["cnk"] != cnk && rowOut["suggestedCnk"] != cnk {
-		t.Fatalf("expected cnk or suggested %#v", rowOut)
+	if rowOut["suggestedCnk"] != cnk {
+		t.Fatalf("suggestedCnk want %s %#v", cnk, rowOut)
+	}
+	if st, _ := rowOut["status"].(string); st != "pending" && st != "error" {
+		t.Fatalf("status after lookup want pending/error got %#v", rowOut)
 	}
 
-	// Exact CNK verify (missing) → still name suggestions
+	// Exact CNK verify (missing) → still name suggestions; do not wipe existing CNK
+	before, err := st.GetCompendiumImportRow(context.Background(), jobID, rowID)
+	if err != nil {
+		t.Fatalf("get before miss: %v", err)
+	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPost,
 		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok,
 		map[string]any{"cnk": "2999999"})
@@ -484,6 +494,44 @@ func TestCompendiumLookupCNK(t *testing.T) {
 	data, _ = env["data"].(map[string]any)
 	if data["cnkFound"] != false {
 		t.Fatalf("cnkFound want false %#v", data)
+	}
+	rowOut, _ = data["row"].(map[string]any)
+	if before.CNK != "" && rowOut["cnk"] != before.CNK {
+		t.Fatalf("miss must not overwrite existing cnk before=%q after=%#v", before.CNK, rowOut)
+	}
+
+	// Promote to ready then lookup → 409 (no demote)
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID, adminTok,
+		map[string]any{"cnk": cnk, "name": "ZZZ Lookup Med Caps 10mg"})
+	if code != http.StatusOK {
+		t.Fatalf("patch ready %d %#v", code, env)
+	}
+	if got, _ := env["data"].(map[string]any)["status"].(string); got != "ready" {
+		t.Fatalf("want ready got %#v", env["data"])
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok,
+		map[string]any{"cnk": cnk})
+	if code != http.StatusConflict || errCode(env) != "conflict" {
+		t.Fatalf("lookup ready want 409 conflict got %d %#v", code, env)
+	}
+	detail, _ = st.GetCompendiumImportDetail(context.Background(), jobID)
+	if detail.Rows[0].Status != "ready" {
+		t.Fatalf("ready must stay ready after rejected lookup %#v", detail.Rows[0])
+	}
+
+	// Excluded → 409
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID, adminTok,
+		map[string]any{"excluded": true})
+	if code != http.StatusOK {
+		t.Fatalf("exclude %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok, map[string]any{})
+	if code != http.StatusConflict || errCode(env) != "conflict" {
+		t.Fatalf("lookup excluded want 409 got %d %#v", code, env)
 	}
 }
 
