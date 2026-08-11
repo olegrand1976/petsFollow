@@ -211,7 +211,7 @@ func (s *Store) CreateActivity(ctx context.Context, in ActivityInput) (Activity,
 		INSERT INTO sales.activities (
 			id, prospect_id, assignee_user_id, created_by, kind, title, due_at, status
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-		RETURNING id::text, prospect_id::text, assignee_user_id::text, COALESCE(created_by::text,''),
+		RETURNING id::text, prospect_id::text, COALESCE(assignee_user_id::text,''), COALESCE(created_by::text,''),
 			kind, title, due_at, done_at, status, created_at, updated_at`,
 		id, in.ProspectID, in.AssigneeUserID, createdBy, kind, strings.TrimSpace(in.Title), due, status)
 	return scanActivity(row.Scan)
@@ -253,7 +253,7 @@ func (s *Store) UpdateActivity(ctx context.Context, id string, title, status str
 		UPDATE sales.activities SET
 			title=$2, status=$3, due_at=$4, done_at=$5, updated_at=NOW()
 		WHERE id=$1
-		RETURNING id::text, prospect_id::text, assignee_user_id::text, COALESCE(created_by::text,''),
+		RETURNING id::text, prospect_id::text, COALESCE(assignee_user_id::text,''), COALESCE(created_by::text,''),
 			kind, title, due_at, done_at, status, created_at, updated_at`,
 		id, title, status, due, doneAt)
 	a, err := scanActivity(row.Scan)
@@ -265,7 +265,7 @@ func (s *Store) UpdateActivity(ctx context.Context, id string, title, status str
 
 func (s *Store) GetActivity(ctx context.Context, id string) (Activity, error) {
 	row := s.pool.QueryRow(ctx, `
-		SELECT id::text, prospect_id::text, assignee_user_id::text, COALESCE(created_by::text,''),
+		SELECT id::text, prospect_id::text, COALESCE(assignee_user_id::text,''), COALESCE(created_by::text,''),
 			kind, title, due_at, done_at, status, created_at, updated_at
 		FROM sales.activities WHERE id=$1`, id)
 	a, err := scanActivity(row.Scan)
@@ -287,7 +287,7 @@ func scanActivity(scan func(dest ...any) error) (Activity, error) {
 
 func (s *Store) ListActivitiesByProspect(ctx context.Context, prospectID string, openOnly bool) ([]Activity, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT a.id::text, a.prospect_id::text, a.assignee_user_id::text, COALESCE(a.created_by::text,''),
+		SELECT a.id::text, a.prospect_id::text, COALESCE(a.assignee_user_id::text,''), COALESCE(a.created_by::text,''),
 			a.kind, a.title, a.due_at, a.done_at, a.status, a.created_at, a.updated_at,
 			COALESCE(u.full_name,''), COALESCE(p.practice_name,''), COALESCE(p.contact_name,'')
 		FROM sales.activities a
@@ -310,7 +310,7 @@ func (s *Store) ListActivitiesForAssignee(ctx context.Context, assigneeUserID, s
 		limit = 100
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT a.id::text, a.prospect_id::text, a.assignee_user_id::text, COALESCE(a.created_by::text,''),
+		SELECT a.id::text, a.prospect_id::text, COALESCE(a.assignee_user_id::text,''), COALESCE(a.created_by::text,''),
 			a.kind, a.title, a.due_at, a.done_at, a.status, a.created_at, a.updated_at,
 			COALESCE(u.full_name,''), COALESCE(p.practice_name,''), COALESCE(p.contact_name,'')
 		FROM sales.activities a
@@ -339,7 +339,7 @@ func (s *Store) ListTeamActivities(ctx context.Context, managerUserID, commercia
 		limit = 100
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT a.id::text, a.prospect_id::text, a.assignee_user_id::text, COALESCE(a.created_by::text,''),
+		SELECT a.id::text, a.prospect_id::text, COALESCE(a.assignee_user_id::text,''), COALESCE(a.created_by::text,''),
 			a.kind, a.title, a.due_at, a.done_at, a.status, a.created_at, a.updated_at,
 			COALESCE(u.full_name,''), COALESCE(p.practice_name,''), COALESCE(p.contact_name,'')
 		FROM sales.activities a
@@ -430,7 +430,7 @@ func (s *Store) ListAgenda(ctx context.Context, commercialUserID string, from, t
 
 	arows, err := s.pool.Query(ctx, `
 		SELECT a.id::text, a.prospect_id::text, p.practice_name, COALESCE(p.contact_name,''),
-			a.title, a.due_at, a.kind, a.assignee_user_id::text, COALESCE(u.full_name,'')
+			a.title, a.due_at, a.kind, COALESCE(a.assignee_user_id::text,''), COALESCE(u.full_name,'')
 		FROM sales.activities a
 		JOIN sales.prospects p ON p.id = a.prospect_id
 		LEFT JOIN identity.users u ON u.id = a.assignee_user_id
@@ -505,7 +505,7 @@ func (s *Store) ListTeamAgenda(ctx context.Context, managerUserID, commercialUse
 
 	arows, err := s.pool.Query(ctx, `
 		SELECT a.id::text, a.prospect_id::text, p.practice_name, COALESCE(p.contact_name,''),
-			a.title, a.due_at, a.kind, a.assignee_user_id::text, COALESCE(u.full_name,'')
+			a.title, a.due_at, a.kind, COALESCE(a.assignee_user_id::text,''), COALESCE(u.full_name,'')
 		FROM sales.activities a
 		JOIN sales.prospects p ON p.id = a.prospect_id
 		LEFT JOIN identity.users u ON u.id = a.assignee_user_id

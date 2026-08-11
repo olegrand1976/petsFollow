@@ -304,6 +304,31 @@ func TestInternalAfmpsImportRunUnauthorized(t *testing.T) {
 	}
 }
 
+func TestInternalAfmpsImportRunPredictableKey(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("AFMPS_IMPORT_SECRET", "test-afmps-import-secret")
+	t.Setenv("AFMPS_IMPORT_OBJECT_KEY", "afmps-imports/latest.csv")
+	api := newTestAPI(t)
+	api.api.TestSetDevSeedEnabled(false)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/afmps-import/run", bytes.NewBufferString(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Afmps-Import-Secret", "test-afmps-import-secret")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("want 503 got %d %s", rec.Code, rec.Body.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &env); err != nil {
+		t.Fatal(err)
+	}
+	errObj, _ := env["error"].(map[string]any)
+	if errObj["code"] != "afmps_object_key_predictable" {
+		t.Fatalf("error %#v", env["error"])
+	}
+}
+
 func TestInternalAfmpsImportRunDisabled(t *testing.T) {
 	t.Setenv("PHARMACY_ENABLED", "false")
 	t.Setenv("AFMPS_IMPORT_SECRET", "test-afmps-import-secret")

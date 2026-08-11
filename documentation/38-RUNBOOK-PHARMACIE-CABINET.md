@@ -60,8 +60,8 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 
 1. Ops dépose le CSV pack officiel sous une clé **non prévisible** :
    `gsutil cp export.csv gs://$GCS_MEDIA_BUCKET/$AFMPS_IMPORT_OBJECT_KEY`
-   (ex. `afmps-imports/<uuid>.csv` ; défaut historique `afmps-imports/latest.csv` à migrer).
-   Hors allowlist d’URL publique app — mais le bucket reste lisible `allUsers` si le chemin est connu.
+   (ex. `afmps-imports/<uuid>.csv`). Hors DEV_SEED, le cron refuse `…/latest.csv`
+   (`503 afmps_object_key_predictable`).
 2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **`--update-secrets` / redeploy** API pour remonter `:latest` (sinon 401 jusqu’à nouvelle révision). Aligner `AFMPS_IMPORT_OBJECT_KEY` sur le chemin déposé.
 3. Cron (1er du mois 05:00 Brussels, `0 5 1 * *`) → `POST /api/v1/internal/afmps-import/run` + `X-Afmps-Import-Secret`.
 4. Ticket system + email `OPS_NOTIFY_EMAIL` → ouvrir `/admin/afmps-imports/{id}` pour gates 2–3.

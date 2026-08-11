@@ -164,6 +164,8 @@ func (a *API) TestSetSupportInboxEmail(addr string) { a.cfg.SupportInboxEmail = 
 // TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
 func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
 
+func (a *API) TestSetDevSeedEnabled(v bool) { a.cfg.DevSeedEnabled = v }
+
 // TestSetStagingSeedRunner remplace le seed destructif de POST /admin/staging/seed
 // (integration tests only) — évite de tronquer la base partagée pendant la suite.
 // fn == nil restaure seed.Run.

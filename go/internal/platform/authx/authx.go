@@ -109,7 +109,7 @@ func (t *TokenIssuer) IssueMFA(userID, email string, role kernel.Role, practiceI
 
 func (t *TokenIssuer) ParseMFA(tokenStr string) (Identity, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if token.Method != jwt.SigningMethodHS256 {
 			return nil, ErrUnauthorized
 		}
 		return t.secret, nil
@@ -153,7 +153,7 @@ func (t *TokenIssuer) ParseRefresh(tokenStr string) (Identity, error) {
 
 func (t *TokenIssuer) parseTyped(tokenStr, typ string) (Identity, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if token.Method != jwt.SigningMethodHS256 {
 			return nil, ErrUnauthorized
 		}
 		return t.secret, nil

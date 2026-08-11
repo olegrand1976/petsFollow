@@ -34,7 +34,11 @@ func newSafeHTTPClient() *http.Client {
 			if len(via) >= maxRedirects {
 				return fmt.Errorf("too_many_redirects")
 			}
-			if err := rejectPrivateOrNonHTTPS(req.URL); err != nil {
+			ctx := req.Context()
+			if ctx == nil {
+				ctx = context.Background()
+			}
+			if err := rejectPrivateOrNonHTTPS(ctx, req.URL); err != nil {
 				return err
 			}
 			return nil
@@ -55,7 +59,7 @@ func (c *HTTPClient) Get(ctx context.Context, urlStr, accept string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	if err := rejectPrivateOrNonHTTPS(u); err != nil {
+	if err := rejectPrivateOrNonHTTPS(ctx, u); err != nil {
 		return nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -84,7 +88,7 @@ func (c *HTTPClient) Get(ctx context.Context, urlStr, accept string) ([]byte, er
 	return body, nil
 }
 
-func rejectPrivateOrNonHTTPS(u *url.URL) error {
+func rejectPrivateOrNonHTTPS(ctx context.Context, u *url.URL) error {
 	if u == nil {
 		return fmt.Errorf("invalid_url")
 	}
@@ -95,19 +99,41 @@ func rejectPrivateOrNonHTTPS(u *url.URL) error {
 	if host == "" {
 		return fmt.Errorf("invalid_host")
 	}
-	// Literal IPs / localhost only — DNS rebinding to RFC1918 is out of scope here
-	// (ingest URLs are provider-fixed, not user-controlled).
+	lower := strings.ToLower(host)
+	if lower == "localhost" || strings.HasSuffix(lower, ".localhost") || strings.HasSuffix(lower, ".local") ||
+		lower == "metadata.google.internal" || strings.HasSuffix(lower, ".internal") {
+		return fmt.Errorf("private_host_forbidden")
+	}
 	if ip := net.ParseIP(host); ip != nil {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() {
+		if isForbiddenIP(ip) {
 			return fmt.Errorf("private_ip_forbidden")
 		}
 		return nil
 	}
-	lower := strings.ToLower(host)
-	if lower == "localhost" || strings.HasSuffix(lower, ".localhost") || strings.HasSuffix(lower, ".local") {
-		return fmt.Errorf("private_host_forbidden")
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return fmt.Errorf("dns_lookup_failed")
+	}
+	if len(addrs) == 0 {
+		return fmt.Errorf("dns_empty")
+	}
+	for _, a := range addrs {
+		if isForbiddenIP(a.IP) {
+			return fmt.Errorf("private_ip_forbidden")
+		}
 	}
 	return nil
+}
+
+func isForbiddenIP(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() || ip.IsUnspecified()
 }
 
 // ResolveURL joins relative href against base.
@@ -127,7 +153,6 @@ func ResolveURL(base, href string) string {
 		return "http:" + href
 	}
 	if strings.HasPrefix(href, "/") {
-		// scheme+host from base
 		schemeEnd := strings.Index(base, "://")
 		if schemeEnd < 0 {
 			return base + href

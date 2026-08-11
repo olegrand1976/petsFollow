@@ -234,3 +234,66 @@ func TestWalkinPlaceholdersExcludedFromInactiveRetentionList(t *testing.T) {
 		}
 	}
 }
+
+func TestCancelVisitClearsCallbackPhone(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := t.Context()
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list clients %d %#v", code, env)
+	}
+	var walkinPetID string
+	for _, raw := range env["data"].([]any) {
+		c, _ := raw.(map[string]any)
+		if c == nil || c["isWalkinPlaceholder"] != true {
+			continue
+		}
+		clientID, _ := c["userId"].(string)
+		code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients/"+clientID+"/pets", vetTok, nil)
+		if code != http.StatusOK {
+			t.Fatalf("walkin pets %d %#v", code, env)
+		}
+		for _, praw := range env["data"].([]any) {
+			p, _ := praw.(map[string]any)
+			if p != nil && p["isWalkinPlaceholder"] == true {
+				walkinPetID, _ = p["id"].(string)
+				break
+			}
+		}
+		break
+	}
+	if walkinPetID == "" {
+		t.Fatal("no walkin pet")
+	}
+
+	slot := time.Now().UTC().Add(18 * time.Minute).Truncate(time.Second).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+walkinPetID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         slot,
+		"confirmDirect":       true,
+		"consultationSession": true,
+		"callbackPhone":       "0470 11 22 33",
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := env["data"].(map[string]any)["id"].(string)
+	if visitID == "" {
+		t.Fatal("empty visit id")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+		"status": "cancelled",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("cancel visit %d %#v", code, env)
+	}
+	var phone string
+	if err := api.pool.QueryRow(ctx, `SELECT COALESCE(callback_phone,'') FROM visits.visits WHERE id=$1`, visitID).Scan(&phone); err != nil {
+		t.Fatal(err)
+	}
+	if phone != "" {
+		t.Fatalf("callback_phone must be cleared on cancel, got %q", phone)
+	}
+}

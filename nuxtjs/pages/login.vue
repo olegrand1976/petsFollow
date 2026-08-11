@@ -129,6 +129,7 @@ import {
   AUTH_POST_LOGIN_RELOAD_PATH,
 } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
+import { googleLoginBody } from '~/utils/googleLoginBody'
 
 definePageMeta({ layout: false })
 
@@ -220,12 +221,14 @@ function reset2FA() {
 }
 
 async function handleGoogleCredential(idToken: string) {
+  // Compte existant : consent ignoré côté API. Create-if-absent → consent_required
+  // si la case CGU n'est pas cochée (aligné Flutter login_screen).
   error.value = ''
   loading.value = true
   try {
     const res = await $fetch('/api/auth/google', {
       method: 'POST',
-      body: { idToken, consent: googleConsent.value },
+      body: googleLoginBody(idToken, googleConsent.value),
     })
     await handleAuthResult(res)
   } catch (e: any) {
@@ -242,6 +245,7 @@ async function handleGoogleCredential(idToken: string) {
 async function mountGoogleButton() {
   if (!googleEnabled.value || !googleBtnRef.value) return
   try {
+    googleBtnRef.value.innerHTML = ''
     await mountGoogleSignInButton(
       googleBtnRef.value,
       config.public.googleClientId,

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
@@ -16,6 +17,30 @@ func TestParseRejectsNonHMACAlg(t *testing.T) {
 	}
 	if _, err := issuer.ParseMFA(noneTok); err == nil {
 		t.Fatal("expected alg=none rejected by ParseMFA")
+	}
+}
+
+func TestParseRejectsNonHS256HMAC(t *testing.T) {
+	secret := []byte("test-secret")
+	issuer := NewTokenIssuer(string(secret), time.Minute, time.Hour)
+	now := time.Now()
+	c := claims{
+		Email: "vet@test.com", Role: kernel.RoleVet, Typ: "access", Tv: 1,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "user-1",
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute)),
+			ID:        "jti-hs384",
+		},
+	}
+	for _, method := range []*jwt.SigningMethodHMAC{jwt.SigningMethodHS384, jwt.SigningMethodHS512} {
+		tok, err := jwt.NewWithClaims(method, c).SignedString(secret)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := issuer.Parse(tok); err == nil {
+			t.Fatalf("expected %s rejected by Parse", method.Alg())
+		}
 	}
 }
 

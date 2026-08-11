@@ -242,18 +242,28 @@ func (a *API) internalAfmpsImportRun(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "pharmacy_disabled", "not_found")
 		return
 	}
-	if a.media == nil {
-		writeErr(w, r, http.StatusServiceUnavailable, "media_unavailable", "media_unavailable")
-		return
-	}
 
 	objectKey := strings.TrimSpace(a.cfg.AfmpsImportObjectKey)
 	if objectKey == "" {
 		objectKey = pharmacy.DefaultAFMPSImportObjectKey
 	}
+	// Bucket médias = allUsers objectViewer : une clé prévisible fuit le pack licencié.
+	if pharmacy.IsPredictableAFMPSImportObjectKey(objectKey) && !a.cfg.DevSeedEnabled {
+		a.notifyAfmpsImportOps(r.Context(), "predictable_object_key",
+			fmt.Sprintf("AFMPS_IMPORT_OBJECT_KEY=%q est prévisible sur le bucket public — poser une clé opaque (ex. afmps-imports/<uuid>.csv) puis redéployer.", objectKey),
+			"/admin/afmps-imports", "")
+		writeErr(w, r, http.StatusServiceUnavailable, "afmps_object_key_predictable", "afmps_object_key_predictable")
+		return
+	}
+
+	if a.media == nil {
+		writeErr(w, r, http.StatusServiceUnavailable, "media_unavailable", "media_unavailable")
+		return
+	}
+
 	filename := filepath.Base(objectKey)
 	if filename == "" || filename == "." {
-		filename = "latest.csv"
+		filename = "pack.csv"
 	}
 
 	open, err := a.store.HasOpenAFMPSImportJob(r.Context())

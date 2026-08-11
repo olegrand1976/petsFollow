@@ -18,8 +18,22 @@ const (
 	// AFMPSConfirmPhrase is the gate-3 confirmation (CLI: quote or use IMPORT_AFMPS).
 	AFMPSConfirmPhrase = "IMPORT AFMPS"
 	// DefaultAFMPSImportObjectKey is the controlled GCS/local object for monthly gate-1 sync.
+	// Predictable on an allUsers media bucket — refuse outside DEV_SEED (see IsPredictableAFMPSImportObjectKey).
 	DefaultAFMPSImportObjectKey = "afmps-imports/latest.csv"
 )
+
+// IsPredictableAFMPSImportObjectKey reports keys that are trivial to guess on a public-read bucket.
+func IsPredictableAFMPSImportObjectKey(key string) bool {
+	k := strings.ToLower(strings.TrimSpace(key))
+	if k == "" {
+		return true
+	}
+	base := k
+	if i := strings.LastIndex(k, "/"); i >= 0 {
+		base = k[i+1:]
+	}
+	return k == DefaultAFMPSImportObjectKey || base == "latest.csv"
+}
 
 // MaxAFMPSCSVBytes is the hard limit for admin upload / cron gate 1 (overridable in tests).
 var MaxAFMPSCSVBytes int64 = 100 << 20 // 100 MiB

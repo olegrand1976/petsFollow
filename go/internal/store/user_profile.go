@@ -367,7 +367,15 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		UPDATE rag.documents SET reviewed_by = NULL WHERE reviewed_by = $1::uuid`, userID); err != nil {
 		return err
 	}
-	// Commercial CRM: redact PII on sends (FK kept — tombstone is UPDATE not DELETE).
+	// Commercial CRM: redact PII on sends/clicks; unlink activities (assignee nullable since 000177).
+	if _, err := tx.Exec(ctx, `
+		UPDATE sales.email_clicks c
+		SET target_url = '[redacted]',
+		    click_token = 'redacted-' || c.id::text
+		FROM sales.email_sends s
+		WHERE c.send_id = s.id AND s.commercial_user_id = $1::uuid`, userID); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE sales.email_sends SET
 			to_email = '[redacted]',
@@ -387,6 +395,7 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	if _, err := tx.Exec(ctx, `
 		UPDATE sales.activities
 		SET created_by = NULL,
+		    assignee_user_id = CASE WHEN assignee_user_id = $1::uuid THEN NULL ELSE assignee_user_id END,
 		    title = CASE WHEN title = '' THEN title ELSE '[redacted]' END,
 		    updated_at = NOW()
 		WHERE created_by = $1::uuid OR assignee_user_id = $1::uuid`, userID); err != nil {

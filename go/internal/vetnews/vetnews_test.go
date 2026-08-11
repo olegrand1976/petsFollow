@@ -1,6 +1,7 @@
 package vetnews
 
 import (
+	"context"
 	"net/url"
 	"strings"
 	"testing"
@@ -144,14 +145,31 @@ func TestNormalizeURL(t *testing.T) {
 }
 
 func TestRejectPrivateOrNonHTTPS(t *testing.T) {
-	if err := rejectPrivateOrNonHTTPS(mustURL(t, "https://example.com/x")); err != nil {
+	ctx := context.Background()
+	// Literal public IP — no DNS (CI/sandbox may block LookupIP).
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://1.1.1.1/x")); err != nil {
 		t.Fatal(err)
 	}
-	if err := rejectPrivateOrNonHTTPS(mustURL(t, "http://example.com/x")); err == nil {
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "http://example.com/x")); err == nil {
 		t.Fatal("want https_required")
 	}
-	if err := rejectPrivateOrNonHTTPS(mustURL(t, "https://127.0.0.1/x")); err == nil {
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://127.0.0.1/x")); err == nil {
 		t.Fatal("want private_ip_forbidden")
+	}
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://10.0.0.1/x")); err == nil {
+		t.Fatal("want private_ip_forbidden for RFC1918")
+	}
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://192.168.1.1/x")); err == nil {
+		t.Fatal("want private_ip_forbidden for RFC1918")
+	}
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://metadata.google.internal/")); err == nil {
+		t.Fatal("want private_host_forbidden")
+	}
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://svc.internal/x")); err == nil {
+		t.Fatal("want private_host_forbidden for .internal")
+	}
+	if err := rejectPrivateOrNonHTTPS(ctx, mustURL(t, "https://169.254.169.254/latest/meta-data/")); err == nil {
+		t.Fatal("want private_ip_forbidden for link-local")
 	}
 }
 

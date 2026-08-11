@@ -1040,6 +1040,7 @@ func (s *Store) UpdateVisitStatus(ctx context.Context, id, status string) (Visit
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE visits.visits SET
 			status = $2,
+			callback_phone = CASE WHEN $2 = 'cancelled' THEN '' ELSE callback_phone END,
 			proposed_scheduled_at = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE proposed_scheduled_at END,
 			pending_action_by = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE pending_action_by END,
 			status_before_reschedule = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE status_before_reschedule END

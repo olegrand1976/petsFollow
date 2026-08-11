@@ -111,7 +111,7 @@ Parcours minimum avant toute dist / staging.
 | B1.3 | P1 | Register véto | `/register` → email | Page `/register/sent` |
 | B1.4 | P1 | Confirm email | `/confirm-email?token=demo-confirm-email` | Compte confirmé / login OK |
 | B1.5 | P1 | Forgot / reset | Forgot → `/reset-password?token=demo-reset-password` (`vet.reset`) | Nouveau MDP utilisable |
-| B1.6 | P2 | Google OAuth (si configuré) | Bouton Google login + case CGU | Session Pro existante sans consent ; **create-if-absent** exige `consent:true` (`consent_required` sinon) — **auto** : `TestGoogleLoginCreateProRequiresConsent` + `TestGoogleLoginCreateProOK` ; UI `login-google-consent` |
+| B1.6 | P2 | Google OAuth (si configuré) | Bouton Google login + case CGU | Bouton GIS **toujours** visible ; session Pro/client **existante sans consent** ; **create-if-absent** exige case + `consent:true` (`consent_required` sinon) — **auto** : `TestGoogleLoginExistingProWithoutConsent` + `TestGoogleLoginExistingClientWithoutConsent` + `TestGoogleLoginCreateProRequiresConsent` + Vitest `googleLoginBody.spec.ts` |
 | B1.7 | P2 | 2FA | Settings → activer TOTP → logout → login + code | Gate 2FA ; refuse code faux |
 | B1.8 | P1 | Must-change password | Compte force change | `/change-password` puis accès app |
 | B1.9 | P2 | Pages légales | `/legal/mentions` `/privacy` `/terms` | Contenu + i18n |
@@ -201,7 +201,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.23 | P1 | Nouveau client / identification | Placeholder système par cabinet ; RDV/walk-in sur « Nouveau client » + « Nouvel animal » ; **téléphone de rappel** obligatoire sur la visite (`callbackPhone`) ; gate Identifier avant CR ; create ou existing+confirm | Go `TestWalkin*` (refus sans tél.) ; placeholders immuables (PATCH/login 403/401) ; finalize/DAF/facture bloqués tant que non identifié ; UC-VP-12 |
 | C2.24 | P1 | RAG base documentaire (tag `dev`) | Flag `AI_CR_ADVANCED_ENABLED` : upload admin → **202** `indexing` → `ready` ; upload cabinet → `pending` invisible au search jusqu’à approve ; download admin + practice (isolation cross-cabinet) ; `POST /admin/rag/reindex` ; reject purge source | Go `TestRAG*` ; UI `/admin/rag` + Settings « Base documentaire » ; doc [44](44-AI-CR-ADVANCED.md) |
 | C2.25 | P1 | CrewAI partagé (Phase 2) | Client Go `platform/crewai` + `make crewai-smoke` (skip si `CREWAI_BASE_URL` vide) ; workflows `staging_smoke_test` / `petsfollow_cr_improve` ; tool RAG via `/internal/rag/search` ; auth fail-closed + IAM ID token staging | Go `TestClient*` (headers/403/workflow) · `TestLoadCrewAIEnv` · `TestCrewAIStagingDeployGuard` ; orchestrateur `test_secrets_match*` · 503 sans secret · draft Gemini non écrasé · deploy static IAM ; doc [44](44-AI-CR-ADVANCED.md) |
-| C2.26 | P1 | Améliorer IA avancé SSE (Phase 3) | Flag on : bouton `visit-report-improve-advanced` → 202 `runId` → SSE ≥3 `step` + `final` → body CR mis à jour ; flag off → 404 + bouton masqué ; `run_in_progress` 409 ; improve classique inchangé | Go mock CrewAI + hub SSE ; orchestrateur async+SSE ; Playwright `03h-visit-report-improve-advanced.spec.ts` (@p1, mocks BFF) ; RGPD export `ragImproveRuns` + purge tombstone Pro ; doc [44](44-AI-CR-ADVANCED.md) |
+| C2.26 | P1 | Améliorer IA avancé SSE (Phase 3) | Flag on : bouton `visit-report-improve-advanced` → 202 `runId` → SSE ≥3 `step` + `final` → body CR mis à jour ; flag off → 404 + bouton masqué ; `run_in_progress` 409 ; improve classique inchangé ; **warm-up minScale=0** : SSE `status` `crew_warming`/`crew_ready`/`running` (loader `visit-report-advanced-status`), instance jamais up dans le budget 90 s → `crewai_unavailable` sans submit | Go mock CrewAI + hub SSE (`TestImproveAdvancedSSE`, `TestImproveAdvancedColdStartWarmup`, `TestImproveAdvancedCrewUnavailable`) + unit `WaitReady` (crewai) ; orchestrateur async+SSE ; Playwright `03h-visit-report-improve-advanced.spec.ts` (@p1, mocks BFF) ; RGPD export `ragImproveRuns` + purge tombstone Pro ; doc [44](44-AI-CR-ADVANCED.md) |
 | C2.27 | P1 | Exports CR PDF/MD/clipboard (Phase 4) | Toolbar `visit-report-export` : copy MD · download MD · PDF via `GET …/report/pdf` (BFF `report-pdf`) ; option strip citations ; GET report enrichi `lastImproveCitations` si run avancé completed | Go `TestVisitReportPDF` + `StripCitations` ; Vitest `visit-report-export.spec.ts` ; Playwright `03i-visit-report-export.spec.ts` (@p1) ; doc [44](44-AI-CR-ADVANCED.md) |
 | C2.28 | P1 | Recette module CR IA avancé (Phase 5) | Staging flag on : smoke `make crewai-smoke` ; parcours UI live (advanced + classique + exports + kill-switch) ; protocole 10 CR anonymisés (≥80 % utilisables) avant GA | Manuel + runbook [44](44-AI-CR-ADVANCED.md) § Phase 5 ; auto = C2.24–C2.27 |
 | C2.29 | P2 | Dette tech CR avancé | Redis hub SSE multi-instance ; cancel Crew remote ; `metrics` + `/admin/rag/improve-stats` ; strip citations | Go + orchestrateur `/cancel` ; doc [44](44-AI-CR-ADVANCED.md) § Dette technique |
@@ -787,10 +787,10 @@ Fichiers : `go/internal/handlers/security_hardening_integration_test.go`, `pitch
 
 ```bash
 # Unitaires
-go test ./internal/vetnews/ ./internal/platform/crewai/ ./internal/platform/authx/ ./internal/platform/redisx/ -count=1
+go test ./internal/vetnews/ ./internal/platform/crewai/ ./internal/platform/authx/ ./internal/platform/redisx/ ./internal/pharmacy/ -count=1
 
 # Intégration (DB seedée)
-go test ./internal/handlers/ -run 'TestGoogleLoginCreate(Pro|Client)|TestGoogleLoginProAudience|TestRGPDRAGDocuments|TestWalkinPlaceholdersExcluded|TestConsultationSessionOrphanPurge|TestRGPDImproveRuns' -count=1 -p 1
+go test ./internal/handlers/ -run 'TestGoogleLoginCreate(Pro|Client)|TestGoogleLoginProAudience|TestGoogleLoginExisting|TestRGPDRAGDocuments|TestRGPDCommercialCRM|TestWalkinPlaceholdersExcluded|TestCancelVisitClearsCallbackPhone|TestConsultationSessionOrphanPurge|TestRGPDImproveRuns|TestInternalAfmpsImportRunPredictableKey' -count=1 -p 1
 ```
 
 | ID | Cas | Attendu |
@@ -800,9 +800,13 @@ go test ./internal/handlers/ -run 'TestGoogleLoginCreate(Pro|Client)|TestGoogleL
 | S23 | Orphan walk-in cancelled | `callback_phone` vidé — `TestConsultationSessionOrphanPurge` |
 | S24 | Walk-in dans cron 3 ans | Absent de `ListInactiveAccounts` — `TestWalkinPlaceholdersExcludedFromInactiveRetentionList` |
 | S25 | Tombstone Pro + RAG | pending/indexing deleted ; ready `uploaded_by` NULL — `TestRGPDRAGDocumentsUnlinkedOnProTombstone` |
-| S26 | JWT `alg=none` | Rejeté par `Parse` / `ParseMFA` — `TestParseRejectsNonHMACAlg` |
+| S26 | JWT `alg=none` / non-HS256 | Rejeté par `Parse` / `ParseMFA` — `TestParseRejectsNonHMACAlg` + `TestParseRejectsNonHS256HMAC` |
 | S27 | Redis `SetNX` | 1ʳᵉ fois true, 2ᵉ false (anti-replay TOTP) — `TestSetNX` |
 | S28 | CrewAI URL seule | `Configured()=false` sans secret / ID token |
+| S29 | AFMPS clé prévisible hors DEV_SEED | **503** `afmps_object_key_predictable` — `TestInternalAfmpsImportRunPredictableKey` |
+| S30 | CRM tombstone commercial | sends/clicks/events/activities redactés + `GetActivity` OK si assignee NULL — `TestRGPDCommercialCRMRedactOnTombstone` |
+| S31 | Cancel visite walk-in | `callback_phone` vidé — `TestCancelVisitClearsCallbackPhone` |
+| S32 | Google compte existant sans consent | **200** Pro + client — `TestGoogleLoginExisting(Pro|Client)WithoutConsent` + Vitest `googleLoginBody` |
 
 Conséquence assumée de S7/S8 : l'access token reste valide jusqu'à son expiration (~15 min) — la révocation est vérifiée au refresh, pas à chaque requête. Le bump est **global au compte** : un logout web ferme aussi la session Flutter.
 
@@ -888,7 +892,7 @@ Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 | F17 | RGPD dual | care_pro + pet `owner_user_id` | `DELETE /me` purge pets puis tombstone |
 | F18 | RGPD consent | client `terms_accepted_at` NULL | `POST /me/accept-terms` `{consent:true}` → `termsAcceptedAt` ; **API 403** hors allowlist (`/pets`…) jusqu’à accept |
 | F19 | RGPD RAG | Pro avec docs `pending`/`indexing`/`ready` | `DELETE /me` : pending+indexing purgés (+ média) ; ready garde corpus, `uploaded_by` NULL — **auto** : `TestRGPDRAGDocumentsUnlinkedOnProTombstone` |
-| F20 | RGPD CRM | Commercial avec `email_sends` / events / activities | Tombstone : redact `to_email`/`subject`/`body` ; events actor NULL ; activities title `[redacted]` |
+| F20 | RGPD CRM | Commercial avec `email_sends` / events / activities | Tombstone : redact `to_email`/`subject`/`body` + clicks `target_url` ; events actor NULL ; activities assignee NULL + title `[redacted]` — **auto** : `TestRGPDCommercialCRMRedactOnTombstone` |
 
 #### Vue filiation (API + Pro UI)
 

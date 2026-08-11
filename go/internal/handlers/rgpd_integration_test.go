@@ -486,3 +486,121 @@ func TestRGPDRAGDocumentsUnlinkedOnProTombstone(t *testing.T) {
 		t.Fatalf("ready rag uploaded_by must be null after tombstone, got %#v", uploader)
 	}
 }
+
+func TestRGPDCommercialCRMRedactOnTombstone(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	adminTok := ensureAdminToken(t, api)
+	commID, _, commTok := createCommercial(t, api, adminTok, "rgpd-crm", "RGPD CRM Comm")
+
+	prospectID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO sales.prospects (
+			id, commercial_user_id, practice_name, contact_name, contact_email, status, source
+		) VALUES ($1, $2, 'Cab CRM', 'Contact', 'contact@example.test', 'new', 'commercial')`,
+		prospectID, commID); err != nil {
+		t.Fatalf("insert prospect: %v", err)
+	}
+	sendID := uuid.NewString()
+	clickID := uuid.NewString()
+	actID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO sales.email_sends (
+			id, prospect_id, commercial_user_id, to_email, subject, body_html_rendered,
+			status, open_token, sent_at
+		) VALUES ($1, $2, $3, 'prospect@example.test', 'Hello PHI', '<p>secret</p>',
+			'sent', $4, NOW())`,
+		sendID, prospectID, commID, "open-"+sendID); err != nil {
+		t.Fatalf("insert send: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO sales.email_clicks (id, send_id, click_token, target_url)
+		VALUES ($1, $2, $3, 'https://example.com/track-me')`,
+		clickID, sendID, "click-"+clickID); err != nil {
+		t.Fatalf("insert click: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO sales.prospect_events (id, prospect_id, actor_user_id, kind, body)
+		VALUES ($1, $2, $3, 'note', 'private note')`,
+		uuid.NewString(), prospectID, commID); err != nil {
+		t.Fatalf("insert event: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO sales.activities (
+			id, prospect_id, assignee_user_id, created_by, kind, title, status
+		) VALUES ($1, $2, $3, $3, 'follow_up', 'Call prospect', 'open')`,
+		actID, prospectID, commID); err != nil {
+		t.Fatalf("insert activity: %v", err)
+	}
+
+	code, env := doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", commTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me commercial %d %#v", code, env)
+	}
+
+	var toEmail, subject, body, target, title, eventBody string
+	var assignee any
+	var actor any
+	if err := api.pool.QueryRow(ctx, `
+		SELECT to_email, subject, body_html_rendered FROM sales.email_sends WHERE id = $1`, sendID).
+		Scan(&toEmail, &subject, &body); err != nil {
+		t.Fatal(err)
+	}
+	if toEmail != "[redacted]" || subject != "[redacted]" || body != "" {
+		t.Fatalf("send not redacted: %q %q %q", toEmail, subject, body)
+	}
+	if err := api.pool.QueryRow(ctx, `
+		SELECT target_url FROM sales.email_clicks WHERE id = $1`, clickID).Scan(&target); err != nil {
+		t.Fatal(err)
+	}
+	if target != "[redacted]" {
+		t.Fatalf("click target_url want [redacted] got %q", target)
+	}
+	if err := api.pool.QueryRow(ctx, `
+		SELECT actor_user_id, body FROM sales.prospect_events WHERE prospect_id = $1`, prospectID).
+		Scan(&actor, &eventBody); err != nil {
+		t.Fatal(err)
+	}
+	if actor != nil {
+		t.Fatalf("event actor must be null, got %#v", actor)
+	}
+	if eventBody != "[redacted]" {
+		t.Fatalf("event body want [redacted] got %q", eventBody)
+	}
+	// COALESCE scan path (nullable assignee after 000177) must not break list/get.
+	var assigneeText string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(assignee_user_id::text,''), title FROM sales.activities WHERE id = $1`, actID).
+		Scan(&assigneeText, &title); err != nil {
+		t.Fatalf("activity coalesce scan: %v", err)
+	}
+	if assigneeText != "" {
+		t.Fatalf("activity assignee must be empty, got %q", assigneeText)
+	}
+	if title != "[redacted]" {
+		t.Fatalf("activity title want [redacted] got %q", title)
+	}
+	if err := api.pool.QueryRow(ctx, `
+		SELECT assignee_user_id FROM sales.activities WHERE id = $1`, actID).Scan(&assignee); err != nil {
+		t.Fatal(err)
+	}
+	if assignee != nil {
+		t.Fatalf("activity assignee must be null, got %#v", assignee)
+	}
+
+	st := store.New(api.pool)
+	got, err := st.GetActivity(ctx, actID)
+	if err != nil {
+		t.Fatalf("GetActivity after null assignee: %v", err)
+	}
+	if got.AssigneeUserID != "" || got.Title != "[redacted]" {
+		t.Fatalf("GetActivity %#v", got)
+	}
+	list, err := st.ListActivitiesByProspect(ctx, prospectID, false)
+	if err != nil {
+		t.Fatalf("ListActivitiesByProspect: %v", err)
+	}
+	if len(list) == 0 {
+		t.Fatal("expected activity still listed on prospect")
+	}
+}

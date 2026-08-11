@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
@@ -94,6 +95,82 @@ func TestGoogleLoginCreateProRequiresConsent(t *testing.T) {
 	}
 	if errMsgKey(env) != "consent_required" {
 		t.Fatalf("error %#v", env["error"])
+	}
+}
+
+func TestGoogleLoginExistingProWithoutConsent(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
+	email := uniqueEmail("google-pro-existing")
+	password := "VetDemo123!"
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": email, "password": password, "fullName": "Existing Vet",
+		"practiceName": "Cab Existing Google", "consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := strings.TrimPrefix(confirmPath, "/confirm-email?token=")
+	if token == "" || token == confirmPath {
+		t.Fatalf("confirmPath %#v", env)
+	}
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": token,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm %d %#v", code, env)
+	}
+
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
+		Subject: "sub-" + email, Email: email, EmailVerified: true, Name: "Existing Vet",
+	})
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
+		"idToken":  "tok",
+		"audience": "pro",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("google existing pro without consent want 200 got %d %#v", code, env)
+	}
+	if _, ok := dataMap(t, env)["accessToken"].(string); !ok {
+		t.Fatalf("tokens missing %#v", env)
+	}
+}
+
+func TestGoogleLoginExistingClientWithoutConsent(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
+	email := uniqueEmail("google-client-existing")
+	password := "ClientDemo123!"
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": email, "password": password, "fullName": "Existing Client", "consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register-client %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := strings.TrimPrefix(confirmPath, "/confirm-email?token=")
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": token,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm %d %#v", code, env)
+	}
+
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
+		Subject: "sub-" + email, Email: email, EmailVerified: true, Name: "Existing Client",
+	})
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
+		"idToken":  "tok",
+		"audience": "client",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("google existing client without consent want 200 got %d %#v", code, env)
+	}
+	if _, ok := dataMap(t, env)["accessToken"].(string); !ok {
+		t.Fatalf("tokens missing %#v", env)
 	}
 }
 
