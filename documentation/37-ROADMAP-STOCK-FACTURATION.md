@@ -33,19 +33,19 @@ Actions ops / juridique à pousser **en parallèle** du code (pas de chantier te
 
 | ID | Prochaine action concrète | Bloque |
 |----|---------------------------|--------|
-| **P0-1** | **Relance ops (2026-08-11)** : mail AFMPS/VAMReg — demander credentials **write** ICD + accès env test + dépôt clé dans SM (`VAMREG_*`) ; readonly OK ([39](39-VAMREG-AFMPS-READONLY.md)). Tant qu’absent : garder `VAMREG_DRY_RUN=true`. | 4.A production |
-| **P0-2** | **Relance ops (2026-08-11)** : mail Billit — accès **reseller** (compte + credentials API) ; brancher SM puis dégeler `EnqueueInvoicesConnect`. Aucun code DAF→facture live tant qu’absent. | 3.C–3.E, GA facture |
+| **P0-1** | **Relance déclenchée (2026-08-11)** : ticket staging [`527c7803…`](https://petsfollow.ll-it-sc.be/admin/support/527c7803-b27e-43d4-bb46-33aa175b4c8f) + brouillon mail (ci-dessous) → **à forwarder** AFMPS/VAMReg write. Readonly OK ([39](39-VAMREG-AFMPS-READONLY.md)). Garder `VAMREG_DRY_RUN=true` jusqu’aux credentials. | 4.A production |
+| **P0-2** | **Relance déclenchée (2026-08-11)** : ticket staging [`572d88c4…`](https://petsfollow.ll-it-sc.be/admin/support/572d88c4-9489-4668-bc82-b07dee145be8) + brouillon mail → **à forwarder** Billit reseller. Aucun code DAF→facture live tant qu’absent. | 3.C–3.E, GA facture |
 | **P0-3** | ✅ Staging + prod (CSV GCS + job completed ~2738 CNK, scheduler mensuel) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | — |
-| **P0-4** | Spec registre **stupéfiants BE** figée (champs, durée conservation, export) | 4.B |
-| **P0-5** | Contacter 1 grossiste pilote (docs API EDI) | 5.A |
-| **P0-6** | Décision écrite **build vs licence** Bigame/Vetcompendium notices | 5.B/C |
-| **P0-7** | Note juridique certif DAF vs disclaimer UI actuel | 4.E |
+| **P0-4** | Spec brouillon [45 § P0-4](45-PHARMACY-P0-SPECS.md#p0-4--registre-stupéfiants-be--phase-4b) — à figer juridique | 4.B |
+| **P0-5** | Spec brouillon [45 § P0-5](45-PHARMACY-P0-SPECS.md#p0-5--grossiste-pilote-edi--phase-5a) — contacter 1 pilote | 5.A |
+| **P0-6** | Spec brouillon [45 § P0-6](45-PHARMACY-P0-SPECS.md#p0-6--bigame--vetcompendium-build-vs-licence--phase-5bc) — décision build/buy | 5.B/C |
+| **P0-7** | Spec brouillon [45 § P0-7](45-PHARMACY-P0-SPECS.md#p0-7--certification-daf-vs-disclaimer--phase-4e) — note juridique | 4.E |
 
 **Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` (revue dual-list + pagination) — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
 
 ### Brokers mails partenaires (à envoyer hors repo)
 
-Relance ops **2026-08-11** — coller tel quel (adapter destinataire / signature).
+Relance ops **2026-08-11** — tickets support créés (notif inbox) ; **forwarder** le corps ci-dessous au destinataire partenaire (adapter signature).
 
 **P0-1 — VAMReg write**
 
@@ -163,6 +163,15 @@ Objectif : tourner sans Excel (hors EDI).
 
 **Gate code** : `pharmacy.EnqueueInvoicesConnect` → `ErrInvoicesConnectResellerPending` jusqu’au déblocage (ne pas brancher sur finalize).
 
+### Blocage actuel (2026-08-11)
+
+| Chantier | Statut | Débloque quand |
+|----------|--------|----------------|
+| **S5** worker `invoices.connect` + Phase **3.C–3.E** | ⏸ gelé | Credentials **P0-2** branchés SM |
+| **4.A** VAMReg live | ⏸ dry-run only | Credentials **P0-1** write + `VAMREG_DRY_RUN=false` |
+
+Aucun code Phase 3 / 4.A à démarrer tant que les tickets P0-1 / P0-2 n’ont pas de réponse partenaire.
+
 | ID | Chantier | Contenu | Statut |
 |----|----------|---------|--------|
 | 3.A | Mapping DAF → lignes | Lignes proposées par l’API (qty, libellé, prix catalogue, TVA) ; revue humaine avant envoi | ✅ Livré (`/invoicing/prefill`) |
@@ -238,7 +247,7 @@ flowchart TB
   P5 --> P6
 ```
 
-**Priorité actuelle** : 2.F / P0-3 catalogue AFMPS ✅ (staging+prod) · **P0-1** VAMReg write / **P0-2** Billit reseller → S5 → Phase 3 · Phase 4.A–B–E / Phase 5 après P0 restants. S6 staging clôturé.  
+**Priorité actuelle** : 2.F / P0-3 ✅ · tickets **P0-1 / P0-2** ouverts (forward mails) · specs brouillon **P0-4…7** ([45](45-PHARMACY-P0-SPECS.md)) · Phase 3 / 4.A **gelées** jusqu’aux credentials. S6 staging clôturé.  
 **Facturation** : dès P0-2 → S5 → Phase 3.
 
 ---
@@ -265,4 +274,5 @@ flowchart TB
 | [28](28-PLAN-STOCK-PEREMPTION.md) | Suivi sprints S0–S6 |
 | [33](33-BILLIT-INTEGRATION.md) | Billit + BIL-9 |
 | [15](15-PLAN-TESTS.md) | P0 / QA |
+| [45](45-PHARMACY-P0-SPECS.md) | Brouillons P0-4…7 |
 | [04-MODULES-METIER.md](04-MODULES-METIER.md) | Modules |
