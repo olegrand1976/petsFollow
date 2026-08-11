@@ -1421,7 +1421,7 @@
       "openPdf": "Abrir PDF",
       "vamregSpecies": "Especie (VAMReg)",
       "vamregIndication": "Indicación",
-      "vamregRefsEmpty": "Listas AFMPS no sincronizadas — texto libre. Ops: POST /internal/pharmacy/vamreg-ref-sync.",
+      "vamregRefsEmpty": "Listas AFMPS no sincronizadas — texto libre permitido.",
       "vamregDuration": "Duración (días)",
       "previewTitle": "Asignación FEFO prevista",
       "error": "Acción DAF imposible.",

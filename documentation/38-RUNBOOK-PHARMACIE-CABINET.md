@@ -99,4 +99,5 @@ E2E pharmacie : `17-pharmacy-stock-daf.spec.ts` · AFMPS admin : `23-afmps-admin
 
 Les tables `pharmacy.*` (mouvements, DAF, audits) **ne sont pas** purgées par le job RGPD 3 ans d’inactivité utilisateurs. Conservation registres typique 5 ans — voir commentaire `internalRunRetentionPurge`.  
 Preuve cabinet : `GET /api/v1/vet/pharmacy/movements/retention-stats` (BFF `/api/vet/pharmacy/movements/retention-stats`).  
-Immutabilité : `petsfollow_app` n’a plus `UPDATE`/`DELETE` sur `pharmacy.stock_movements` (migration `000172`) ; anonymisation pro nullifie `created_by` via `pharmacy.rgpd_null_stock_movement_created_by`.
+Immutabilité : `petsfollow_app` n’a plus `UPDATE`/`DELETE` sur `pharmacy.stock_movements` (migration `000172`) ; trigger `enforce_stock_movements_immutable` (`000173`/`000174`) bloque aussi en local. Nullify autorisé : `created_by`, `delivery_note_id`, `inventory_session_id` (RGPD + FK `ON DELETE SET NULL`).  
+**Attention ops** : un `DELETE` hard d’un `practice.practices` cascade sur les mouvements et **échoue** à cause du trigger — soft-delete cabinet ou procédure ops dédiée (pas de wipe SQL naïf).

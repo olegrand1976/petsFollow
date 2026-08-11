@@ -846,15 +846,18 @@ type StockMovementsRetentionStats struct {
 	NewestAt                string `json:"newestAt,omitempty"`
 	OlderThanRetentionYears int    `json:"olderThanRetentionYears"`
 	RetentionYears          int    `json:"retentionYears"`
-	ImmutableAppRole        bool   `json:"immutableAppRole"` // documented: UPDATE/DELETE revoked for petsfollow_app
+	// ImmutableEnforced — trigger+policy append-only (UPDATE métier / DELETE bloqués).
+	ImmutableEnforced bool `json:"immutableEnforced"`
+	// AppRoleUpdateRevoked — true si petsfollow_app n'a plus UPDATE (staging/prod).
+	AppRoleUpdateRevoked bool `json:"appRoleUpdateRevoked"`
 }
 
 // StockMovementsRetentionStats returns counts for a practice register (preuve rétention 5 ans).
 func (s *Store) StockMovementsRetentionStats(ctx context.Context, practiceID string) (StockMovementsRetentionStats, error) {
 	out := StockMovementsRetentionStats{
-		PracticeID:       practiceID,
-		RetentionYears:   StockMovementsRetentionYears,
-		ImmutableAppRole: true,
+		PracticeID:        practiceID,
+		RetentionYears:    StockMovementsRetentionYears,
+		ImmutableEnforced: true,
 	}
 	var oldest, newest *time.Time
 	err := s.pool.QueryRow(ctx, `
@@ -875,6 +878,11 @@ func (s *Store) StockMovementsRetentionStats(ctx context.Context, practiceID str
 	if newest != nil {
 		out.NewestAt = newest.UTC().Format(time.RFC3339)
 	}
+	// Role may be absent in local test DBs — treat missing role as revoked=false.
+	_ = s.pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM pg_roles WHERE rolname = 'petsfollow_app'
+		) AND NOT has_table_privilege('petsfollow_app', 'pharmacy.stock_movements', 'UPDATE')`).Scan(&out.AppRoleUpdateRevoked)
 	return out, nil
 }
 

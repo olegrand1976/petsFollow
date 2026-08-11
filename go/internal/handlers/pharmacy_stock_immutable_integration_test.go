@@ -18,6 +18,7 @@ func TestPharmacyStockMovementsImmutableAndRetentionStats(t *testing.T) {
 	st := store.New(api.pool)
 
 	suffix := uuid.NewString()[:8]
+	lot := "LOT-IMM-" + suffix
 	medID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
 		CNK: "2777" + suffix[:4], Name: "Immutable Demo " + suffix, IsActive: true,
 	})
@@ -29,7 +30,7 @@ func TestPharmacyStockMovementsImmutableAndRetentionStats(t *testing.T) {
 	exp := time.Now().AddDate(0, 0, 90).Format("2006-01-02")
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
 		"medicationId": medID,
-		"lotNumber":    "LOT-IMM-" + suffix,
+		"lotNumber":    lot,
 		"expiresOn":    exp,
 		"qty":          2,
 		"unit":         "box",
@@ -40,9 +41,11 @@ func TestPharmacyStockMovementsImmutableAndRetentionStats(t *testing.T) {
 
 	var movID, createdBy string
 	if err := api.pool.QueryRow(ctx, `
-		SELECT id::text, COALESCE(created_by::text,'')
-		FROM pharmacy.stock_movements
-		ORDER BY created_at DESC LIMIT 1`).Scan(&movID, &createdBy); err != nil {
+		SELECT m.id::text, COALESCE(m.created_by::text,'')
+		FROM pharmacy.stock_movements m
+		JOIN pharmacy.medication_batches b ON b.id = m.batch_id
+		WHERE b.lot_number = $1
+		ORDER BY m.created_at DESC LIMIT 1`, lot).Scan(&movID, &createdBy); err != nil {
 		t.Fatal(err)
 	}
 	if movID == "" {
@@ -61,6 +64,13 @@ func TestPharmacyStockMovementsImmutableAndRetentionStats(t *testing.T) {
 	_, err = api.pool.Exec(ctx, `DELETE FROM pharmacy.stock_movements WHERE id = $1::uuid`, movID)
 	if err == nil {
 		t.Fatal("expected immutable block on DELETE")
+	}
+
+	// FK-style nullify of delivery_note_id must be allowed (column already null → no-op path).
+	_, err = api.pool.Exec(ctx, `
+		UPDATE pharmacy.stock_movements SET delivery_note_id = NULL WHERE id = $1::uuid`, movID)
+	if err != nil {
+		t.Fatalf("nullify delivery_note_id should be allowed: %v", err)
 	}
 
 	if createdBy != "" {
@@ -82,7 +92,7 @@ func TestPharmacyStockMovementsImmutableAndRetentionStats(t *testing.T) {
 		t.Fatalf("retention-stats %d %#v", code, env)
 	}
 	got := dataMap(t, env)
-	if got["immutableAppRole"] != true {
+	if got["immutableEnforced"] != true {
 		t.Fatalf("%#v", got)
 	}
 	if got["retentionYears"].(float64) != float64(store.StockMovementsRetentionYears) {

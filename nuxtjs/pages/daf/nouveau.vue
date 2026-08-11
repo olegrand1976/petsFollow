@@ -92,19 +92,15 @@
         <option
           v-for="o in vamregSpecies"
           :key="o.code"
-          :value="o.code"
-        >
-          {{ refLabel(o) }}
-        </option>
+          :value="refOptionValue(o)"
+        />
       </datalist>
       <datalist id="daf-vamreg-indication">
         <option
           v-for="o in vamregIndications"
           :key="o.code"
-          :value="o.code"
-        >
-          {{ refLabel(o) }}
-        </option>
+          :value="refOptionValue(o)"
+        />
       </datalist>
       <ProButton variant="secondary" test-id="daf-add-line" @click="addLine">{{ $t('pharmacy.daf.addLine') }}</ProButton>
     </ProCard>
@@ -232,6 +228,22 @@ function refLabel(o: VamregRefOption): string {
   return (o.labelFr || o.labelEn || o.labelNl || o.code || '').trim()
 }
 
+/** Datalist value: "CODE — Label" so browsers show a readable suggestion; API keeps the code. */
+function refOptionValue(o: VamregRefOption): string {
+  const label = refLabel(o)
+  if (!label || label === o.code) return o.code
+  return `${o.code} — ${label}`
+}
+
+function parseRefInput(raw: string): string {
+  const s = String(raw || '').trim()
+  if (!s) return ''
+  const sep = ' — '
+  const i = s.indexOf(sep)
+  if (i > 0) return s.slice(0, i).trim()
+  return s
+}
+
 async function loadVamregRefs() {
   vamregRefsLoaded.value = false
   try {
@@ -308,7 +320,7 @@ const canSubmit = computed(() =>
   lines.value.every((l) => {
     if (!l.med?.id || !l.ammNumber || !(l.qty > 0)) return false
     if (l.med.raw?.isAntibiotic) {
-      return !!l.species.trim() && !!l.indication.trim() && l.durationDays > 0 && !!l.posology.trim()
+      return !!parseRefInput(l.species) && !!parseRefInput(l.indication) && l.durationDays > 0 && !!l.posology.trim()
     }
     return true
   }),
@@ -473,10 +485,10 @@ function buildItems() {
     }
     if (l.med?.raw?.isAntibiotic) {
       item.vamregPayload = {
-        species: l.species,
-        indication: l.indication,
+        species: parseRefInput(l.species),
+        indication: parseRefInput(l.indication),
         durationDays: l.durationDays,
-        posology: l.posology,
+        posology: l.posology.trim(),
       }
     }
     return item

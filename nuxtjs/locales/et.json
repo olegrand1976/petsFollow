@@ -1421,7 +1421,7 @@
       "openPdf": "Ava PDF",
       "vamregSpecies": "Liik (VAMReg)",
       "vamregIndication": "Näidustus",
-      "vamregRefsEmpty": "AFMPS loendid pole sünkroonitud — vaba tekst. Ops: POST /internal/pharmacy/vamreg-ref-sync.",
+      "vamregRefsEmpty": "AFMPS loendid pole sünkroonitud — vaba tekst lubatud.",
       "vamregDuration": "Kestus (päeva)",
       "previewTitle": "Planeeritud FEFO jaotus",
       "error": "DAF toiming ebaõnnestus.",

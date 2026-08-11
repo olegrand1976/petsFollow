@@ -1421,7 +1421,7 @@
       "openPdf": "PDF openen",
       "vamregSpecies": "Soort (VAMReg)",
       "vamregIndication": "Indicatie",
-      "vamregRefsEmpty": "AFMPS-lijsten niet gesynchroniseerd — vrije tekst. Ops: POST /internal/pharmacy/vamreg-ref-sync.",
+      "vamregRefsEmpty": "AFMPS-lijsten niet gesynchroniseerd — vrije tekst toegestaan.",
       "vamregDuration": "Duur (dagen)",
       "previewTitle": "Geplande FEFO-toewijzing",
       "error": "DAF-actie mislukt.",

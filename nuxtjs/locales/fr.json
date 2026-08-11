@@ -2130,7 +2130,7 @@
       "openPdf": "Ouvrir PDF",
       "vamregSpecies": "Espèce (VAMReg)",
       "vamregIndication": "Indication",
-      "vamregRefsEmpty": "Listes AFMPS non synchronisées — saisie libre. Ops : POST /internal/pharmacy/vamreg-ref-sync.",
+      "vamregRefsEmpty": "Listes AFMPS non synchronisées — saisie libre autorisée.",
       "vamregDuration": "Durée (jours)",
       "vamregLabel": "VAMReg",
       "vamregRetry": "Relancer VAMReg",
