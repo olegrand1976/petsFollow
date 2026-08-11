@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canAdvanceSupportStatus,
   isValidSupportStatusTransition,
-  supportStatusSelectOptions,
+  SUPPORT_WORKFLOW_ORDER,
 } from '~/utils/support-status'
 
 describe('support-status', () => {
@@ -15,8 +16,11 @@ describe('support-status', () => {
     expect(isValidSupportStatusTransition('closed', 'open')).toBe(true)
   })
 
-  it('expose current + next pour le select', () => {
-    expect(supportStatusSelectOptions('done')).toEqual(['done', 'closed'])
-    expect(supportStatusSelectOptions('open')).toEqual(['open', 'in_progress', 'closed'])
+  it('expose les 5 étapes et les avances cliquables', () => {
+    expect(SUPPORT_WORKFLOW_ORDER).toEqual(['open', 'in_progress', 'to_test', 'done', 'closed'])
+    expect(canAdvanceSupportStatus('open', 'in_progress')).toBe(true)
+    expect(canAdvanceSupportStatus('open', 'closed')).toBe(true)
+    expect(canAdvanceSupportStatus('open', 'done')).toBe(false)
+    expect(canAdvanceSupportStatus('open', 'open')).toBe(false)
   })
 })

@@ -147,7 +147,14 @@
                 data-testid="admin-support-kanban-status"
                 @change="onKanbanStatus(ticket, ($event.target as HTMLSelectElement).value)"
               >
-                <option v-for="st in STATUSES" :key="st" :value="st">{{ statusLabel(st) }}</option>
+                <option
+                  v-for="st in SUPPORT_STATUSES"
+                  :key="st"
+                  :value="st"
+                  :disabled="st !== ticket.status && !canAdvanceSupportStatus(ticket.status, st)"
+                >
+                  {{ statusLabel(st) }}
+                </option>
               </select>
             </label>
           </article>
@@ -185,11 +192,16 @@
 </template>
 
 <script setup lang="ts">
+import {
+  SUPPORT_STATUSES,
+  canAdvanceSupportStatus,
+  supportStatusBadgeVariant,
+} from '~/utils/support-status'
+
 definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
 const PAGE_SIZE = 25
 const KANBAN_LIMIT = 100
-const STATUSES = ['open', 'in_progress', 'to_test', 'done', 'closed'] as const
 
 const { t } = useI18n()
 const { viewMode } = useListView('pf-admin-support-view', 'table')
@@ -214,7 +226,7 @@ const pageLabel = computed(() => {
 })
 
 const kanbanColumns = computed(() =>
-  STATUSES.map((status) => ({
+  SUPPORT_STATUSES.map((status) => ({
     status,
     title: statusLabel(status),
     items: rows.value.filter((ticket) => ticket.status === status),
@@ -234,20 +246,7 @@ function sourceLabel(source: string) {
 }
 
 function statusVariant(status: string): 'neutral' | 'success' | 'warning' | 'danger' {
-  switch (status) {
-    case 'open':
-      return 'danger'
-    case 'in_progress':
-      return 'warning'
-    case 'to_test':
-      return 'neutral'
-    case 'done':
-      return 'success'
-    case 'closed':
-      return 'neutral'
-    default:
-      return 'neutral'
-  }
+  return supportStatusBadgeVariant(status)
 }
 
 function formatDate(iso: string) {
@@ -321,6 +320,11 @@ async function loadAt(targetOffset: number): Promise<boolean> {
 
 async function onKanbanStatus(ticket: any, status: string) {
   if (!status || status === ticket.status) return
+  if (!canAdvanceSupportStatus(ticket.status, status)) {
+    patchError.value = t('admin.support.statusTransitionBlocked')
+    await load()
+    return
+  }
   patchError.value = ''
   try {
     await $fetch(`/api/admin/support/tickets/${ticket.id}`, {
