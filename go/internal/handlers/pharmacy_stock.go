@@ -27,6 +27,7 @@ func (a *API) registerPharmacyStockRoutes(pr chi.Router) {
 	pr.Post("/vet/pharmacy/batches/{id}/quarantine", a.quarantinePharmacyBatch)
 	pr.Post("/vet/pharmacy/batches/{id}/waste", a.wastePharmacyBatch)
 	pr.Get("/vet/pharmacy/expiry/summary", a.getPharmacyExpirySummary)
+	pr.Get("/vet/pharmacy/movements/retention-stats", a.getPharmacyMovementsRetentionStats)
 	pr.Get("/vet/pharmacy/movements", a.listPharmacyMovements)
 	pr.Get("/vet/pharmacy/prices", a.listPharmacyPrices)
 	pr.Put("/vet/pharmacy/prices/{medicationId}", a.putPharmacyPrice)
@@ -389,6 +390,22 @@ func (a *API) listPharmacyMovements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
+}
+
+func (a *API) getPharmacyMovementsRetentionStats(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	stats, err := a.store.StockMovementsRetentionStats(r.Context(), id.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, stats)
 }
 
 func (a *API) exportPharmacyBatchesCSV(w http.ResponseWriter, r *http.Request) {

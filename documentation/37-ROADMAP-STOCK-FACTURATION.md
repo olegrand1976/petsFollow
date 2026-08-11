@@ -113,7 +113,7 @@ Lien ticket : **BIL-9** — [33 § Phase 5](33-BILLIT-INTEGRATION.md) — **livr
 | 4.C | Temps d’attente structurés | Viande / lait / œufs sur référentiel + DAF | ✅ Colonnes ref + snapshot DAF + PDF + `PATCH …/withdrawal` |
 | 4.D | Chaîne alimentaire | Statut animal ; DAF obligatoire ; éviction (ex. phénylbutazone) | ✅ `food_chain_status` + gate finalize + ban flag |
 | 4.E | Mentions DAF renforcées | Alignement AFMPS + revue juridique PDF | Disclaimer non certifié — attend P0-7 |
-| 4.F | Traçabilité 5 ans | Rétention / export registres ; pas de purge destructive mouvements | ✅ Job rétention users **n’efface pas** `pharmacy.*` (commentaire `retention.go`) · inventaire CSV · runbook 38 |
+| 4.F | Traçabilité 5 ans | Rétention / export registres ; pas de purge destructive mouvements | ✅ Job rétention users **n’efface pas** `pharmacy.*` · `REVOKE UPDATE/DELETE` mouvements (000172) · `GET …/movements/retention-stats` · inventaire CSV · runbook 38 |
 
 ---
 

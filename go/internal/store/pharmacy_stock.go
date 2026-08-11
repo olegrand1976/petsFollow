@@ -835,6 +835,49 @@ func (s *Store) ListStockMovements(ctx context.Context, practiceID string, filte
 	return out, rows.Err()
 }
 
+// StockMovementsRetentionYears — conservation typique registres (UE 2019/6 / BE).
+const StockMovementsRetentionYears = 5
+
+// StockMovementsRetentionStats proves pharmacy movements are kept (not purged by user retention).
+type StockMovementsRetentionStats struct {
+	PracticeID              string `json:"practiceId"`
+	Total                   int    `json:"total"`
+	OldestAt                string `json:"oldestAt,omitempty"`
+	NewestAt                string `json:"newestAt,omitempty"`
+	OlderThanRetentionYears int    `json:"olderThanRetentionYears"`
+	RetentionYears          int    `json:"retentionYears"`
+	ImmutableAppRole        bool   `json:"immutableAppRole"` // documented: UPDATE/DELETE revoked for petsfollow_app
+}
+
+// StockMovementsRetentionStats returns counts for a practice register (preuve rétention 5 ans).
+func (s *Store) StockMovementsRetentionStats(ctx context.Context, practiceID string) (StockMovementsRetentionStats, error) {
+	out := StockMovementsRetentionStats{
+		PracticeID:       practiceID,
+		RetentionYears:   StockMovementsRetentionYears,
+		ImmutableAppRole: true,
+	}
+	var oldest, newest *time.Time
+	err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int,
+		       MIN(created_at),
+		       MAX(created_at),
+		       COUNT(*) FILTER (WHERE created_at < NOW() - make_interval(years => $2))::int
+		FROM pharmacy.stock_movements
+		WHERE practice_id = $1`, practiceID, StockMovementsRetentionYears).Scan(
+		&out.Total, &oldest, &newest, &out.OlderThanRetentionYears,
+	)
+	if err != nil {
+		return out, err
+	}
+	if oldest != nil {
+		out.OldestAt = oldest.UTC().Format(time.RFC3339)
+	}
+	if newest != nil {
+		out.NewestAt = newest.UTC().Format(time.RFC3339)
+	}
+	return out, nil
+}
+
 func (s *Store) ListPracticeVetEmails(ctx context.Context, practiceID string) ([]string, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT email FROM identity.users

@@ -53,11 +53,23 @@
         <template v-if="line.med?.raw?.isAntibiotic">
           <div>
             <label class="pro-label">{{ $t('pharmacy.daf.vamregSpecies') }}</label>
-            <input v-model="line.species" class="pro-input" />
+            <input
+              v-model="line.species"
+              class="pro-input"
+              list="daf-vamreg-species"
+              data-testid="daf-vamreg-species"
+              autocomplete="off"
+            />
           </div>
           <div>
             <label class="pro-label">{{ $t('pharmacy.daf.vamregIndication') }}</label>
-            <input v-model="line.indication" class="pro-input" />
+            <input
+              v-model="line.indication"
+              class="pro-input"
+              list="daf-vamreg-indication"
+              data-testid="daf-vamreg-indication"
+              autocomplete="off"
+            />
           </div>
           <div>
             <label class="pro-label">{{ $t('pharmacy.daf.vamregDuration') }}</label>
@@ -67,8 +79,33 @@
             <label class="pro-label">{{ $t('pharmacy.daf.vamregPosology') }}</label>
             <input v-model="line.posology" class="pro-input" data-testid="daf-vamreg-posology" />
           </div>
+          <p
+            v-if="vamregRefsLoaded && !vamregSpecies.length && !vamregIndications.length"
+            class="pro-hint daf-refs-hint"
+            data-testid="daf-vamreg-refs-empty"
+          >
+            {{ $t('pharmacy.daf.vamregRefsEmpty') }}
+          </p>
         </template>
       </div>
+      <datalist id="daf-vamreg-species">
+        <option
+          v-for="o in vamregSpecies"
+          :key="o.code"
+          :value="o.code"
+        >
+          {{ refLabel(o) }}
+        </option>
+      </datalist>
+      <datalist id="daf-vamreg-indication">
+        <option
+          v-for="o in vamregIndications"
+          :key="o.code"
+          :value="o.code"
+        >
+          {{ refLabel(o) }}
+        </option>
+      </datalist>
       <ProButton variant="secondary" test-id="daf-add-line" @click="addLine">{{ $t('pharmacy.daf.addLine') }}</ProButton>
     </ProCard>
 
@@ -180,6 +217,41 @@ const contextPetName = ref('')
 const petFoodChain = ref('')
 const petDomicile = ref('')
 const petSpecies = ref('')
+
+type VamregRefOption = {
+  code: string
+  labelFr?: string
+  labelEn?: string
+  labelNl?: string
+}
+const vamregSpecies = ref<VamregRefOption[]>([])
+const vamregIndications = ref<VamregRefOption[]>([])
+const vamregRefsLoaded = ref(false)
+
+function refLabel(o: VamregRefOption): string {
+  return (o.labelFr || o.labelEn || o.labelNl || o.code || '').trim()
+}
+
+async function loadVamregRefs() {
+  vamregRefsLoaded.value = false
+  try {
+    const [sp, ind] = await Promise.all([
+      $fetch<any>('/api/vet/pharmacy/vamreg-refs?kind=target_species'),
+      $fetch<any>('/api/vet/pharmacy/vamreg-refs?kind=indication'),
+    ])
+    const spItems = unwrap(sp)?.items
+    const indItems = unwrap(ind)?.items
+    vamregSpecies.value = Array.isArray(spItems) ? spItems : []
+    vamregIndications.value = Array.isArray(indItems) ? indItems : []
+  }
+  catch {
+    vamregSpecies.value = []
+    vamregIndications.value = []
+  }
+  finally {
+    vamregRefsLoaded.value = true
+  }
+}
 
 const clientUserId = computed(() => String(route.query.clientUserId || ''))
 const petId = computed(() => String(route.query.petId || ''))
@@ -339,6 +411,7 @@ async function loadDraftById() {
 
 onMounted(() => {
   void loadContext()
+  void loadVamregRefs()
   void (async () => {
     if (visitId.value) await loadDraftFromVisit()
     else if (dafIdQuery.value) await loadDraftById()

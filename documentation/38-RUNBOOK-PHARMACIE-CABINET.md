@@ -97,4 +97,6 @@ E2E pharmacie : `17-pharmacy-stock-daf.spec.ts` · AFMPS admin : `23-afmps-admin
 
 ## Rétention 5 ans
 
-Les tables `pharmacy.*` (mouvements, DAF, audits) **ne sont pas** purgées par le job RGPD 3 ans d’inactivité utilisateurs. Conservation registres typique 5 ans — voir commentaire `internalRunRetentionPurge`.
+Les tables `pharmacy.*` (mouvements, DAF, audits) **ne sont pas** purgées par le job RGPD 3 ans d’inactivité utilisateurs. Conservation registres typique 5 ans — voir commentaire `internalRunRetentionPurge`.  
+Preuve cabinet : `GET /api/v1/vet/pharmacy/movements/retention-stats` (BFF `/api/vet/pharmacy/movements/retention-stats`).  
+Immutabilité : `petsfollow_app` n’a plus `UPDATE`/`DELETE` sur `pharmacy.stock_movements` (migration `000172`) ; anonymisation pro nullifie `created_by` via `pharmacy.rgpd_null_stock_movement_created_by`.

@@ -111,6 +111,16 @@ test.describe('pharmacy stock + DAF trace', { tag: ['@p0', '@pharmacy'] }, () =>
     }
     const totalDelta = linked.reduce((sum, m) => sum + Number(m.delta), 0)
     expect(totalDelta).toBe(-2)
+
+    const ret = await page.request.get('/api/vet/pharmacy/movements/retention-stats')
+    expect(ret.status()).toBe(200)
+    const retData = (await ret.json() as { data?: { retentionYears?: number; total?: number; immutableAppRole?: boolean } }).data
+    expect(retData?.retentionYears).toBe(5)
+    expect(retData?.immutableAppRole).toBe(true)
+    expect(Number(retData?.total ?? 0)).toBeGreaterThanOrEqual(1)
+
+    const refs = await page.request.get('/api/vet/pharmacy/vamreg-refs?kind=target_species')
+    expect(refs.status(), await refs.text()).toBe(200)
   })
 })
 

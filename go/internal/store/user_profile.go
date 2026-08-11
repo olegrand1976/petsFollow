@@ -243,7 +243,7 @@ func redactPharmacyUserDataExec(ctx context.Context, tx pgx.Tx, userID string) e
 		`UPDATE pharmacy.delivery_notes SET created_by = NULL WHERE created_by = $1`,
 		`UPDATE pharmacy.inventory_sessions SET created_by = NULL WHERE created_by = $1`,
 		`UPDATE pharmacy.inventory_sessions SET closed_by = NULL WHERE closed_by = $1`,
-		`UPDATE pharmacy.stock_movements SET created_by = NULL WHERE created_by = $1`,
+		`SELECT pharmacy.rgpd_null_stock_movement_created_by($1::uuid)`,
 		`UPDATE pharmacy.medication_prices SET updated_by = NULL WHERE updated_by = $1`,
 	} {
 		if _, err := tx.Exec(ctx, q, userID); err != nil {
