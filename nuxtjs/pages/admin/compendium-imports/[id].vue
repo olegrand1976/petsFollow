@@ -35,12 +35,24 @@
             v-if="job.status === 'uploaded' || job.status === 'failed' || job.status === 'extracting'"
             test-id="admin-compendium-extract"
             :disabled="busy"
-            @click="startExtract"
+            @click="startExtract(false)"
           >
-            {{ job.status === 'uploaded' ? $t('admin.compendium.startExtract') : $t('admin.compendium.retryExtract') }}
+            {{ extractPrimaryLabel }}
+          </ProButton>
+          <ProButton
+            v-if="canForceRestartExtract"
+            variant="secondary"
+            test-id="admin-compendium-extract-restart"
+            :disabled="busy"
+            @click="startExtract(true)"
+          >
+            {{ $t('admin.compendium.restartExtract') }}
           </ProButton>
           <ProBadge :variant="statusVariant(job.status)">{{ statusLabel(job.status) }}</ProBadge>
         </div>
+        <p v-if="canResumeExtract" class="pro-hint pro-mt-md" data-testid="admin-compendium-resume-hint">
+          {{ $t('admin.compendium.resumeHint', { done: job.extractDone, total: job.extractTotal }) }}
+        </p>
       </ProCard>
 
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-preview">
@@ -288,6 +300,20 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const pendingCount = computed(() => rows.value.filter(r => canConfirmRow(r)).length)
 const errorRowCount = computed(() => rows.value.filter(r => r.status === 'error').length)
+const canResumeExtract = computed(() => {
+  if (!job.value) return false
+  if (job.value.status !== 'failed' && job.value.status !== 'extracting') return false
+  const done = Number(job.value.extractDone || 0)
+  const total = Number(job.value.extractTotal || 0)
+  return done > 0 && total > done
+})
+const canForceRestartExtract = computed(() => canResumeExtract.value)
+const extractPrimaryLabel = computed(() => {
+  if (!job.value) return ''
+  if (job.value.status === 'uploaded') return t('admin.compendium.startExtract')
+  if (canResumeExtract.value) return t('admin.compendium.resumeExtract')
+  return t('admin.compendium.retryExtract')
+})
 
 function rowEditable (row: any) {
   return row?.status !== 'upserted' && row?.status !== 'excluded'
@@ -363,10 +389,11 @@ function stopPoll () {
   }
 }
 
-async function startExtract () {
+async function startExtract (forceRestart = false) {
   busy.value = true
   try {
-    await $fetch(`/api/admin/compendium-imports/${id.value}/extract`, { method: 'POST' })
+    const q = forceRestart ? '?restart=1' : ''
+    await $fetch(`/api/admin/compendium-imports/${id.value}/extract${q}`, { method: 'POST' })
     startPoll()
     await load()
   } finally {

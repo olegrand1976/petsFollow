@@ -2299,7 +2299,10 @@
       "confirmRow": "Kinnita",
       "pageHint": "Ava PDF lehel {page}, et kirje käsitsi lõpetada",
       "manualHint": "Puudulik või halvasti loetav rida: taastatud väljad jäävad nähtavaks. Kasuta PDF-lehe numbrit käsitsi parandamiseks/täiendamiseks, seejärel Kinnita.",
-      "fixFromPage": "Täida käsitsi (PDF lk {page})"
+      "fixFromPage": "Täida käsitsi (PDF lk {page})",
+      "resumeExtract": "Jätka ekstrakti",
+      "restartExtract": "Alusta otsast",
+      "resumeHint": "Võib jätkata chunkist {done}/{total} (juba eraldatud read säilivad)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

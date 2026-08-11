@@ -224,21 +224,76 @@ func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]C
 	return out, rows.Err()
 }
 
-// MarkCompendiumExtracting sets status + extract_total.
-// Allows uploaded | failed | extracting (stuck-job recovery / restart).
-func (s *Store) MarkCompendiumExtracting(ctx context.Context, id string, extractTotal int) error {
-	tag, err := s.pool.Exec(ctx, `
-		UPDATE pharmacy.compendium_import_jobs
-		SET status = 'extracting', extract_total = $2, extract_done = 0,
-		    error_message = NULL, updated_at = now()
-		WHERE id = $1 AND status IN ('uploaded', 'failed', 'extracting')`, id, extractTotal)
+// BeginCompendiumExtractResult describes how the next extract run should proceed.
+type BeginCompendiumExtractResult struct {
+	ResumeFromChunk int // 0-based index into ChunkPageRanges
+}
+
+const compendiumExtractStaleAfter = 15 * time.Minute
+
+// BeginCompendiumExtract claims the job for extraction.
+// forceRestart clears progress + rows. Otherwise a failed/stale job resumes from extract_done.
+// Active extracting jobs updated within 15 minutes refuse a second claim (anti double-run).
+func (s *Store) BeginCompendiumExtract(ctx context.Context, id string, extractTotal int, forceRestart bool) (BeginCompendiumExtractResult, error) {
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return err
+		return BeginCompendiumExtractResult{}, err
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrConflict
+	defer tx.Rollback(ctx)
+
+	var status string
+	var extractDone int
+	var updatedAt time.Time
+	err = tx.QueryRow(ctx, `
+		SELECT status, extract_done, updated_at
+		FROM pharmacy.compendium_import_jobs
+		WHERE id = $1
+		FOR UPDATE`, id).Scan(&status, &extractDone, &updatedAt)
+	if err == pgx.ErrNoRows {
+		return BeginCompendiumExtractResult{}, ErrNotFound
 	}
-	return nil
+	if err != nil {
+		return BeginCompendiumExtractResult{}, err
+	}
+	switch status {
+	case "uploaded", "failed", "extracting":
+	default:
+		return BeginCompendiumExtractResult{}, ErrConflict
+	}
+	if status == "extracting" && time.Since(updatedAt) < compendiumExtractStaleAfter {
+		return BeginCompendiumExtractResult{}, ErrConflict
+	}
+
+	resumeFrom := 0
+	canResume := !forceRestart && status != "uploaded" && extractDone > 0 && extractDone < extractTotal
+	if canResume {
+		resumeFrom = extractDone
+	} else {
+		if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.compendium_import_rows WHERE job_id = $1`, id); err != nil {
+			return BeginCompendiumExtractResult{}, err
+		}
+		extractDone = 0
+		resumeFrom = 0
+	}
+
+	_, err = tx.Exec(ctx, `
+		UPDATE pharmacy.compendium_import_jobs
+		SET status = 'extracting', extract_total = $2, extract_done = $3,
+		    error_message = NULL, updated_at = now()
+		WHERE id = $1`, id, extractTotal, extractDone)
+	if err != nil {
+		return BeginCompendiumExtractResult{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return BeginCompendiumExtractResult{}, err
+	}
+	return BeginCompendiumExtractResult{ResumeFromChunk: resumeFrom}, nil
+}
+
+// MarkCompendiumExtracting is kept for tests that force an extracting status without a run.
+func (s *Store) MarkCompendiumExtracting(ctx context.Context, id string, extractTotal int) error {
+	_, err := s.BeginCompendiumExtract(ctx, id, extractTotal, true)
+	return err
 }
 
 func (s *Store) SetCompendiumExtractProgress(ctx context.Context, id string, done int) error {
@@ -268,18 +323,22 @@ type CompendiumRowInsert struct {
 	ErrorMessage       string
 }
 
-// ReplaceCompendiumExtractRows clears previous rows and inserts a new extract batch; marks extracted.
-func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, rows []CompendiumRowInsert) error {
+// AppendCompendiumExtractRows inserts rows for one completed chunk (keeps prior chunks on failure).
+func (s *Store) AppendCompendiumExtractRows(ctx context.Context, jobID string, rows []CompendiumRowInsert) error {
+	if len(rows) == 0 {
+		return nil
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.compendium_import_rows WHERE job_id = $1`, jobID); err != nil {
+	var base int
+	if err := tx.QueryRow(ctx, `
+		SELECT COALESCE(MAX(row_number), 0) FROM pharmacy.compendium_import_rows WHERE job_id = $1`, jobID).Scan(&base); err != nil {
 		return err
 	}
-	ready, errs := 0, 0
 	for i, row := range rows {
 		raw := row.RawJSON
 		if len(raw) == 0 {
@@ -293,12 +352,6 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 		if status == "" {
 			status = "pending"
 		}
-		switch status {
-		case "ready":
-			ready++
-		case "error":
-			errs++
-		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO pharmacy.compendium_import_rows (
 				id, job_id, row_number, source_page, cnk, name,
@@ -309,7 +362,7 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 			) VALUES (
 				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16::jsonb,$17,NULLIF($18,''),NULLIF($19,'')
 			)`,
-			uuid.NewString(), jobID, i+1, row.SourcePage,
+			uuid.NewString(), jobID, base+i+1, row.SourcePage,
 			strings.TrimSpace(row.CNK), strings.TrimSpace(row.Name),
 			strings.TrimSpace(row.Manufacturer), strings.TrimSpace(row.ActiveSubstance),
 			strings.TrimSpace(row.ATCCode), strings.TrimSpace(row.PharmaceuticalForm),
@@ -320,19 +373,53 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 			return err
 		}
 	}
-	// Human-reviewed = ready|excluded|upserted only (pending/error wait for control).
-	reviewed := ready
+	if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// FinalizeCompendiumExtract marks the job extracted after all chunks succeeded.
+func (s *Store) FinalizeCompendiumExtract(ctx context.Context, jobID string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
+		return err
+	}
 	_, err = tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_jobs
 		SET status = 'extracted',
 		    extract_done = extract_total,
-		    row_count = $2, ready_count = $3, error_count = $4,
-		    reviewed_count = $5, error_message = NULL, updated_at = now()
-		WHERE id = $1`, jobID, len(rows), ready, errs, reviewed)
+		    error_message = NULL,
+		    updated_at = now()
+		WHERE id = $1`, jobID)
 	if err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// ReplaceCompendiumExtractRows clears previous rows and inserts a new extract batch; marks extracted.
+func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, rows []CompendiumRowInsert) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `DELETE FROM pharmacy.compendium_import_rows WHERE job_id = $1`, jobID); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	if err := s.AppendCompendiumExtractRows(ctx, jobID, rows); err != nil {
+		return err
+	}
+	return s.FinalizeCompendiumExtract(ctx, jobID)
 }
 
 func (s *Store) FailCompendiumImportJob(ctx context.Context, id, msg string) error {
@@ -787,7 +874,8 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 	}
 
 	rows, err := tx.Query(ctx, `
-		SELECT id::text, cnk, name, atc_code, pharmaceutical_form, pack_size, is_antibiotic
+		SELECT id::text, cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       atc_code, pharmaceutical_form, pack_size, is_antibiotic
 		FROM pharmacy.compendium_import_rows
 		WHERE job_id = $1 AND status = 'ready'
 		ORDER BY row_number`, jobID)
@@ -795,13 +883,14 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 		return CompendiumCommitResult{}, err
 	}
 	type readyRow struct {
-		id, cnk, name, atc, form, pack string
-		ab                             bool
+		id, cnk, name, manufacturer, substance, atc, form, pack string
+		ab                                                      bool
 	}
 	var ready []readyRow
 	for rows.Next() {
 		var rr readyRow
-		if err := rows.Scan(&rr.id, &rr.cnk, &rr.name, &rr.atc, &rr.form, &rr.pack, &rr.ab); err != nil {
+		if err := rows.Scan(&rr.id, &rr.cnk, &rr.name, &rr.manufacturer, &rr.substance,
+			&rr.atc, &rr.form, &rr.pack, &rr.ab); err != nil {
 			rows.Close()
 			return CompendiumCommitResult{}, err
 		}
@@ -814,11 +903,18 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 
 	upserted := 0
 	for _, rr := range ready {
-		meta, _ := json.Marshal(map[string]string{
+		metaMap := map[string]any{
 			"source": "compendium-pdf",
 			"jobId":  jobID,
 			"rowId":  rr.id,
-		})
+		}
+		if strings.TrimSpace(rr.manufacturer) != "" {
+			metaMap["manufacturer"] = strings.TrimSpace(rr.manufacturer)
+		}
+		if strings.TrimSpace(rr.substance) != "" {
+			metaMap["activeSubstance"] = strings.TrimSpace(rr.substance)
+		}
+		meta, _ := json.Marshal(metaMap)
 		norm := NormalizeMedicationName(rr.name)
 		newID := uuid.NewString()
 		var id string

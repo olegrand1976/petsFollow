@@ -2299,7 +2299,10 @@
       "confirmRow": "Bevestigen",
       "pageHint": "Open de PDF op pagina {page} om de fiche te vervolledigen",
       "manualHint": "Onvolledige of moeilijk leesbare regel: teruggevonden velden blijven zichtbaar. Gebruik het PDF-paginanummer om manueel te corrigeren/aan te vullen, daarna Bevestigen.",
-      "fixFromPage": "Manueel aanvullen (PDF p.{page})"
+      "fixFromPage": "Manueel aanvullen (PDF p.{page})",
+      "resumeExtract": "Extractie hervatten",
+      "restartExtract": "Opnieuw beginnen",
+      "resumeHint": "Hervatten vanaf chunk {done}/{total} (reeds geëxtraheerde rijen blijven)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

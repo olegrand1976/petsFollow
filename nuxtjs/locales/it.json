@@ -2964,7 +2964,10 @@
       "confirmRow": "Conferma",
       "pageHint": "Apri il PDF a pagina {page} per completare la scheda",
       "manualHint": "Riga incompleta o poco legibile: i campi recuperati restano visibili. Usa il n° di pagina PDF per correggere/completare a mano, poi Conferma.",
-      "fixFromPage": "Completare manualmente (PDF p.{page})"
+      "fixFromPage": "Completare manualmente (PDF p.{page})",
+      "resumeExtract": "Riprendi estrazione",
+      "restartExtract": "Ricomincia da zero",
+      "resumeHint": "Ripresa possibile dal chunk {done}/{total} (righe già estratte conservate)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

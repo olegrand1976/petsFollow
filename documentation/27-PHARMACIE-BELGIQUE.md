@@ -440,9 +440,9 @@ Complément après catalogue AFMPS : UI `/admin/compendium-imports`.
 Le PDF Vetcompendium **ne contient pas de CNK** (vérifié sur l’édition FR 2026). L’extraction Gemini remplit la fiche ; le CNK est **proposé par matching flou** sur `pharmacy.ref_medications`. Sans catalogue AFMPS → aucune suggestion (message UI).
 
 1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages). Pages = **numéros PDF absolus** (Vetcompendium FR 2026 : offset imprimé ≈ −18, ex. PDF 364 = catalogue imprimé 346).
-2. **Extract chunké** : plage découpée en lots de **6 pages** ; chaque lot est trimmé (`pdfcpu`) puis envoyé à Gemini (timeout HTTP média **5 min**/chunk ; budget job ≈ 10 min + 5 min×chunks, cap 3 h). Échec trim → `trim_failed` (pas de fallback PDF entier). Progress UI = `extractDone` / `extractTotal` (nb de chunks). Staging `pharmacy.compendium_import_*` + match AFMPS.
-3. Contrôle humain : suggestion / candidat / corriger, **Valider** / bulk `confirm-ready`, exclude.
-4. Commit → upsert (`afmps_meta.source=compendium-pdf`) — **CNK réel obligatoire**.
+2. **Extract chunké** : plage découpée en lots de **6 pages** ; chaque lot est trimmé (`pdfcpu`) puis envoyé à Gemini (timeout HTTP média **5 min**/chunk ; budget job ≈ 10 min + 5 min×chunks, cap 3 h). Échec trim → `trim_failed` (pas de fallback PDF entier). Progress UI = `extractDone` / `extractTotal` (nb de chunks). **Persistance par chunk** : monographies d’un lot réussi écrites tout de suite ; échec au chunk N conserve 1…N−1. **Reprise** : `POST …/extract` sur `failed` reprend à `extractDone` ; `?restart=1` efface et recommence ; extract actif (< 15 min) → 409. Staging `pharmacy.compendium_import_*` + match AFMPS.
+3. Contrôle humain : suggestion / candidat / corriger (page, labo, substance, pack), **Valider** / bulk `confirm-ready`, exclude.
+4. Commit → upsert (`afmps_meta.source=compendium-pdf` + `manufacturer` / `activeSubstance` si présents) — **CNK réel obligatoire**.
 
 Format catalogue (vérifié FR 2026, plage A–Z) : 2 colonnes · `NOM (Lab)` · substance: dose · forme+voie collées (`comprimépo`) · `Posologie` · espèces · retrait · conditionnement · `R/` · **pas de CNK/ATC**. Invariant extract : ne pas inventer de CNK.
 

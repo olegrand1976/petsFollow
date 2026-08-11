@@ -27,6 +27,22 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 | P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | ⬜ Ouvert | Décision build/buy écrite |
 | P0-7 | Trajectoire **certification DAF** vs disclaimer actuel | Juridique | ⬜ Ouvert | Écrit produit + juridique |
 
+### Suivi P0 partenaires (hors code) — 2026-08-11
+
+Actions ops / juridique à pousser **en parallèle** du code (pas de chantier technique tant que le critère de sortie n’est pas atteint) :
+
+| ID | Prochaine action concrète | Bloque |
+|----|---------------------------|--------|
+| **P0-1** | Obtenir credentials **write** VAMReg (ICD déclaration) + env test SM | 4.A production |
+| **P0-2** | Relancer Billit pour **accès reseller** ; dès réception → dégeler S5 worker + Phase 3 | 3.C–3.E, GA facture |
+| **P0-3** | Trancher licence / cadence maj **AFMPS–CNK** prod (contrat + fréquence) | 2.F ops |
+| **P0-4** | Spec registre **stupéfiants BE** figée (champs, durée conservation, export) | 4.B |
+| **P0-5** | Contacter 1 grossiste pilote (docs API EDI) | 5.A |
+| **P0-6** | Décision écrite **build vs licence** Bigame/Vetcompendium notices | 5.B/C |
+| **P0-7** | Note juridique certif DAF vs disclaimer UI actuel | 4.E |
+
+**Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
+
 ### Prérequis facturation — Billit reseller (figé)
 
 **On attend encore les accès reseller Billit.** Tant qu’ils ne sont pas reçus :

@@ -313,7 +313,7 @@ Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 | D9 | P1 | Commissions commercial | Idem commercial | `/admin/commercial-commissions` |
 | D10 | P2 | SPIFF mix bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
-| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` (flag pharmacy) | Page liste + badge `dev` ; extract + **matching CNK AFMPS** (PDF sans CNK) + **lookup-cnk manuel** (catalogue `ref_medications`) + pending→confirm→commit ; DELETE job · e2e `21-compendium-admin` · Go `TestCompendiumImportFlow` / `Delete` / `CNKMatch` / `LookupCNK` |
+| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` (flag pharmacy) | Page liste + badge `dev` ; extract chunké **persist+resume** (`TestCompendiumImportResumeAfterChunkFailure`) + matching CNK AFMPS + lookup-cnk + pending→confirm→commit (meta manufacturer/substance) ; DELETE job · e2e `21-compendium-admin` · Go `TestCompendium*` |
 | D11c | P1 | Import AFMPS CSV | Nav admin → `/admin/afmps-imports` (flag pharmacy) | Page liste + badge `dev` ; **e2e UI** triple contrôle validate→reviewed→commit (`23-afmps-admin` + fixture `afmps-mini.csv`) ; filtre collisions ; meta JSON merge · Go `TestAFMPSImportTripleGate` / `Gate1Blocked` / `MetaMerge` · unit `pharmacy/afmps_csv_test` · runbook `38` § Import AFMPS |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |

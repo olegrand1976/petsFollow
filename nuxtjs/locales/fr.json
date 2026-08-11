@@ -2893,7 +2893,10 @@
       "retryExtract": "Relancer l’extraction",
       "previewHint": "Les lignes valides restent « en attente » jusqu’au contrôle humain (valider, vérifier le CNK via le catalogue AFMPS, ou corriger CNK/nom).",
       "confirmReady": "Valider {count} ligne(s) en attente",
-      "confirmRow": "Valider"
+      "confirmRow": "Valider",
+      "resumeExtract": "Reprendre l'extraction",
+      "restartExtract": "Tout recommencer",
+      "resumeHint": "Reprise possible depuis le chunk {done}/{total} (lignes déjà extraites conservées)."
     },
     "brandAssets": {
       "title": "Assets QR stores",

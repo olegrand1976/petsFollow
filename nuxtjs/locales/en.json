@@ -2299,7 +2299,10 @@
       "confirmRow": "Confirm",
       "pageHint": "Open the PDF at page {page} to complete the entry",
       "manualHint": "Incomplete or hard-to-read row: recovered fields stay visible. Use the PDF page number to correct/complete manually, then Confirm.",
-      "fixFromPage": "Complete manually (PDF p.{page})"
+      "fixFromPage": "Complete manually (PDF p.{page})",
+      "resumeExtract": "Resume extraction",
+      "restartExtract": "Restart from scratch",
+      "resumeHint": "Can resume from chunk {done}/{total} (already extracted rows kept)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

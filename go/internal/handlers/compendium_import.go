@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +27,9 @@ const maxCompendiumPDFBytes = 20 << 20 // 20 MiB
 
 // testCompendiumExtract overrides Gemini extract in integration tests.
 var testCompendiumExtract func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error)
+
+// compendiumExtractRunning prevents double goroutines for the same job on one API process.
+var compendiumExtractRunning sync.Map
 
 // TestSetCompendiumExtract installs a mock extractor (integration tests only).
 func TestSetCompendiumExtract(fn func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error)) {
@@ -231,7 +235,7 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// uploaded | failed | extracting (recovery if process died mid-job)
+	// uploaded | failed | extracting (stale recovery only — see BeginCompendiumExtract)
 	if job.Status != "uploaded" && job.Status != "failed" && job.Status != "extracting" {
 		writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 		return
@@ -250,7 +254,14 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_page_range")
 		return
 	}
-	if err := a.store.MarkCompendiumExtracting(r.Context(), id, len(chunks)); err != nil {
+	forceRestart := r.URL.Query().Get("restart") == "1" || r.URL.Query().Get("restart") == "true"
+	if _, loaded := compendiumExtractRunning.LoadOrStore(id, struct{}{}); loaded {
+		writeErr(w, r, http.StatusConflict, "conflict", "extract_already_running")
+		return
+	}
+	begin, err := a.store.BeginCompendiumExtract(r.Context(), id, len(chunks), forceRestart)
+	if err != nil {
+		compendiumExtractRunning.Delete(id)
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 			return
@@ -259,18 +270,20 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	go a.runCompendiumExtract(id)
+	go a.runCompendiumExtract(id, begin.ResumeFromChunk)
 
 	detail, err := a.store.GetCompendiumImportDetail(r.Context(), id)
 	if err != nil {
-		httpx.WriteData(w, http.StatusAccepted, map[string]any{"status": "extracting"})
+		httpx.WriteData(w, http.StatusAccepted, map[string]any{"status": "extracting", "resumeFromChunk": begin.ResumeFromChunk})
 		return
 	}
 	scrubCompendiumDetail(&detail)
 	httpx.WriteData(w, http.StatusAccepted, detail)
 }
 
-func (a *API) runCompendiumExtract(jobID string) {
+func (a *API) runCompendiumExtract(jobID string, resumeFromChunk int) {
+	defer compendiumExtractRunning.Delete(jobID)
+
 	job, err := a.store.GetCompendiumImportJob(context.Background(), jobID)
 	if err != nil {
 		return
@@ -280,9 +293,16 @@ func (a *API) runCompendiumExtract(jobID string) {
 		_ = a.store.FailCompendiumImportJob(context.Background(), jobID, "invalid_page_range")
 		return
 	}
+	if resumeFromChunk < 0 {
+		resumeFromChunk = 0
+	}
+	if resumeFromChunk > len(chunks) {
+		resumeFromChunk = len(chunks)
+	}
 	// Budget: media HTTP timeout is 5 min/chunk — keep headroom for trim + CNK match + persist.
 	// Max UI range is 200 pages → ≤34 chunks → ~3 h worst case.
-	timeout := min(10*time.Minute+time.Duration(len(chunks))*5*time.Minute, 3*time.Hour)
+	remaining := len(chunks) - resumeFromChunk
+	timeout := min(10*time.Minute+time.Duration(remaining)*5*time.Minute, 3*time.Hour)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	// Persist failure even if the run ctx already timed out / cancelled.
@@ -303,8 +323,8 @@ func (a *API) runCompendiumExtract(jobID string) {
 	}
 
 	extractor := &pharmacy.CompendiumExtractor{Gemini: a.gemini}
-	var meds []pharmacy.ExtractedMedication
-	for i, ch := range chunks {
+	for i := resumeFromChunk; i < len(chunks); i++ {
+		ch := chunks[i]
 		start, end := ch[0], ch[1]
 		var chunkMeds []pharmacy.ExtractedMedication
 		if testCompendiumExtract != nil {
@@ -320,7 +340,6 @@ func (a *API) runCompendiumExtract(jobID string) {
 		}
 		if err != nil {
 			log.Printf("compendium extract %s: gemini chunk %d/%d p%d-%d: %v", jobID, i+1, len(chunks), start, end, err)
-			// Persist a short reason so /admin UI is actionable (not just "extract_failed").
 			msg := fmt.Sprintf("extract_failed chunk %d/%d p%d-%d: %v", i+1, len(chunks), start, end, err)
 			if len(msg) > 400 {
 				msg = msg[:400] + "…"
@@ -328,10 +347,22 @@ func (a *API) runCompendiumExtract(jobID string) {
 			_ = a.store.FailCompendiumImportJob(failCtx, jobID, msg)
 			return
 		}
-		meds = append(meds, chunkMeds...)
+		inserts := a.compendiumRowsFromMeds(ctx, jobID, job.PageStart, chunkMeds)
+		if err := a.store.AppendCompendiumExtractRows(ctx, jobID, inserts); err != nil {
+			log.Printf("compendium extract %s: persist chunk %d: %v", jobID, i+1, err)
+			_ = a.store.FailCompendiumImportJob(failCtx, jobID, "persist_failed")
+			return
+		}
 		_ = a.store.SetCompendiumExtractProgress(ctx, jobID, i+1)
 	}
 
+	if err := a.store.FinalizeCompendiumExtract(ctx, jobID); err != nil {
+		log.Printf("compendium extract %s: finalize: %v", jobID, err)
+		_ = a.store.FailCompendiumImportJob(failCtx, jobID, "persist_failed")
+	}
+}
+
+func (a *API) compendiumRowsFromMeds(ctx context.Context, jobID string, fallbackPage int, meds []pharmacy.ExtractedMedication) []store.CompendiumRowInsert {
 	all := make([]store.CompendiumRowInsert, 0, len(meds))
 	for _, m := range meds {
 		match := pharmacy.CNKMatchResult{}
@@ -361,7 +392,7 @@ func (a *API) runCompendiumExtract(jobID string) {
 		}
 		sp := classified.SourcePage
 		if sp == nil {
-			p := job.PageStart
+			p := fallbackPage
 			sp = &p
 		}
 		var scorePtr *float64
@@ -388,11 +419,7 @@ func (a *API) runCompendiumExtract(jobID string) {
 			ErrorMessage:       msg,
 		})
 	}
-
-	if err := a.store.ReplaceCompendiumExtractRows(ctx, jobID, all); err != nil {
-		log.Printf("compendium extract %s: persist: %v", jobID, err)
-		_ = a.store.FailCompendiumImportJob(failCtx, jobID, "persist_failed")
-	}
+	return all
 }
 
 func manufacturerFromAFMPSMeta(raw json.RawMessage) string {

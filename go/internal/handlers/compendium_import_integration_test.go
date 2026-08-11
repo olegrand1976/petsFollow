@@ -219,6 +219,99 @@ func TestCompendiumImportMultiChunk(t *testing.T) {
 	}
 }
 
+func TestCompendiumImportResumeAfterChunkFailure(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://localhost:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	prev := pharmacy.CompendiumPagesPerChunk
+	pharmacy.CompendiumPagesPerChunk = 3
+	t.Cleanup(func() { pharmacy.CompendiumPagesPerChunk = prev })
+
+	var calls [][2]int
+	failOnce := true
+	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
+		calls = append(calls, [2]int{start, end})
+		if failOnce && start == 4 {
+			failOnce = false
+			return nil, fmt.Errorf("simulated_chunk_fail")
+		}
+		p := start
+		return []pharmacy.ExtractedMedication{
+			{CNK: fmt.Sprintf("2890%03d", start), Name: fmt.Sprintf("Resume Med %d", start), Manufacturer: "Lab", ActiveSubstance: "mol", SourcePage: &p},
+		}, nil
+	})
+	t.Cleanup(handlers.TestClearCompendiumExtract)
+
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	pdf := []byte("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n")
+	code, env := doCompendiumUpload(t, api.handler, adminTok, pdf, 1, 8)
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+	jobID, _ := env["data"].(map[string]any)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/extract", adminTok, nil)
+	if code != http.StatusAccepted {
+		t.Fatalf("extract %d %#v", code, env)
+	}
+
+	st := store.New(api.pool)
+	waitStatus := func(want string) store.CompendiumImportDetail {
+		t.Helper()
+		deadline := time.Now().Add(5 * time.Second)
+		var detail store.CompendiumImportDetail
+		for time.Now().Before(deadline) {
+			detail, err = st.GetCompendiumImportDetail(context.Background(), jobID)
+			if err != nil {
+				t.Fatalf("detail: %v", err)
+			}
+			if detail.Job.Status == want {
+				return detail
+			}
+			if detail.Job.Status == "extracted" || detail.Job.Status == "failed" {
+				if detail.Job.Status != want {
+					t.Fatalf("want %s got %s err=%s calls=%v", want, detail.Job.Status, detail.Job.ErrorMessage, calls)
+				}
+				return detail
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		t.Fatalf("timeout status=%s err=%s", detail.Job.Status, detail.Job.ErrorMessage)
+		return detail
+	}
+
+	failed := waitStatus("failed")
+	if failed.Job.ExtractDone != 1 {
+		t.Fatalf("extractDone after fail=%d want 1 (chunk 0 kept)", failed.Job.ExtractDone)
+	}
+	if len(failed.Rows) != 1 {
+		t.Fatalf("rows kept after fail=%d %#v", len(failed.Rows), failed.Rows)
+	}
+	callsBeforeResume := len(calls)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/extract", adminTok, nil)
+	if code != http.StatusAccepted {
+		t.Fatalf("resume extract %d %#v", code, env)
+	}
+	done := waitStatus("extracted")
+	if done.Job.ExtractDone != 3 || len(done.Rows) != 3 {
+		t.Fatalf("after resume done=%d rows=%d calls=%v", done.Job.ExtractDone, len(done.Rows), calls)
+	}
+	// Resume should only re-run chunks 2 and 3 (indices 1 and 2), not chunk 0 again.
+	newCalls := calls[callsBeforeResume:]
+	if len(newCalls) != 2 || newCalls[0] != [2]int{4, 6} || newCalls[1] != [2]int{7, 8} {
+		t.Fatalf("resume calls %#v (all %#v)", newCalls, calls)
+	}
+}
+
 func TestCompendiumImportCNKMatch(t *testing.T) {
 	t.Setenv("PHARMACY_ENABLED", "true")
 	api := newTestAPI(t)

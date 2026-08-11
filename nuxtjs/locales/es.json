@@ -2299,7 +2299,10 @@
       "confirmRow": "Confirmar",
       "pageHint": "Abra el PDF en la página {page} para completar la ficha",
       "manualHint": "Línea incompleta o poco legible: los campos recuperados siguen visibles. Use el nº de página PDF para corregir/completar a mano y luego Confirmar.",
-      "fixFromPage": "Completar manualmente (PDF p.{page})"
+      "fixFromPage": "Completar manualmente (PDF p.{page})",
+      "resumeExtract": "Reanudar extracción",
+      "restartExtract": "Empezar de nuevo",
+      "resumeHint": "Se puede reanudar desde el chunk {done}/{total} (se conservan las filas ya extraídas)."
     },
     "afmps": {
       "title": "AFMPS CSV import",
