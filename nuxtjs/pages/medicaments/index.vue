@@ -126,6 +126,13 @@
               >
                 {{ $t('pharmacy.medicaments.sourceCompendium') }}
               </ProBadge>
+              <ProBadge
+                v-else-if="afmpsSourceKind(row.afmpsSource) === 'other'"
+                variant="neutral"
+                data-testid="medicaments-source-other-badge"
+              >
+                {{ $t('pharmacy.medicaments.sourceOther') }}
+              </ProBadge>
               <span v-else class="pro-hint" data-testid="medicaments-source-unknown">—</span>
             </td>
           </tr>
@@ -190,6 +197,13 @@
             data-testid="medicaments-detail-source-compendium"
           >
             {{ $t('pharmacy.medicaments.sourceCompendium') }}
+          </ProBadge>
+          <ProBadge
+            v-else-if="sourceKind === 'other'"
+            variant="neutral"
+            data-testid="medicaments-detail-source-other"
+          >
+            {{ $t('pharmacy.medicaments.sourceOther') }}
           </ProBadge>
           <ProBadge v-if="detail.isAntibiotic" variant="warning">{{ $t('pharmacy.antibioticWarning') }}</ProBadge>
           <ProBadge v-if="detail.foodChainBanned" variant="danger">{{ $t('pharmacy.medicaments.foodChainBanned') }}</ProBadge>

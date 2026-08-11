@@ -160,47 +160,30 @@ func (s *Store) ListRefMedicationsByLetter(ctx context.Context, letter string, l
 		offset = 0
 	}
 
+	const letterWhere = `
+		is_active AND (
+			($1 = '#' AND left(name_normalized, 1) !~ '^[a-z]$')
+			OR ($1 <> '#' AND left(name_normalized, 1) = lower($1))
+		)`
+
 	var total int
-	var err error
-	if letter == "#" {
-		err = s.pool.QueryRow(ctx, `
-			SELECT count(*)::int FROM pharmacy.ref_medications
-			WHERE is_active AND left(name_normalized, 1) !~ '^[a-z]$'`).Scan(&total)
-	} else {
-		err = s.pool.QueryRow(ctx, `
-			SELECT count(*)::int FROM pharmacy.ref_medications
-			WHERE is_active AND left(name_normalized, 1) = lower($1)`, letter).Scan(&total)
-	}
-	if err != nil {
+	if err := s.pool.QueryRow(ctx, `
+		SELECT count(*)::int FROM pharmacy.ref_medications
+		WHERE `+letterWhere, letter).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	var rows pgx.Rows
-	if letter == "#" {
-		rows, err = s.pool.Query(ctx, `
-			SELECT id::text, cnk, name,
-			       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
-			       COALESCE(amm_number, ''),
-			       is_antibiotic, is_active,
-			       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
-			       COALESCE(afmps_meta->>'source', '')
-			FROM pharmacy.ref_medications
-			WHERE is_active AND left(name_normalized, 1) !~ '^[a-z]$'
-			ORDER BY name ASC
-			LIMIT $1 OFFSET $2`, limit, offset)
-	} else {
-		rows, err = s.pool.Query(ctx, `
-			SELECT id::text, cnk, name,
-			       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
-			       COALESCE(amm_number, ''),
-			       is_antibiotic, is_active,
-			       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
-			       COALESCE(afmps_meta->>'source', '')
-			FROM pharmacy.ref_medications
-			WHERE is_active AND left(name_normalized, 1) = lower($1)
-			ORDER BY name ASC
-			LIMIT $2 OFFSET $3`, letter, limit, offset)
-	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, cnk, name,
+		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+		       COALESCE(amm_number, ''),
+		       is_antibiotic, is_active,
+		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
+		       COALESCE(afmps_meta->>'source', '')
+		FROM pharmacy.ref_medications
+		WHERE `+letterWhere+`
+		ORDER BY name ASC
+		LIMIT $2 OFFSET $3`, letter, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}

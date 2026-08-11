@@ -6,6 +6,8 @@ export const MEDICAMENT_ALPHABET_LETTERS = [
 
 export type MedicamentLetter = (typeof MEDICAMENT_ALPHABET_LETTERS)[number]
 
+export type AfmpsSourceKind = 'afmps' | 'compendium' | 'other'
+
 export function normalizeMedicamentLetter(raw: string | null | undefined): MedicamentLetter | null {
   const s = (raw ?? '').trim().toUpperCase()
   if (s === '#') return '#'
@@ -47,10 +49,15 @@ export function parseAfmpsMeta(raw: unknown): AfmpsMetaFields {
   }
 }
 
-export function afmpsSourceKind(source: string | null | undefined): 'afmps' | 'compendium' | 'other' | null {
+/**
+ * Classify catalogue provenance. Prefix match on known families only
+ * (avoids false positives from arbitrary substrings).
+ */
+export function afmpsSourceKind(source: string | null | undefined): AfmpsSourceKind | null {
   if (!source) return null
-  const s = source.toLowerCase()
-  if (s.includes('afmps')) return 'afmps'
-  if (s.includes('compendium')) return 'compendium'
+  const s = source.trim().toLowerCase()
+  if (!s) return null
+  if (s === 'afmps' || s.startsWith('afmps-') || s.startsWith('afmps_')) return 'afmps'
+  if (s === 'compendium' || s.startsWith('compendium-') || s.startsWith('compendium_')) return 'compendium'
   return 'other'
 }

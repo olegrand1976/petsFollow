@@ -53,9 +53,13 @@ describe('medicaments-alphabet', () => {
 
   it('classifies AFMPS source kinds', () => {
     expect(afmpsSourceKind('afmps-pack-csv')).toBe('afmps')
-    expect(afmpsSourceKind('afmps-import-cron')).toBe('afmps')
+    expect(afmpsSourceKind('afmps_import_cron')).toBe('afmps')
+    expect(afmpsSourceKind('AFMPS')).toBe('afmps')
     expect(afmpsSourceKind('compendium-pdf')).toBe('compendium')
+    expect(afmpsSourceKind('compendium_pdf')).toBe('compendium')
     expect(afmpsSourceKind('seed')).toBe('other')
+    expect(afmpsSourceKind('meta-afmps-leak')).toBe('other')
     expect(afmpsSourceKind(undefined)).toBeNull()
+    expect(afmpsSourceKind('')).toBeNull()
   })
 })
