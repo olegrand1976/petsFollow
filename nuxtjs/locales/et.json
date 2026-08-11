@@ -2284,7 +2284,7 @@
       "colAb": "AB",
       "colActions": "Actions",
       "exclude": "Exclude",
-      "include": "Include",
+      "include": "Tagasi valmisse",
       "acceptSuggested": "Nõustu CNK",
       "pickCnk": "Vali CNK…",
       "catalogEmpty": "AFMPS kataloog tühi — impordi AFMPS CSV enne CNK sobitamist.",
@@ -2314,7 +2314,7 @@
         "upserted": "Loaded"
       },
       "retryExtract": "Käivita eraldamine uuesti",
-      "previewHint": "Kontrollige ridu vasakul, kinnitage need jaotisesse «Valmis importimiseks», seejärel laadige sõnastik.",
+      "previewHint": "Kontrollige ridu vasakul, kinnitage need jaotisesse «Valmis importimiseks», seejärel laadige sõnastik. Välja muutmine (CNK, nimi, leht…) klassifitseerib rea uuesti (sageli Valmis, kui CNK+nimi on ok).",
       "confirmReady": "Kinnita {count} ootel rida",
       "confirmRow": "Kinnita",
       "pageHint": "Ava PDF lehel {page}, et kirje käsitsi lõpetada",
@@ -2347,7 +2347,14 @@
       "reviewFiltersTitle": "Filtrid",
       "panelExcluded": "Välistatud",
       "emptyExcluded": "Välistatud ridu pole.",
-      "filtersScopeHint": "Filtrid kehtivad ainult jaotisele «Kontrollida». Valmis / Välistatud jäävad täielikuks."
+      "filtersScopeHint": "Filtrid kehtivad ainult jaotisele «Kontrollida». Valmis / Välistatud jäävad täielikuks.",
+      "totalRows": "Read",
+      "loadError": "Seda Compendiumi importi ei õnnestunud laadida.",
+      "notFound": "Importi ei leitud.",
+      "extractFailed": "Eraldamine ebaõnnestus",
+      "patchFailed": "Rida ei õnnestunud salvestada",
+      "confirmReadyFailed": "Ridade kinnitamine ebaõnnestus",
+      "extractInProgress": "Eraldamine käib — jätka ainult kui töö on kinni (>15 min ilma eduta)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

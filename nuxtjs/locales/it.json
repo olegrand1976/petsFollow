@@ -2949,7 +2949,7 @@
       "colAb": "AB",
       "colActions": "Actions",
       "exclude": "Exclude",
-      "include": "Include",
+      "include": "Ripristina come pronta",
       "acceptSuggested": "Accetta CNK",
       "pickCnk": "Scegli un CNK…",
       "catalogEmpty": "Catalogo AFMPS vuoto — importa un CSV AFMPS prima del matching CNK.",
@@ -2979,7 +2979,7 @@
         "upserted": "Loaded"
       },
       "retryExtract": "Rilanciare l’estrazione",
-      "previewHint": "Controlla le righe a sinistra, conferma per spostarle in «Pronte all’import», poi esegui il commit del dizionario.",
+      "previewHint": "Controlla le righe a sinistra, conferma per spostarle in «Pronte all’import», poi esegui il commit del dizionario. Modificare un campo (CNK, nome, pagina…) riclassifica anche la riga (spesso in Pronte se CNK+nome sono ok).",
       "confirmReady": "Conferma {count} riga/e in attesa",
       "confirmRow": "Conferma",
       "pageHint": "Apri il PDF a pagina {page} per completare la scheda",
@@ -3012,7 +3012,14 @@
       "reviewFiltersTitle": "Filtri",
       "panelExcluded": "Escluse",
       "emptyExcluded": "Nessuna riga esclusa.",
-      "filtersScopeHint": "I filtri valgono solo per «Da controllare». Pronte / Escluse restano complete."
+      "filtersScopeHint": "I filtri valgono solo per «Da controllare». Pronte / Escluse restano complete.",
+      "totalRows": "Righe",
+      "loadError": "Impossibile caricare questo import Compendium.",
+      "notFound": "Import non trovato.",
+      "extractFailed": "Estrazione non riuscita",
+      "patchFailed": "Impossibile salvare la riga",
+      "confirmReadyFailed": "Impossibile confermare le righe",
+      "extractInProgress": "Estrazione in corso — ripresa solo se il job è bloccato (>15 min senza progresso)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

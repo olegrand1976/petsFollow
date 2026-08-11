@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  COMPENDIUM_EXTRACT_STALE_MS,
   COMPENDIUM_REVIEW_PAGE_SIZE,
   compendiumReviewTotals,
   filterCompendiumReviewRows,
+  isCompendiumExtractClaimLive,
   isExcludedQueueRow,
   isReadyQueueRow,
   isReviewQueueRow,
@@ -51,5 +53,17 @@ describe('compendium-review helpers', () => {
     expect(p2.items).toHaveLength(5)
     expect(p2).toMatchObject({ page: 2, from: 21, to: 25, total: 25 })
     expect(paginateRows([], 3).page).toBe(1)
+  })
+
+  it('détecte extract live vs stale (15 min)', () => {
+    const now = Date.UTC(2026, 7, 11, 12, 0, 0)
+    expect(isCompendiumExtractClaimLive('failed', new Date(now).toISOString(), now)).toBe(false)
+    expect(isCompendiumExtractClaimLive('extracting', undefined, now)).toBe(true)
+    expect(isCompendiumExtractClaimLive('extracting', new Date(now - 60_000).toISOString(), now)).toBe(true)
+    expect(isCompendiumExtractClaimLive(
+      'extracting',
+      new Date(now - COMPENDIUM_EXTRACT_STALE_MS - 1).toISOString(),
+      now,
+    )).toBe(false)
   })
 })

@@ -2284,7 +2284,7 @@
       "colAb": "AB",
       "colActions": "Actions",
       "exclude": "Exclude",
-      "include": "Include",
+      "include": "Terug naar klaar",
       "acceptSuggested": "CNK aanvaarden",
       "pickCnk": "Kies een CNK…",
       "catalogEmpty": "AFMPS-catalogus leeg — importeer eerst een AFMPS-CSV voor CNK-matching.",
@@ -2314,7 +2314,7 @@
         "upserted": "Loaded"
       },
       "retryExtract": "Extractie opnieuw starten",
-      "previewHint": "Controleer rijen links, bevestig om ze naar “Klaar om te importeren” te verplaatsen, en commit dan het woordenboek.",
+      "previewHint": "Controleer rijen links, bevestig om ze naar “Klaar om te importeren” te verplaatsen, en commit dan het woordenboek. Een veldwijziging (CNK, naam, pagina…) herclassificeert de rij ook (vaak naar Klaar als CNK+naam ok zijn).",
       "confirmReady": "{count} wachtende rij(en) bevestigen",
       "confirmRow": "Bevestigen",
       "pageHint": "Open de PDF op pagina {page} om de fiche te vervolledigen",
@@ -2347,7 +2347,14 @@
       "reviewFiltersTitle": "Filters",
       "panelExcluded": "Uitgesloten",
       "emptyExcluded": "Geen uitgesloten rijen.",
-      "filtersScopeHint": "Filters gelden enkel voor “Te controleren”. Klaar / Uitgesloten blijven volledig."
+      "filtersScopeHint": "Filters gelden enkel voor “Te controleren”. Klaar / Uitgesloten blijven volledig.",
+      "totalRows": "Rijen",
+      "loadError": "Kon deze Compendium-import niet laden.",
+      "notFound": "Import niet gevonden.",
+      "extractFailed": "Extractie mislukt",
+      "patchFailed": "Rij kon niet worden opgeslagen",
+      "confirmReadyFailed": "Bevestigen van rijen mislukt",
+      "extractInProgress": "Extractie bezig — hervatten enkel als de job vastzit (>15 min zonder vooruitgang)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

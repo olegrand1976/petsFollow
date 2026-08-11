@@ -2284,7 +2284,7 @@
       "colAb": "AB",
       "colActions": "Actions",
       "exclude": "Exclude",
-      "include": "Include",
+      "include": "Restore to ready",
       "acceptSuggested": "Accept CNK",
       "pickCnk": "Pick a CNK…",
       "catalogEmpty": "AFMPS catalogue empty — import an AFMPS CSV before CNK matching.",
@@ -2314,7 +2314,7 @@
         "upserted": "Loaded"
       },
       "retryExtract": "Retry extraction",
-      "previewHint": "Review rows on the left, confirm to move them to “Ready to import”, then commit the dictionary.",
+      "previewHint": "Review rows on the left, confirm to move them to “Ready to import”, then commit the dictionary. Editing a field (CNK, name, page…) also reclassifies the row (often to Ready when CNK+name are set).",
       "confirmReady": "Confirm {count} pending row(s)",
       "confirmRow": "Confirm",
       "pageHint": "Open the PDF at page {page} to complete the entry",
@@ -2347,7 +2347,14 @@
       "reviewFiltersTitle": "Filters",
       "panelExcluded": "Excluded",
       "emptyExcluded": "No excluded rows.",
-      "filtersScopeHint": "Filters apply only to “To review”. Ready / Excluded lists stay complete."
+      "filtersScopeHint": "Filters apply only to “To review”. Ready / Excluded lists stay complete.",
+      "totalRows": "Rows",
+      "loadError": "Could not load this Compendium import.",
+      "notFound": "Import not found.",
+      "extractFailed": "Extraction failed",
+      "patchFailed": "Could not save the row",
+      "confirmReadyFailed": "Could not confirm pending rows",
+      "extractInProgress": "Extraction in progress — resume only if the job is stuck (>15 min without progress)."
     },
     "afmps": {
       "title": "AFMPS CSV import",

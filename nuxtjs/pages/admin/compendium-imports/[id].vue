@@ -11,7 +11,18 @@
     </ProPageHeader>
 
     <div v-if="loading" class="pro-hint">{{ $t('common.loading') }}</div>
-    <template v-else-if="job">
+    <div
+      v-else-if="loadError"
+      class="pro-hint pro-hint--error"
+      data-testid="admin-compendium-load-error"
+    >
+      {{ loadError }}
+    </div>
+    <div v-else-if="!job" class="pro-hint" data-testid="admin-compendium-not-found">
+      <p>{{ $t('admin.compendium.notFound') }}</p>
+      <NuxtLink to="/admin/compendium-imports" class="pro-link">{{ $t('admin.compendium.back') }}</NuxtLink>
+    </div>
+    <template v-else>
       <div class="pro-grid-kpi pro-mb-lg">
         <ProKpi :value="`${job.extractPct ?? 0}%`" :label="$t('admin.compendium.kpiExtract')" />
         <ProKpi :value="`${job.reviewPct ?? 0}%`" :label="$t('admin.compendium.kpiReview')" />
@@ -22,17 +33,45 @@
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-progress">
         <h3 class="pro-mb-md">{{ $t('admin.compendium.progressTitle') }}</h3>
         <p class="pro-hint">{{ $t('admin.compendium.progressExtract', { pct: job.extractPct ?? 0, done: job.extractDone, total: job.extractTotal }) }}</p>
-        <div class="compendium-bar" role="progressbar" :aria-valuenow="job.extractPct ?? 0" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="compendium-bar"
+          role="progressbar"
+          :aria-label="$t('admin.compendium.kpiExtract')"
+          :aria-valuenow="job.extractPct ?? 0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           <div class="compendium-bar__fill" :style="{ width: `${job.extractPct ?? 0}%` }" />
         </div>
         <p class="pro-hint pro-mt-md">{{ $t('admin.compendium.progressReview', { pct: job.reviewPct ?? 0, done: job.reviewedCount, total: job.rowCount }) }}</p>
-        <div class="compendium-bar" role="progressbar" :aria-valuenow="job.reviewPct ?? 0" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="compendium-bar"
+          role="progressbar"
+          :aria-label="$t('admin.compendium.kpiReview')"
+          :aria-valuenow="job.reviewPct ?? 0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           <div class="compendium-bar__fill compendium-bar__fill--review" :style="{ width: `${job.reviewPct ?? 0}%` }" />
         </div>
         <p v-if="job.errorMessage" class="pro-hint pro-hint--error pro-mt-md">{{ job.errorMessage }}</p>
+        <p
+          v-if="actionError"
+          class="pro-hint pro-hint--error pro-mt-md"
+          data-testid="admin-compendium-action-error"
+        >
+          {{ actionError }}
+        </p>
+        <p
+          v-if="extractLive"
+          class="pro-hint pro-mt-md"
+          data-testid="admin-compendium-extract-live"
+        >
+          {{ $t('admin.compendium.extractInProgress') }}
+        </p>
         <div class="pro-flex-gap pro-mt-md">
           <ProButton
-            v-if="job.status === 'uploaded' || job.status === 'failed' || job.status === 'extracting'"
+            v-if="showExtractActions"
             test-id="admin-compendium-extract"
             :disabled="busy"
             @click="startExtract(false)"
@@ -60,10 +99,11 @@
           <span class="compendium-chip">{{ $t('admin.compendium.totalToReview') }} · <strong>{{ totals.toReview }}</strong></span>
           <span class="compendium-chip compendium-chip--ok">{{ $t('admin.compendium.totalReady') }} · <strong>{{ totals.ready }}</strong></span>
           <span class="compendium-chip">{{ $t('admin.compendium.totalExcluded') }} · <strong>{{ totals.excluded }}</strong></span>
-          <span class="compendium-chip">{{ $t('admin.compendium.totalLoaded') }} · <strong>{{ totals.loaded }}</strong></span>
+          <span class="compendium-chip">{{ $t('admin.compendium.totalLoaded') }} · <strong>{{ totals.upserted }}</strong></span>
+          <span class="compendium-chip">{{ $t('admin.compendium.totalRows') }} · <strong>{{ totals.loaded }}</strong></span>
         </div>
-          <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
-          <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.filtersScopeHint') }}</p>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.filtersScopeHint') }}</p>
         <p v-if="errorRowCount > 0" class="pro-hint pro-mb-md" data-testid="admin-compendium-manual-hint">
           {{ $t('admin.compendium.manualHint') }}
         </p>
@@ -82,6 +122,7 @@
             class="pro-input compendium-filters__search"
             data-testid="admin-compendium-filter-q"
             :placeholder="$t('admin.compendium.filterSearch')"
+            :aria-label="$t('admin.compendium.filterSearch')"
             @input="resetReviewPage"
           >
           <label class="compendium-filters__status">
@@ -541,6 +582,7 @@ import {
   COMPENDIUM_REVIEW_PAGE_SIZE,
   compendiumReviewTotals,
   filterCompendiumReviewRows,
+  isCompendiumExtractClaimLive,
   isExcludedQueueRow,
   isReadyQueueRow,
   isReviewQueueRow,
@@ -558,6 +600,8 @@ const busy = ref(false)
 const job = ref<any>(null)
 const rows = ref<any[]>([])
 const refCatalogCount = ref(0)
+const loadError = ref('')
+const actionError = ref('')
 const commitMsg = ref('')
 const lookingUpId = ref('')
 const patchingId = ref('')
@@ -610,9 +654,17 @@ const pdfIframeSrc = computed(() => {
     : (Number(job.value.pageStart) || 1)
   return `${pdfBaseUrl.value}#page=${page}`
 })
-const canResumeExtract = computed(() => {
+const extractLive = computed(() => isCompendiumExtractClaimLive(job.value?.status, job.value?.updatedAt))
+const showExtractActions = computed(() => {
   if (!job.value) return false
-  if (job.value.status !== 'failed' && job.value.status !== 'extracting') return false
+  const s = job.value.status
+  if (s === 'uploaded' || s === 'failed') return true
+  // Stale extracting : reclaim autorisé côté store (>15 min).
+  return s === 'extracting' && !extractLive.value
+})
+const canResumeExtract = computed(() => {
+  if (!job.value || !showExtractActions.value) return false
+  if (job.value.status === 'uploaded') return false
   const done = Number(job.value.extractDone || 0)
   const total = Number(job.value.extractTotal || 0)
   return done > 0 && total > done
@@ -624,6 +676,10 @@ const extractPrimaryLabel = computed(() => {
   if (canResumeExtract.value) return t('admin.compendium.resumeExtract')
   return t('admin.compendium.retryExtract')
 })
+
+function apiErrMessage (e: any, fallbackKey: string) {
+  return e?.data?.error?.message ?? e?.statusMessage ?? t(fallbackKey)
+}
 
 function resetReviewPage () {
   reviewPageNum.value = 1
@@ -710,19 +766,35 @@ function statusLabel (status: string) {
 }
 
 async function load () {
-  const res: any = await $fetch(`/api/admin/compendium-imports/${id.value}`)
-  const data = res?.data ?? res
-  job.value = data?.job ?? data
-  rows.value = data?.rows ?? []
-  refCatalogCount.value = Number(data?.refCatalogCount ?? 0)
-  loading.value = false
-  if (!viewerPage.value && job.value?.pageStart) {
-    setViewerPage(Number(job.value.pageStart) || 1)
-  }
-  if (job.value?.status === 'extracting') {
-    startPoll()
-  } else {
-    stopPoll()
+  loadError.value = ''
+  try {
+    const res: any = await $fetch(`/api/admin/compendium-imports/${id.value}`)
+    const data = res?.data ?? res
+    job.value = data?.job ?? data
+    rows.value = data?.rows ?? []
+    refCatalogCount.value = Number(data?.refCatalogCount ?? 0)
+    if (!viewerPage.value && job.value?.pageStart) {
+      setViewerPage(Number(job.value.pageStart) || 1)
+    }
+    if (job.value?.status === 'extracting') {
+      startPoll()
+    } else {
+      stopPoll()
+    }
+  } catch (e: any) {
+    const msg = apiErrMessage(e, 'admin.compendium.loadError')
+    if (!job.value) {
+      loadError.value = msg
+      stopPoll()
+    } else {
+      // Poll / soft refresh : garder l’UI, afficher l’erreur, continuer si extract live.
+      actionError.value = msg
+      if (!isCompendiumExtractClaimLive(job.value?.status, job.value?.updatedAt)) {
+        stopPoll()
+      }
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -738,12 +810,16 @@ function stopPoll () {
 }
 
 async function startExtract (forceRestart = false) {
+  if (extractLive.value) return
   busy.value = true
+  actionError.value = ''
   try {
     const q = forceRestart ? '?restart=1' : ''
     await $fetch(`/api/admin/compendium-imports/${id.value}/extract${q}`, { method: 'POST' })
     startPoll()
     await load()
+  } catch (e: any) {
+    actionError.value = apiErrMessage(e, 'admin.compendium.extractFailed')
   } finally {
     busy.value = false
   }
@@ -763,6 +839,7 @@ async function patchSourcePage (row: any) {
 
 async function patchRow (row: any, body: Record<string, unknown>) {
   patchingId.value = row.id
+  actionError.value = ''
   try {
     const res: any = await $fetch(`/api/admin/compendium-imports/${id.value}/rows/${row.id}`, {
       method: 'PATCH',
@@ -771,6 +848,9 @@ async function patchRow (row: any, body: Record<string, unknown>) {
     const updated = res?.data ?? res
     const idx = rows.value.findIndex(r => r.id === row.id)
     if (idx >= 0) rows.value[idx] = { ...rows.value[idx], ...updated }
+    await load()
+  } catch (e: any) {
+    actionError.value = apiErrMessage(e, 'admin.compendium.patchFailed')
     await load()
   } finally {
     patchingId.value = ''
@@ -820,10 +900,13 @@ async function lookupCnk (row: any) {
 
 async function confirmReady () {
   busy.value = true
+  actionError.value = ''
   try {
     await $fetch(`/api/admin/compendium-imports/${id.value}/confirm-ready`, { method: 'POST' })
     readyPageNum.value = 1
     await load()
+  } catch (e: any) {
+    actionError.value = apiErrMessage(e, 'admin.compendium.confirmReadyFailed')
   } finally {
     busy.value = false
   }
