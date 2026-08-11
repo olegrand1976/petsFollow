@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
@@ -25,6 +28,8 @@ func (a *API) registerSupportRoutes(r chi.Router) {
 		pr.Get("/admin/support/tickets/{id}", a.adminGetSupportTicket)
 		pr.Patch("/admin/support/tickets/{id}", a.adminPatchSupportTicket)
 		pr.Post("/admin/support/tickets/{id}/replies", a.adminReplySupportTicket)
+		pr.Post("/admin/support/tickets/{id}/attachments", a.adminUploadSupportAttachment)
+		pr.Get("/admin/support/tickets/{id}/attachments/{attachmentID}/download", a.adminDownloadSupportAttachment)
 	})
 }
 
@@ -183,7 +188,8 @@ type patchSupportTicketReq struct {
 }
 
 func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	admin, ok := a.requireAdminOrDev(w, r)
+	if !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -192,7 +198,7 @@ func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	ticket, err := a.store.UpdateSupportTicketStatus(r.Context(), id, req.Status)
+	ticket, err := a.store.UpdateSupportTicketStatus(r.Context(), id, req.Status, admin.UserID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
@@ -263,4 +269,93 @@ func (a *API) adminReplySupportTicket(w http.ResponseWriter, r *http.Request) {
 		"reply":  reply,
 		"ticket": ticket,
 	})
+}
+
+func (a *API) adminUploadSupportAttachment(w http.ResponseWriter, r *http.Request) {
+	admin, ok := a.requireAdminOrDev(w, r)
+	if !ok {
+		return
+	}
+	ticketID := chi.URLParam(r, "id")
+	if _, err := a.store.GetSupportTicket(r.Context(), ticketID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+
+	ct, size, fileName, objectKey, err := a.uploadDocumentFile(r, "support-attachments", ticketID)
+	if err != nil {
+		a.writeUploadErr(w, r, err)
+		return
+	}
+	att, err := a.store.CreateSupportTicketAttachment(r.Context(), store.CreateSupportTicketAttachmentInput{
+		TicketID:    ticketID,
+		UploadedBy:  admin.UserID,
+		FileName:    fileName,
+		ContentType: ct,
+		SizeBytes:   size,
+		ObjectKey:   objectKey,
+	})
+	if err != nil {
+		if a.media != nil && objectKey != "" {
+			_ = a.media.Delete(r.Context(), objectKey)
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, att)
+}
+
+func (a *API) adminDownloadSupportAttachment(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	ticketID := chi.URLParam(r, "id")
+	attID := chi.URLParam(r, "attachmentID")
+	att, err := a.store.GetSupportTicketAttachment(r.Context(), attID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if att.TicketID != ticketID {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	key := strings.TrimSpace(att.ObjectKey)
+	if key == "" || a.media == nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	rc, contentType, err := a.media.Open(r.Context(), key)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	defer rc.Close()
+	if strings.TrimSpace(att.ContentType) != "" {
+		contentType = att.ContentType
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	stem := strings.TrimSuffix(strings.TrimSpace(att.FileName), path.Ext(att.FileName))
+	if strings.TrimSpace(stem) == "" {
+		stem = "attachment"
+	}
+	ext, extErr := media.ExtForDocument(att.ContentType)
+	if extErr != nil {
+		ext = ""
+	}
+	filename := sanitizeFilename(stem) + ext
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", `inline; filename="`+filename+`"`)
+	w.Header().Set("Cache-Control", "private, no-store")
+	_, _ = io.Copy(w, rc)
 }

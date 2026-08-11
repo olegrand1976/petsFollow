@@ -9,7 +9,8 @@
       <div v-if="supportStats" class="pro-grid-kpi" data-testid="admin-dev-support-kpi">
         <ProKpi :value="statusCount('open')" :label="$t('admin.support.statsOpen')" />
         <ProKpi :value="statusCount('in_progress')" :label="$t('admin.support.statsInProgress')" />
-        <ProKpi :value="statusCount('resolved')" :label="$t('admin.support.statsResolved')" />
+        <ProKpi :value="statusCount('to_test')" :label="$t('admin.support.statsToTest')" />
+        <ProKpi :value="statusCount('done')" :label="$t('admin.support.statsDone')" />
         <ProKpi :value="statusCount('closed')" :label="$t('admin.support.statsClosed')" />
         <ProKpi :value="supportStats.openOlderThan24h ?? 0" :label="$t('admin.support.statsOpen24h')" />
         <ProKpi :value="supportStats.openOlderThan7d ?? 0" :label="$t('admin.support.statsOpen7d')" />

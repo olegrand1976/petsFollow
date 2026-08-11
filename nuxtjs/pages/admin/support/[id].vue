@@ -25,15 +25,29 @@
             data-testid="admin-support-status"
             @change="saveStatus"
           >
-            <option value="open">{{ $t('admin.support.status_open') }}</option>
-            <option value="in_progress">{{ $t('admin.support.status_in_progress') }}</option>
-            <option value="resolved">{{ $t('admin.support.status_resolved') }}</option>
-            <option value="closed">{{ $t('admin.support.status_closed') }}</option>
+            <option v-for="st in STATUSES" :key="st" :value="st">{{ statusLabel(st) }}</option>
           </select>
           <p v-if="statusMsg" class="pro-hint">{{ statusMsg }}</p>
         </div>
         <h3 class="pro-mb-sm">{{ $t('admin.support.message') }}</h3>
         <p class="support-message" data-testid="admin-support-message">{{ ticket.message }}</p>
+      </ProCard>
+
+      <ProCard class="pro-mb-lg">
+        <h3 class="pro-mb-md">{{ $t('admin.support.statusHistory') }}</h3>
+        <ProEmptyState
+          v-if="!(ticket.statusHistory || []).length"
+          :title="$t('admin.support.noStatusHistory')"
+        />
+        <ul v-else class="support-history" data-testid="admin-support-status-history">
+          <li v-for="ev in ticket.statusHistory" :key="ev.id">
+            <strong>{{ statusTransitionLabel(ev) }}</strong>
+            <span class="text-muted">
+              · {{ formatDate(ev.createdAt) }}
+              <template v-if="ev.changedName"> · {{ ev.changedName }}</template>
+            </span>
+          </li>
+        </ul>
       </ProCard>
 
       <ProCard class="pro-mb-lg">
@@ -55,10 +69,53 @@
       </ProCard>
 
       <ProCard class="pro-mb-lg">
-        <h3 class="pro-mb-md">{{ $t('admin.support.replies') }}</h3>
+        <h3 class="pro-mb-md">{{ $t('admin.support.attachments') }}</h3>
+        <ProEmptyState
+          v-if="!(ticket.attachments || []).length"
+          :title="$t('admin.support.noAttachments')"
+        />
+        <ul v-else class="support-attachments" data-testid="admin-support-attachments">
+          <li v-for="att in ticket.attachments" :key="att.id">
+            <a
+              :href="`/api/admin/support/tickets/${ticket.id}/attachments/${att.id}/download`"
+              target="_blank"
+              rel="noopener"
+              data-testid="admin-support-attachment-link"
+            >
+              {{ att.fileName }}
+            </a>
+            <span class="text-muted">
+              · {{ formatSize(att.sizeBytes) }}
+              · {{ formatDate(att.createdAt) }}
+              <template v-if="att.uploaderName"> · {{ att.uploaderName }}</template>
+            </span>
+          </li>
+        </ul>
+        <form class="pro-form pro-mt-md" @submit.prevent="uploadAttachment">
+          <div class="pro-field">
+            <label class="pro-label" for="support-attachment">{{ $t('admin.support.attachmentLabel') }}</label>
+            <input
+              id="support-attachment"
+              ref="fileInput"
+              type="file"
+              accept=".pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              class="pro-input"
+              data-testid="admin-support-attachment-input"
+              @change="onFilePicked"
+            >
+          </div>
+          <p v-if="attachMsg" class="pro-hint" data-testid="admin-support-attach-msg">{{ attachMsg }}</p>
+          <ProButton type="submit" test-id="admin-support-attach-submit" :disabled="attaching || !pickedFile">
+            {{ $t('admin.support.attachmentSubmit') }}
+          </ProButton>
+        </form>
+      </ProCard>
+
+      <ProCard class="pro-mb-lg">
+        <h3 class="pro-mb-md">{{ $t('admin.support.comments') }}</h3>
         <ProEmptyState
           v-if="!(ticket.replies || []).length"
-          :title="$t('admin.support.noReplies')"
+          :title="$t('admin.support.noComments')"
         />
         <ul v-else class="support-replies" data-testid="admin-support-replies">
           <li v-for="r in ticket.replies" :key="r.id">
@@ -69,7 +126,7 @@
         </ul>
         <form class="pro-form pro-mt-md" @submit.prevent="sendReply">
           <div class="pro-field">
-            <label class="pro-label" for="support-reply">{{ $t('admin.support.replyLabel') }}</label>
+            <label class="pro-label" for="support-reply">{{ $t('admin.support.commentLabel') }}</label>
             <textarea
               id="support-reply"
               v-model="replyBody"
@@ -81,7 +138,7 @@
           </div>
           <p v-if="replyMsg" class="pro-hint" data-testid="admin-support-reply-msg">{{ replyMsg }}</p>
           <ProButton type="submit" test-id="admin-support-reply-submit" :disabled="replying">
-            {{ $t('admin.support.replySubmit') }}
+            {{ $t('admin.support.commentSubmit') }}
           </ProButton>
         </form>
       </ProCard>
@@ -92,6 +149,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
+const STATUSES = ['open', 'in_progress', 'to_test', 'done', 'closed'] as const
+
 const route = useRoute()
 const { t } = useI18n()
 const ticket = ref<any>(null)
@@ -101,6 +160,10 @@ const statusMsg = ref('')
 const replyBody = ref('')
 const replyMsg = ref('')
 const replying = ref(false)
+const attachMsg = ref('')
+const attaching = ref(false)
+const pickedFile = ref<File | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const ticketMeta = computed(() => {
   if (!ticket.value) return ''
@@ -130,14 +193,26 @@ function statusVariant(status: string): 'neutral' | 'success' | 'warning' | 'dan
   switch (status) {
     case 'open': return 'danger'
     case 'in_progress': return 'warning'
-    case 'resolved': return 'success'
+    case 'to_test': return 'neutral'
+    case 'done': return 'success'
     case 'closed': return 'neutral'
     default: return 'neutral'
   }
 }
+function statusTransitionLabel(ev: { fromStatus?: string | null, toStatus: string }) {
+  const to = statusLabel(ev.toStatus)
+  if (!ev.fromStatus) return to
+  return `${statusLabel(ev.fromStatus)} → ${to}`
+}
 function formatDate(iso: string) {
   if (!iso) return '—'
   try { return new Date(iso).toLocaleString() } catch { return iso }
+}
+function formatSize(bytes: number) {
+  if (!bytes || bytes < 0) return '—'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 async function load() {
@@ -155,13 +230,12 @@ async function load() {
 async function saveStatus() {
   statusMsg.value = ''
   const id = route.params.id as string
-  const res: any = await $fetch(`/api/admin/support/tickets/${id}`, {
+  await $fetch(`/api/admin/support/tickets/${id}`, {
     method: 'PATCH',
     body: { status: statusDraft.value },
   })
-  const data = res.data ?? res
-  if (ticket.value) ticket.value.status = data.status
   statusMsg.value = t('admin.support.statusUpdated')
+  await load()
 }
 
 async function sendReply() {
@@ -175,10 +249,39 @@ async function sendReply() {
       body: { body: replyBody.value.trim() },
     })
     replyBody.value = ''
-    replyMsg.value = t('admin.support.replySent')
+    replyMsg.value = t('admin.support.commentSent')
     await load()
   } finally {
     replying.value = false
+  }
+}
+
+function onFilePicked(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  pickedFile.value = input.files?.[0] ?? null
+  attachMsg.value = ''
+}
+
+async function uploadAttachment() {
+  if (!pickedFile.value || attaching.value) return
+  attaching.value = true
+  attachMsg.value = ''
+  try {
+    const id = route.params.id as string
+    const fd = new FormData()
+    fd.append('file', pickedFile.value)
+    await $fetch(`/api/admin/support/tickets/${id}/attachments`, {
+      method: 'POST',
+      body: fd,
+    })
+    pickedFile.value = null
+    if (fileInput.value) fileInput.value.value = ''
+    attachMsg.value = t('admin.support.attachmentUploaded')
+    await load()
+  } catch {
+    attachMsg.value = t('admin.support.attachmentError')
+  } finally {
+    attaching.value = false
   }
 }
 
@@ -218,49 +321,33 @@ onMounted(() => { void load() })
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-}
-.support-origin-route .pro-label {
-  margin: 0;
-}
-.support-origin-route code {
-  font-size: 0.85rem;
-  word-break: break-all;
 }
 .support-diag-pre {
-  max-height: 24rem;
-  overflow: auto;
-  font-size: 0.75rem;
-  background: var(--pf-vet-bg);
+  margin: 0;
   padding: 0.75rem;
-  border-radius: var(--pf-vet-radius);
-  white-space: pre-wrap;
-  word-break: break-word;
+  background: var(--pf-vet-bg);
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius-sm, 6px);
+  overflow: auto;
+  max-height: 24rem;
+  font-size: 0.8rem;
 }
-.support-replies {
+.support-replies,
+.support-history,
+.support-attachments {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-.support-replies li {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--pf-vet-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 .support-replies p {
-  margin: 0.35rem 0 0;
+  margin: 0.25rem 0 0;
   white-space: pre-wrap;
-}
-.pro-textarea {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius);
-  background: var(--pf-vet-surface);
-  color: var(--pf-vet-text);
-  font: inherit;
-  resize: vertical;
 }
 .text-muted {
   color: var(--pf-vet-text-muted);
+  font-size: 0.85em;
 }
 </style>

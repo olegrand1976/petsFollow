@@ -5,7 +5,8 @@
     <div v-if="stats" class="pro-grid-kpi pro-mb-md" data-testid="admin-support-stats">
       <ProKpi :value="statusCount('open')" :label="$t('admin.support.statsOpen')" />
       <ProKpi :value="statusCount('in_progress')" :label="$t('admin.support.statsInProgress')" />
-      <ProKpi :value="statusCount('resolved')" :label="$t('admin.support.statsResolved')" />
+      <ProKpi :value="statusCount('to_test')" :label="$t('admin.support.statsToTest')" />
+      <ProKpi :value="statusCount('done')" :label="$t('admin.support.statsDone')" />
       <ProKpi :value="statusCount('closed')" :label="$t('admin.support.statsClosed')" />
       <ProKpi :value="stats.openOlderThan24h ?? 0" :label="$t('admin.support.statsOpen24h')" />
       <ProKpi :value="stats.openOlderThan7d ?? 0" :label="$t('admin.support.statsOpen7d')" />
@@ -39,7 +40,8 @@
                 <option value="">{{ $t('admin.support.filterAll') }}</option>
                 <option value="open">{{ $t('admin.support.filterOpen') }}</option>
                 <option value="in_progress">{{ $t('admin.support.filterInProgress') }}</option>
-                <option value="resolved">{{ $t('admin.support.filterResolved') }}</option>
+                <option value="to_test">{{ $t('admin.support.filterToTest') }}</option>
+                <option value="done">{{ $t('admin.support.filterDone') }}</option>
                 <option value="closed">{{ $t('admin.support.filterClosed') }}</option>
               </select>
             </div>
@@ -141,10 +143,7 @@
                 data-testid="admin-support-kanban-status"
                 @change="onKanbanStatus(ticket, ($event.target as HTMLSelectElement).value)"
               >
-                <option value="open">{{ $t('admin.support.filterOpen') }}</option>
-                <option value="in_progress">{{ $t('admin.support.filterInProgress') }}</option>
-                <option value="resolved">{{ $t('admin.support.filterResolved') }}</option>
-                <option value="closed">{{ $t('admin.support.filterClosed') }}</option>
+                <option v-for="st in STATUSES" :key="st" :value="st">{{ statusLabel(st) }}</option>
               </select>
             </label>
           </article>
@@ -186,7 +185,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
 const PAGE_SIZE = 25
 const KANBAN_LIMIT = 100
-const STATUSES = ['open', 'in_progress', 'resolved', 'closed'] as const
+const STATUSES = ['open', 'in_progress', 'to_test', 'done', 'closed'] as const
 
 const { t } = useI18n()
 const { viewMode } = useListView('pf-admin-support-view', 'table')
@@ -236,7 +235,9 @@ function statusVariant(status: string): 'neutral' | 'success' | 'warning' | 'dan
       return 'danger'
     case 'in_progress':
       return 'warning'
-    case 'resolved':
+    case 'to_test':
+      return 'neutral'
+    case 'done':
       return 'success'
     case 'closed':
       return 'neutral'

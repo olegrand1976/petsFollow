@@ -21,7 +21,8 @@ const (
 
 	SupportStatusOpen       = "open"
 	SupportStatusInProgress = "in_progress"
-	SupportStatusResolved   = "resolved"
+	SupportStatusToTest     = "to_test"
+	SupportStatusDone       = "done"
 	SupportStatusClosed     = "closed"
 
 	MaxSupportSubjectLen       = 200
@@ -40,7 +41,8 @@ var validSupportSources = map[string]bool{
 var validSupportStatuses = map[string]bool{
 	SupportStatusOpen:       true,
 	SupportStatusInProgress: true,
-	SupportStatusResolved:   true,
+	SupportStatusToTest:     true,
+	SupportStatusDone:       true,
 	SupportStatusClosed:     true,
 }
 
@@ -73,9 +75,33 @@ type SupportTicketReply struct {
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
+type SupportTicketStatusEvent struct {
+	ID          string    `json:"id"`
+	TicketID    string    `json:"ticketId"`
+	FromStatus  *string   `json:"fromStatus"`
+	ToStatus    string    `json:"toStatus"`
+	ChangedBy   *string   `json:"changedBy,omitempty"`
+	ChangedName string    `json:"changedName,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type SupportTicketAttachment struct {
+	ID           string    `json:"id"`
+	TicketID     string    `json:"ticketId"`
+	UploadedBy   *string   `json:"uploadedBy,omitempty"`
+	UploaderName string    `json:"uploaderName,omitempty"`
+	FileName     string    `json:"fileName"`
+	ContentType  string    `json:"contentType"`
+	SizeBytes    int64     `json:"sizeBytes"`
+	ObjectKey    string    `json:"-"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
 type SupportTicketDetail struct {
 	SupportTicket
-	Replies []SupportTicketReply `json:"replies"`
+	Replies       []SupportTicketReply       `json:"replies"`
+	StatusHistory []SupportTicketStatusEvent `json:"statusHistory"`
+	Attachments   []SupportTicketAttachment  `json:"attachments"`
 }
 
 type CreateSupportTicketInput struct {
@@ -88,6 +114,15 @@ type CreateSupportTicketInput struct {
 	AppVersion  string
 	Locale      string
 	Route       string
+}
+
+type CreateSupportTicketAttachmentInput struct {
+	TicketID    string
+	UploadedBy  string
+	FileName    string
+	ContentType string
+	SizeBytes   int64
+	ObjectKey   string
 }
 
 func normalizeSupportSource(s string) string {
@@ -115,57 +150,76 @@ func ResolveSupportSource(role kernel.Role, requested string) string {
 
 func (s *Store) CreateSupportTicket(ctx context.Context, in CreateSupportTicketInput) (SupportTicket, error) {
 	source := normalizeSupportSource(in.Source)
-	if !validSupportSources[source] {
-		return SupportTicket{}, ErrValidation
-	}
 	subject := strings.TrimSpace(in.Subject)
 	message := strings.TrimSpace(in.Message)
-	if subject == "" || message == "" {
+	if !validSupportSources[source] || subject == "" || message == "" ||
+		utf8.RuneCountInString(subject) > MaxSupportSubjectLen ||
+		utf8.RuneCountInString(message) > MaxSupportMessageLen {
 		return SupportTicket{}, ErrValidation
 	}
-	if utf8.RuneCountInString(subject) > MaxSupportSubjectLen {
+	diagnostics := in.Diagnostics
+	if len(diagnostics) == 0 {
+		diagnostics = json.RawMessage(`{}`)
+	}
+	if !json.Valid(diagnostics) {
 		return SupportTicket{}, ErrValidation
 	}
-	if utf8.RuneCountInString(message) > MaxSupportMessageLen {
-		return SupportTicket{}, ErrValidation
-	}
-	diag := in.Diagnostics
-	if len(diag) == 0 {
-		diag = json.RawMessage(`{}`)
-	}
-	if !json.Valid(diag) {
-		return SupportTicket{}, ErrValidation
-	}
-	if len(diag) > MaxSupportDiagnosticsBytes {
+	if len(diagnostics) > MaxSupportDiagnosticsBytes {
 		return SupportTicket{}, ErrDiagnosticsTooLarge
 	}
 
-	var createdByArg any
-	if strings.TrimSpace(in.CreatedBy) != "" {
-		createdByArg = strings.TrimSpace(in.CreatedBy)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return SupportTicket{}, err
 	}
+	defer tx.Rollback(ctx)
 
-	var t SupportTicket
-	var createdBy *string
-	err := s.pool.QueryRow(ctx, `
+	var createdBy any
+	if userID := strings.TrimSpace(in.CreatedBy); userID != "" {
+		createdBy = userID
+	}
+	var ticket SupportTicket
+	var ticketCreatedBy *string
+	err = tx.QueryRow(ctx, `
 		INSERT INTO ops.support_tickets (
 			created_by, source, subject, message, status, diagnostics,
 			user_agent, app_version, locale, route
 		) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)
 		RETURNING id, created_by, source, subject, message, status, diagnostics,
 			user_agent, app_version, locale, route, created_at, updated_at`,
-		createdByArg, source, subject, message, SupportStatusOpen, []byte(diag),
+		createdBy, source, subject, message, SupportStatusOpen, []byte(diagnostics),
 		strings.TrimSpace(in.UserAgent), strings.TrimSpace(in.AppVersion),
 		strings.TrimSpace(in.Locale), strings.TrimSpace(in.Route),
 	).Scan(
-		&t.ID, &createdBy, &t.Source, &t.Subject, &t.Message, &t.Status, &t.Diagnostics,
-		&t.UserAgent, &t.AppVersion, &t.Locale, &t.Route, &t.CreatedAt, &t.UpdatedAt,
+		&ticket.ID, &ticketCreatedBy, &ticket.Source, &ticket.Subject, &ticket.Message,
+		&ticket.Status, &ticket.Diagnostics, &ticket.UserAgent, &ticket.AppVersion,
+		&ticket.Locale, &ticket.Route, &ticket.CreatedAt, &ticket.UpdatedAt,
 	)
 	if err != nil {
 		return SupportTicket{}, err
 	}
-	t.CreatedBy = createdBy
-	return t, nil
+	ticket.CreatedBy = ticketCreatedBy
+	if err := insertSupportStatusEventTx(ctx, tx, ticket.ID, nil, SupportStatusOpen, in.CreatedBy); err != nil {
+		return SupportTicket{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return SupportTicket{}, err
+	}
+	return ticket, nil
+}
+
+func insertSupportStatusEventTx(ctx context.Context, tx pgx.Tx, ticketID string, fromStatus *string, toStatus, changedBy string) error {
+	var changedByArg any
+	if userID := strings.TrimSpace(changedBy); userID != "" {
+		changedByArg = userID
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO ops.support_ticket_status_events (
+			ticket_id, from_status, to_status, changed_by
+		) VALUES ($1, $2, $3, $4)`,
+		ticketID, fromStatus, toStatus, changedByArg,
+	)
+	return err
 }
 
 const MaxSupportSearchLen = 100
@@ -181,92 +235,83 @@ func (s *Store) ListSupportTickets(ctx context.Context, status, source, search s
 	source = normalizeSupportSource(source)
 	search = strings.TrimSpace(search)
 	if utf8.RuneCountInString(search) > MaxSupportSearchLen {
-		runes := []rune(search)
-		search = string(runes[:MaxSupportSearchLen])
+		search = string([]rune(search)[:MaxSupportSearchLen])
 	}
 
 	args := []any{}
-	var conds []string
+	var conditions []string
 	if status != "" {
 		if !validSupportStatuses[status] {
 			return nil, 0, ErrValidation
 		}
 		args = append(args, status)
-		conds = append(conds, "t.status = $"+strconv.Itoa(len(args)))
+		conditions = append(conditions, "t.status = $"+strconv.Itoa(len(args)))
 	}
 	if source != "" {
 		if !validSupportSources[source] {
 			return nil, 0, ErrValidation
 		}
 		args = append(args, source)
-		conds = append(conds, "t.source = $"+strconv.Itoa(len(args)))
+		conditions = append(conditions, "t.source = $"+strconv.Itoa(len(args)))
 	}
 	if search != "" {
 		args = append(args, "%"+escapeILIKE(search)+"%")
-		idx := strconv.Itoa(len(args))
-		conds = append(conds, "(t.subject ILIKE $"+idx+" ESCAPE '\\' OR COALESCE(u.email, '') ILIKE $"+idx+" ESCAPE '\\' OR COALESCE(u.full_name, '') ILIKE $"+idx+" ESCAPE '\\')")
+		index := strconv.Itoa(len(args))
+		conditions = append(conditions, "(t.subject ILIKE $"+index+" ESCAPE '\\' OR COALESCE(u.email, '') ILIKE $"+index+" ESCAPE '\\' OR COALESCE(u.full_name, '') ILIKE $"+index+" ESCAPE '\\')")
 	}
 	where := ""
-	if len(conds) > 0 {
-		where = "WHERE " + strings.Join(conds, " AND ")
+	if len(conditions) > 0 {
+		where = "WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	countQ := `
-		SELECT COUNT(*) FROM ops.support_tickets t
-		LEFT JOIN identity.users u ON u.id = t.created_by
-		` + where
 	var total int
-	if err := s.pool.QueryRow(ctx, countQ, args...).Scan(&total); err != nil {
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM ops.support_tickets t
+		LEFT JOIN identity.users u ON u.id = t.created_by `+where, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
 	listArgs := append(append([]any{}, args...), limit, offset)
-	limIdx := len(args) + 1
-	offIdx := len(args) + 2
-	listQ := `
+	limitIndex := len(args) + 1
+	offsetIndex := len(args) + 2
+	rows, err := s.pool.Query(ctx, `
 		SELECT t.id, t.created_by, COALESCE(u.email, ''), COALESCE(u.full_name, ''), COALESCE(u.role::text, ''),
 			t.source, t.subject, t.message, t.status,
 			t.user_agent, t.app_version, t.locale, t.route, t.created_at, t.updated_at,
 			(SELECT COUNT(*)::int FROM ops.support_ticket_replies r WHERE r.ticket_id = t.id)
 		FROM ops.support_tickets t
-		LEFT JOIN identity.users u ON u.id = t.created_by
-		` + where + `
+		LEFT JOIN identity.users u ON u.id = t.created_by `+where+`
 		ORDER BY t.created_at DESC
-		LIMIT $` + strconv.Itoa(limIdx) + ` OFFSET $` + strconv.Itoa(offIdx)
-	rows, err := s.pool.Query(ctx, listQ, listArgs...)
+		LIMIT $`+strconv.Itoa(limitIndex)+` OFFSET $`+strconv.Itoa(offsetIndex), listArgs...)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	var out []SupportTicket
+	tickets := []SupportTicket{}
 	for rows.Next() {
-		var t SupportTicket
+		var ticket SupportTicket
 		var createdBy *string
 		if err := rows.Scan(
-			&t.ID, &createdBy, &t.CreatorEmail, &t.CreatorName, &t.CreatorRole,
-			&t.Source, &t.Subject, &t.Message, &t.Status,
-			&t.UserAgent, &t.AppVersion, &t.Locale, &t.Route, &t.CreatedAt, &t.UpdatedAt,
-			&t.ReplyCount,
+			&ticket.ID, &createdBy, &ticket.CreatorEmail, &ticket.CreatorName, &ticket.CreatorRole,
+			&ticket.Source, &ticket.Subject, &ticket.Message, &ticket.Status,
+			&ticket.UserAgent, &ticket.AppVersion, &ticket.Locale, &ticket.Route,
+			&ticket.CreatedAt, &ticket.UpdatedAt, &ticket.ReplyCount,
 		); err != nil {
 			return nil, 0, err
 		}
-		t.CreatedBy = createdBy
-		out = append(out, t)
+		ticket.CreatedBy = createdBy
+		tickets = append(tickets, ticket)
 	}
-	if out == nil {
-		out = []SupportTicket{}
-	}
-	return out, total, rows.Err()
+	return tickets, total, rows.Err()
 }
 
 func escapeILIKE(s string) string {
-	replacer := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
-	return replacer.Replace(s)
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
 }
 
 func (s *Store) GetSupportTicket(ctx context.Context, id string) (SupportTicketDetail, error) {
-	var t SupportTicket
+	var ticket SupportTicket
 	var createdBy *string
 	err := s.pool.QueryRow(ctx, `
 		SELECT t.id, t.created_by, COALESCE(u.email, ''), COALESCE(u.full_name, ''), COALESCE(u.role::text, ''),
@@ -275,9 +320,10 @@ func (s *Store) GetSupportTicket(ctx context.Context, id string) (SupportTicketD
 		FROM ops.support_tickets t
 		LEFT JOIN identity.users u ON u.id = t.created_by
 		WHERE t.id = $1`, id).Scan(
-		&t.ID, &createdBy, &t.CreatorEmail, &t.CreatorName, &t.CreatorRole,
-		&t.Source, &t.Subject, &t.Message, &t.Status, &t.Diagnostics,
-		&t.UserAgent, &t.AppVersion, &t.Locale, &t.Route, &t.CreatedAt, &t.UpdatedAt,
+		&ticket.ID, &createdBy, &ticket.CreatorEmail, &ticket.CreatorName, &ticket.CreatorRole,
+		&ticket.Source, &ticket.Subject, &ticket.Message, &ticket.Status, &ticket.Diagnostics,
+		&ticket.UserAgent, &ticket.AppVersion, &ticket.Locale, &ticket.Route,
+		&ticket.CreatedAt, &ticket.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -285,52 +331,137 @@ func (s *Store) GetSupportTicket(ctx context.Context, id string) (SupportTicketD
 		}
 		return SupportTicketDetail{}, err
 	}
-	t.CreatedBy = createdBy
+	ticket.CreatedBy = createdBy
 
+	replies, err := s.listSupportTicketReplies(ctx, id)
+	if err != nil {
+		return SupportTicketDetail{}, err
+	}
+	history, err := s.listSupportTicketStatusEvents(ctx, id)
+	if err != nil {
+		return SupportTicketDetail{}, err
+	}
+	attachments, err := s.listSupportTicketAttachments(ctx, id)
+	if err != nil {
+		return SupportTicketDetail{}, err
+	}
+	return SupportTicketDetail{
+		SupportTicket: ticket,
+		Replies:       replies,
+		StatusHistory: history,
+		Attachments:   attachments,
+	}, nil
+}
+
+func (s *Store) listSupportTicketReplies(ctx context.Context, ticketID string) ([]SupportTicketReply, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT r.id, r.ticket_id, r.author_id, COALESCE(u.full_name, ''), r.body, r.created_at
 		FROM ops.support_ticket_replies r
 		LEFT JOIN identity.users u ON u.id = r.author_id
 		WHERE r.ticket_id = $1
-		ORDER BY r.created_at ASC`, id)
+		ORDER BY r.created_at ASC`, ticketID)
 	if err != nil {
-		return SupportTicketDetail{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	replies := []SupportTicketReply{}
 	for rows.Next() {
-		var r SupportTicketReply
-		var authorID *string
-		if err := rows.Scan(&r.ID, &r.TicketID, &authorID, &r.AuthorName, &r.Body, &r.CreatedAt); err != nil {
-			return SupportTicketDetail{}, err
+		var reply SupportTicketReply
+		if err := rows.Scan(
+			&reply.ID, &reply.TicketID, &reply.AuthorID, &reply.AuthorName, &reply.Body, &reply.CreatedAt,
+		); err != nil {
+			return nil, err
 		}
-		r.AuthorID = authorID
-		replies = append(replies, r)
+		replies = append(replies, reply)
 	}
-	if err := rows.Err(); err != nil {
-		return SupportTicketDetail{}, err
-	}
-	return SupportTicketDetail{SupportTicket: t, Replies: replies}, nil
+	return replies, rows.Err()
 }
 
-func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string) (SupportTicket, error) {
+func (s *Store) listSupportTicketStatusEvents(ctx context.Context, ticketID string) ([]SupportTicketStatusEvent, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT e.id, e.ticket_id, e.from_status, e.to_status, e.changed_by,
+			COALESCE(u.full_name, ''), e.created_at
+		FROM ops.support_ticket_status_events e
+		LEFT JOIN identity.users u ON u.id = e.changed_by
+		WHERE e.ticket_id = $1
+		ORDER BY e.created_at ASC, e.id ASC`, ticketID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := []SupportTicketStatusEvent{}
+	for rows.Next() {
+		var event SupportTicketStatusEvent
+		if err := rows.Scan(
+			&event.ID, &event.TicketID, &event.FromStatus, &event.ToStatus,
+			&event.ChangedBy, &event.ChangedName, &event.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, rows.Err()
+}
+
+func (s *Store) listSupportTicketAttachments(ctx context.Context, ticketID string) ([]SupportTicketAttachment, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT a.id, a.ticket_id, a.uploaded_by, COALESCE(u.full_name, ''),
+			a.file_name, a.content_type, a.size_bytes, a.object_key, a.created_at
+		FROM ops.support_ticket_attachments a
+		LEFT JOIN identity.users u ON u.id = a.uploaded_by
+		WHERE a.ticket_id = $1
+		ORDER BY a.created_at ASC, a.id ASC`, ticketID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	attachments := []SupportTicketAttachment{}
+	for rows.Next() {
+		var attachment SupportTicketAttachment
+		if err := rows.Scan(
+			&attachment.ID, &attachment.TicketID, &attachment.UploadedBy, &attachment.UploaderName,
+			&attachment.FileName, &attachment.ContentType, &attachment.SizeBytes,
+			&attachment.ObjectKey, &attachment.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		attachments = append(attachments, attachment)
+	}
+	return attachments, rows.Err()
+}
+
+// UpdateSupportTicketStatus records an effective status change. The optional form
+// keeps legacy callers compiling while new callers must provide the actor ID.
+func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string, changedBy ...string) (SupportTicket, error) {
 	status = strings.TrimSpace(status)
 	if !validSupportStatuses[status] {
 		return SupportTicket{}, ErrValidation
 	}
-	var t SupportTicket
+	actorID := ""
+	if len(changedBy) > 0 {
+		actorID = changedBy[0]
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return SupportTicket{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var ticket SupportTicket
 	var createdBy *string
-	err := s.pool.QueryRow(ctx, `
-		UPDATE ops.support_tickets
-		SET status = $2, updated_at = NOW()
+	err = tx.QueryRow(ctx, `
+		SELECT id, created_by, source, subject, message, status,
+			user_agent, app_version, locale, route, created_at, updated_at
+		FROM ops.support_tickets
 		WHERE id = $1
-		RETURNING id, created_by, source, subject, message, status,
-			user_agent, app_version, locale, route, created_at, updated_at`,
-		id, status,
-	).Scan(
-		&t.ID, &createdBy, &t.Source, &t.Subject, &t.Message, &t.Status,
-		&t.UserAgent, &t.AppVersion, &t.Locale, &t.Route, &t.CreatedAt, &t.UpdatedAt,
+		FOR UPDATE`, id).Scan(
+		&ticket.ID, &createdBy, &ticket.Source, &ticket.Subject, &ticket.Message, &ticket.Status,
+		&ticket.UserAgent, &ticket.AppVersion, &ticket.Locale, &ticket.Route,
+		&ticket.CreatedAt, &ticket.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -338,8 +469,30 @@ func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string
 		}
 		return SupportTicket{}, err
 	}
-	t.CreatedBy = createdBy
-	return t, nil
+	ticket.CreatedBy = createdBy
+	if ticket.Status == status {
+		if err := tx.Commit(ctx); err != nil {
+			return SupportTicket{}, err
+		}
+		return ticket, nil
+	}
+
+	previous := ticket.Status
+	if err := tx.QueryRow(ctx, `
+		UPDATE ops.support_tickets
+		SET status = $2, updated_at = NOW()
+		WHERE id = $1
+		RETURNING status, updated_at`, id, status,
+	).Scan(&ticket.Status, &ticket.UpdatedAt); err != nil {
+		return SupportTicket{}, err
+	}
+	if err := insertSupportStatusEventTx(ctx, tx, id, &previous, status, actorID); err != nil {
+		return SupportTicket{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return SupportTicket{}, err
+	}
+	return ticket, nil
 }
 
 func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, body string) (SupportTicketReply, SupportTicket, error) {
@@ -354,14 +507,17 @@ func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, b
 	}
 	defer tx.Rollback(ctx)
 
-	var t SupportTicket
+	var ticket SupportTicket
 	var createdBy *string
 	err = tx.QueryRow(ctx, `
 		SELECT id, created_by, source, subject, message, status,
 			user_agent, app_version, locale, route, created_at, updated_at
-		FROM ops.support_tickets WHERE id = $1 FOR UPDATE`, ticketID).Scan(
-		&t.ID, &createdBy, &t.Source, &t.Subject, &t.Message, &t.Status,
-		&t.UserAgent, &t.AppVersion, &t.Locale, &t.Route, &t.CreatedAt, &t.UpdatedAt,
+		FROM ops.support_tickets
+		WHERE id = $1
+		FOR UPDATE`, ticketID).Scan(
+		&ticket.ID, &createdBy, &ticket.Source, &ticket.Subject, &ticket.Message, &ticket.Status,
+		&ticket.UserAgent, &ticket.AppVersion, &ticket.Locale, &ticket.Route,
+		&ticket.CreatedAt, &ticket.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -369,41 +525,109 @@ func (s *Store) AddSupportTicketReply(ctx context.Context, ticketID, authorID, b
 		}
 		return SupportTicketReply{}, SupportTicket{}, err
 	}
-	t.CreatedBy = createdBy
+	ticket.CreatedBy = createdBy
 
-	newStatus := t.Status
-	if t.Status == SupportStatusOpen {
-		newStatus = SupportStatusInProgress
-	}
-	err = tx.QueryRow(ctx, `
-		UPDATE ops.support_tickets
-		SET status = $2, updated_at = NOW()
-		WHERE id = $1
-		RETURNING status, updated_at`, ticketID, newStatus).Scan(&t.Status, &t.UpdatedAt)
-	if err != nil {
-		return SupportTicketReply{}, SupportTicket{}, err
+	if ticket.Status == SupportStatusOpen {
+		previous := ticket.Status
+		if err := tx.QueryRow(ctx, `
+			UPDATE ops.support_tickets
+			SET status = $2, updated_at = NOW()
+			WHERE id = $1
+			RETURNING status, updated_at`, ticketID, SupportStatusInProgress,
+		).Scan(&ticket.Status, &ticket.UpdatedAt); err != nil {
+			return SupportTicketReply{}, SupportTicket{}, err
+		}
+		if err := insertSupportStatusEventTx(ctx, tx, ticketID, &previous, ticket.Status, authorID); err != nil {
+			return SupportTicketReply{}, SupportTicket{}, err
+		}
 	}
 
 	var reply SupportTicketReply
-	var authorIDPtr *string
-	err = tx.QueryRow(ctx, `
+	if err := tx.QueryRow(ctx, `
 		INSERT INTO ops.support_ticket_replies (ticket_id, author_id, body)
 		VALUES ($1, $2, $3)
 		RETURNING id, ticket_id, author_id, body, created_at`,
 		ticketID, authorID, body,
-	).Scan(&reply.ID, &reply.TicketID, &authorIDPtr, &reply.Body, &reply.CreatedAt)
-	if err != nil {
+	).Scan(&reply.ID, &reply.TicketID, &reply.AuthorID, &reply.Body, &reply.CreatedAt); err != nil {
 		return SupportTicketReply{}, SupportTicket{}, err
 	}
-	reply.AuthorID = authorIDPtr
-
 	if err := tx.Commit(ctx); err != nil {
 		return SupportTicketReply{}, SupportTicket{}, err
 	}
-	return reply, t, nil
+	return reply, ticket, nil
 }
 
-// AnonymizeUserSupportTickets clears PII on tickets (standalone, uses pool).
+func (s *Store) CreateSupportTicketAttachment(ctx context.Context, in CreateSupportTicketAttachmentInput) (SupportTicketAttachment, error) {
+	in.TicketID = strings.TrimSpace(in.TicketID)
+	in.UploadedBy = strings.TrimSpace(in.UploadedBy)
+	in.FileName = strings.TrimSpace(in.FileName)
+	in.ContentType = strings.TrimSpace(in.ContentType)
+	in.ObjectKey = strings.TrimSpace(in.ObjectKey)
+	if in.TicketID == "" || in.FileName == "" || in.ObjectKey == "" || in.SizeBytes < 0 {
+		return SupportTicketAttachment{}, ErrValidation
+	}
+
+	var attachment SupportTicketAttachment
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO ops.support_ticket_attachments (
+			ticket_id, uploaded_by, file_name, content_type, size_bytes, object_key
+		) VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, ticket_id, uploaded_by, file_name, content_type, size_bytes, object_key, created_at`,
+		in.TicketID, in.UploadedBy, in.FileName, in.ContentType, in.SizeBytes, in.ObjectKey,
+	).Scan(
+		&attachment.ID, &attachment.TicketID, &attachment.UploadedBy, &attachment.FileName,
+		&attachment.ContentType, &attachment.SizeBytes, &attachment.ObjectKey, &attachment.CreatedAt,
+	)
+	if err != nil {
+		return SupportTicketAttachment{}, err
+	}
+	return attachment, nil
+}
+
+func (s *Store) GetSupportTicketAttachment(ctx context.Context, id string) (SupportTicketAttachment, error) {
+	var attachment SupportTicketAttachment
+	err := s.pool.QueryRow(ctx, `
+		SELECT a.id, a.ticket_id, a.uploaded_by, COALESCE(u.full_name, ''),
+			a.file_name, a.content_type, a.size_bytes, a.object_key, a.created_at
+		FROM ops.support_ticket_attachments a
+		LEFT JOIN identity.users u ON u.id = a.uploaded_by
+		WHERE a.id = $1`, id,
+	).Scan(
+		&attachment.ID, &attachment.TicketID, &attachment.UploadedBy, &attachment.UploaderName,
+		&attachment.FileName, &attachment.ContentType, &attachment.SizeBytes,
+		&attachment.ObjectKey, &attachment.CreatedAt,
+	)
+	if err == pgx.ErrNoRows {
+		return SupportTicketAttachment{}, ErrNotFound
+	}
+	return attachment, err
+}
+
+func (s *Store) ListSupportAttachmentObjectKeysForUser(ctx context.Context, userID string) ([]string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT COALESCE(a.object_key, '')
+		FROM ops.support_ticket_attachments a
+		JOIN ops.support_tickets t ON t.id = a.ticket_id
+		WHERE t.created_by = $1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keys := []string{}
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		if key = strings.TrimSpace(key); key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys, rows.Err()
+}
+
+// AnonymizeUserSupportTickets clears ticket PII and all user references.
 func (s *Store) AnonymizeUserSupportTickets(ctx context.Context, userID string) error {
 	return anonymizeUserSupportTicketsExec(ctx, s.pool, userID)
 }
@@ -413,9 +637,19 @@ type supportExecer interface {
 }
 
 func anonymizeUserSupportTicketsExec(ctx context.Context, db supportExecer, userID string) error {
-	_, err := db.Exec(ctx, `
-		UPDATE ops.support_tickets SET
-			created_by = NULL,
+	if _, err := db.Exec(ctx, `
+		UPDATE ops.support_ticket_attachments a
+		SET file_name = '[anonymized]',
+			content_type = '',
+			size_bytes = 0,
+			object_key = ''
+		FROM ops.support_tickets t
+		WHERE t.id = a.ticket_id AND t.created_by = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := db.Exec(ctx, `
+		UPDATE ops.support_tickets
+		SET created_by = NULL,
 			subject = '[anonymized]',
 			message = '[anonymized]',
 			diagnostics = '{}'::jsonb,
@@ -424,35 +658,64 @@ func anonymizeUserSupportTicketsExec(ctx context.Context, db supportExecer, user
 			locale = '',
 			route = '',
 			updated_at = NOW()
-		WHERE created_by = $1`, userID)
+		WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := db.Exec(ctx, `UPDATE ops.support_ticket_replies SET author_id = NULL WHERE author_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := db.Exec(ctx, `UPDATE ops.support_ticket_status_events SET changed_by = NULL WHERE changed_by = $1`, userID); err != nil {
+		return err
+	}
+	_, err := db.Exec(ctx, `UPDATE ops.support_ticket_attachments SET uploaded_by = NULL WHERE uploaded_by = $1`, userID)
 	return err
 }
 
-// ListSupportTicketsForExport returns tickets + replies for RGPD export.
+// ListSupportTicketsForExport returns tickets, replies, status history, and attachment metadata for RGPD export.
 func (s *Store) ListSupportTicketsForExport(ctx context.Context, userID string) (json.RawMessage, error) {
 	var raw []byte
 	err := s.pool.QueryRow(ctx, `
-		SELECT COALESCE(jsonb_agg(row_to_json(x) ORDER BY x.created_at), '[]'::jsonb)
+		SELECT COALESCE(jsonb_agg(row_to_json(ticket) ORDER BY ticket.created_at), '[]'::jsonb)
 		FROM (
 			SELECT t.id, t.source, t.subject, t.message, t.status, t.diagnostics,
-				t.user_agent, t.app_version, t.locale, t.route,
-				t.created_at, t.updated_at,
+				t.user_agent, t.app_version, t.locale, t.route, t.created_at, t.updated_at,
 				COALESCE((
 					SELECT jsonb_agg(jsonb_build_object(
 						'id', r.id, 'body', r.body, 'createdAt', r.created_at
 					) ORDER BY r.created_at)
-					FROM ops.support_ticket_replies r WHERE r.ticket_id = t.id
-				), '[]'::jsonb) AS replies
+					FROM ops.support_ticket_replies r
+					WHERE r.ticket_id = t.id
+				), '[]'::jsonb) AS replies,
+				COALESCE((
+					SELECT jsonb_agg(jsonb_build_object(
+						'id', e.id, 'fromStatus', e.from_status, 'toStatus', e.to_status,
+						'changedBy', e.changed_by, 'changedName', COALESCE(u.full_name, ''),
+						'createdAt', e.created_at
+					) ORDER BY e.created_at, e.id)
+					FROM ops.support_ticket_status_events e
+					LEFT JOIN identity.users u ON u.id = e.changed_by
+					WHERE e.ticket_id = t.id
+				), '[]'::jsonb) AS status_history,
+				COALESCE((
+					SELECT jsonb_agg(jsonb_build_object(
+						'id', a.id, 'uploadedBy', a.uploaded_by,
+						'uploaderName', COALESCE(u.full_name, ''), 'fileName', a.file_name,
+						'contentType', a.content_type, 'sizeBytes', a.size_bytes, 'createdAt', a.created_at
+					) ORDER BY a.created_at, a.id)
+					FROM ops.support_ticket_attachments a
+					LEFT JOIN identity.users u ON u.id = a.uploaded_by
+					WHERE a.ticket_id = t.id
+				), '[]'::jsonb) AS attachments
 			FROM ops.support_tickets t
 			WHERE t.created_by = $1
-		) x`, userID).Scan(&raw)
+		) ticket`, userID).Scan(&raw)
 	if err != nil {
 		return nil, err
 	}
 	return json.RawMessage(raw), nil
 }
 
-// SupportTicketStats — agrégats inbox ops (admin / DEV).
+// SupportTicketStats — agrégats inbox ops, avec vieillissement des tickets actifs.
 type SupportTicketStats struct {
 	ByStatus         map[string]int `json:"byStatus"`
 	BySource         map[string]int `json:"bySource"`
@@ -466,54 +729,53 @@ func (s *Store) SupportTicketStats(ctx context.Context) (SupportTicketStats, err
 		ByStatus: map[string]int{},
 		BySource: map[string]int{},
 	}
-	rows, err := s.pool.Query(ctx, `
-		SELECT status, COUNT(*)::int FROM ops.support_tickets GROUP BY status`)
+	rows, err := s.pool.Query(ctx, `SELECT status, COUNT(*)::int FROM ops.support_tickets GROUP BY status`)
 	if err != nil {
 		return out, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var st string
-		var n int
-		if err := rows.Scan(&st, &n); err != nil {
+		var status string
+		var count int
+		if err := rows.Scan(&status, &count); err != nil {
 			return out, err
 		}
-		out.ByStatus[st] = n
-		out.Total += n
+		out.ByStatus[status] = count
+		out.Total += count
 	}
 	if err := rows.Err(); err != nil {
 		return out, err
 	}
 
-	srcRows, err := s.pool.Query(ctx, `
-		SELECT source, COUNT(*)::int FROM ops.support_tickets GROUP BY source`)
+	sourceRows, err := s.pool.Query(ctx, `SELECT source, COUNT(*)::int FROM ops.support_tickets GROUP BY source`)
 	if err != nil {
 		return out, err
 	}
-	defer srcRows.Close()
-	for srcRows.Next() {
-		var src string
-		var n int
-		if err := srcRows.Scan(&src, &n); err != nil {
+	defer sourceRows.Close()
+	for sourceRows.Next() {
+		var source string
+		var count int
+		if err := sourceRows.Scan(&source, &count); err != nil {
 			return out, err
 		}
-		out.BySource[src] = n
+		out.BySource[source] = count
 	}
-	if err := srcRows.Err(); err != nil {
+	if err := sourceRows.Err(); err != nil {
 		return out, err
 	}
 
-	now := time.Now().UTC()
-	err = s.pool.QueryRow(ctx, `
+	activeStatuses := []string{SupportStatusOpen, SupportStatusInProgress, SupportStatusToTest}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM ops.support_tickets
-		WHERE status IN ('open', 'in_progress') AND created_at < $1`,
-		now.Add(-24*time.Hour)).Scan(&out.OpenOlderThan24h)
-	if err != nil {
+		WHERE status = ANY($1) AND created_at < NOW() - INTERVAL '24 hours'`, activeStatuses,
+	).Scan(&out.OpenOlderThan24h); err != nil {
 		return out, err
 	}
-	err = s.pool.QueryRow(ctx, `
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM ops.support_tickets
-		WHERE status IN ('open', 'in_progress') AND created_at < $1`,
-		now.Add(-7*24*time.Hour)).Scan(&out.OpenOlderThan7d)
-	return out, err
+		WHERE status = ANY($1) AND created_at < NOW() - INTERVAL '7 days'`, activeStatuses,
+	).Scan(&out.OpenOlderThan7d); err != nil {
+		return out, err
+	}
+	return out, nil
 }

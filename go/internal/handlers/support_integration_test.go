@@ -1,11 +1,17 @@
 package handlers_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
@@ -102,13 +108,33 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
-		"status": "resolved",
+		"status": "done",
 	})
 	if code != http.StatusOK {
 		t.Fatalf("patch status %d %#v", code, env)
 	}
-	if dataMap(t, env)["status"] != "resolved" {
-		t.Fatalf("expected resolved: %#v", env)
+	if dataMap(t, env)["status"] != "done" {
+		t.Fatalf("expected done: %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin get after patch %d %#v", code, env)
+	}
+	history, _ := dataMap(t, env)["statusHistory"].([]any)
+	if len(history) < 2 {
+		t.Fatalf("expected status history events, got %#v", dataMap(t, env)["statusHistory"])
+	}
+	foundDone := false
+	for _, raw := range history {
+		ev, _ := raw.(map[string]any)
+		if ev["toStatus"] == "done" {
+			foundDone = true
+			break
+		}
+	}
+	if !foundDone {
+		t.Fatalf("expected done event in history: %#v", history)
 	}
 }
 
@@ -267,5 +293,119 @@ func TestSupportTicketExportAndAnonymize(t *testing.T) {
 	anonDiag, _ := detail["diagnostics"].(map[string]any)
 	if anonDiag == nil || len(anonDiag) != 0 {
 		t.Fatalf("expected empty diagnostics object: %#v", detail["diagnostics"])
+	}
+}
+
+func TestSupportTicketStatusWorkflowAndAttachments(t *testing.T) {
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://127.0.0.1:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	vetOtherTok := loginToken(t, api.handler, "vet.lyon@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/support/tickets", vetTok, map[string]any{
+		"source":      "nuxt_pro",
+		"subject":     "Workflow attachment",
+		"message":     "need status + file",
+		"diagnostics": map[string]any{},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	ticketID, _ := dataMap(t, env)["id"].(string)
+
+	for _, st := range []string{"in_progress", "to_test", "done"} {
+		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+			"status": st,
+		})
+		if code != http.StatusOK {
+			t.Fatalf("patch %s %d %#v", st, code, env)
+		}
+		if dataMap(t, env)["status"] != st {
+			t.Fatalf("expected %s: %#v", st, env)
+		}
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+		"status": "closed",
+	})
+	if code != http.StatusOK || dataMap(t, env)["status"] != "closed" {
+		t.Fatalf("patch closed %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get %d %#v", code, env)
+	}
+	history, _ := dataMap(t, env)["statusHistory"].([]any)
+	if len(history) < 5 {
+		t.Fatalf("expected >=5 status events, got %d %#v", len(history), history)
+	}
+
+	pdf := []byte("%PDF-1.4\n% support note\n")
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	part, err := w.CreateFormFile("file", "note.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := part.Write(pdf); err != nil {
+		t.Fatal(err)
+	}
+	_ = w.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/support/tickets/"+ticketID+"/attachments", &body)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+adminTok)
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	var envelope map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &envelope)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("upload attachment %d %#v", rec.Code, envelope)
+	}
+	att := dataMap(t, envelope)
+	attID, _ := att["id"].(string)
+	if attID == "" {
+		t.Fatalf("missing attachment id: %#v", att)
+	}
+	if _, ok := att["objectKey"]; ok {
+		t.Fatalf("must not expose objectKey: %#v", att)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get after upload %d %#v", code, env)
+	}
+	atts, _ := dataMap(t, env)["attachments"].([]any)
+	if len(atts) != 1 {
+		t.Fatalf("expected 1 attachment, got %#v", atts)
+	}
+
+	dl := "/api/v1/admin/support/tickets/" + ticketID + "/attachments/" + attID + "/download"
+	req = httptest.NewRequest(http.MethodGet, dl, nil)
+	req.Header.Set("Authorization", "Bearer "+adminTok)
+	rec = httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("download %d %s", rec.Code, rec.Body.String())
+	}
+	if !bytes.Equal(rec.Body.Bytes(), pdf) {
+		t.Fatalf("unexpected download body")
+	}
+
+	req = httptest.NewRequest(http.MethodGet, dl, nil)
+	req.Header.Set("Authorization", "Bearer "+vetOtherTok)
+	rec = httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code == http.StatusOK {
+		t.Fatalf("vet must not download support attachment, got 200")
 	}
 }
