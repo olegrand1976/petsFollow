@@ -14,6 +14,7 @@ import (
 
 func (a *API) registerPharmacyMedicationRoutes(pr chi.Router) {
 	pr.Get("/vet/pharmacy/medications/search", a.searchPharmacyMedications)
+	pr.Get("/vet/pharmacy/medications", a.listPharmacyMedications)
 	pr.Get("/vet/pharmacy/medications/{id}", a.getPharmacyMedication)
 	pr.Patch("/vet/pharmacy/medications/{id}/withdrawal", a.patchPharmacyMedicationWithdrawal)
 	pr.Patch("/vet/pets/{petID}/food-chain", a.patchVetPetFoodChain)
@@ -49,6 +50,67 @@ func (a *API) searchPharmacyMedications(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// GET /vet/pharmacy/medications?letter=&limit=&offset=
+func (a *API) listPharmacyMedications(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	if _, ok := a.requirePracticePerm(w, r, "pharmacy.read"); !ok {
+		return
+	}
+	letter, ok := store.ParseMedicationLetter(r.URL.Query().Get("letter"))
+	if !ok {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "letter_required")
+		return
+	}
+	limit := 50
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil {
+			limit = n
+		}
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	offset := 0
+	if raw := r.URL.Query().Get("offset"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+	items, total, err := a.store.ListRefMedicationsByLetter(r.Context(), letter, limit, offset)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "letter_required")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	includeCounts := true
+	switch strings.ToLower(strings.TrimSpace(r.URL.Query().Get("includeCounts"))) {
+	case "0", "false", "no":
+		includeCounts = false
+	}
+	payload := map[string]any{
+		"items":  items,
+		"total":  total,
+		"letter": letter,
+		"limit":  limit,
+		"offset": offset,
+	}
+	if includeCounts {
+		letterCounts, catalogTotal, err := a.store.CountRefMedicationsByLetter(r.Context())
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		payload["letterCounts"] = letterCounts
+		payload["catalogTotal"] = catalogTotal
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
 }
 
 // GET /vet/pharmacy/medications/{id} — national ref merged with practice withdrawal overlay.

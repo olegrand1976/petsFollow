@@ -34,6 +34,22 @@ export type CompendiumReviewTotals = {
 
 export const COMPENDIUM_REVIEW_PAGE_SIZE = 20
 
+/** Aligné sur BeginCompendiumExtract (store) : reclaim anti double-run. */
+export const COMPENDIUM_EXTRACT_STALE_MS = 15 * 60 * 1000
+
+/** true = extract encore « live » → UI ne doit pas relancer (409). */
+export function isCompendiumExtractClaimLive (
+  status: string | undefined,
+  updatedAt: string | Date | undefined,
+  now: number = Date.now(),
+): boolean {
+  if (status !== 'extracting') return false
+  if (updatedAt == null || updatedAt === '') return true
+  const t = new Date(updatedAt).getTime()
+  if (!Number.isFinite(t)) return true
+  return now - t < COMPENDIUM_EXTRACT_STALE_MS
+}
+
 export function isReviewQueueRow (row: CompendiumRowLike): boolean {
   return row.status === 'pending' || row.status === 'error'
 }

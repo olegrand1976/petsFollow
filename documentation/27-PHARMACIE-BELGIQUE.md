@@ -130,6 +130,7 @@ nuxtjs/
 ├── composables/usePharmacyApi.ts
 ├── server/api/vet/
 │   ├── medications/search.get.ts
+│   ├── medications/index.get.ts      # ?letter=&limit=&offset=&includeCounts=
 │   ├── deposits/...
 │   ├── batches/...
 │   ├── daf/...
@@ -347,8 +348,9 @@ Réponses enveloppe `{ data: … }` (convention existante).
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| `GET` | `/vet/medications/search?q=&limit=20` | Autocomplete FTS + trigram |
-| `GET` | `/vet/medications/{id}` | Fiche CNK |
+| `GET` | `/vet/pharmacy/medications/search?q=&limit=20` | Autocomplete FTS + trigram |
+| `GET` | `/vet/pharmacy/medications?letter=A&limit=&offset=` | Index A–Z (`#` = non-lettre) + `letterCounts` / `catalogTotal` (`includeCounts=0` pour pagination) |
+| `GET` | `/vet/pharmacy/medications/{id}` | Fiche CNK (+ `afmpsMeta` / `afmpsSource`) |
 
 Réponse search (élément) :
 
@@ -611,7 +613,7 @@ Local : `make api-dev` pose `VAMREG_DRY_RUN=true` ; workers off sauf flag explic
 
 | Route | Rôle |
 |-------|------|
-| `/medicaments` | Recherche catalogue + badge antibiotique |
+| `/medicaments` | Recherche catalogue + **index A–Z** (`GET …/medications?letter=`) + badges liaison AFMPS / Compendium |
 | `/stock` | Dépôts, lots, alertes péremption |
 | `/stock/mouvements` | Journal |
 | `/daf` | Liste |
