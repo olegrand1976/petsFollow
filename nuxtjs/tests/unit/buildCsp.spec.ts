@@ -34,5 +34,12 @@ describe('buildCsp', () => {
   it('autorise iframe same-origin (viewer PDF admin) + GSI', () => {
     const csp = buildCsp('')
     expect(csp).toMatch(/frame-src 'self' https:\/\/accounts\.google\.com\/gsi\//)
+    expect(csp).toContain("frame-ancestors 'none'")
+  })
+
+  it('autorise frame-ancestors self pour réponses PDF iframe', () => {
+    const csp = buildCsp('', { frameAncestors: "'self'" })
+    expect(csp).toContain("frame-ancestors 'self'")
+    expect(csp).not.toContain("frame-ancestors 'none'")
   })
 })

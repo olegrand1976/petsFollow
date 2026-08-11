@@ -103,6 +103,13 @@ export default defineNuxtConfig({
         'Content-Security-Policy': buildCsp(),
       },
     },
+    // Viewer PDF Compendium (iframe same-origin) — override DENY / frame-ancestors none.
+    '/api/admin/compendium-imports/*/pdf': {
+      headers: {
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Content-Security-Policy': buildCsp(undefined, { frameAncestors: "'self'" }),
+      },
+    },
   },
   app: {
     head: {
