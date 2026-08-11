@@ -85,21 +85,28 @@ type FEFOPreviewLine struct {
 func (s *Store) GetRefMedication(ctx context.Context, id string) (RefMedication, error) {
 	var m RefMedication
 	var atc, form, pack, amm string
+	var meta []byte
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, cnk, name,
 		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
 		       COALESCE(amm_number, ''),
 		       is_antibiotic, is_active,
-		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
+		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
+		       COALESCE(afmps_meta, '{}'::jsonb)
 		FROM pharmacy.ref_medications WHERE id = $1`, id).Scan(
 		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
 		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
+		&meta,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RefMedication{}, ErrNotFound
 	}
+	if err != nil {
+		return RefMedication{}, err
+	}
 	m.ATCCode, m.PharmaceuticalForm, m.PackSize, m.AMMNumber = atc, form, pack, amm
-	return m, err
+	applyAFMPSMeta(&m, meta)
+	return m, nil
 }
 
 // GetRefMedicationForPractice returns national ref merged with practice overlay (withdrawal / ban).
@@ -109,6 +116,7 @@ func (s *Store) GetRefMedicationForPractice(ctx context.Context, practiceID, med
 	}
 	var m RefMedication
 	var atc, form, pack, amm string
+	var meta []byte
 	err := s.pool.QueryRow(ctx, `
 		SELECT m.id::text, m.cnk, m.name,
 		       COALESCE(m.atc_code, ''), COALESCE(m.pharmaceutical_form, ''), COALESCE(m.pack_size, ''),
@@ -117,19 +125,25 @@ func (s *Store) GetRefMedicationForPractice(ctx context.Context, practiceID, med
 		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_meat_days ELSE m.withdrawal_meat_days END,
 		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_milk_days ELSE m.withdrawal_milk_days END,
 		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_eggs_days ELSE m.withdrawal_eggs_days END,
-		       CASE WHEN o.medication_id IS NOT NULL THEN o.food_chain_banned ELSE m.food_chain_banned END
+		       CASE WHEN o.medication_id IS NOT NULL THEN o.food_chain_banned ELSE m.food_chain_banned END,
+		       COALESCE(m.afmps_meta, '{}'::jsonb)
 		FROM pharmacy.ref_medications m
 		LEFT JOIN pharmacy.medication_practice_attrs o
 		  ON o.medication_id = m.id AND o.practice_id = $2::uuid
 		WHERE m.id = $1`, medicationID, practiceID).Scan(
 		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
 		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
+		&meta,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RefMedication{}, ErrNotFound
 	}
+	if err != nil {
+		return RefMedication{}, err
+	}
 	m.ATCCode, m.PharmaceuticalForm, m.PackSize, m.AMMNumber = atc, form, pack, amm
-	return m, err
+	applyAFMPSMeta(&m, meta)
+	return m, nil
 }
 
 // UpsertPracticeMedicationWithdrawal sets practice-scoped withdrawal / food-chain ban (never mutates national ref).

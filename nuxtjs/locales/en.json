@@ -1257,6 +1257,7 @@
       "dictionaryAlphabetAria": "A–Z alphabetical index",
       "catalogEmpty": "The FAMHP dictionary is empty — import the CSV pack to link CNKs.",
       "catalogEmptyLink": "Go to FAMHP import",
+      "catalogEmptyHint": "Ask an administrator to import the FAMHP CSV pack.",
       "catalogTotal": "{count} active medications",
       "colName": "Name",
       "colCnk": "CNK",

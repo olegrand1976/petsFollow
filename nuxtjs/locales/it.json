@@ -1922,6 +1922,7 @@
       "dictionaryAlphabetAria": "Indice alfabetico A–Z",
       "catalogEmpty": "Il dizionario AFMPS è vuoto — importa il pack CSV per collegare i CNK.",
       "catalogEmptyLink": "Vai all’import AFMPS",
+      "catalogEmptyHint": "Chiedete a un amministratore di importare il pack CSV AFMPS.",
       "catalogTotal": "{count} medicinali attivi",
       "colName": "Nome",
       "colCnk": "CNK",

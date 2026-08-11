@@ -89,20 +89,28 @@ func (a *API) listPharmacyMedications(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	letterCounts, catalogTotal, err := a.store.CountRefMedicationsByLetter(r.Context())
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
+	includeCounts := true
+	switch strings.ToLower(strings.TrimSpace(r.URL.Query().Get("includeCounts"))) {
+	case "0", "false", "no":
+		includeCounts = false
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"items":        items,
-		"total":        total,
-		"letter":       letter,
-		"letterCounts": letterCounts,
-		"catalogTotal": catalogTotal,
-		"limit":        limit,
-		"offset":       offset,
-	})
+	payload := map[string]any{
+		"items":  items,
+		"total":  total,
+		"letter": letter,
+		"limit":  limit,
+		"offset": offset,
+	}
+	if includeCounts {
+		letterCounts, catalogTotal, err := a.store.CountRefMedicationsByLetter(r.Context())
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		payload["letterCounts"] = letterCounts
+		payload["catalogTotal"] = catalogTotal
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
 }
 
 // GET /vet/pharmacy/medications/{id} — national ref merged with practice withdrawal overlay.

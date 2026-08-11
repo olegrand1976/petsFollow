@@ -26,9 +26,17 @@
       data-testid="medicaments-catalog-empty"
     >
       {{ $t('pharmacy.medicaments.catalogEmpty') }}
-      <NuxtLink class="pro-link" to="/admin/afmps-imports" data-testid="medicaments-catalog-import-link">
+      <NuxtLink
+        v-if="isAdmin"
+        class="pro-link"
+        to="/admin/afmps-imports"
+        data-testid="medicaments-catalog-import-link"
+      >
         {{ $t('pharmacy.medicaments.catalogEmptyLink') }}
       </NuxtLink>
+      <span v-else data-testid="medicaments-catalog-empty-hint">
+        {{ $t('pharmacy.medicaments.catalogEmptyHint') }}
+      </span>
     </div>
 
     <ProCard class="pro-mb-lg">
@@ -87,8 +95,12 @@
             :key="row.id"
             class="med-dict__row"
             :class="{ 'is-selected': detail?.id === row.id }"
+            role="button"
+            tabindex="0"
             :data-testid="`medicaments-dict-row-${row.cnk}`"
             @click="openFromDict(row)"
+            @keydown.enter.prevent="openFromDict(row)"
+            @keydown.space.prevent="openFromDict(row)"
           >
             <td>
               {{ row.name }}
@@ -100,10 +112,21 @@
             <td>{{ row.pharmaceuticalForm || '—' }}</td>
             <td>{{ row.atcCode || '—' }}</td>
             <td>
-              <ProBadge v-if="row.cnk" variant="success" data-testid="medicaments-afmps-badge">
+              <ProBadge
+                v-if="afmpsSourceKind(row.afmpsSource) === 'afmps'"
+                variant="success"
+                data-testid="medicaments-afmps-badge"
+              >
                 {{ $t('pharmacy.medicaments.badgeAfmps') }}
               </ProBadge>
-              <ProBadge v-else variant="danger">{{ $t('pharmacy.medicaments.badgeUnlinked') }}</ProBadge>
+              <ProBadge
+                v-else-if="afmpsSourceKind(row.afmpsSource) === 'compendium'"
+                variant="neutral"
+                data-testid="medicaments-compendium-badge"
+              >
+                {{ $t('pharmacy.medicaments.sourceCompendium') }}
+              </ProBadge>
+              <span v-else class="pro-hint" data-testid="medicaments-source-unknown">—</span>
             </td>
           </tr>
         </tbody>
@@ -293,8 +316,10 @@ import { formatPharmacyCents, pharmacyPriceIsPersisted, pharmacyWithdrawalDays }
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 
 const { t } = useI18n()
+const { user } = useProUser()
 const { canPractice } = usePracticePerms()
 const canWrite = computed(() => canPractice('pharmacy.write'))
+const isAdmin = computed(() => user.value?.role === 'admin')
 
 const selected = ref<ProComboboxItem | null>(null)
 const detail = ref<MedDetail | null>(null)
@@ -314,6 +339,7 @@ const dictBusy = ref(false)
 const letterCounts = ref(parseLetterCounts(undefined))
 const catalogTotal = ref(0)
 const catalogReady = ref(false)
+let dictLoadSeq = 0
 
 type MedRow = {
   id: string
@@ -323,6 +349,7 @@ type MedRow = {
   pharmaceuticalForm?: string
   packSize?: string
   isAntibiotic?: boolean
+  afmpsSource?: string
 }
 
 type MedDetail = {
@@ -401,13 +428,25 @@ async function searchMedications(q: string): Promise<ProComboboxItem[]> {
   }))
 }
 
-async function loadDictionary(letter: MedicamentLetter, offset = 0) {
+async function loadDictionary(
+  letter: MedicamentLetter,
+  offset = 0,
+  opts: { includeCounts?: boolean } = {},
+) {
+  const seq = ++dictLoadSeq
+  const includeCounts = opts.includeCounts ?? true
   dictBusy.value = true
   error.value = ''
   try {
     const res = await $fetch<any>('/api/vet/pharmacy/medications', {
-      query: { letter, limit: String(pageSize), offset: String(offset) },
+      query: {
+        letter,
+        limit: String(pageSize),
+        offset: String(offset),
+        includeCounts: includeCounts ? '1' : '0',
+      },
     })
+    if (seq !== dictLoadSeq) return
     const data = unwrap<{
       items?: MedRow[]
       total?: number
@@ -415,46 +454,52 @@ async function loadDictionary(letter: MedicamentLetter, offset = 0) {
       letterCounts?: Record<string, unknown>
       catalogTotal?: number
     }>(res)
-    letterCounts.value = parseLetterCounts(data.letterCounts)
-    catalogTotal.value = data.catalogTotal ?? 0
-    catalogReady.value = true
+    if (includeCounts && data.letterCounts) {
+      letterCounts.value = parseLetterCounts(data.letterCounts)
+      catalogTotal.value = data.catalogTotal ?? 0
+      catalogReady.value = true
+    }
 
     const resolved = normalizeMedicamentLetter(data.letter) ?? letter
     if (
-      offset === 0
+      includeCounts
+      && offset === 0
       && !letterHasEntries(letterCounts.value, resolved)
       && catalogTotal.value > 0
     ) {
       const fallback = MEDICAMENT_ALPHABET_LETTERS.find((l) => letterHasEntries(letterCounts.value, l))
       if (fallback && fallback !== resolved) {
-        await loadDictionary(fallback, 0)
+        await loadDictionary(fallback, 0, { includeCounts: true })
         return
       }
     }
 
+    if (seq !== dictLoadSeq) return
     dictItems.value = data.items ?? []
     dictTotal.value = data.total ?? 0
     dictOffset.value = offset
     activeLetter.value = resolved
+    if (!catalogReady.value) catalogReady.value = true
   }
   catch (e: any) {
+    if (seq !== dictLoadSeq) return
     dictItems.value = []
     error.value = pharmacyErr(e, 'pharmacy.medicaments.errorLoad')
   }
   finally {
-    dictBusy.value = false
+    if (seq === dictLoadSeq) dictBusy.value = false
   }
 }
 
 function selectLetter(letter: MedicamentLetter) {
-  if (!letterHasEntries(letterCounts.value, letter) && catalogReady.value && catalogTotal.value > 0) return
-  loadDictionary(letter, 0)
+  if (!letterHasEntries(letterCounts.value, letter)) return
+  loadDictionary(letter, 0, { includeCounts: true })
 }
 
 function pageDict(dir: -1 | 1) {
   const next = dictOffset.value + dir * pageSize
   if (next < 0 || next >= dictTotal.value) return
-  loadDictionary(activeLetter.value, next)
+  loadDictionary(activeLetter.value, next, { includeCounts: false })
 }
 
 function openFromDict(row: MedRow) {

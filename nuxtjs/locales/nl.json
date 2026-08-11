@@ -1257,6 +1257,7 @@
       "dictionaryAlphabetAria": "Alfabetische index A–Z",
       "catalogEmpty": "Het FAGG-woordenboek is leeg — importeer het CSV-pakket om CNK’s te koppelen.",
       "catalogEmptyLink": "Naar FAGG-import",
+      "catalogEmptyHint": "Vraag een beheerder om het FAGG CSV-pakket te importeren.",
       "catalogTotal": "{count} actieve geneesmiddelen",
       "colName": "Naam",
       "colCnk": "CNK",

@@ -191,6 +191,31 @@ func TestPharmacyMedicationListByLetter(t *testing.T) {
 	if metaObj["manufacturer"] != "Demo Labs" {
 		t.Fatalf("afmpsMeta %#v", detail["afmpsMeta"])
 	}
+
+	// List rows expose afmpsSource; pagination can skip letterCounts.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/medications?letter=A&includeCounts=0", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list no counts %d %#v", code, env)
+	}
+	data, _ = env["data"].(map[string]any)
+	if _, ok := data["letterCounts"]; ok {
+		t.Fatalf("letterCounts should be omitted when includeCounts=0 %#v", data)
+	}
+	items, _ = data["items"].([]any)
+	foundSrc := false
+	for _, it := range items {
+		m, _ := it.(map[string]any)
+		if m["cnk"] == "2711111" {
+			if m["afmpsSource"] != "afmps-pack-csv" {
+				t.Fatalf("list afmpsSource %#v", m)
+			}
+			foundSrc = true
+			break
+		}
+	}
+	if !foundSrc {
+		t.Fatalf("expected list row with afmpsSource %#v", env)
+	}
 }
 
 func toFloat(v any) float64 {

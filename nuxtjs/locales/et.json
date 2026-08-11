@@ -1257,6 +1257,7 @@
       "dictionaryAlphabetAria": "Tähestikuline indeks A–Z",
       "catalogEmpty": "AFMPS sõnastik on tühi — importige CSV-pakett CNK sidumiseks.",
       "catalogEmptyLink": "AFMPS impordi juurde",
+      "catalogEmptyHint": "Paluge administraatoril importida AFMPS CSV-pakett.",
       "catalogTotal": "{count} aktiivset ravimit",
       "colName": "Nimi",
       "colCnk": "CNK",
