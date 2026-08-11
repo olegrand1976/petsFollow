@@ -141,10 +141,11 @@ SSE :
 | `status` | `{"state":"running"}` | « Agents en cours d'exécution… » (après 202 submit) |
 | `error` | `{"errorCode":"crewai_unavailable"}` | Budget épuisé — run `failed`, message dédié + retry manuel |
 
-Les phases warming/ready sont aussi persistées comme `step`
-(`AppendImproveRunStep`) : le fallback DB / Redis cross-instance les rejoue.
-Côté UI, la phase locale `starting` s'affiche dès le clic (avant le premier
-événement SSE).
+Les phases warming/ready/running sont persistées comme `step` avec
+`state`/`label` = code stable (`crew_warming`…) — pas de libellé EN libre ;
+le fallback DB / Redis late-join réémet `event: status` avant chaque step de
+contrôle. Côté UI, ces steps n'apparaissent pas dans la liste agents (ligne
+d'état i18n uniquement) ; la phase locale `starting` s'affiche dès le clic.
 
 **Ops V1** : le hub SSE côté API Go est **in-proc** ; si l’EventSource atterrit sur une autre instance Cloud Run, le client **poll** `rag.improve_runs` jusqu’au statut terminal (pas de live thought cross-instance). Orchestrateur staging : `max-instances=1` (bus SSE mémoire). Prod multi-instance → Redis/PubSub plus tard.
 

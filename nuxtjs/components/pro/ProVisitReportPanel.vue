@@ -457,7 +457,10 @@ import { normalizeReportText } from '~/utils/safeMarkdown'
 import { canonicalizeReportMarkdown } from '~/utils/reportRichText'
 import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
-import type { AdvancedImproveState } from '~/composables/useAdvancedImproveStream'
+import {
+  isAdvancedImproveControlStep,
+  type AdvancedImproveState,
+} from '~/utils/advancedImproveStatus'
 import {
   copyVisitReportMarkdown,
   downloadVisitReportMarkdown,
@@ -1025,6 +1028,8 @@ async function improveVisitReportAdvanced() {
       },
       {
         onStep: (step) => {
+          // Warm-up / ready / running : ligne d'état seulement (pas la liste agents).
+          if (isAdvancedImproveControlStep(step)) return
           if (step?.agent && step?.label) advancedSteps.value = [...advancedSteps.value, step]
         },
         onStatus: (state) => { advancedStatus.value = state },

@@ -294,9 +294,6 @@ func (a *API) improveVisitReportAdvanced(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	a.improveHub.open(run.ID)
-	a.improveHub.publish(run.ID, "step", map[string]any{
-		"agent": "orchestrator", "label": "Starting multi-agent run", "at": time.Now().UTC().Format(time.RFC3339),
-	})
 
 	runCtx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	a.improveHub.registerCancel(run.ID, cancel)
@@ -362,7 +359,7 @@ func (a *API) runImproveAdvanced(
 		return
 	}
 	_ = a.store.UpdateImproveRunCrewTask(bg, runID, out.TaskID)
-	a.publishImproveStatus(bg, runID, "running", "Agents running")
+	a.publishImproveStatus(bg, runID, "running")
 
 	events := make(chan crewai.StreamEvent, 16)
 	var streamErr error
@@ -495,12 +492,13 @@ func (a *API) runImproveAdvanced(
 	a.trackAiCrUsage(practiceID, userID, visitID, store.AiCrUsageImproveAdvanced)
 }
 
-// publishImproveStatus persists a control step (with stable `state`) and fans
-// out SSE `status` + `step` so live clients and DB/Redis late joiners stay aligned.
-func (a *API) publishImproveStatus(bg context.Context, runID, state, label string) {
+// publishImproveStatus persists a control step (with stable `state`/`label`) and
+// fans out SSE `status` + `step` so live clients and DB/Redis late joiners stay
+// aligned. Label = state code (locale-neutral) — the UI translates via `status`.
+func (a *API) publishImproveStatus(bg context.Context, runID, state string) {
 	step := map[string]any{
 		"agent": "orchestrator",
-		"label": label,
+		"label": state,
 		"state": state,
 		"at":    time.Now().UTC().Format(time.RFC3339),
 	}
@@ -514,12 +512,12 @@ func (a *API) publishImproveStatus(bg context.Context, runID, state, label strin
 // the UI) + persisted `step` frames so late joiners / DB fallback replay them.
 func (a *API) waitCrewReady(ctx, bg context.Context, runID string) error {
 	err := a.crewai.WaitReady(ctx, crewWarmupBudget, func() {
-		a.publishImproveStatus(bg, runID, "crew_warming", "Waking AI instance (cold start)")
+		a.publishImproveStatus(bg, runID, "crew_warming")
 	})
 	if err != nil {
 		return err
 	}
-	a.publishImproveStatus(bg, runID, "crew_ready", "AI instance ready — submitting task")
+	a.publishImproveStatus(bg, runID, "crew_ready")
 	return nil
 }
 

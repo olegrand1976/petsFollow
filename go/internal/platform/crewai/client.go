@@ -97,8 +97,8 @@ func (c *Client) Health(ctx context.Context) error {
 	return nil
 }
 
-// permanentHealthErr reports auth/config failures (401/403) that no amount of
-// retrying will fix — fail fast instead of burning the warm-up budget.
+// permanentHealthErr reports auth/config failures that no amount of retrying
+// will fix — fail fast instead of burning the warm-up budget.
 func permanentHealthErr(err error) bool {
 	if err == nil {
 		return false
@@ -106,7 +106,9 @@ func permanentHealthErr(err error) bool {
 	s := err.Error()
 	return strings.Contains(s, "crewai_health_401") ||
 		strings.Contains(s, "crewai_health_403") ||
-		strings.Contains(s, "crewai_unauthorized")
+		strings.Contains(s, "crewai_unauthorized") ||
+		strings.Contains(s, "crewai_id_token") ||
+		strings.Contains(s, "crewai_not_configured")
 }
 
 // WaitReady polls GET /health until the Cloud Run instance answers (minScale=0

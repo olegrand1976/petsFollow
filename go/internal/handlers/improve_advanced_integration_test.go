@@ -355,8 +355,11 @@ func TestImproveAdvancedColdStartWarmup(t *testing.T) {
 	if !strings.Contains(body, `"state":"crew_ready"`) {
 		t.Fatalf("missing crew_ready: %s", truncate(body, 600))
 	}
-	if !strings.Contains(body, "Waking AI instance") {
-		t.Fatalf("missing warm-up step: %s", truncate(body, 600))
+	if !strings.Contains(body, `"state":"running"`) {
+		t.Fatalf("missing running status: %s", truncate(body, 600))
+	}
+	if !strings.Contains(body, `"label":"crew_warming"`) {
+		t.Fatalf("missing warm-up control step: %s", truncate(body, 600))
 	}
 	if !strings.Contains(body, "event: final") {
 		t.Fatalf("missing final: %s", truncate(body, 800))

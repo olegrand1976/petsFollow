@@ -41,7 +41,15 @@
 </template>
 
 <script setup lang="ts">
-export type AgentStep = { agent: string; label: string; at?: string }
+import type { AdvancedImproveState } from '~/utils/advancedImproveStatus'
+
+/** Step agent ou contrôle orchestrateur (`state` = warm-up / ready / running). */
+export type AgentStep = {
+  agent: string
+  label: string
+  at?: string
+  state?: AdvancedImproveState
+}
 
 defineProps<{
   title: string

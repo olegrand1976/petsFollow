@@ -1,7 +1,10 @@
 import type { AgentStep } from '~/components/pro/ProAgentLoader.vue'
+import {
+  advancedImproveStateFromStep,
+  type AdvancedImproveState,
+} from '~/utils/advancedImproveStatus'
 
-/** État du run côté orchestrateur (SSE `status`) — codes stables traduits par l'UI. */
-export type AdvancedImproveState = 'crew_warming' | 'crew_ready' | 'running'
+export type { AdvancedImproveState }
 
 export type AdvancedImproveHandlers = {
   onStep?: (step: AgentStep) => void
@@ -87,15 +90,17 @@ export function useAdvancedImproveStream() {
       es.addEventListener('step', (ev) => {
         try {
           const data = JSON.parse((ev as MessageEvent).data || '{}') as AgentStep
+          // Filet late-join : un step `state` sans frame status (ancien run / gap) met à jour l'UI.
+          const fromStep = advancedImproveStateFromStep(data)
+          if (fromStep) handlers.onStatus?.(fromStep)
           handlers.onStep?.(data)
         } catch { /* ignore */ }
       })
       es.addEventListener('status', (ev) => {
         try {
           const data = JSON.parse((ev as MessageEvent).data || '{}') as { state?: string }
-          if (data.state === 'crew_warming' || data.state === 'crew_ready' || data.state === 'running') {
-            handlers.onStatus?.(data.state)
-          }
+          const fromStatus = advancedImproveStateFromStep(data)
+          if (fromStatus) handlers.onStatus?.(fromStatus)
         } catch { /* ignore */ }
       })
       es.addEventListener('final', (ev) => {

@@ -179,6 +179,23 @@ func TestWaitReadyAuthErrorFailsFast(t *testing.T) {
 	}
 }
 
+func TestWaitReadyIDTokenErrorFailsFast(t *testing.T) {
+	// UseIDToken without ADC → authorize fails with crewai_id_token (permanent).
+	c := &crewai.Client{BaseURL: "https://crewai.example.invalid", UseIDToken: true}
+	coldStarts := 0
+	startedAt := time.Now()
+	err := c.WaitReady(context.Background(), 30*time.Second, func() { coldStarts++ })
+	if err == nil || !strings.Contains(err.Error(), "crewai_id_token") {
+		t.Fatalf("got %v", err)
+	}
+	if coldStarts != 0 {
+		t.Fatalf("id_token error must not report cold start (%d)", coldStarts)
+	}
+	if time.Since(startedAt) > 5*time.Second {
+		t.Fatal("id_token error must fail fast")
+	}
+}
+
 func TestWaitReadyBudgetExhausted(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
