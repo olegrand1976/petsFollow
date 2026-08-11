@@ -126,6 +126,15 @@
               </td>
               <td>
                 <ProButton
+                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  variant="ghost"
+                  test-id="admin-compendium-lookup-cnk"
+                  :disabled="busy || lookingUpId === row.id || !row.name"
+                  @click="lookupCnk(row)"
+                >
+                  {{ $t('admin.compendium.lookupCnk') }}
+                </ProButton>
+                <ProButton
                   v-if="row.status === 'pending' && row.suggestedCnk && !row.cnk"
                   variant="ghost"
                   @click="patchRow(row, { cnk: row.suggestedCnk })"
@@ -153,6 +162,7 @@
                 >
                   {{ $t('admin.compendium.include') }}
                 </ProButton>
+                <p v-if="lookupMsg[row.id]" class="pro-hint" data-testid="admin-compendium-lookup-msg">{{ lookupMsg[row.id] }}</p>
               </td>
             </tr>
           </tbody>
@@ -187,6 +197,8 @@ const job = ref<any>(null)
 const rows = ref<any[]>([])
 const refCatalogCount = ref(0)
 const commitMsg = ref('')
+const lookingUpId = ref('')
+const lookupMsg = ref<Record<string, string>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending' && r.cnk).length)
@@ -274,6 +286,47 @@ async function patchRow (row: any, body: Record<string, unknown>) {
     if (idx >= 0) rows.value[idx] = { ...rows.value[idx], ...updated }
     await load()
   } finally {
+    busy.value = false
+  }
+}
+
+async function lookupCnk (row: any) {
+  if (!row?.id || !row.name) return
+  lookingUpId.value = row.id
+  lookupMsg.value = { ...lookupMsg.value, [row.id]: '' }
+  busy.value = true
+  try {
+    const body: Record<string, string> = {}
+    if (row.cnk) body.cnk = String(row.cnk).trim()
+    const res: any = await $fetch(`/api/admin/compendium-imports/${id.value}/rows/${row.id}/lookup-cnk`, {
+      method: 'POST',
+      body,
+    })
+    const data = res?.data ?? res
+    const updated = data?.row ?? data
+    const idx = rows.value.findIndex(r => r.id === row.id)
+    if (idx >= 0 && updated) rows.value[idx] = { ...rows.value[idx], ...updated }
+    if (typeof data?.cnkFound === 'boolean') {
+      lookupMsg.value = {
+        ...lookupMsg.value,
+        [row.id]: data.cnkFound
+          ? t('admin.compendium.lookupCnkFound')
+          : t('admin.compendium.lookupCnkNotFound'),
+      }
+    } else {
+      lookupMsg.value = {
+        ...lookupMsg.value,
+        [row.id]: t('admin.compendium.lookupCnkDone'),
+      }
+    }
+    await load()
+  } catch (e: any) {
+    lookupMsg.value = {
+      ...lookupMsg.value,
+      [row.id]: e?.data?.error?.message ?? e?.statusMessage ?? t('admin.compendium.lookupCnkFailed'),
+    }
+  } finally {
+    lookingUpId.value = ''
     busy.value = false
   }
 }

@@ -42,6 +42,7 @@ func (a *API) registerCompendiumImportRoutes(r chi.Router) {
 	r.Delete("/admin/compendium-imports/{id}", a.adminDeleteCompendiumImport)
 	r.Post("/admin/compendium-imports/{id}/extract", a.adminStartCompendiumExtract)
 	r.Patch("/admin/compendium-imports/{id}/rows/{rowId}", a.adminPatchCompendiumRow)
+	r.Post("/admin/compendium-imports/{id}/rows/{rowId}/lookup-cnk", a.adminLookupCompendiumRowCNK)
 	r.Post("/admin/compendium-imports/{id}/confirm-ready", a.adminConfirmCompendiumReady)
 	r.Post("/admin/compendium-imports/{id}/commit", a.adminCommitCompendiumImport)
 }
@@ -428,6 +429,115 @@ func (a *API) adminPatchCompendiumRow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, row)
+}
+
+func (a *API) adminLookupCompendiumRowCNK(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
+		return
+	}
+	jobID := chi.URLParam(r, "id")
+	rowID := chi.URLParam(r, "rowId")
+
+	var body struct {
+		CNK *string `json:"cnk"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+
+	row, err := a.store.GetCompendiumImportRow(r.Context(), jobID, rowID)
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if row.Status == "upserted" || row.Status == "excluded" {
+		writeErr(w, r, http.StatusConflict, "conflict", "row_locked")
+		return
+	}
+
+	verifyCNK := ""
+	if body.CNK != nil {
+		verifyCNK = strings.TrimSpace(*body.CNK)
+	}
+	var cnkFound *bool
+	match := pharmacy.CNKMatchResult{}
+
+	if verifyCNK != "" {
+		ref, gerr := a.store.GetRefMedicationByCNK(r.Context(), verifyCNK)
+		found := gerr == nil
+		cnkFound = &found
+		if found {
+			match = pharmacy.CNKMatchResult{
+				SuggestedCNK: ref.CNK,
+				Score:        1,
+				Candidates: []pharmacy.CNKMatchCandidate{{
+					CNK:                ref.CNK,
+					Name:               ref.Name,
+					PharmaceuticalForm: ref.PharmaceuticalForm,
+					PackSize:           ref.PackSize,
+					Score:              1,
+				}},
+				// Prefill only when the row has no CNK yet (human typed verify stays as-is via ClassifyAfterMatch).
+				AutoFill: strings.TrimSpace(row.CNK) == "",
+			}
+		}
+	}
+
+	// Name rematch against local AFMPS catalogue when verify missed or no CNK to check.
+	if (verifyCNK == "" || (cnkFound != nil && !*cnkFound)) && strings.TrimSpace(row.Name) != "" {
+		hits, searchErr := a.store.SearchRefMedications(r.Context(), row.Name, 10)
+		if searchErr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		refs := make([]pharmacy.RefMedMatchInput, 0, len(hits))
+		for _, h := range hits {
+			refs = append(refs, pharmacy.RefMedMatchInput{
+				CNK:                h.CNK,
+				Name:               h.Name,
+				PharmaceuticalForm: h.PharmaceuticalForm,
+				PackSize:           h.PackSize,
+				Manufacturer:       manufacturerFromAFMPSMeta(h.AFMPSMeta),
+			})
+		}
+		nameMatch := pharmacy.SuggestCNK(pharmacy.ExtractedMedication{
+			CNK:                row.CNK,
+			Name:               row.Name,
+			Manufacturer:       row.Manufacturer,
+			PharmaceuticalForm: row.PharmaceuticalForm,
+			PackSize:           row.PackSize,
+		}, refs)
+		if verifyCNK != "" && cnkFound != nil && !*cnkFound {
+			// Keep name suggestions for the human, but do not autofill a different CNK.
+			nameMatch.AutoFill = false
+		}
+		match = nameMatch
+	}
+
+	updated, err := a.store.ApplyCompendiumRowMatch(r.Context(), jobID, rowID, match)
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if errors.Is(err, store.ErrConflict) {
+		writeErr(w, r, http.StatusConflict, "conflict", "row_locked")
+		return
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+
+	payload := map[string]any{"row": updated}
+	if cnkFound != nil {
+		payload["cnkFound"] = *cnkFound
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
 }
 
 func (a *API) adminConfirmCompendiumReady(w http.ResponseWriter, r *http.Request) {

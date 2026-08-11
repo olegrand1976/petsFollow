@@ -379,6 +379,114 @@ func TestCompendiumImportDelete(t *testing.T) {
 	}
 }
 
+func TestCompendiumLookupCNK(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://localhost:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	st := store.New(api.pool)
+	cnk := "2734567"
+	cleanup := func() {
+		_, _ = api.pool.Exec(context.Background(),
+			`DELETE FROM pharmacy.ref_medications WHERE cnk = $1 OR name LIKE 'ZZZ Lookup Med %'`, cnk)
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+
+	if _, err := st.UpsertRefMedication(context.Background(), store.RefMedicationUpsert{
+		CNK:                cnk,
+		Name:               "ZZZ Lookup Med Capsules 10 mg",
+		PharmaceuticalForm: "gélule",
+		IsActive:           true,
+	}); err != nil {
+		t.Fatalf("seed ref: %v", err)
+	}
+
+	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
+		return []pharmacy.ExtractedMedication{
+			{Name: "ZZZ Lookup Med Caps 10mg", PharmaceuticalForm: "gélule", SourcePage: &start},
+		}, nil
+	})
+	t.Cleanup(handlers.TestClearCompendiumExtract)
+
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	pdf := []byte("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n")
+	code, env := doCompendiumUpload(t, api.handler, adminTok, pdf, 1, 2)
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+	jobID, _ := env["data"].(map[string]any)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/extract", adminTok, nil)
+	if code != http.StatusAccepted {
+		t.Fatalf("extract %d %#v", code, env)
+	}
+
+	deadline := time.Now().Add(5 * time.Second)
+	var detail store.CompendiumImportDetail
+	for time.Now().Before(deadline) {
+		detail, err = st.GetCompendiumImportDetail(context.Background(), jobID)
+		if err != nil {
+			t.Fatalf("detail: %v", err)
+		}
+		if detail.Job.Status == "extracted" || detail.Job.Status == "failed" {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if detail.Job.Status != "extracted" || len(detail.Rows) != 1 {
+		t.Fatalf("status=%s rows=%d err=%s", detail.Job.Status, len(detail.Rows), detail.Job.ErrorMessage)
+	}
+	rowID := detail.Rows[0].ID
+
+	// Name rematch (no CNK in body)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok, map[string]any{})
+	if code != http.StatusOK {
+		t.Fatalf("lookup name %d %#v", code, env)
+	}
+	data, _ := env["data"].(map[string]any)
+	rowOut, _ := data["row"].(map[string]any)
+	if sug, _ := rowOut["suggestedCnk"].(string); sug != cnk {
+		t.Fatalf("suggested after name lookup %#v", rowOut)
+	}
+
+	// Exact CNK verify (found)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok,
+		map[string]any{"cnk": cnk})
+	if code != http.StatusOK {
+		t.Fatalf("lookup exact %d %#v", code, env)
+	}
+	data, _ = env["data"].(map[string]any)
+	if data["cnkFound"] != true {
+		t.Fatalf("cnkFound want true %#v", data)
+	}
+	rowOut, _ = data["row"].(map[string]any)
+	if rowOut["cnk"] != cnk && rowOut["suggestedCnk"] != cnk {
+		t.Fatalf("expected cnk or suggested %#v", rowOut)
+	}
+
+	// Exact CNK verify (missing) → still name suggestions
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+rowID+"/lookup-cnk", adminTok,
+		map[string]any{"cnk": "2999999"})
+	if code != http.StatusOK {
+		t.Fatalf("lookup miss %d %#v", code, env)
+	}
+	data, _ = env["data"].(map[string]any)
+	if data["cnkFound"] != false {
+		t.Fatalf("cnkFound want false %#v", data)
+	}
+}
+
 func doCompendiumUpload(t *testing.T, h http.Handler, token string, pdf []byte, pageStart, pageEnd int) (int, map[string]any) {
 	t.Helper()
 	var body bytes.Buffer

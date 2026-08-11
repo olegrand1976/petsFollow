@@ -481,6 +481,123 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	return r, nil
 }
 
+// GetCompendiumImportRow loads one staging row (job + row id).
+func (s *Store) GetCompendiumImportRow(ctx context.Context, jobID, rowID string) (CompendiumImportRow, error) {
+	var r CompendiumImportRow
+	var raw, cands []byte
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, job_id::text, row_number, source_page,
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
+		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
+		FROM pharmacy.compendium_import_rows
+		WHERE id = $1 AND job_id = $2`, rowID, jobID).Scan(
+		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+		&r.SuggestedCNK, &r.MatchScore, &cands,
+		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
+	)
+	if err == pgx.ErrNoRows {
+		return r, ErrNotFound
+	}
+	if err != nil {
+		return r, err
+	}
+	r.RawJSON = raw
+	r.MatchCandidates = cands
+	return r, nil
+}
+
+// ApplyCompendiumRowMatch refreshes AFMPS catalogue suggestions after a manual lookup.
+// Reclassifies via ClassifyAfterMatch (does not promote to ready). Locked for upserted rows.
+func (s *Store) ApplyCompendiumRowMatch(ctx context.Context, jobID, rowID string, match pharmacy.CNKMatchResult) (CompendiumImportRow, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return CompendiumImportRow{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var r CompendiumImportRow
+	var raw, cands []byte
+	err = tx.QueryRow(ctx, `
+		SELECT id::text, job_id::text, row_number, source_page,
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
+		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
+		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
+		FROM pharmacy.compendium_import_rows
+		WHERE id = $1 AND job_id = $2
+		FOR UPDATE`, rowID, jobID).Scan(
+		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
+		&r.SuggestedCNK, &r.MatchScore, &cands,
+		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
+	)
+	if err == pgx.ErrNoRows {
+		return r, ErrNotFound
+	}
+	if err != nil {
+		return r, err
+	}
+	r.RawJSON = raw
+	r.MatchCandidates = cands
+	if r.Status == "upserted" || r.Status == "excluded" {
+		return r, ErrConflict
+	}
+
+	m := pharmacy.ExtractedMedication{
+		CNK:                r.CNK,
+		Name:               r.Name,
+		Manufacturer:       r.Manufacturer,
+		ActiveSubstance:    r.ActiveSubstance,
+		ATCCode:            r.ATCCode,
+		PharmaceuticalForm: r.PharmaceuticalForm,
+		PackSize:           r.PackSize,
+		IsAntibiotic:       r.IsAntibiotic,
+		SourcePage:         r.SourcePage,
+	}
+	classified, status, code, msg := pharmacy.ClassifyAfterMatch(m, match)
+	r.CNK = classified.CNK
+	r.Status = status
+	r.ErrorCode = code
+	r.ErrorMessage = msg
+	r.SuggestedCNK = match.SuggestedCNK
+	candsRaw, _ := json.Marshal(match.Candidates)
+	if len(match.Candidates) == 0 {
+		candsRaw = []byte("[]")
+	}
+	r.MatchCandidates = candsRaw
+	var scorePtr *float64
+	if match.Score > 0 || match.SuggestedCNK != "" {
+		sc := match.Score
+		scorePtr = &sc
+	}
+	r.MatchScore = scorePtr
+
+	_, err = tx.Exec(ctx, `
+		UPDATE pharmacy.compendium_import_rows
+		SET cnk = $3, suggested_cnk = NULLIF($4,''), match_score = $5,
+		    match_candidates = $6::jsonb,
+		    status = $7, error_code = NULLIF($8,''), error_message = NULLIF($9,'')
+		WHERE id = $1 AND job_id = $2`,
+		rowID, jobID, r.CNK, r.SuggestedCNK, scorePtr, string(candsRaw),
+		r.Status, r.ErrorCode, r.ErrorMessage,
+	)
+	if err != nil {
+		return r, err
+	}
+	if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
+		return r, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return r, err
+	}
+	return r, nil
+}
+
 func refreshCompendiumJobCountsTx(ctx context.Context, tx pgx.Tx, jobID string) error {
 	_, err := tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_jobs j

@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -112,6 +113,39 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 		out = append(out, m)
 	}
 	return out, rows.Err()
+}
+
+// GetRefMedicationByCNK returns an active national dictionary row by exact CNK.
+func (s *Store) GetRefMedicationByCNK(ctx context.Context, cnk string) (RefMedication, error) {
+	cnk = strings.TrimSpace(cnk)
+	if cnk == "" {
+		return RefMedication{}, ErrNotFound
+	}
+	var m RefMedication
+	var atc, form, pack, amm string
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, cnk, name,
+		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+		       COALESCE(amm_number, ''),
+		       is_antibiotic, is_active,
+		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
+		FROM pharmacy.ref_medications
+		WHERE is_active AND cnk = $1
+		LIMIT 1`, cnk).Scan(
+		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
+		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
+	)
+	if err == pgx.ErrNoRows {
+		return RefMedication{}, ErrNotFound
+	}
+	if err != nil {
+		return RefMedication{}, err
+	}
+	m.ATCCode = atc
+	m.PharmaceuticalForm = form
+	m.PackSize = pack
+	m.AMMNumber = amm
+	return m, nil
 }
 
 // UpsertRefMedication inserts or updates by CNK. name_normalized is computed in Go
