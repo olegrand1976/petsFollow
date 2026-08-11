@@ -62,8 +62,6 @@ test.describe('AFMPS admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
     await expect(page.getByTestId('admin-afmps-imports-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('afmps-dev-badge')).toBeVisible()
     await expect(page.getByTestId('admin-afmps-new')).toBeVisible()
-
-    await page.getByTestId('admin-afmps-new').click()
     await expect(page.getByTestId('admin-afmps-upload-card')).toBeVisible()
     await expect(page.getByTestId('admin-afmps-file')).toBeVisible()
   })
@@ -85,10 +83,7 @@ test.describe('AFMPS admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
     await loginAsAdmin(page, ADMIN_EMAIL, ADMIN_PASSWORD)
     await page.goto('/admin/afmps-imports', { waitUntil: 'networkidle' })
     await expect(page.getByTestId('admin-afmps-imports-page')).toBeVisible({ timeout: 15000 })
-
-    await page.getByTestId('admin-afmps-new').click()
     await expect(page.getByTestId('admin-afmps-upload-card')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('admin-afmps-file')).toBeVisible()
     await page.getByTestId('admin-afmps-file').setInputFiles(filePath)
     await page.getByTestId('admin-afmps-upload').click()
 

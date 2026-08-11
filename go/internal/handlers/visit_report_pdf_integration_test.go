@@ -51,7 +51,7 @@ func TestVisitReportPDF(t *testing.T) {
 
 	// Aucun CR encore écrit : refus distinct du CR vide, sinon le message affiché
 	// au véto (« Compte-rendu introuvable » vs « vide ») ne veut plus rien dire.
-	code, body, hdr := doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
+	code, body, _ := doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
 	if code != http.StatusNotFound || !strings.Contains(string(body), "report_not_found") {
 		t.Fatalf("no report yet: want 404 report_not_found, got %d %s", code, body)
 	}
@@ -78,7 +78,7 @@ func TestVisitReportPDF(t *testing.T) {
 		t.Fatalf("report id %#v", env)
 	}
 
-	code, body, hdr = doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
+	code, body, hdr := doAuthBytes(t, api.handler, http.MethodGet, path, vetTok)
 	if code != 200 {
 		t.Fatalf("pdf %d %s", code, body)
 	}

@@ -6,13 +6,13 @@
     >
       <template #actions>
         <ProBadge variant="warning" data-testid="afmps-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
-        <ProButton test-id="admin-afmps-new" @click="showUpload = true">
+        <ProButton test-id="admin-afmps-new" @click="focusUpload">
           {{ $t('admin.afmps.newImport') }}
         </ProButton>
       </template>
     </ProPageHeader>
 
-    <ProCard v-if="showUpload" class="pro-mb-lg" data-testid="admin-afmps-upload-card">
+    <ProCard class="pro-mb-lg" data-testid="admin-afmps-upload-card">
       <h3 class="pro-mb-md">{{ $t('admin.afmps.uploadTitle') }}</h3>
       <form class="pro-form" @submit.prevent="upload">
         <div class="pro-field">
@@ -32,7 +32,6 @@
           <ProButton type="submit" test-id="admin-afmps-upload" :disabled="uploading || !file">
             {{ $t('admin.afmps.uploadSubmit') }}
           </ProButton>
-          <ProButton variant="ghost" type="button" @click="showUpload = false">{{ $t('common.cancel') }}</ProButton>
         </div>
       </form>
     </ProCard>
@@ -82,12 +81,16 @@ definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { t } = useI18n()
 const jobs = ref<any[]>([])
-const showUpload = ref(false)
 const file = ref<File | null>(null)
 const uploading = ref(false)
 const uploadError = ref('')
 const deletingId = ref('')
 const deleteError = ref('')
+
+function focusUpload () {
+  document.getElementById('afmps-file')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  document.getElementById('afmps-file')?.focus()
+}
 
 function statusVariant (status: string) {
   switch (status) {
