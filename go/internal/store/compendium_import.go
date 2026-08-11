@@ -47,6 +47,7 @@ type CompendiumImportRow struct {
 	Name               string          `json:"name"`
 	Manufacturer       string          `json:"manufacturer,omitempty"`
 	ActiveSubstance    string          `json:"activeSubstance,omitempty"`
+	Strength           string          `json:"strength,omitempty"`
 	ATCCode            string          `json:"atcCode"`
 	PharmaceuticalForm string          `json:"pharmaceuticalForm"`
 	PackSize           string          `json:"packSize"`
@@ -193,7 +194,7 @@ func (s *Store) CountActiveRefMedications(ctx context.Context) (int, error) {
 func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]CompendiumImportRow, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''), COALESCE(strength,''),
 		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
 		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
@@ -210,7 +211,7 @@ func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]C
 		var raw, cands []byte
 		if err := rows.Scan(
 			&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-			&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+			&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance, &r.Strength,
 			&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
 			&r.SuggestedCNK, &r.MatchScore, &cands,
 			&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
@@ -310,6 +311,7 @@ type CompendiumRowInsert struct {
 	Name               string
 	Manufacturer       string
 	ActiveSubstance    string
+	Strength           string
 	ATCCode            string
 	PharmaceuticalForm string
 	PackSize           string
@@ -355,17 +357,18 @@ func (s *Store) AppendCompendiumExtractRows(ctx context.Context, jobID string, r
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO pharmacy.compendium_import_rows (
 				id, job_id, row_number, source_page, cnk, name,
-				manufacturer, active_substance, atc_code,
+				manufacturer, active_substance, strength, atc_code,
 				pharmaceutical_form, pack_size, is_antibiotic,
 				suggested_cnk, match_score, match_candidates,
 				raw_json, status, error_code, error_message
 			) VALUES (
-				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16::jsonb,$17,NULLIF($18,''),NULLIF($19,'')
+				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,$17::jsonb,$18,NULLIF($19,''),NULLIF($20,'')
 			)`,
 			uuid.NewString(), jobID, base+i+1, row.SourcePage,
 			strings.TrimSpace(row.CNK), strings.TrimSpace(row.Name),
 			strings.TrimSpace(row.Manufacturer), strings.TrimSpace(row.ActiveSubstance),
-			strings.TrimSpace(row.ATCCode), strings.TrimSpace(row.PharmaceuticalForm),
+			strings.TrimSpace(row.Strength), strings.TrimSpace(row.ATCCode),
+			strings.TrimSpace(row.PharmaceuticalForm),
 			strings.TrimSpace(row.PackSize), row.IsAntibiotic,
 			strings.TrimSpace(row.SuggestedCNK), row.MatchScore, string(cands),
 			string(raw), status, row.ErrorCode, row.ErrorMessage,
@@ -469,6 +472,7 @@ type PatchCompendiumRowInput struct {
 	Name               *string `json:"name"`
 	Manufacturer       *string `json:"manufacturer"`
 	ActiveSubstance    *string `json:"activeSubstance"`
+	Strength           *string `json:"strength"`
 	ATCCode            *string `json:"atcCode"`
 	PharmaceuticalForm *string `json:"pharmaceuticalForm"`
 	PackSize           *string `json:"packSize"`
@@ -488,7 +492,7 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	var raw, cands []byte
 	err = tx.QueryRow(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''), COALESCE(strength,''),
 		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
 		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
@@ -496,7 +500,7 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 		WHERE id = $1 AND job_id = $2
 		FOR UPDATE`, rowID, jobID).Scan(
 		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance, &r.Strength,
 		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
 		&r.SuggestedCNK, &r.MatchScore, &cands,
 		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
@@ -524,6 +528,9 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	}
 	if in.ActiveSubstance != nil {
 		r.ActiveSubstance = strings.TrimSpace(*in.ActiveSubstance)
+	}
+	if in.Strength != nil {
+		r.Strength = strings.TrimSpace(*in.Strength)
 	}
 	if in.ATCCode != nil {
 		r.ATCCode = strings.TrimSpace(*in.ATCCode)
@@ -567,11 +574,11 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 
 	_, err = tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_rows
-		SET cnk = $3, name = $4, manufacturer = $5, active_substance = $6, atc_code = $7,
-		    pharmaceutical_form = $8, pack_size = $9, is_antibiotic = $10, source_page = $11,
-		    status = $12, error_code = NULLIF($13,''), error_message = NULLIF($14,'')
+		SET cnk = $3, name = $4, manufacturer = $5, active_substance = $6, strength = $7, atc_code = $8,
+		    pharmaceutical_form = $9, pack_size = $10, is_antibiotic = $11, source_page = $12,
+		    status = $13, error_code = NULLIF($14,''), error_message = NULLIF($15,'')
 		WHERE id = $1 AND job_id = $2`,
-		rowID, jobID, r.CNK, r.Name, r.Manufacturer, r.ActiveSubstance, r.ATCCode,
+		rowID, jobID, r.CNK, r.Name, r.Manufacturer, r.ActiveSubstance, r.Strength, r.ATCCode,
 		r.PharmaceuticalForm, r.PackSize, r.IsAntibiotic, r.SourcePage,
 		r.Status, r.ErrorCode, r.ErrorMessage,
 	)
@@ -593,14 +600,14 @@ func (s *Store) GetCompendiumImportRow(ctx context.Context, jobID, rowID string)
 	var raw, cands []byte
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''), COALESCE(strength,''),
 		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
 		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
 		FROM pharmacy.compendium_import_rows
 		WHERE id = $1 AND job_id = $2`, rowID, jobID).Scan(
 		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance, &r.Strength,
 		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
 		&r.SuggestedCNK, &r.MatchScore, &cands,
 		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
@@ -637,7 +644,7 @@ func (s *Store) LookupCompendiumImportRowCNK(ctx context.Context, jobID, rowID, 
 	var raw, cands []byte
 	err = tx.QueryRow(ctx, `
 		SELECT id::text, job_id::text, row_number, source_page,
-		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
+		       cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''), COALESCE(strength,''),
 		       atc_code, pharmaceutical_form, pack_size, is_antibiotic,
 		       COALESCE(suggested_cnk,''), match_score, COALESCE(match_candidates, '[]'::jsonb),
 		       raw_json, status, COALESCE(error_code,''), COALESCE(error_message,'')
@@ -645,7 +652,7 @@ func (s *Store) LookupCompendiumImportRowCNK(ctx context.Context, jobID, rowID, 
 		WHERE id = $1 AND job_id = $2
 		FOR UPDATE`, rowID, jobID).Scan(
 		&r.ID, &r.JobID, &r.RowNumber, &r.SourcePage,
-		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance,
+		&r.CNK, &r.Name, &r.Manufacturer, &r.ActiveSubstance, &r.Strength,
 		&r.ATCCode, &r.PharmaceuticalForm, &r.PackSize, &r.IsAntibiotic,
 		&r.SuggestedCNK, &r.MatchScore, &cands,
 		&raw, &r.Status, &r.ErrorCode, &r.ErrorMessage,
@@ -875,7 +882,7 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 
 	rows, err := tx.Query(ctx, `
 		SELECT id::text, cnk, name, COALESCE(manufacturer,''), COALESCE(active_substance,''),
-		       atc_code, pharmaceutical_form, pack_size, is_antibiotic
+		       COALESCE(strength,''), atc_code, pharmaceutical_form, pack_size, is_antibiotic
 		FROM pharmacy.compendium_import_rows
 		WHERE job_id = $1 AND status = 'ready'
 		ORDER BY row_number`, jobID)
@@ -883,14 +890,14 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 		return CompendiumCommitResult{}, err
 	}
 	type readyRow struct {
-		id, cnk, name, manufacturer, substance, atc, form, pack string
-		ab                                                      bool
+		id, cnk, name, manufacturer, substance, strength, atc, form, pack string
+		ab                                                                bool
 	}
 	var ready []readyRow
 	for rows.Next() {
 		var rr readyRow
 		if err := rows.Scan(&rr.id, &rr.cnk, &rr.name, &rr.manufacturer, &rr.substance,
-			&rr.atc, &rr.form, &rr.pack, &rr.ab); err != nil {
+			&rr.strength, &rr.atc, &rr.form, &rr.pack, &rr.ab); err != nil {
 			rows.Close()
 			return CompendiumCommitResult{}, err
 		}
@@ -913,6 +920,9 @@ func (s *Store) CommitCompendiumImport(ctx context.Context, jobID string) (Compe
 		}
 		if strings.TrimSpace(rr.substance) != "" {
 			metaMap["activeSubstance"] = strings.TrimSpace(rr.substance)
+		}
+		if strings.TrimSpace(rr.strength) != "" {
+			metaMap["strength"] = strings.TrimSpace(rr.strength)
 		}
 		meta, _ := json.Marshal(metaMap)
 		norm := NormalizeMedicationName(rr.name)

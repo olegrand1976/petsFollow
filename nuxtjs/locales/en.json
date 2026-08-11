@@ -2302,7 +2302,11 @@
       "fixFromPage": "Complete manually (PDF p.{page})",
       "resumeExtract": "Resume extraction",
       "restartExtract": "Restart from scratch",
-      "resumeHint": "Can resume from chunk {done}/{total} (already extracted rows kept)."
+      "resumeHint": "Can resume from chunk {done}/{total} (already extracted rows kept).",
+      "colStrength": "Strength",
+      "viewerTitle": "Source PDF",
+      "viewerHint": "Click a row to sync the page. The viewer navigates via #page=N.",
+      "openPdfTab": "Open in new tab"
     },
     "afmps": {
       "title": "AFMPS CSV import",

@@ -2896,7 +2896,11 @@
       "confirmRow": "Valider",
       "resumeExtract": "Reprendre l'extraction",
       "restartExtract": "Tout recommencer",
-      "resumeHint": "Reprise possible depuis le chunk {done}/{total} (lignes déjà extraites conservées)."
+      "resumeHint": "Reprise possible depuis le chunk {done}/{total} (lignes déjà extraites conservées).",
+      "colStrength": "Force",
+      "viewerTitle": "PDF source",
+      "viewerHint": "Cliquez une ligne pour synchroniser la page. Le lecteur navigue via #page=N.",
+      "openPdfTab": "Ouvrir dans un onglet"
     },
     "brandAssets": {
       "title": "Assets QR stores",

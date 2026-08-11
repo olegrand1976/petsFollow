@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -46,7 +47,7 @@ func TestCompendiumImportFlow(t *testing.T) {
 	orphanName := "ZZZ Unmatched Orphan " + uuid.NewString()[:8]
 	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
 		return []pharmacy.ExtractedMedication{
-			{CNK: "2888001", Name: "Compendium Demo Med", ATCCode: "J01CA04", IsAntibiotic: true, SourcePage: &start},
+			{CNK: "2888001", Name: "Compendium Demo Med", ATCCode: "J01CA04", Strength: "50 mg", IsAntibiotic: true, SourcePage: &start},
 			{CNK: "", Name: orphanName, IsAntibiotic: false},
 		}, nil
 	})
@@ -62,6 +63,20 @@ func TestCompendiumImportFlow(t *testing.T) {
 	jobID, _ := job["id"].(string)
 	if jobID == "" {
 		t.Fatalf("no job id %#v", env)
+	}
+
+	pdfReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/compendium-imports/"+jobID+"/pdf", nil)
+	pdfReq.Header.Set("Authorization", "Bearer "+adminTok)
+	pdfRec := httptest.NewRecorder()
+	api.handler.ServeHTTP(pdfRec, pdfReq)
+	if pdfRec.Code != http.StatusOK {
+		t.Fatalf("pdf stream %d %s", pdfRec.Code, pdfRec.Body.String())
+	}
+	if ct := pdfRec.Header().Get("Content-Type"); !strings.Contains(ct, "pdf") {
+		t.Fatalf("pdf content-type %q", ct)
+	}
+	if !bytes.HasPrefix(pdfRec.Body.Bytes(), []byte("%PDF")) {
+		t.Fatalf("pdf body prefix %q", pdfRec.Body.Bytes()[:min(8, pdfRec.Body.Len())])
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/extract", adminTok, nil)
@@ -98,6 +113,9 @@ func TestCompendiumImportFlow(t *testing.T) {
 	for _, r := range detail.Rows {
 		if r.Status == "pending" && r.CNK == "2888001" {
 			pendingID = r.ID
+			if r.Strength != "50 mg" || r.ATCCode != "J01CA04" {
+				t.Fatalf("strength/atc pending %#v", r)
+			}
 		}
 		// No AFMPS hit → error (missing_cnk / cnk_unmatched) until human PATCH.
 		if r.Status == "error" && (r.ErrorCode == "missing_cnk" || r.ErrorCode == "cnk_unmatched") {
@@ -150,6 +168,18 @@ func TestCompendiumImportFlow(t *testing.T) {
 	if hits[0].CNK != "2888001" {
 		t.Fatalf("unexpected %#v", hits[0])
 	}
+	var metaRaw []byte
+	if err := api.pool.QueryRow(context.Background(),
+		`SELECT afmps_meta FROM pharmacy.ref_medications WHERE cnk = '2888001'`).Scan(&metaRaw); err != nil {
+		t.Fatalf("meta query: %v", err)
+	}
+	var meta map[string]any
+	if err := json.Unmarshal(metaRaw, &meta); err != nil {
+		t.Fatalf("meta: %v raw=%q", err, metaRaw)
+	}
+	if meta["strength"] != "50 mg" {
+		t.Fatalf("afmps_meta.strength %#v", meta)
+	}
 }
 
 func TestCompendiumImportMultiChunk(t *testing.T) {
@@ -171,10 +201,16 @@ func TestCompendiumImportMultiChunk(t *testing.T) {
 	var calls [][2]int
 	handlers.TestSetCompendiumExtract(func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error) {
 		calls = append(calls, [2]int{start, end})
-		p := start
-		return []pharmacy.ExtractedMedication{
-			{CNK: fmt.Sprintf("2889%03d", start), Name: fmt.Sprintf("Chunk Med %d", start), SourcePage: &p},
-		}, nil
+		med := pharmacy.ExtractedMedication{
+			CNK:  fmt.Sprintf("2889%03d", start),
+			Name: fmt.Sprintf("Chunk Med %d", start),
+		}
+		// Chunk 2: omit sourcePage → handler must fall back to chunk start (4), not job.PageStart (1).
+		if start != 4 {
+			p := start
+			med.SourcePage = &p
+		}
+		return []pharmacy.ExtractedMedication{med}, nil
 	})
 	t.Cleanup(handlers.TestClearCompendiumExtract)
 
@@ -216,6 +252,14 @@ func TestCompendiumImportMultiChunk(t *testing.T) {
 	}
 	if len(detail.Rows) != 3 {
 		t.Fatalf("rows=%d %#v", len(detail.Rows), detail.Rows)
+	}
+	for _, r := range detail.Rows {
+		if r.CNK != "2889004" {
+			continue
+		}
+		if r.SourcePage == nil || *r.SourcePage != 4 {
+			t.Fatalf("fallback sourcePage for chunk-2 med: got %#v want 4", r.SourcePage)
+		}
 	}
 }
 

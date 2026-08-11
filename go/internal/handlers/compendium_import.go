@@ -43,6 +43,7 @@ func (a *API) registerCompendiumImportRoutes(r chi.Router) {
 	r.Post("/admin/compendium-imports", a.adminCreateCompendiumImport)
 	r.Get("/admin/compendium-imports", a.adminListCompendiumImports)
 	r.Get("/admin/compendium-imports/{id}", a.adminGetCompendiumImport)
+	r.Get("/admin/compendium-imports/{id}/pdf", a.adminGetCompendiumImportPDF)
 	r.Delete("/admin/compendium-imports/{id}", a.adminDeleteCompendiumImport)
 	r.Post("/admin/compendium-imports/{id}/extract", a.adminStartCompendiumExtract)
 	r.Patch("/admin/compendium-imports/{id}/rows/{rowId}", a.adminPatchCompendiumRow)
@@ -193,6 +194,45 @@ func (a *API) adminGetCompendiumImport(w http.ResponseWriter, r *http.Request) {
 	}
 	scrubCompendiumDetail(&detail)
 	httpx.WriteData(w, http.StatusOK, detail)
+}
+
+func (a *API) adminGetCompendiumImportPDF(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
+		return
+	}
+	job, err := a.store.GetCompendiumImportJob(r.Context(), chi.URLParam(r, "id"))
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if a.media == nil || strings.TrimSpace(job.PDFObjectKey) == "" {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pdf_missing")
+		return
+	}
+	rc, ct, err := a.media.Open(r.Context(), job.PDFObjectKey)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pdf_missing")
+		return
+	}
+	defer rc.Close()
+	if ct == "" {
+		ct = "application/pdf"
+	}
+	fname := filepath.Base(strings.TrimSpace(job.Filename))
+	if fname == "" || fname == "." || fname == "/" {
+		fname = "compendium.pdf"
+	}
+	if !strings.HasSuffix(strings.ToLower(fname), ".pdf") {
+		fname += ".pdf"
+	}
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename=%q`, fname))
+	w.Header().Set("Cache-Control", "private, no-store")
+	_, _ = io.Copy(w, rc)
 }
 
 func (a *API) adminDeleteCompendiumImport(w http.ResponseWriter, r *http.Request) {
@@ -347,7 +387,11 @@ func (a *API) runCompendiumExtract(jobID string, resumeFromChunk int) {
 			_ = a.store.FailCompendiumImportJob(failCtx, jobID, msg)
 			return
 		}
-		inserts := a.compendiumRowsFromMeds(ctx, jobID, job.PageStart, chunkMeds)
+		if len(chunkMeds) == 0 {
+			log.Printf("compendium extract %s: empty chunk %d/%d p%d-%d (advancing)", jobID, i+1, len(chunks), start, end)
+		}
+		// Fallback sourcePage = chunk start (not job.PageStart) so mid-PDF rows keep a useful hint.
+		inserts := a.compendiumRowsFromMeds(ctx, jobID, start, chunkMeds)
 		if err := a.store.AppendCompendiumExtractRows(ctx, jobID, inserts); err != nil {
 			log.Printf("compendium extract %s: persist chunk %d: %v", jobID, i+1, err)
 			_ = a.store.FailCompendiumImportJob(failCtx, jobID, "persist_failed")
@@ -406,6 +450,7 @@ func (a *API) compendiumRowsFromMeds(ctx context.Context, jobID string, fallback
 			Name:               classified.Name,
 			Manufacturer:       classified.Manufacturer,
 			ActiveSubstance:    classified.ActiveSubstance,
+			Strength:           classified.Strength,
 			ATCCode:            classified.ATCCode,
 			PharmaceuticalForm: classified.PharmaceuticalForm,
 			PackSize:           classified.PackSize,

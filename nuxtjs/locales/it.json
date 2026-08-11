@@ -2967,7 +2967,11 @@
       "fixFromPage": "Completare manualmente (PDF p.{page})",
       "resumeExtract": "Riprendi estrazione",
       "restartExtract": "Ricomincia da zero",
-      "resumeHint": "Ripresa possibile dal chunk {done}/{total} (righe già estratte conservate)."
+      "resumeHint": "Ripresa possibile dal chunk {done}/{total} (righe già estratte conservate).",
+      "colStrength": "Dosaggio",
+      "viewerTitle": "PDF sorgente",
+      "viewerHint": "Clicca una riga per sincronizzare la pagina. Il viewer naviga con #page=N.",
+      "openPdfTab": "Apri in nuova scheda"
     },
     "afmps": {
       "title": "AFMPS CSV import",

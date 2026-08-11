@@ -30,4 +30,9 @@ describe('buildCsp', () => {
     expect(csp).not.toMatch(/script-src[^;]*\*/)
     expect(csp).toContain("worker-src 'self' blob:")
   })
+
+  it('autorise iframe same-origin (viewer PDF admin) + GSI', () => {
+    const csp = buildCsp('')
+    expect(csp).toMatch(/frame-src 'self' https:\/\/accounts\.google\.com\/gsi\//)
+  })
 })
