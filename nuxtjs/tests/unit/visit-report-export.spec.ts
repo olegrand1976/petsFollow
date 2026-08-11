@@ -61,11 +61,11 @@ describe('visit-report-export', () => {
     })
   })
 
+  // `vi.stubGlobal` plutôt que `Object.defineProperty` : le navigateur cassé est
+  // remis d'aplomb par le `unstubAllGlobals` du beforeEach, sinon il fuit sur les
+  // tests suivants du fichier.
   it('copyVisitReportMarkdown signale un presse-papier indisponible', async () => {
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {},
-      configurable: true,
-    })
+    vi.stubGlobal('navigator', {})
     await expect(copyVisitReportMarkdown('# CR')).rejects.toMatchObject({
       data: { error: { msgKey: 'clipboard_unavailable' } },
     })
@@ -161,6 +161,25 @@ describe('openVisitReportPdfBlob', () => {
       data: { error: { msgKey: 'report_not_found' } },
     })
     expect(click).not.toHaveBeenCalled()
+  })
+
+  // Sans `message` distinct du code, la phrase déjà traduite par l'API serait
+  // cherchée comme clé i18n et le véto lirait « Une erreur est survenue ».
+  it('conserve le message de l’API quand le code n’a pas de clé Pro', async () => {
+    const payload = JSON.stringify({ error: { code: 'internal', message: 'Génération indisponible' } })
+    vi.stubGlobal('$fetch', vi.fn(async () => new Blob([payload], { type: 'application/json' })))
+    stubBrowser(() => ({}))
+    await expect(openVisitReportPdfBlob('v-1')).rejects.toMatchObject({
+      data: { error: { code: 'internal', message: 'Génération indisponible' } },
+    })
+  })
+
+  it('retombe sur pdf_failed quand le corps JSON n’a pas de code', async () => {
+    vi.stubGlobal('$fetch', vi.fn(async () => new Blob(['{"statusMessage":"boom"}'], { type: 'application/json' })))
+    stubBrowser(() => ({}))
+    await expect(openVisitReportPdfBlob('v-1')).rejects.toMatchObject({
+      data: { error: { code: 'pdf_failed', msgKey: 'pdf_failed', message: 'boom' } },
+    })
   })
 
   it('retype un blob sans content-type en PDF', async () => {

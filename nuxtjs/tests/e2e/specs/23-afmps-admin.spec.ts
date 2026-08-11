@@ -87,6 +87,8 @@ test.describe('AFMPS admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
     await expect(page.getByTestId('admin-afmps-imports-page')).toBeVisible({ timeout: 15000 })
 
     await page.getByTestId('admin-afmps-new').click()
+    await expect(page.getByTestId('admin-afmps-upload-card')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('admin-afmps-file')).toBeVisible()
     await page.getByTestId('admin-afmps-file').setInputFiles(filePath)
     await page.getByTestId('admin-afmps-upload').click()
 

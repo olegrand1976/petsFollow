@@ -2,11 +2,12 @@
 
 /**
  * Erreur locale à la forme que lit `mapError` (`data.error.msgKey` → `errors.*`).
- * Sans cette enveloppe, l'échec sort en « Une erreur est survenue ».
+ * Sans cette enveloppe, l'échec sort en « Une erreur est survenue ». `message`
+ * porte le texte déjà traduit par l'API quand le code n'a pas de clé côté Pro.
  */
-function exportError(code: string): Error {
-  const err: any = new Error(code)
-  err.data = { error: { code, msgKey: code } }
+function exportError(code: string, message?: string): Error {
+  const err: any = new Error(message || code)
+  err.data = { error: { code, msgKey: code, ...(message ? { message } : {}) } }
   return err
 }
 
@@ -96,7 +97,10 @@ export async function openVisitReportPdfBlob(
 
   const type = (blob.type || '').toLowerCase()
   if (type.includes('json') || type.includes('text/html') || type.includes('text/plain')) {
-    let msg = 'pdf_failed'
+    // Code et message sont distincts : ranger une phrase dans `msgKey` la ferait
+    // chercher comme clé i18n, échouer, et sortir en « Une erreur est survenue ».
+    let code = 'pdf_failed'
+    let message = ''
     try {
       const text = await blob.text()
       const parsed = JSON.parse(text) as {
@@ -104,14 +108,11 @@ export async function openVisitReportPdfBlob(
         statusMessage?: string
         data?: { code?: string }
       }
-      msg = parsed?.error?.code
-        || parsed?.data?.code
-        || parsed?.error?.message
-        || parsed?.statusMessage
-        || msg
+      code = parsed?.error?.code || parsed?.data?.code || code
+      message = parsed?.error?.message || parsed?.statusMessage || ''
     }
     catch { /* keep default */ }
-    throw exportError(msg)
+    throw exportError(code, message)
   }
 
   const typed = type.includes('pdf') ? blob : new Blob([blob], { type: 'application/pdf' })

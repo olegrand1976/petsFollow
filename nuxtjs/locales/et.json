@@ -3009,6 +3009,7 @@
     "not_ready": "Teenus ei ole valmis",
     "generic": "Ilmnes viga",
     "clipboard_unavailable": "Kopeerimine ebaõnnestus: lõikelaud pole saadaval",
+    "report_not_found": "Visiidi aruannet ei leitud",
     "report_empty": "Visiidi aruanne on tühi",
     "pdf_failed": "PDF-i loomine ebaõnnestus",
     "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga",

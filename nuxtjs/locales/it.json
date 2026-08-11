@@ -3988,6 +3988,7 @@
     "not_ready": "Servizio non pronto",
     "generic": "Si è verificato un errore",
     "clipboard_unavailable": "Copia non riuscita: gli appunti non sono disponibili",
+    "report_not_found": "Referto non trovato",
     "report_empty": "Il referto è vuoto",
     "pdf_failed": "Generazione del PDF non riuscita",
     "pet_not_in_practice": "L'animale non è collegato a questo studio",

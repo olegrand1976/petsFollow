@@ -3014,6 +3014,7 @@
     "not_ready": "Service not ready",
     "generic": "An error occurred",
     "clipboard_unavailable": "Copy failed: the clipboard is not available",
+    "report_not_found": "Visit report not found",
     "report_empty": "The visit report is empty",
     "pdf_failed": "PDF generation failed",
     "pet_not_in_practice": "Pet is not linked to this practice",

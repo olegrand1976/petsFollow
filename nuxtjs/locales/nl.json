@@ -3009,6 +3009,7 @@
     "not_ready": "Service niet gereed",
     "generic": "Er is een fout opgetreden",
     "clipboard_unavailable": "Kopiëren mislukt: het klembord is niet beschikbaar",
+    "report_not_found": "Bezoekverslag niet gevonden",
     "report_empty": "Het bezoekverslag is leeg",
     "pdf_failed": "PDF genereren mislukt",
     "pet_not_in_practice": "Dier hoort niet bij deze praktijk",

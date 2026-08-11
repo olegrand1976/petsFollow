@@ -4037,6 +4037,7 @@
     "not_ready": "Service non prêt",
     "generic": "Une erreur est survenue",
     "clipboard_unavailable": "Copie impossible : le presse-papier n’est pas accessible",
+    "report_not_found": "Compte-rendu introuvable",
     "report_empty": "Le compte-rendu est vide",
     "pdf_failed": "Échec de la génération du PDF",
     "pet_not_in_practice": "Animal non rattaché à ce cabinet",

@@ -3009,6 +3009,7 @@
     "not_ready": "Servicio no disponible",
     "generic": "Se ha producido un error",
     "clipboard_unavailable": "No se pudo copiar: el portapapeles no está disponible",
+    "report_not_found": "Informe de visita no encontrado",
     "report_empty": "El informe de visita está vacío",
     "pdf_failed": "Error al generar el PDF",
     "pet_not_in_practice": "El animal no está vinculado a esta clínica",
