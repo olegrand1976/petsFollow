@@ -3,6 +3,7 @@ import {
   formatBrusselsDateTime,
   formatPrescriptionVisitLabel,
   isOrphanLinkedVisit,
+  visitIdForPatch,
   visitIdForSave,
   withEnsuredLinkedVisit,
   type PrescriptionVisitOption,
@@ -28,6 +29,16 @@ describe('prescription-visit helpers', () => {
     expect(visitIdForSave(withOrphan, '')).toBe('')
     expect(isOrphanLinkedVisit(withOrphan, 'gone')).toBe(true)
     expect(isOrphanLinkedVisit(withOrphan, 'v1')).toBe(false)
+  })
+
+  it('visitIdForPatch omits while loading and never clears on dispense', () => {
+    const withOrphan = withEnsuredLinkedVisit(base, 'gone')
+    expect(visitIdForPatch(base, 'v1', { loading: true, allowClear: true })).toBeUndefined()
+    expect(visitIdForPatch(base, 'v1', { allowClear: true })).toBe('v1')
+    expect(visitIdForPatch(base, '', { allowClear: true })).toBe('')
+    expect(visitIdForPatch(withOrphan, 'gone', { allowClear: true })).toBe('')
+    expect(visitIdForPatch(withOrphan, 'gone', { allowClear: false })).toBeUndefined()
+    expect(visitIdForPatch(base, '', { allowClear: false })).toBeUndefined()
   })
 
   it('formatBrusselsDateTime converts UTC to Europe/Brussels wall time', () => {

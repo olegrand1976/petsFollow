@@ -13,7 +13,7 @@
           v-if="canEditDraft"
           variant="primary"
           test-id="prescriptions-save"
-          :disabled="busy"
+          :disabled="busy || visitsLoading"
           @click="save"
         >
           {{ busy ? $t('prescriptions.loading') : $t('prescriptions.save') }}
@@ -31,7 +31,7 @@
           v-if="canDispenseDaf"
           variant="secondary"
           test-id="prescriptions-dispense-daf"
-          :disabled="busy || !hasCatalogLines"
+          :disabled="busy || visitsLoading || !hasCatalogLines"
           @click="dispenseDaf"
         >
           {{ $t('prescriptions.dispenseDaf') }}
@@ -151,6 +151,7 @@ import {
   isOrphanLinkedVisit,
   type PrescriptionVisitOption,
   unwrapApiData,
+  visitIdForPatch,
   visitIdForSave,
   withEnsuredLinkedVisit,
 } from '~/utils/prescription-visit'
@@ -401,18 +402,23 @@ async function aiPrefill() {
 }
 
 async function save() {
-  if (busy.value || doc.value?.status !== 'draft') return
+  if (busy.value || visitsLoading.value || doc.value?.status !== 'draft') return
   busy.value = true
   error.value = ''
   try {
-    const body: any = {
+    const body: Record<string, unknown> = {
       notes: notes.value,
       careAdvice: careAdvice.value,
       paperFormat: paperFormat.value,
       validUntil: validUntil.value || '',
       medications: medPayload(),
-      visitId: visitIdForSave(visits.value, linkedVisitId.value),
     }
+    // allowClear : « aucune visite » / orphelin → '' ; pendant loading on omet (voir visitIdForPatch).
+    const patchVisit = visitIdForPatch(visits.value, linkedVisitId.value, {
+      loading: visitsLoading.value,
+      allowClear: true,
+    })
+    if (patchVisit !== undefined) body.visitId = patchVisit
     const res = await $fetch<any>(`/api/vet/prescriptions/${route.params.id}`, {
       method: 'PATCH',
       body,
@@ -444,28 +450,38 @@ async function remove() {
 }
 
 async function dispenseDaf() {
-  if (!canDispenseDaf.value || !hasCatalogLines.value || busy.value) return
+  if (!canDispenseDaf.value || !hasCatalogLines.value || busy.value || visitsLoading.value) return
   busy.value = true
   error.value = ''
   try {
     if (canEditDraft.value) {
-      const body: any = {
+      const body: Record<string, unknown> = {
         notes: notes.value,
         careAdvice: careAdvice.value,
         paperFormat: paperFormat.value,
         validUntil: validUntil.value || '',
         medications: medPayload(),
-        visitId: visitIdForSave(visits.value, linkedVisitId.value),
       }
+      // Jamais clear visitId ici : un '' pendant/après load orphelin casserait le pont facture.
+      const patchVisit = visitIdForPatch(visits.value, linkedVisitId.value, {
+        loading: visitsLoading.value,
+        allowClear: false,
+      })
+      if (patchVisit !== undefined) body.visitId = patchVisit
       const saved = await $fetch<any>(`/api/vet/prescriptions/${route.params.id}`, {
         method: 'PATCH',
         body,
       })
       applyDoc(unwrapApiData(saved))
     }
+    const linkedVisit = visitIdForSave(visits.value, linkedVisitId.value)
+      || String(doc.value?.visitId || '').trim()
     const res = await $fetch<any>('/api/vet/pharmacy/daf/from-prescription', {
       method: 'POST',
-      body: { prescriptionId: String(route.params.id) },
+      body: {
+        prescriptionId: String(route.params.id),
+        ...(linkedVisit ? { visitId: linkedVisit } : {}),
+      },
     })
     const daf = unwrapApiData(res)
     const q = new URLSearchParams()

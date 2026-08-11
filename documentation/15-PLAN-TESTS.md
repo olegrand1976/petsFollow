@@ -517,7 +517,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
 | I9 | Offre sync | `/produits` (+ écran tarif public quand livré) | Aligné docs + `domain.go` |
 
-**Pharmacie BE (dev)** : stock + DAF/PDF + VAMReg dry-run + prix/seuils/commandes/BL/inventaire + chaîne alimentaire sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` (dont `TestPharmacyPlanCoverage`) + Playwright `@p0`/`@p1` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts). Roadmap : [37](37-ROADMAP-STOCK-FACTURATION.md). DAF→Billit (BIL-9) **gelé** (gate `EnqueueInvoicesConnect`) jusqu’accès reseller. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
+**Pharmacie BE (dev)** : stock + DAF/PDF + VAMReg dry-run + prix/seuils/commandes/BL/inventaire + chaîne alimentaire sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` (dont `TestPharmacyPlanCoverage`, `TestConsultConsignesStockInvoiceFlow`) + Playwright `@p0`/`@p1` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts) + flux croisé [`26-consult-rx-stock-invoice.spec.ts`](../nuxtjs/tests/e2e/specs/26-consult-rx-stock-invoice.spec.ts). Roadmap : [37](37-ROADMAP-STOCK-FACTURATION.md). DAF→Billit (BIL-9) **gelé** (gate `EnqueueInvoicesConnect`) jusqu’accès reseller. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
@@ -566,7 +566,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` (fiche consignes) |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
 | C8.4 | P1 | Lien visite + suggest | `visitId` cohérent ; `suggest-from-visit` sans CR → `no_visit_report` ; Gemini off → 503 |
-| C8.5 | P1 | Consignes → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
+| C8.5 | P1 | Consignes → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` ; **héritage `visitId`** depuis la consigne si omis ; body `visitId` ≠ consignes → `visit_mismatch` |
+| C8.6 | P1 | Flux consult → consignes → stock → facture | Même `visitId` : CR → consignes (méd. catalogue) → DAF finalize FEFO → `GET …/invoicing/prefill` | Go `TestConsultConsignesStockInvoiceFlow` + `TestPharmacyDAFFromPrescriptionVisitMismatch` ; e2e `@p1` [`26-consult-rx-stock-invoice.spec.ts`](../nuxtjs/tests/e2e/specs/26-consult-rx-stock-invoice.spec.ts) (CTA hub + dispense UI ; création Rx API) ; PATCH dispense **n'efface pas** `visitId` (`visitIdForPatch`) |
 
 ---
 
@@ -920,7 +921,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client · type de client Particulier masque TVA / n° d'entreprise | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize · protocole 1 clic | `@p0` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · hub sans traitements in-workspace | `@p0` |
+| `26-consult-rx-stock-invoice` | Flux croisé : hub CR → consignes → DAF finalize (stock) → prefill facture | `@p1` `@pharmacy` `@invoicing` |
 | `03c-consultations-history` | Historique `/consultations` : liste walk-in + RDV avec CR + filtre + ouvrir CR → fiche `/consultations/{id}` + soft-delete + **durée audio / player** + badge draft DAF | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons · Finaliser → hub direct | `@p1` |

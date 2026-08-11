@@ -399,7 +399,18 @@ func (a *API) createPharmacyDAFFromPrescription(w http.ResponseWriter, r *http.R
 	if notes == "" {
 		notes = strings.TrimSpace(rx.Notes)
 	}
-	visitID := strings.TrimSpace(body.VisitID)
+	// Body visitId wins s'il est cohérent ; sinon on hérite du lien consignes→visite.
+	// Un body qui pointe une autre visite que la consigne → visit_mismatch (pas de facture croisée).
+	bodyVisit := strings.TrimSpace(body.VisitID)
+	rxVisit := strings.TrimSpace(rx.VisitID)
+	if bodyVisit != "" && rxVisit != "" && bodyVisit != rxVisit {
+		writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+		return
+	}
+	visitID := bodyVisit
+	if visitID == "" {
+		visitID = rxVisit
+	}
 	if visitID != "" {
 		if !a.validateDAFLinks(w, r, id.PracticeID, rx.OwnerID, rx.PetID, visitID) {
 			return

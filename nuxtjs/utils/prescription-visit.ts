@@ -101,6 +101,25 @@ export function visitIdForSave(
   return id
 }
 
+/**
+ * Valeur `visitId` pour un PATCH partiel.
+ * - `loading` : omettre (liste pas encore hydratée — un `''` clearerait le lien serveur).
+ * - `allowClear` : envoyer `''` si l'utilisateur a choisi « aucune » / orphelin.
+ * - sinon : n'envoyer que si non vide (dispense DAF — préserver le lien existant).
+ * `undefined` = ne pas inclure la clé dans le body.
+ */
+export function visitIdForPatch(
+  visits: PrescriptionVisitOption[],
+  linkedId: string,
+  opts: { loading?: boolean, allowClear?: boolean },
+): string | undefined {
+  if (opts.loading) return undefined
+  const vid = visitIdForSave(visits, linkedId)
+  if (vid) return vid
+  if (opts.allowClear) return ''
+  return undefined
+}
+
 export async function fetchPetVisitsForPrescription(petId: string): Promise<PrescriptionVisitOption[]> {
   const id = String(petId || '').trim()
   if (!id) return []
