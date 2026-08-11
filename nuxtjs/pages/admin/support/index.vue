@@ -68,6 +68,10 @@
         </template>
       </ProListToolbar>
 
+      <p v-if="patchError" class="pro-error" role="alert" data-testid="admin-support-patch-error">
+        {{ patchError }}
+      </p>
+
       <p
         v-if="viewMode === 'kanban' && total > KANBAN_LIMIT"
         class="text-muted"
@@ -323,8 +327,7 @@ async function onKanbanStatus(ticket: any, status: string) {
       method: 'PATCH',
       body: { status },
     })
-    ticket.status = status
-    await loadStats()
+    await load()
   } catch {
     patchError.value = t('admin.support.patchError')
     await load()

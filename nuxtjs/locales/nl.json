@@ -2137,6 +2137,7 @@
       "commentLabel": "Nieuwe reactie",
       "commentSubmit": "Reactie toevoegen",
       "commentSent": "Reactie toegevoegd",
+      "commentError": "Reactie kon niet worden toegevoegd.",
       "replies": "Reacties",
       "noReplies": "Nog geen reacties",
       "replyLabel": "Nieuwe reactie",

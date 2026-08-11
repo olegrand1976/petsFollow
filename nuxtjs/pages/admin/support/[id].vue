@@ -9,6 +9,9 @@
     />
 
     <div v-if="loading" class="text-muted">{{ $t('common.loading') }}</div>
+    <p v-else-if="loadError" class="pro-error" role="alert" data-testid="admin-support-detail-error">
+      {{ loadError }}
+    </p>
     <template v-else-if="ticket">
       <ProCard class="pro-mb-lg">
         <div class="support-meta pro-mb-md">
@@ -27,7 +30,13 @@
           >
             <option v-for="st in STATUSES" :key="st" :value="st">{{ statusLabel(st) }}</option>
           </select>
-          <p v-if="statusMsg" class="pro-hint">{{ statusMsg }}</p>
+          <p
+            v-if="statusMsg"
+            :class="statusMsgError ? 'pro-error' : 'pro-hint'"
+            data-testid="admin-support-status-msg"
+          >
+            {{ statusMsg }}
+          </p>
         </div>
         <h3 class="pro-mb-sm">{{ $t('admin.support.message') }}</h3>
         <p class="support-message" data-testid="admin-support-message">{{ ticket.message }}</p>
@@ -136,7 +145,13 @@
               data-testid="admin-support-reply"
             />
           </div>
-          <p v-if="replyMsg" class="pro-hint" data-testid="admin-support-reply-msg">{{ replyMsg }}</p>
+          <p
+            v-if="replyMsg"
+            :class="replyMsgError ? 'pro-error' : 'pro-hint'"
+            data-testid="admin-support-reply-msg"
+          >
+            {{ replyMsg }}
+          </p>
           <ProButton type="submit" test-id="admin-support-reply-submit" :disabled="replying">
             {{ $t('admin.support.commentSubmit') }}
           </ProButton>
@@ -155,10 +170,13 @@ const route = useRoute()
 const { t } = useI18n()
 const ticket = ref<any>(null)
 const loading = ref(true)
+const loadError = ref('')
 const statusDraft = ref('open')
 const statusMsg = ref('')
+const statusMsgError = ref(false)
 const replyBody = ref('')
 const replyMsg = ref('')
+const replyMsgError = ref(false)
 const replying = ref(false)
 const attachMsg = ref('')
 const attaching = ref(false)
@@ -215,33 +233,47 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-async function load() {
-  loading.value = true
+async function load(opts?: { quiet?: boolean }) {
+  const quiet = Boolean(opts?.quiet)
+  if (!quiet) loading.value = true
+  loadError.value = ''
   try {
     const id = route.params.id as string
     const res: any = await $fetch(`/api/admin/support/tickets/${id}`)
     ticket.value = res.data ?? res
     statusDraft.value = ticket.value?.status || 'open'
+  } catch {
+    loadError.value = t('admin.support.loadError')
+    if (!quiet) ticket.value = null
   } finally {
-    loading.value = false
+    if (!quiet) loading.value = false
   }
 }
 
 async function saveStatus() {
   statusMsg.value = ''
-  const id = route.params.id as string
-  await $fetch(`/api/admin/support/tickets/${id}`, {
-    method: 'PATCH',
-    body: { status: statusDraft.value },
-  })
-  statusMsg.value = t('admin.support.statusUpdated')
-  await load()
+  statusMsgError.value = false
+  const previous = ticket.value?.status || 'open'
+  try {
+    const id = route.params.id as string
+    await $fetch(`/api/admin/support/tickets/${id}`, {
+      method: 'PATCH',
+      body: { status: statusDraft.value },
+    })
+    statusMsg.value = t('admin.support.statusUpdated')
+    await load({ quiet: true })
+  } catch {
+    statusDraft.value = previous
+    statusMsgError.value = true
+    statusMsg.value = t('admin.support.patchError')
+  }
 }
 
 async function sendReply() {
   if (!replyBody.value.trim() || replying.value) return
   replying.value = true
   replyMsg.value = ''
+  replyMsgError.value = false
   try {
     const id = route.params.id as string
     await $fetch(`/api/admin/support/tickets/${id}/replies`, {
@@ -250,7 +282,10 @@ async function sendReply() {
     })
     replyBody.value = ''
     replyMsg.value = t('admin.support.commentSent')
-    await load()
+    await load({ quiet: true })
+  } catch {
+    replyMsgError.value = true
+    replyMsg.value = t('admin.support.commentError')
   } finally {
     replying.value = false
   }
@@ -277,7 +312,7 @@ async function uploadAttachment() {
     pickedFile.value = null
     if (fileInput.value) fileInput.value.value = ''
     attachMsg.value = t('admin.support.attachmentUploaded')
-    await load()
+    await load({ quiet: true })
   } catch {
     attachMsg.value = t('admin.support.attachmentError')
   } finally {

@@ -2137,6 +2137,7 @@
       "commentLabel": "New comment",
       "commentSubmit": "Add comment",
       "commentSent": "Comment added",
+      "commentError": "Could not add the comment.",
       "replies": "Comments",
       "noReplies": "No comments yet",
       "replyLabel": "New comment",

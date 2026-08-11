@@ -3016,6 +3016,7 @@
       "commentLabel": "Nouveau commentaire",
       "commentSubmit": "Ajouter le commentaire",
       "commentSent": "Commentaire ajouté",
+      "commentError": "Impossible d’ajouter le commentaire.",
       "replies": "Commentaires",
       "noReplies": "Aucun commentaire encore",
       "replyLabel": "Nouveau commentaire",

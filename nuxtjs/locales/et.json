@@ -2137,6 +2137,7 @@
       "commentLabel": "Uus kommentaar",
       "commentSubmit": "Lisa kommentaar",
       "commentSent": "Kommentaar lisatud",
+      "commentError": "Kommentaari lisamine ebaõnnestus.",
       "replies": "Kommentaarid",
       "noReplies": "Kommentaare pole veel",
       "replyLabel": "Uus kommentaar",

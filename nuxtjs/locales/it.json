@@ -2802,6 +2802,7 @@
       "commentLabel": "Nuovo commento",
       "commentSubmit": "Aggiungi commento",
       "commentSent": "Commento aggiunto",
+      "commentError": "Impossibile aggiungere il commento.",
       "replies": "Commenti",
       "noReplies": "Ancora nessun commento",
       "replyLabel": "Nuovo commento",
