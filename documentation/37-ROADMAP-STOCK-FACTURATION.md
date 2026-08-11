@@ -4,7 +4,7 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F catalogue ✅ (staging+prod) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
+| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F catalogue ✅ (staging+prod) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2, **mails envoyés** — attente credentials) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
 | Dernière revue | 2026-08-11 (P0-1/P0-2 mails envoyés · 45 décisions produit finalisées) |
@@ -24,7 +24,7 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 | P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging + prod** (~2738 CNK) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | Catalogue national en base staging/prod |
 | P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | 🟡 Décision produit figée ([45](45-PHARMACY-P0-SPECS.md)) — ☐ juridique | Spec + OK juridique → Phase 4.B |
 | P0-5 | Contact / docs API **grossistes** (1 pilote) | Produit | 🟡 Process figé ([45](45-PHARMACY-P0-SPECS.md)) — ☐ choix pilote commercial | Pilote + docs → Phase 5.A |
-| P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | 🟡 Décision produit : build Compendium + licence différée ([45](45-PHARMACY-P0-SPECS.md)) — ☐ budget | OK produit → 5.B/C reportés |
+| P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | 🟡 Décision produit : build Compendium + licence différée ([45](45-PHARMACY-P0-SPECS.md)) — ☐ budget (valide le report) | Coche = report 5.B/C confirmé (pas d’ouverture code) |
 | P0-7 | Trajectoire **certification DAF** vs disclaimer | Juridique | 🟡 Décision produit : rester disclaimer ([45](45-PHARMACY-P0-SPECS.md)) — ☐ juridique | OK juridique → polish 4.E |
 
 ### Suivi P0 partenaires (hors code) — 2026-08-11
@@ -36,10 +36,10 @@ Actions ops / juridique à pousser **en parallèle** du code (pas de chantier te
 | **P0-1** | **Mail envoyé (2026-08-11)** — attente credentials write ; ticket [`527c7803…`](https://petsfollow.ll-it-sc.be/admin/support/527c7803-b27e-43d4-bb46-33aa175b4c8f) · garder `VAMREG_DRY_RUN=true` ([39](39-VAMREG-AFMPS-READONLY.md)) | 4.A production |
 | **P0-2** | **Mail envoyé (2026-08-11)** — attente reseller ; ticket [`572d88c4…`](https://petsfollow.ll-it-sc.be/admin/support/572d88c4-9489-4668-bc82-b07dee145be8) · S5/Phase 3 gelés | 3.C–3.E, GA facture |
 | **P0-3** | ✅ Staging + prod — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | — |
-| **P0-4** | Décisions produit [45 § P0-4](45-PHARMACY-P0-SPECS.md) — ☐ validation juridique | 4.B |
-| **P0-5** | Process [45 § P0-5](45-PHARMACY-P0-SPECS.md) — ☐ retenir 1 pilote | 5.A |
-| **P0-6** | Décision [45 § P0-6](45-PHARMACY-P0-SPECS.md) (build + licence différée) — ☐ OK budget | 5.B/C reportés |
-| **P0-7** | Décision [45 § P0-7](45-PHARMACY-P0-SPECS.md) (disclaimer) — ☐ validation juridique | 4.E |
+| **P0-4** | Décisions produit [45](45-PHARMACY-P0-SPECS.md) (registre dédié) — ☐ validation juridique | 4.B |
+| **P0-5** | Process [45](45-PHARMACY-P0-SPECS.md) — ☐ retenir 1 pilote | 5.A |
+| **P0-6** | Décision [45](45-PHARMACY-P0-SPECS.md) (build + licence différée) — ☐ OK report budget | 5.B/C reportés |
+| **P0-7** | Décision [45](45-PHARMACY-P0-SPECS.md) (disclaimer) — ☐ validation juridique | 4.E |
 
 **Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` (revue dual-list + pagination) — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
 

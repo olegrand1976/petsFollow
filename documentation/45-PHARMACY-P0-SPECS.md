@@ -8,7 +8,7 @@
 |----|------------------|---------------------|
 | P0-4 | Modèle registre + rétention 5 ans + exports | ☐ Juridique BE |
 | P0-5 | Process pilote EDI (1 grossiste) | ☐ Commercial (choix nom) |
-| P0-6 | Hybride : AFMPS + Compendium build ; licence notices plus tard | ☐ Produit / budget |
+| P0-6 | Hybride : AFMPS + Compendium build ; **5.B/C reportés** | ☐ Produit / budget (valide le report) |
 | P0-7 | Rester en disclaimer non certifié jusqu’à trajectoire certif claire | ☐ Juridique |
 
 ---
@@ -26,8 +26,10 @@
 | Entité | Champs clés |
 |--------|-------------|
 | `ref_medications` | `is_controlled` (+ `controlled_class` optionnel) |
-| `controlled_movements` ou vue sur `stock_movements` filtrée | lot, qty signée, motif (`receipt`/`daf`/`waste`/`adjust`), acteur, animal?, DAF?, timestamp |
+| `pharmacy.controlled_movements` (**table dédiée**, immuable) | lot, qty signée, motif (`receipt`/`daf`/`waste`/`adjust`), acteur, animal?, DAF?, timestamp, attestation |
 | Export | snapshot période + hash + auteur |
+
+**Non-choix** : pas de simple vue filtrée sur `stock_movements` — le journal stock actuel n’a pas les champs registre (attestation, motif légal) et n’est pas un substitut de registre stupéfiants. Les mouvements stock peuvent **alimenter** le registre (hook receipt/DAF/waste) mais la source de vérité exportable = `controlled_movements`.
 
 ### UI cible (4.B)
 - Filtre `/stock` + journal `/stock/controlled` (tag `dev`)
@@ -82,8 +84,8 @@ Admin Compendium PDF (`/admin/compendium-imports`, D11b) = **outil interne** d�
 Responsabilité éditoriale des textes extraits PDF : **cabinet / ops** (revue humaine gates) — l’IA n’est qu’assistant d’extraction.
 
 ### Critère de sortie P0-6
-- [x] Décision produit écrite (ce §)
-- [ ] OK budget / roadmap commerciale (pas de licence V1) → **5.B/C reportés** ; D11b reste le chemin build
+- [x] Décision produit écrite (ce §) : **report explicite** de 5.B/C (licence / Bigame) ; D11b = chemin build V1
+- [ ] OK budget / roadmap commerciale = **validation du report** (pas d’ouverture de 5.B/C) — coche = « on assume le différé »
 
 ---
 
@@ -105,4 +107,8 @@ Responsabilité éditoriale des textes extraits PDF : **cabinet / ops** (revue h
 
 1. Cocher les ☐ ci-dessus (ou amender).
 2. Mettre à jour [37](37-ROADMAP-STOCK-FACTURATION.md) §0 (P0-4…7 → 🟢 / 🟡).
-3. Ouvrir le chantier code correspondant (4.B / 4.E / 5.A…) **uniquement** alors.
+3. Ouvrir le chantier code correspondant **uniquement** alors :
+   - P0-4 validé → **4.B**
+   - P0-5 pilote nommé → **5.A**
+   - P0-7 validé → polish **4.E** (mentions, sans certif)
+   - P0-6 coché → **rien à coder** pour 5.B/C (report confirmé) ; D11b continue sous `dev`
