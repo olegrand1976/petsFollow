@@ -124,6 +124,34 @@ SQL
 echo "→ Preview purge targets:"
 psql "$DATABASE_URL" -c "$PREVIEW_SQL" || true
 
+# Purge media objects for e2e support attachments (best-effort) before SQL DELETE.
+SUPPORT_KEYS_SQL=$(cat <<'SQL'
+SELECT COALESCE(a.object_key, '')
+FROM ops.support_ticket_attachments a
+JOIN ops.support_tickets t ON t.id = a.ticket_id
+WHERE t.subject LIKE 'E2E support %'
+  AND COALESCE(a.object_key, '') <> '';
+SQL
+)
+
+if [[ "$DRY_RUN" == true ]]; then
+  echo "DRY-RUN support attachment keys:"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tA -c "$SUPPORT_KEYS_SQL" || true
+else
+  KEYS_FILE="$(mktemp)"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tA -c "$SUPPORT_KEYS_SQL" > "$KEYS_FILE" || true
+  while IFS= read -r key; do
+    [[ -z "$key" ]] && continue
+    if [[ -n "${GCS_MEDIA_BUCKET:-}" ]]; then
+      gsutil -q rm "gs://${GCS_MEDIA_BUCKET}/${key}" 2>/dev/null || true
+    fi
+    if [[ -n "${MEDIA_LOCAL_DIR:-}" && -f "${MEDIA_LOCAL_DIR}/${key}" ]]; then
+      rm -f "${MEDIA_LOCAL_DIR}/${key}" || true
+    fi
+  done < "$KEYS_FILE"
+  rm -f "$KEYS_FILE"
+fi
+
 PURGE_SQL=$(cat <<'SQL'
 BEGIN;
 
@@ -176,7 +204,8 @@ WHERE contact_email LIKE 'crm.%@petsfollow.test'
    OR practice_name LIKE 'Prospect CRM %'
    OR practice_name LIKE 'Prospect Mail %';
 
--- Tickets support e2e (replies CASCADE).
+-- Tickets support e2e (replies / status history / attachments CASCADE).
+-- Object keys already purged above (GCS / MEDIA_LOCAL_DIR) when present.
 DELETE FROM ops.support_tickets WHERE subject LIKE 'E2E support %';
 
 -- Pharmacie : lots e2e (@pharmacy) + smoke S6, DAF, BL, inventaire.

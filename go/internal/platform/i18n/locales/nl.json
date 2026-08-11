@@ -90,6 +90,7 @@
     "invalid_card_key": "Ongeldige ontdekkingskaart",
     "invalid_platform": "Ongeldig platform",
     "invalid_status": "Ongeldige status",
+    "invalid_transition": "Statusovergang niet toegestaan",
     "invalid_duration": "Ongeldige duur",
     "conflict": "Conflict",
     "pacs_study_other_pet": "Deze DICOM-studie is al gekoppeld aan een ander dier in de praktijk",

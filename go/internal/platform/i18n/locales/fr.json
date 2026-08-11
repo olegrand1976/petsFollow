@@ -90,6 +90,7 @@
     "invalid_card_key": "Carte découverte invalide",
     "invalid_platform": "Plateforme invalide",
     "invalid_status": "Statut invalide",
+    "invalid_transition": "Transition de statut non autorisée",
     "invalid_duration": "Durée invalide",
     "conflict": "Conflit",
     "pacs_study_other_pet": "Cette étude DICOM est déjà liée à un autre animal du cabinet",

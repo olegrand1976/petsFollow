@@ -90,6 +90,7 @@
     "invalid_card_key": "Vigane avastuskaart",
     "invalid_platform": "Vigane platvorm",
     "invalid_status": "Vigane olek",
+    "invalid_transition": "Olekumuutus pole lubatud",
     "invalid_duration": "Vigane kestus",
     "conflict": "Konflikt",
     "pacs_study_other_pet": "See DICOM-uuring on juba seotud teise loomaga kabinetis",

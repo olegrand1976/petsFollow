@@ -90,6 +90,7 @@
     "invalid_card_key": "Invalid discovery card",
     "invalid_platform": "Invalid platform",
     "invalid_status": "Invalid status",
+    "invalid_transition": "Status transition not allowed",
     "invalid_duration": "Invalid duration",
     "conflict": "Conflict",
     "pacs_study_other_pet": "This DICOM study is already linked to another pet in the practice",

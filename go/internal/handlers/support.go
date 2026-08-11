@@ -196,6 +196,10 @@ func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
+		if errors.Is(err, store.ErrInvalidSupportTransition) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_transition")
+			return
+		}
 		if errors.Is(err, store.ErrValidation) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
@@ -252,11 +256,16 @@ func (a *API) adminReplySupportTicket(w http.ResponseWriter, r *http.Request) {
 			n := a.notifier
 			to, subj, body, cta := u.Email, ticket.Subject, strings.TrimSpace(req.Body), a.supportCreatorCTAURL(ticket)
 			go func() {
-				_ = n.SendSupportTicketReply(to, locale, name, subj, body, cta)
+				if err := n.SendSupportTicketReply(to, locale, name, subj, body, cta); err != nil {
+					log.Printf("support notify reply ticket=%s: %v", ticket.ID, err)
+				}
 			}()
 		}
 	}
-	if previousStatus != ticket.Status {
+	// Skip status-changed mail for the automatic open→in_progress bump on first reply
+	// (creator already receives the reply email).
+	autoAck := previousStatus == store.SupportStatusOpen && ticket.Status == store.SupportStatusInProgress
+	if previousStatus != ticket.Status && !autoAck {
 		a.notifySupportTicketStatusChanged(r.Context(), ticket, previousStatus, ticket.Status, admin.UserID)
 	}
 
@@ -451,17 +460,21 @@ func (a *API) notifySupportTicketCreated(ctx context.Context, ticket store.Suppo
 	// Soft-fail ops/ack async — never block ticket create on SMTP fan-out.
 	go func() {
 		for _, r := range ops {
-			_ = n.SendSupportTicketOps(
+			if err := n.SendSupportTicketOps(
 				r.Email, r.Locale, ticketID, subject,
 				fullName, emailAddr, role, source, msgPreview, adminURL,
-			)
+			); err != nil {
+				log.Printf("support notify created ops ticket=%s to=%s: %v", ticketID, r.Email, err)
+			}
 		}
 		if creatorEmail == "" {
 			return
 		}
-		_ = n.SendSupportTicketCreatedAck(
+		if err := n.SendSupportTicketCreatedAck(
 			creatorEmail, locale, name, subject, ticketID, creatorCTA,
-		)
+		); err != nil {
+			log.Printf("support notify created ack ticket=%s: %v", ticketID, err)
+		}
 	}()
 }
 
@@ -517,11 +530,13 @@ func (a *API) notifySupportTicketStatusChanged(ctx context.Context, ticket store
 
 	go func() {
 		for _, d := range dests {
-			_ = n.SendSupportTicketStatusChanged(
+			if err := n.SendSupportTicketStatusChanged(
 				d.email, d.locale, d.name, subject, ticketID,
 				supportStatusLabel(d.locale, fromStatus), supportStatusLabel(d.locale, toStatus),
 				changedByName, d.detailURL,
-			)
+			); err != nil {
+				log.Printf("support notify status ticket=%s to=%s: %v", ticketID, d.email, err)
+			}
 		}
 	}()
 }

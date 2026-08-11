@@ -90,6 +90,7 @@
     "invalid_card_key": "Tarjeta de descubrimiento no válida",
     "invalid_platform": "Plataforma no válida",
     "invalid_status": "Estado no válido",
+    "invalid_transition": "Transición de estado no permitida",
     "invalid_duration": "Duración no válida",
     "conflict": "Conflicto",
     "pacs_study_other_pet": "Este estudio DICOM ya está vinculado a otro animal del centro",

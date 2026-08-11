@@ -478,6 +478,9 @@ func (s *Store) UpdateSupportTicketStatus(ctx context.Context, id, status string
 		}
 		return ticket, previous, nil
 	}
+	if !IsValidSupportStatusTransition(previous, status) {
+		return SupportTicket{}, "", ErrInvalidSupportTransition
+	}
 
 	if err := tx.QueryRow(ctx, `
 		UPDATE ops.support_tickets

@@ -28,7 +28,7 @@
             data-testid="admin-support-status"
             @change="saveStatus"
           >
-            <option v-for="st in STATUSES" :key="st" :value="st">{{ statusLabel(st) }}</option>
+            <option v-for="st in statusOptions" :key="st" :value="st">{{ statusLabel(st) }}</option>
           </select>
           <p
             v-if="statusMsg"
@@ -113,7 +113,13 @@
               @change="onFilePicked"
             >
           </div>
-          <p v-if="attachMsg" class="pro-hint" data-testid="admin-support-attach-msg">{{ attachMsg }}</p>
+          <p
+            v-if="attachMsg"
+            :class="attachMsgError ? 'pro-error' : 'pro-hint'"
+            data-testid="admin-support-attach-msg"
+          >
+            {{ attachMsg }}
+          </p>
           <ProButton type="submit" test-id="admin-support-attach-submit" :disabled="attaching || !pickedFile">
             {{ $t('admin.support.attachmentSubmit') }}
           </ProButton>
@@ -162,9 +168,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
+import { supportStatusSelectOptions } from '~/utils/support-status'
 
-const STATUSES = ['open', 'in_progress', 'to_test', 'done', 'closed'] as const
+definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
 const route = useRoute()
 const { t } = useI18n()
@@ -179,9 +185,12 @@ const replyMsg = ref('')
 const replyMsgError = ref(false)
 const replying = ref(false)
 const attachMsg = ref('')
+const attachMsgError = ref(false)
 const attaching = ref(false)
 const pickedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const statusOptions = computed(() => supportStatusSelectOptions(ticket.value?.status || statusDraft.value))
 
 const ticketMeta = computed(() => {
   if (!ticket.value) return ''
@@ -301,6 +310,7 @@ async function uploadAttachment() {
   if (!pickedFile.value || attaching.value) return
   attaching.value = true
   attachMsg.value = ''
+  attachMsgError.value = false
   try {
     const id = route.params.id as string
     const fd = new FormData()
@@ -314,6 +324,7 @@ async function uploadAttachment() {
     attachMsg.value = t('admin.support.attachmentUploaded')
     await load({ quiet: true })
   } catch {
+    attachMsgError.value = true
     attachMsg.value = t('admin.support.attachmentError')
   } finally {
     attaching.value = false

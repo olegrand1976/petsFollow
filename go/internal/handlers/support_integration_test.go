@@ -334,6 +334,17 @@ func TestSupportTicketStatusWorkflowAndAttachments(t *testing.T) {
 			t.Fatalf("expected %s: %#v", st, env)
 		}
 	}
+	// Illegal jump: done → to_test (must go closed or stay done).
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
+		"status": "to_test",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("want 400 invalid_transition got %d %#v", code, env)
+	}
+	errObj, _ := env["error"].(map[string]any)
+	if errObj["msgKey"] != "invalid_transition" && errObj["message"] != "invalid_transition" {
+		t.Fatalf("want invalid_transition msgKey %#v", env)
+	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
 		"status": "closed",
 	})

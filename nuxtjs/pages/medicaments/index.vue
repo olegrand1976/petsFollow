@@ -65,6 +65,7 @@
           type="button"
           class="med-alpha__btn"
           :class="{ 'is-active': activeLetter === letter }"
+          :aria-pressed="activeLetter === letter"
           :disabled="!letterHasEntries(letterCounts, letter)"
           :data-testid="`medicaments-letter-${letter === '#' ? 'hash' : letter}`"
           @click="selectLetter(letter)"
@@ -73,7 +74,12 @@
         </button>
       </nav>
 
-      <p v-if="dictBusy" class="pro-hint" data-testid="medicaments-dict-loading">
+      <p
+        v-if="dictBusy"
+        class="pro-hint"
+        aria-live="polite"
+        data-testid="medicaments-dict-loading"
+      >
         {{ $t('pharmacy.medicaments.dictionaryLoading') }}
       </p>
       <div v-else-if="!dictItems.length" class="pro-empty" data-testid="medicaments-dict-empty">
@@ -97,6 +103,7 @@
             :class="{ 'is-selected': detail?.id === row.id }"
             role="button"
             tabindex="0"
+            :aria-label="row.name"
             :data-testid="`medicaments-dict-row-${row.cnk}`"
             @click="openFromDict(row)"
             @keydown.enter.prevent="openFromDict(row)"
@@ -512,7 +519,8 @@ async function loadDictionary(
 
 function selectLetter(letter: MedicamentLetter) {
   if (!letterHasEntries(letterCounts.value, letter)) return
-  loadDictionary(letter, 0, { includeCounts: true })
+  // Counts already loaded: skip the global GROUP BY on every letter click.
+  loadDictionary(letter, 0, { includeCounts: !catalogReady.value })
 }
 
 function pageDict(dir: -1 | 1) {
