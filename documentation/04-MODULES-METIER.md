@@ -53,9 +53,9 @@ Admin : CRUD commercials / managers, assign véto, pool non assignés + suggesti
 
 Rappels care (+ seed horse pack), contacts professionnels, compétitions ; foyer / kennel (`litter_tag`, batch) — **inclus** avec entitlement animal actif (plus d’upsell addon).
 
-## Pharmacie cabinet (Belgique) — spec
+## Pharmacie cabinet (Belgique) — livré (tag `dev`)
 
-Dictionnaire CNK/AFMPS, stocks multi-dépôts FEFO, DAF + PDF, workers VAMReg / invoices.connect — **spécification** [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) (**non livré**). Distinct des rappels Care côté client.
+Dictionnaire CNK/AFMPS (import admin + CLI), stocks multi-dépôts FEFO, DAF + PDF, VAMReg dry-run, prix/seuils/commandes/inventaire — **livré sous flag** `PHARMACY_ENABLED` ([27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md), [28](28-PLAN-STOCK-PEREMPTION.md), [37](37-ROADMAP-STOCK-FACTURATION.md)). Restants majeurs : catalogue national ops (P0-3), VAMReg write live (P0-1), worker Billit (P0-2), GA. Distinct des rappels Care côté client.
 
 ## Admin plateforme
 

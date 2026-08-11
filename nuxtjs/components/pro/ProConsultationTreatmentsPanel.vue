@@ -98,6 +98,15 @@
             :disabled="finalized || busy"
           />
         </div>
+        <div>
+          <label class="pro-label">{{ $t('pharmacy.daf.vamregPosology') }}</label>
+          <input
+            v-model="line.posology"
+            class="pro-input"
+            :data-testid="`consultation-treatment-posology-${idx}`"
+            :disabled="finalized || busy"
+          />
+        </div>
       </template>
       <div v-if="lines.length > 1 && !finalized" class="consult-treatments__remove">
         <ProButton variant="ghost" :test-id="`consultation-treatment-remove-${idx}`" :disabled="busy" @click="removeLine(idx)">
@@ -250,10 +259,11 @@ type Line = {
   species: string
   indication: string
   durationDays: number
+  posology: string
 }
 
 function emptyLine(): Line {
-  return { med: null, ammNumber: '', qty: 1, species: '', indication: '', durationDays: 5 }
+  return { med: null, ammNumber: '', qty: 1, species: '', indication: '', durationDays: 5, posology: '' }
 }
 
 const lines = ref<Line[]>([emptyLine()])
@@ -277,7 +287,7 @@ const canSubmit = computed(() =>
     if (!l.med?.id) return true
     if (!l.ammNumber || !(l.qty > 0)) return false
     if (l.med.raw?.isAntibiotic) {
-      return !!l.species.trim() && !!l.indication.trim() && l.durationDays > 0
+      return !!l.species.trim() && !!l.indication.trim() && l.durationDays > 0 && !!l.posology.trim()
     }
     return true
   }),
@@ -304,6 +314,7 @@ function linesSnapshot() {
     species: l.species,
     indication: l.indication,
     durationDays: l.durationDays,
+    posology: l.posology,
   })))
 }
 
@@ -343,6 +354,9 @@ function onMedSelected(line: Line, med: ProComboboxItem | null) {
     }
     if (!line.durationDays || line.durationDays < 1) {
       line.durationDays = 5
+    }
+    if (!line.posology.trim()) {
+      line.posology = t('pharmacy.daf.vamregPosologyDefault')
     }
   }
 }
@@ -387,6 +401,7 @@ function buildItems() {
           species: l.species,
           indication: l.indication,
           durationDays: l.durationDays,
+          posology: l.posology,
         }
       }
       return item
@@ -424,6 +439,7 @@ function applyDoc(doc: any) {
       species: String(payload.species || ''),
       indication: String(payload.indication || ''),
       durationDays: Number(payload.durationDays) || 5,
+      posology: String(payload.posology || ''),
     } as Line
   })
   markClean()

@@ -1,9 +1,9 @@
 # 27 — Pharmacie vétérinaire Belgique (Phase 1)
 
 Document de **mise en place** (architecture, modèle, API, infra, sprints).  
-**Statut** : spécification — **non implémenté** dans le code au moment de la rédaction.
+**Statut** : **livré sous flag `dev`** (`PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED`) — tag `nav.tagDev` jusqu’à décision GA. Suivi d’exécution : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) (~92 % Phase 1) · roadmap [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md).
 
-Plan d’exécution **tracé** (fait / partiel / à faire) : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) — S0 spec ✅ · code métier ⬜ · migrations cibles **000081+** (les numéros 000039–000042 de ce doc sont obsolètes : déjà utilisés par d’autres features).
+Migrations cibles **000081+** (les numéros 000039–000042 cités plus bas dans l’historique de ce doc sont obsolètes : déjà utilisés par d’autres features).
 
 Ne confondre pas avec l’addon **Care+** (rappels médicaments côté client Flutter) : ce module est une **pharmacie cabinet** (Pro Nuxt), multi-tenant `practice_id`, alignée sur les contraintes belges (CNK / AFMPS, DAF, VAMReg).
 
@@ -425,7 +425,7 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Staging `pharmacy.afmps
 | **2 — Revue humaine** | Admin UI ou CLI : KPIs + exclude lignes ; **Marquer revu** | `reviewed` |
 | **3 — Commit** | Confirm `IMPORT AFMPS` (ou `IMPORT_AFMPS`) ; upsert lignes `ready` (transactionnel) ; `afmps_meta` **fusionné** (`\|\|`, clés AFMPS priorisées) ; `--deactivate-missing` **opt-in** après affichage du compteur | `completed` |
 
-Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PHARMACY_ENABLED`) · e2e `23-afmps-admin`.
+Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PHARMACY_ENABLED`) · e2e `23-afmps-admin` (fixture `nuxtjs/tests/e2e/fixtures/afmps-mini.csv`) · runbook ops [38](38-RUNBOOK-PHARMACIE-CABINET.md) § Import AFMPS.
 
 UI gate 2 : checkbox d’accusé de revue + filtres collision (`insert` / `update` / …) — l’accusé est **UI-only** (CLI/`mark-reviewed` API reste libre pour ops). Commit fusionne `afmps_meta` (clés AFMPS priorisées). Staging rows via `COPY`.
 

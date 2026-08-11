@@ -60,7 +60,7 @@ func TestValidateVamregPayload(t *testing.T) {
 	if err := pharmacy.ValidateVamregPayload(json.RawMessage(`{}`)); err == nil {
 		t.Fatal("want incomplete")
 	}
-	ok := json.RawMessage(`{"species":"dog","indication":"inf","durationDays":5}`)
+	ok := json.RawMessage(`{"species":"dog","indication":"inf","durationDays":5,"posology":"1x/j"}`)
 	if err := pharmacy.ValidateVamregPayload(ok); err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func (f *fakeVamregStore) BuildVamregDeclareRequest(ctx context.Context, practic
 	}
 	return pharmacy.VamregDeclareRequest{
 		DAFID: dafID, PracticeID: practiceID,
-		Lines: []pharmacy.VamregLine{{MedicationCNK: "1", Qty: 1, Payload: json.RawMessage(`{"species":"dog","indication":"x","durationDays":1}`)}},
+		Lines: []pharmacy.VamregLine{{MedicationCNK: "1", Qty: 1, Payload: json.RawMessage(`{"species":"dog","indication":"x","durationDays":1,"posology":"1x/j"}`)}},
 	}, nil
 }
 func (f *fakeVamregStore) GetDAFVamregGate(ctx context.Context, practiceID, dafID string) (status, vamreg string, hasAB bool, err error) {

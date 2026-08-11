@@ -56,18 +56,20 @@ type MedicationBatch struct {
 }
 
 type StockMovement struct {
-	ID           string  `json:"id"`
-	PracticeID   string  `json:"practiceId"`
-	BatchID      string  `json:"batchId"`
-	Delta        float64 `json:"delta"`
-	Reason       string  `json:"reason"`
-	ReasonDetail string  `json:"reasonDetail,omitempty"`
-	DafID        string  `json:"dafId,omitempty"`
-	DafItemID    string  `json:"dafItemId,omitempty"`
-	LotNumber    string  `json:"lotNumber,omitempty"`
-	ExpiresOn    string  `json:"expiresOn,omitempty"`
-	CreatedBy    string  `json:"createdBy,omitempty"`
-	CreatedAt    string  `json:"createdAt"`
+	ID             string  `json:"id"`
+	PracticeID     string  `json:"practiceId"`
+	BatchID        string  `json:"batchId"`
+	Delta          float64 `json:"delta"`
+	Reason         string  `json:"reason"`
+	ReasonDetail   string  `json:"reasonDetail,omitempty"`
+	DafID          string  `json:"dafId,omitempty"`
+	DafItemID      string  `json:"dafItemId,omitempty"`
+	LotNumber      string  `json:"lotNumber,omitempty"`
+	ExpiresOn      string  `json:"expiresOn,omitempty"`
+	MedicationCNK  string  `json:"medicationCnk,omitempty"`
+	MedicationName string  `json:"medicationName,omitempty"`
+	CreatedBy      string  `json:"createdBy,omitempty"`
+	CreatedAt      string  `json:"createdAt"`
 }
 
 type ListMovementsFilter struct {
@@ -267,6 +269,9 @@ func (s *Store) CreateMedicationDeposit(ctx context.Context, practiceID, name, c
 		uuid.NewString(), practiceID, name, code, isDefault,
 	).Scan(&d.ID, &d.PracticeID, &d.Name, &d.Code, &d.IsDefault)
 	if err != nil {
+		if isUniqueViolationConstraint(err, "medication_deposits_practice_id_code") {
+			return MedicationDeposit{}, ErrConflict
+		}
 		return MedicationDeposit{}, err
 	}
 	return d, tx.Commit(ctx)
@@ -385,10 +390,11 @@ func (s *Store) GetMedicationBatch(ctx context.Context, practiceID, batchID stri
 }
 
 type ListBatchesFilter struct {
-	DepositID string
-	Band      string // ok|soon|return|critical|expired|quarantine|all
-	Status    string
-	Q         string
+	DepositID    string
+	MedicationID string
+	Band         string // ok|soon|return|critical|expired|quarantine|all
+	Status       string
+	Q            string
 }
 
 func (s *Store) ListMedicationBatches(ctx context.Context, practiceID string, f ListBatchesFilter) ([]MedicationBatch, error) {
@@ -409,8 +415,9 @@ func (s *Store) ListMedicationBatches(ctx context.Context, practiceID string, f 
 		  AND ($2 = '' OR b.deposit_id::text = $2)
 		  AND ($3 = '' OR b.status = $3)
 		  AND ($4 = '' OR m.name_normalized ILIKE '%' || $4 || '%' OR m.cnk ILIKE '%' || $4 || '%' OR b.lot_number ILIKE '%' || $4 || '%')
+		  AND ($5 = '' OR b.medication_id::text = $5)
 		ORDER BY b.expires_on ASC, m.name ASC`,
-		practiceID, f.DepositID, f.Status, strings.ToLower(strings.TrimSpace(f.Q)),
+		practiceID, f.DepositID, f.Status, strings.ToLower(strings.TrimSpace(f.Q)), strings.TrimSpace(f.MedicationID),
 	)
 	if err != nil {
 		return nil, err
@@ -800,9 +807,11 @@ func (s *Store) ListStockMovements(ctx context.Context, practiceID string, filte
 		       COALESCE(m.reason_detail,''),
 		       COALESCE(m.daf_id::text,''), COALESCE(m.daf_item_id::text,''),
 		       COALESCE(b.lot_number,''), COALESCE(b.expires_on::text,''),
+		       COALESCE(rm.cnk,''), COALESCE(rm.name,''),
 		       COALESCE(m.created_by::text,''), m.created_at::text
 		FROM pharmacy.stock_movements m
-		JOIN pharmacy.medication_batches b ON b.id = m.batch_id
+		LEFT JOIN pharmacy.medication_batches b ON b.id = m.batch_id
+		LEFT JOIN pharmacy.ref_medications rm ON rm.id = b.medication_id
 		WHERE m.practice_id = $1
 		  AND ($2 = '' OR m.daf_id::text = $2)
 		ORDER BY m.created_at DESC
@@ -816,7 +825,8 @@ func (s *Store) ListStockMovements(ctx context.Context, practiceID string, filte
 		var m StockMovement
 		if err := rows.Scan(
 			&m.ID, &m.PracticeID, &m.BatchID, &m.Delta, &m.Reason, &m.ReasonDetail,
-			&m.DafID, &m.DafItemID, &m.LotNumber, &m.ExpiresOn, &m.CreatedBy, &m.CreatedAt,
+			&m.DafID, &m.DafItemID, &m.LotNumber, &m.ExpiresOn,
+			&m.MedicationCNK, &m.MedicationName, &m.CreatedBy, &m.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

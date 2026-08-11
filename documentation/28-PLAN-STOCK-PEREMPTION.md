@@ -7,8 +7,8 @@
 | Statut global | **~92 % Phase 1** — S0–S4 ✅ · S5 ⏸ (reseller Billit) · S6 ✅ (smoke staging) |
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
-| Dernière revue | 2026-07-29 (Prio 2 polish : digests skip/lundi + copy quarantaine / Stock cabinet) |
-| Prochaine action | **S5** dès accès reseller Billit (**P0-2** — en attente, pas de code) ; Phase 2.F / 4.A–B / 4.E / Phase 5 attend P0 ; GA tag `dev` = décision produit |
+| Dernière revue | 2026-08-11 (UI stock mouvements / prix / seuils / settings + posologie VAMReg) |
+| Prochaine action | **S5** dès accès reseller Billit (**P0-2**) ; VAMReg write live (**P0-1**) ; catalogue national (**P0-3**) ; GA tag `dev` = décision produit |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
 

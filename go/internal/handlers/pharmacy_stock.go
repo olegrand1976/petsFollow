@@ -32,6 +32,7 @@ func (a *API) registerPharmacyStockRoutes(pr chi.Router) {
 	pr.Put("/vet/pharmacy/prices/{medicationId}", a.putPharmacyPrice)
 	pr.Get("/vet/pharmacy/prices/{medicationId}", a.getPharmacyPrice)
 	pr.Put("/vet/pharmacy/reorder-thresholds", a.putPharmacyReorderThreshold)
+	pr.Get("/vet/pharmacy/reorder-thresholds", a.getPharmacyReorderThreshold)
 	pr.Get("/vet/pharmacy/reorder-alerts", a.listPharmacyReorderAlerts)
 }
 
@@ -209,10 +210,11 @@ func (a *API) listPharmacyBatches(w http.ResponseWriter, r *http.Request) {
 	}
 	q := r.URL.Query()
 	items, err := a.store.ListMedicationBatches(r.Context(), id.PracticeID, store.ListBatchesFilter{
-		DepositID: q.Get("depositId"),
-		Band:      q.Get("band"),
-		Status:    q.Get("status"),
-		Q:         q.Get("q"),
+		DepositID:    q.Get("depositId"),
+		MedicationID: q.Get("medicationId"),
+		Band:         q.Get("band"),
+		Status:       q.Get("status"),
+		Q:            q.Get("q"),
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -586,6 +588,36 @@ func (a *API) putPharmacyReorderThreshold(w http.ResponseWriter, r *http.Request
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, th)
+}
+
+func (a *API) getPharmacyReorderThreshold(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	medicationID := strings.TrimSpace(r.URL.Query().Get("medicationId"))
+	if medicationID == "" {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		return
+	}
+	th, found, err := a.store.GetReorderThreshold(r.Context(), id.PracticeID, medicationID)
+	if err != nil {
+		if a.writePharmacyErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !found {
+		httpx.WriteData(w, http.StatusOK, map[string]any{"found": false, "minQty": 5})
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"found": true, "id": th.ID, "medicationId": th.MedicationID, "minQty": th.MinQty,
+	})
 }
 
 func (a *API) listPharmacyReorderAlerts(w http.ResponseWriter, r *http.Request) {

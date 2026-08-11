@@ -61,7 +61,11 @@
           </div>
           <div>
             <label class="pro-label">{{ $t('pharmacy.daf.vamregDuration') }}</label>
-            <input v-model.number="line.durationDays" type="number" min="1" class="pro-input" />
+            <input v-model.number="line.durationDays" type="number" min="1" class="pro-input" data-testid="daf-vamreg-duration" />
+          </div>
+          <div>
+            <label class="pro-label">{{ $t('pharmacy.daf.vamregPosology') }}</label>
+            <input v-model="line.posology" class="pro-input" data-testid="daf-vamreg-posology" />
           </div>
         </template>
       </div>
@@ -215,12 +219,13 @@ type Line = {
   species: string
   indication: string
   durationDays: number
+  posology: string
 }
 
 const lines = ref<Line[]>([emptyLine()])
 
 function emptyLine(): Line {
-  return { med: null, ammNumber: '', qty: 1, species: '', indication: '', durationDays: 5 }
+  return { med: null, ammNumber: '', qty: 1, species: '', indication: '', durationDays: 5, posology: '' }
 }
 
 function addLine() {
@@ -231,7 +236,7 @@ const canSubmit = computed(() =>
   lines.value.every((l) => {
     if (!l.med?.id || !l.ammNumber || !(l.qty > 0)) return false
     if (l.med.raw?.isAntibiotic) {
-      return !!l.species.trim() && !!l.indication.trim() && l.durationDays > 0
+      return !!l.species.trim() && !!l.indication.trim() && l.durationDays > 0 && !!l.posology.trim()
     }
     return true
   }),
@@ -291,6 +296,7 @@ function applyDraftDoc(doc: any) {
     species: '',
     indication: '',
     durationDays: 5,
+    posology: '',
   }))
   for (let i = 0; i < lines.value.length; i++) {
     const raw = doc.items[i]?.vamregPayload
@@ -298,6 +304,7 @@ function applyDraftDoc(doc: any) {
     lines.value[i].species = String(raw.species || '')
     lines.value[i].indication = String(raw.indication || '')
     lines.value[i].durationDays = Number(raw.durationDays) || 5
+    lines.value[i].posology = String(raw.posology || '')
   }
   return true
 }
@@ -350,6 +357,12 @@ function onMedSelected(line: Line, med: ProComboboxItem | null) {
   if (raw.isAntibiotic && !line.indication.trim()) {
     line.indication = t('clients.consultation.vamregIndicationDefault')
   }
+  if (raw.isAntibiotic && (!line.durationDays || line.durationDays < 1)) {
+    line.durationDays = 5
+  }
+  if (raw.isAntibiotic && !line.posology.trim()) {
+    line.posology = t('pharmacy.daf.vamregPosologyDefault')
+  }
 }
 
 watch(
@@ -390,6 +403,7 @@ function buildItems() {
         species: l.species,
         indication: l.indication,
         durationDays: l.durationDays,
+        posology: l.posology,
       }
     }
     return item

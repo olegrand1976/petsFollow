@@ -53,6 +53,18 @@ func TestPharmacyFoodChainAndWithdrawal(t *testing.T) {
 		t.Fatalf("practice overlay missing meat days %#v", merged)
 	}
 
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/medications/"+medID, tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get medication %d %#v", code, env)
+	}
+	gotMed := dataMap(t, env)
+	if gotMed["cnk"] == nil || gotMed["id"] != medID {
+		t.Fatalf("get medication payload %#v", gotMed)
+	}
+	if gotMed["withdrawalMeatDays"] == nil || int(gotMed["withdrawalMeatDays"].(float64)) != meat {
+		t.Fatalf("GET medication missing overlay %#v", gotMed)
+	}
+
 	// Spirit (seed horse) — set food_producing
 	petsCode, petsEnv := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pets", tok, nil)
 	if petsCode != http.StatusOK {

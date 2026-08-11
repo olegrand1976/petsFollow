@@ -24,7 +24,11 @@
       <ProCard class="pro-mb-lg" data-testid="admin-afmps-gates">
         <h3 class="pro-mb-md">{{ $t('admin.afmps.gatesTitle') }}</h3>
         <p class="pro-hint">{{ $t('admin.afmps.gate1') }} → {{ $t('admin.afmps.gate2') }} → {{ $t('admin.afmps.gate3') }}</p>
-        <p class="pro-mt-md">
+        <p
+          class="pro-mt-md"
+          data-testid="admin-afmps-job-status"
+          :data-status="job.status"
+        >
           <ProBadge :variant="statusVariant(job.status)">{{ statusLabel(job.status) }}</ProBadge>
         </p>
         <p v-if="job.status === 'blocked'" class="pro-hint pro-hint--error pro-mt-md">{{ $t('admin.afmps.blockedHint') }}</p>

@@ -4,10 +4,10 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 4.C/4.D/4.F ✅ · S6 ✅ (smoke staging) · 2.F / S5 / Phase 3 gelés (P0) |
+| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ (API) · dette UI cabinet en cours · 4.C/4.D/4.F ✅ · S6 ✅ · 2.F ops / S5 / Phase 3 gelés (P0) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
-| Dernière revue | 2026-07-29 (client VAMReg AFMPS readonly — [39](39-VAMREG-AFMPS-READONLY.md)) |
+| Dernière revue | 2026-08-11 (audit A–D + UI stock mouvements/prix/seuils/settings) |
 
 **Hors scope** (retour véto clinique / offline) : normes vitals, templates dentaires UGent, canvas protocoles, mode offline Flutter — backlog séparé.
 
@@ -74,13 +74,13 @@ Objectif : tourner sans Excel (hors EDI).
 
 | ID | Chantier | Contenu | Done when |
 |----|----------|---------|-----------|
-| 2.A | Catalogue prix practice | Prix achat / vente HT + TVA par CNK | ✅ API `PUT/GET …/prices` + table `medication_prices` |
-| 2.B | Seuils & alertes réassort | Seuil min + `GET …/reorder-alerts` | ✅ API + table `reorder_thresholds` |
+| 2.A | Catalogue prix practice | Prix achat / vente HT + TVA par CNK | ✅ API + **UI** `/stock` (carte prix) |
+| 2.B | Seuils & alertes réassort | Seuil min + `GET …/reorder-alerts` | ✅ API + **UI** édition seuil + alertes |
 | 2.C | Commandes internes | Brouillon + e-mail fournisseur (CSV) | ✅ API `orders` + UI `/stock` + `SendVetAlertWithCSV` |
 | 2.D | Réception enrichie | BL manuel (n°, fournisseur, lignes → lots) + notif | ✅ API `delivery-notes` + UI BL optionnel |
 | 2.E | Inventaire annuel | Session, écarts → adjust, export | ✅ API `inventory/sessions` + UI `/stock` + CSV |
-| 2.F | Import CNK national | Pipeline AFMPS + maj planifiée | ⏸ **Attend P0-3** |
-| — | Dette UI | Découpe [`stock/index.vue`](../nuxtjs/pages/stock/index.vue) + composable / composants `pharmacy/Stock*` | ✅ |
+| 2.F | Import CNK national | Pipeline AFMPS admin/CLI ✅ · catalogue national + maj planifiée | ⏸ **Attend P0-3** (ops/licence — pas le code pipeline) |
+| — | UI journal / settings | Mouvements, waste reasons, settings expiry, adjust manuel | ✅ composants `pharmacy/Stock*` |
 
 **Dépendances** : P0-3 pour 2.F ; 2.A utile à Phase 3.
 

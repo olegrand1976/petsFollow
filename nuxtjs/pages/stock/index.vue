@@ -32,6 +32,37 @@
       @select="setBand"
     />
 
+    <PharmacyStockDepositsCard
+      v-if="canWritePharmacy || deposits.length"
+      v-model:form="depositForm"
+      :deposits="deposits"
+      :can-write="canWritePharmacy"
+      :busy="busyDeposit"
+      :msg="depositMsg"
+      @create="createDeposit"
+    />
+
+    <PharmacyStockSettingsCard
+      v-if="canWritePharmacy"
+      :settings="settings"
+      :busy="busySettings"
+      :msg="settingsMsg"
+      @update:settings="Object.assign(settings, $event)"
+      @save="saveSettings"
+    />
+
+    <PharmacyStockPricingCard
+      v-if="canWritePharmacy"
+      :selected-med="pricingMed"
+      :form="pricingForm"
+      :busy="busyPricing"
+      :msg="pricingMsg"
+      :search-fn="searchMedications"
+      @update:selected-med="onPricingMedChange"
+      @update:form="Object.assign(pricingForm, $event)"
+      @save="savePricing"
+    />
+
     <PharmacyStockReorderCard
       v-if="canWritePharmacy && reorderAlerts.length"
       :alerts="reorderAlerts"
@@ -67,22 +98,33 @@
       :busy="busyReceipt"
       :can-receive="canReceive"
       :soft-warn="softWarn"
+      :deposits="deposits"
       :search-fn="searchMedications"
       @receive="receive"
     />
 
     <PharmacyStockBatchesTable
       :batches="batches"
+      :deposits="deposits"
+      :deposit-filter="depositFilter"
       :query="q"
       :busy="busy || busyBatchAction"
       :can-write="canWritePharmacy"
       :band-variant="bandVariant"
       :band-label="bandLabel"
       @update:query="q = $event"
+      @update:deposit-filter="setDepositFilter"
       @search="loadBatches"
       @refresh="refresh"
       @quarantine="quarantine"
       @waste="waste"
+      @adjust="adjust"
+    />
+
+    <PharmacyStockMovementsCard
+      :movements="movements"
+      :busy="busy"
+      @refresh="loadMovements"
     />
   </div>
 </template>
@@ -97,13 +139,21 @@ const {
   busyOrder,
   busyInventory,
   busyBatchAction,
+  busySettings,
+  busyPricing,
+  busyDeposit,
   error,
   softWarn,
   bandFilter,
+  depositFilter,
   q,
   selectedMed,
   receipt,
   batches,
+  movements,
+  deposits,
+  depositForm,
+  depositMsg,
   reorderAlerts,
   suppliers,
   orderSupplierId,
@@ -113,14 +163,22 @@ const {
   invSession,
   invCounts,
   invMsg,
+  settings,
+  settingsMsg,
+  pricingMed,
+  pricingForm,
+  pricingMsg,
   summary,
   bandCards,
   canReceive,
   bandVariant,
   bandLabel,
   setBand,
+  setDepositFilter,
   searchMedications,
   loadBatches,
+  loadMovements,
+  createDeposit,
   startInventory,
   onInvCountInput,
   closeInventory,
@@ -131,6 +189,10 @@ const {
   receive,
   quarantine,
   waste,
+  adjust,
+  saveSettings,
+  savePricing,
+  onPricingMedChange,
   exportCsv,
 } = usePharmacyStockPage()
 

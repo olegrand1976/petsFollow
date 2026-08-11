@@ -235,7 +235,7 @@ func TestPharmacyPlanCoverage(t *testing.T) {
 		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
 			"items": []map[string]any{{
 				"medicationId": abID, "qty": 1, "ammNumber": "BE-RP-1",
-				"vamregPayload": map[string]any{"species": "dog", "indication": "x", "durationDays": 3},
+				"vamregPayload": map[string]any{"species": "dog", "indication": "x", "durationDays": 3, "posology": "1x/j"},
 			}},
 		})
 		if code != http.StatusCreated {

@@ -67,7 +67,7 @@ print("receipt ok")
 
 item = {"medicationId": med_id, "qty": 1, "ammNumber": f"BE-S6-{suffix}"}
 if med.get("isAntibiotic"):
-    item["vamregPayload"] = {"species": "dog", "indication": "smoke", "durationDays": 3}
+    item["vamregPayload"] = {"species": "dog", "indication": "smoke", "durationDays": 3, "posology": "1x/j"}
 
 code, env = req("POST", "/api/v1/vet/pharmacy/daf", tok, {"items": [item]})
 if code != 201:

@@ -14,6 +14,7 @@ import (
 
 func (a *API) registerPharmacyMedicationRoutes(pr chi.Router) {
 	pr.Get("/vet/pharmacy/medications/search", a.searchPharmacyMedications)
+	pr.Get("/vet/pharmacy/medications/{id}", a.getPharmacyMedication)
 	pr.Patch("/vet/pharmacy/medications/{id}/withdrawal", a.patchPharmacyMedicationWithdrawal)
 	pr.Patch("/vet/pets/{petID}/food-chain", a.patchVetPetFoodChain)
 }
@@ -48,6 +49,27 @@ func (a *API) searchPharmacyMedications(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// GET /vet/pharmacy/medications/{id} — national ref merged with practice withdrawal overlay.
+func (a *API) getPharmacyMedication(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	med, err := a.store.GetRefMedicationForPractice(r.Context(), id.PracticeID, chi.URLParam(r, "id"))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, med)
 }
 
 func (a *API) patchPharmacyMedicationWithdrawal(w http.ResponseWriter, r *http.Request) {

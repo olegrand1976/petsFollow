@@ -200,6 +200,31 @@ func (s *Store) UpsertReorderThreshold(ctx context.Context, practiceID, medicati
 	return out, nil
 }
 
+// GetReorderThreshold returns the practice-wide threshold (deposit_id IS NULL) for a medication.
+// ok=false when unset.
+func (s *Store) GetReorderThreshold(ctx context.Context, practiceID, medicationID string) (ReorderThreshold, bool, error) {
+	medicationID = strings.TrimSpace(medicationID)
+	if practiceID == "" || medicationID == "" {
+		return ReorderThreshold{}, false, ErrValidation
+	}
+	var out ReorderThreshold
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, practice_id::text, medication_id::text, COALESCE(deposit_id::text,''),
+		       min_qty::float8, updated_at::text
+		FROM pharmacy.reorder_thresholds
+		WHERE practice_id = $1 AND medication_id = $2 AND deposit_id IS NULL
+		LIMIT 1`, practiceID, medicationID).Scan(
+		&out.ID, &out.PracticeID, &out.MedicationID, &out.DepositID, &out.MinQty, &out.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ReorderThreshold{}, false, nil
+	}
+	if err != nil {
+		return ReorderThreshold{}, false, err
+	}
+	return out, true, nil
+}
+
 // ListReorderAlerts returns medications whose active on-hand qty is below threshold.
 func (s *Store) ListReorderAlerts(ctx context.Context, practiceID string) ([]ReorderAlert, error) {
 	rows, err := s.pool.Query(ctx, `

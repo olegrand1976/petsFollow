@@ -132,3 +132,19 @@ func TestPharmacyFEFOAndExpiry(t *testing.T) {
 		t.Fatalf("waste: %v", err)
 	}
 }
+
+func TestCreateMedicationDepositDuplicateCode(t *testing.T) {
+	st, ctx := pharmacyStockStore(t)
+	u, err := st.GetUserByEmail(ctx, "vet.demo@petsfollow.test")
+	if err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	code := "DUP" + time.Now().Format("150405")
+	if _, err := st.CreateMedicationDeposit(ctx, u.PracticeID, "Depot A", code, false); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	_, err = st.CreateMedicationDeposit(ctx, u.PracticeID, "Depot B", code, false)
+	if !errors.Is(err, store.ErrConflict) {
+		t.Fatalf("want ErrConflict, got %v", err)
+	}
+}

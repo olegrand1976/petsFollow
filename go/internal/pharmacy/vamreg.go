@@ -30,11 +30,15 @@ func FormatDAFNumber(year int, number int64) string {
 	return fmt.Sprintf("DAF-%d-%06d", year, number)
 }
 
+// VamregPosologyMaxLen caps posology payload size for VAMReg declare.
+const VamregPosologyMaxLen = 500
+
 // VamregPayload fields required before finalize on antibiotic lines.
 type VamregPayload struct {
 	Species      string `json:"species"`
 	Indication   string `json:"indication"`
 	DurationDays int    `json:"durationDays"`
+	Posology     string `json:"posology"`
 }
 
 // ValidateVamregPayload returns ErrDAFVAMRegIncomplete when required fields are missing.
@@ -46,7 +50,12 @@ func ValidateVamregPayload(raw json.RawMessage) error {
 	if err := json.Unmarshal(raw, &p); err != nil {
 		return ErrDAFVAMRegIncomplete
 	}
-	if strings.TrimSpace(p.Species) == "" || strings.TrimSpace(p.Indication) == "" || p.DurationDays <= 0 {
+	posology := strings.TrimSpace(p.Posology)
+	if strings.TrimSpace(p.Species) == "" ||
+		strings.TrimSpace(p.Indication) == "" ||
+		p.DurationDays <= 0 ||
+		posology == "" ||
+		len(posology) > VamregPosologyMaxLen {
 		return ErrDAFVAMRegIncomplete
 	}
 	return nil

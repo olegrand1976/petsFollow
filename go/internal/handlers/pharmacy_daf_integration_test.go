@@ -357,7 +357,7 @@ func TestPharmacyDAFVAMRegDryRun(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
 		"items": []map[string]any{{
 			"medicationId": abID, "qty": 1, "ammNumber": "BE-VAM-1",
-			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 7},
+			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 7, "posology": "1x/j"},
 		}},
 	})
 	if code != http.StatusCreated {
@@ -422,7 +422,7 @@ func TestPharmacyDAFCancelBlockedWhileVAMRegPending(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
 		"items": []map[string]any{{
 			"medicationId": abID, "qty": 1, "ammNumber": "BE-PEND-1",
-			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 5},
+			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 5, "posology": "1x/j"},
 		}},
 	})
 	if code != http.StatusCreated {

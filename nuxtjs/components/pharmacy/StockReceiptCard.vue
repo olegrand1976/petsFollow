@@ -10,6 +10,26 @@
         <label class="pro-label" for="stock-supplier">{{ $t('pharmacy.stock.supplierName') }}</label>
         <input id="stock-supplier" v-model="receipt.supplierName" class="pro-input" data-testid="stock-supplier">
       </div>
+      <div v-if="deposits.length > 1">
+        <label class="pro-label" for="stock-receipt-deposit">{{ $t('pharmacy.stock.deposit') }}</label>
+        <select
+          id="stock-receipt-deposit"
+          v-model="receipt.depositId"
+          class="pro-select"
+          data-testid="stock-receipt-deposit"
+        >
+          <option v-for="d in deposits" :key="d.id" :value="d.id">
+            {{ d.name }} ({{ d.code }}){{ d.isDefault ? ` — ${$t('pharmacy.stock.depositDefault')}` : '' }}
+          </option>
+        </select>
+      </div>
+      <p
+        v-else-if="deposits.length === 1"
+        class="pro-hint"
+        data-testid="stock-receipt-deposit-hint"
+      >
+        {{ $t('pharmacy.stock.depositSingleHint', { name: deposits[0].name, code: deposits[0].code }) }}
+      </p>
       <div>
         <label class="pro-label" for="stock-med">{{ $t('pharmacy.stock.medication') }}</label>
         <ProCombobox
@@ -44,6 +64,7 @@
 
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
+import type { PharmacyDeposit } from '~/composables/usePharmacyStockPage'
 
 export type StockReceiptForm = {
   lotNumber: string
@@ -51,6 +72,7 @@ export type StockReceiptForm = {
   qty: number
   noteNumber: string
   supplierName: string
+  depositId: string
 }
 
 const receipt = defineModel<StockReceiptForm>('receipt', { required: true })
@@ -60,6 +82,7 @@ defineProps<{
   busy: boolean
   canReceive: boolean
   softWarn: boolean
+  deposits: PharmacyDeposit[]
   searchFn: (q: string) => Promise<ProComboboxItem[]>
 }>()
 defineEmits<{ receive: [] }>()

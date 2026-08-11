@@ -1,5 +1,6 @@
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 import { pharmacyErrorMessage } from '~/utils/pharmacy-error'
+import { pharmacyPriceIsPersisted, type PharmacyWasteReason } from '~/utils/pharmacy-stock'
 
 export type PharmacySupplier = {
   id: string
@@ -45,6 +46,44 @@ export type PharmacyBatchRow = {
   expiryBand: string
 }
 
+export type PharmacyMovementRow = {
+  id: string
+  batchId: string
+  delta: number
+  reason: string
+  reasonDetail?: string
+  lotNumber?: string
+  medicationCnk?: string
+  medicationName?: string
+  createdAt: string
+}
+
+export type PharmacySettingsForm = {
+  autoQuarantineExpired: boolean
+  expiryDigestEnabled: boolean
+  notifyOnAutoQuarantine: boolean
+}
+
+export type PharmacyDeposit = {
+  id: string
+  name: string
+  code: string
+  isDefault: boolean
+}
+
+export type PharmacyDepositForm = {
+  name: string
+  code: string
+  isDefault: boolean
+}
+
+export type PharmacyPricingForm = {
+  purchasePriceCents: number
+  sellPriceCents: number
+  vatPercent: number
+  minQty: number
+}
+
 type MedRow = {
   id: string
   cnk: string
@@ -71,13 +110,21 @@ export function usePharmacyStockPage() {
   const busyOrder = ref(false)
   const busyInventory = ref(false)
   const busyBatchAction = ref(false)
+  const busySettings = ref(false)
+  const busyPricing = ref(false)
   const error = ref('')
   const softWarn = ref(false)
   const bandFilter = ref('all')
+  const depositFilter = ref('')
   const q = ref('')
   const selectedMed = ref<ProComboboxItem | null>(null)
-  const receipt = reactive({ lotNumber: '', expiresOn: '', qty: 1, noteNumber: '', supplierName: '' })
+  const receipt = reactive({ lotNumber: '', expiresOn: '', qty: 1, noteNumber: '', supplierName: '', depositId: '' })
   const batches = ref<PharmacyBatchRow[]>([])
+  const movements = ref<PharmacyMovementRow[]>([])
+  const deposits = ref<PharmacyDeposit[]>([])
+  const depositForm = ref<PharmacyDepositForm>({ name: '', code: '', isDefault: false })
+  const depositMsg = ref('')
+  const busyDeposit = ref(false)
   const reorderAlerts = ref<PharmacyReorderAlert[]>([])
   const suppliers = ref<PharmacySupplier[]>([])
   const orderSupplierId = ref('')
@@ -87,6 +134,22 @@ export function usePharmacyStockPage() {
   const invSession = ref<PharmacyInvSession | null>(null)
   const invCounts = ref<Record<string, number>>({})
   const invMsg = ref('')
+  const settingsMsg = ref('')
+  const pricingMsg = ref('')
+  const settings = reactive<PharmacySettingsForm>({
+    autoQuarantineExpired: true,
+    expiryDigestEnabled: true,
+    notifyOnAutoQuarantine: true,
+  })
+  const pricingMed = ref<ProComboboxItem | null>(null)
+  const pricingForm = reactive<PharmacyPricingForm>({
+    purchasePriceCents: 0,
+    sellPriceCents: 0,
+    vatPercent: 21,
+    minQty: 5,
+  })
+  const pricingHadExisting = ref(false)
+  const pricingLoadToken = ref(0)
   const summary = ref<Record<string, number>>({
     ok: 0, soon: 0, return: 0, critical: 0, expired: 0, quarantine: 0,
   })
@@ -128,6 +191,11 @@ export function usePharmacyStockPage() {
     loadBatches()
   }
 
+  function setDepositFilter(id: string) {
+    depositFilter.value = id
+    loadBatches()
+  }
+
   async function searchMedications(query: string): Promise<ProComboboxItem[]> {
     const res = await $fetch<any>('/api/vet/pharmacy/medications/search', { query: { q: query, limit: '20' } })
     const items = unwrapData<{ items?: MedRow[] }>(res)?.items ?? []
@@ -159,9 +227,193 @@ export function usePharmacyStockPage() {
       query: {
         band: bandFilter.value === 'all' ? undefined : bandFilter.value,
         q: q.value || undefined,
+        depositId: depositFilter.value || undefined,
       },
     })
     batches.value = unwrapData<{ items?: PharmacyBatchRow[] }>(res)?.items ?? []
+  }
+
+  async function loadDeposits() {
+    try {
+      const res = await $fetch<any>('/api/vet/pharmacy/deposits')
+      deposits.value = unwrapData<{ items?: PharmacyDeposit[] }>(res)?.items ?? []
+      const def = deposits.value.find(d => d.isDefault) || deposits.value[0]
+      if (def && !receipt.depositId) {
+        receipt.depositId = def.id
+      }
+      else if (receipt.depositId && !deposits.value.some(d => d.id === receipt.depositId)) {
+        receipt.depositId = def?.id || ''
+      }
+    }
+    catch (e: any) {
+      deposits.value = []
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorLoad')
+    }
+  }
+
+  async function createDeposit() {
+    if (!depositForm.value.name.trim() || !depositForm.value.code.trim()) return
+    busyDeposit.value = true
+    error.value = ''
+    depositMsg.value = ''
+    try {
+      await $fetch('/api/vet/pharmacy/deposits', {
+        method: 'POST',
+        body: {
+          name: depositForm.value.name.trim(),
+          code: depositForm.value.code.trim(),
+          isDefault: depositForm.value.isDefault,
+        },
+      })
+      depositForm.value = { name: '', code: '', isDefault: false }
+      depositMsg.value = t('pharmacy.stock.depositCreated')
+      await loadDeposits()
+    }
+    catch (e: any) {
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorDeposit')
+    }
+    finally {
+      busyDeposit.value = false
+    }
+  }
+
+  async function loadMovements() {
+    try {
+      const res = await $fetch<any>('/api/vet/pharmacy/movements', { query: { limit: '50' } })
+      movements.value = unwrapData<{ items?: PharmacyMovementRow[] }>(res)?.items ?? []
+    }
+    catch (e: any) {
+      movements.value = []
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorLoad')
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const res = await $fetch<any>('/api/vet/pharmacy/settings')
+      const data = unwrapData<Record<string, any>>(res)
+      settings.autoQuarantineExpired = data.autoQuarantineExpired !== false
+      settings.expiryDigestEnabled = data.expiryDigestEnabled !== false
+      settings.notifyOnAutoQuarantine = data.notifyOnAutoQuarantine !== false
+    }
+    catch {
+      /* keep defaults */
+    }
+  }
+
+  async function saveSettings() {
+    busySettings.value = true
+    error.value = ''
+    settingsMsg.value = ''
+    try {
+      await $fetch('/api/vet/pharmacy/settings', {
+        method: 'PATCH',
+        body: {
+          autoQuarantineExpired: settings.autoQuarantineExpired,
+          expiryDigestEnabled: settings.expiryDigestEnabled,
+          notifyOnAutoQuarantine: settings.notifyOnAutoQuarantine,
+        },
+      })
+      settingsMsg.value = t('pharmacy.stock.settingsSaved')
+    }
+    catch (e: any) {
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorSettings')
+    }
+    finally {
+      busySettings.value = false
+    }
+  }
+
+  async function loadPricingForMed(medicationId: string) {
+    const token = ++pricingLoadToken.value
+    pricingHadExisting.value = false
+    pricingForm.purchasePriceCents = 0
+    pricingForm.sellPriceCents = 0
+    pricingForm.vatPercent = 21
+    pricingForm.minQty = 5
+    try {
+      const [priceRes, thrRes] = await Promise.all([
+        $fetch<any>(`/api/vet/pharmacy/prices/${medicationId}`),
+        $fetch<any>('/api/vet/pharmacy/reorder-thresholds', { query: { medicationId } }),
+      ])
+      if (token !== pricingLoadToken.value) return
+      const price = unwrapData<{
+        purchasePriceCents?: number
+        sellPriceCents?: number
+        vatPercent?: number
+        updatedAt?: string
+      }>(priceRes)
+      pricingForm.purchasePriceCents = price.purchasePriceCents ?? 0
+      pricingForm.sellPriceCents = price.sellPriceCents ?? 0
+      pricingForm.vatPercent = price.vatPercent && price.vatPercent > 0 ? price.vatPercent : 21
+      pricingHadExisting.value = pharmacyPriceIsPersisted(price)
+      const thr = unwrapData<{ found?: boolean, minQty?: number }>(thrRes)
+      if (thr?.found && typeof thr.minQty === 'number') {
+        pricingForm.minQty = thr.minQty
+      }
+    }
+    catch (e: any) {
+      if (token !== pricingLoadToken.value) return
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorPricing')
+    }
+  }
+
+  async function onPricingMedChange(med: ProComboboxItem | null) {
+    pricingMed.value = med
+    if (!med?.id) {
+      pricingHadExisting.value = false
+      return
+    }
+    await loadPricingForMed(med.id)
+  }
+
+  async function savePricing() {
+    if (!pricingMed.value?.id) return
+    if (pricingForm.purchasePriceCents === 0 && pricingForm.sellPriceCents === 0) {
+      if (pricingHadExisting.value) {
+        if (!confirm(t('pharmacy.stock.pricingZeroConfirm'))) return
+      }
+      else if (!confirm(t('pharmacy.stock.pricingZeroNewConfirm'))) {
+        return
+      }
+    }
+    busyPricing.value = true
+    error.value = ''
+    pricingMsg.value = ''
+    let priceSaved = false
+    try {
+      await $fetch(`/api/vet/pharmacy/prices/${pricingMed.value.id}`, {
+        method: 'PUT',
+        body: {
+          purchasePriceCents: pricingForm.purchasePriceCents,
+          sellPriceCents: pricingForm.sellPriceCents,
+          vatPercent: pricingForm.vatPercent,
+        },
+      })
+      priceSaved = true
+      pricingHadExisting.value = true
+      await $fetch('/api/vet/pharmacy/reorder-thresholds', {
+        method: 'PUT',
+        body: {
+          medicationId: pricingMed.value.id,
+          minQty: pricingForm.minQty,
+        },
+      })
+      pricingMsg.value = t('pharmacy.stock.pricingSaved')
+      await loadReorderAlerts()
+    }
+    catch (e: any) {
+      if (priceSaved) {
+        error.value = pharmacyErr(e, 'pharmacy.stock.errorPricingThreshold')
+        pricingMsg.value = t('pharmacy.stock.pricingPartial')
+      }
+      else {
+        error.value = pharmacyErr(e, 'pharmacy.stock.errorPricing')
+      }
+    }
+    finally {
+      busyPricing.value = false
+    }
   }
 
   async function loadReorderAlerts() {
@@ -175,7 +427,6 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorReorderLoad')
     }
   }
-
 
   async function loadSuppliers() {
     try {
@@ -338,7 +589,16 @@ export function usePharmacyStockPage() {
     busy.value = true
     error.value = ''
     try {
-      await Promise.all([loadSummary(), loadBatches(), loadReorderAlerts(), loadSuppliers(), loadOpenInventory()])
+      await Promise.all([
+        loadSummary(),
+        loadBatches(),
+        loadMovements(),
+        loadReorderAlerts(),
+        loadSuppliers(),
+        loadOpenInventory(),
+        loadSettings(),
+        loadDeposits(),
+      ])
     }
     catch (e: any) {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorLoad')
@@ -392,6 +652,7 @@ export function usePharmacyStockPage() {
           notify: Boolean(userBL),
           items: [{
             medicationId: selectedMed.value.id,
+            depositId: receipt.depositId || undefined,
             lotNumber: receipt.lotNumber,
             expiresOn: receipt.expiresOn,
             qty: receipt.qty,
@@ -430,12 +691,29 @@ export function usePharmacyStockPage() {
     }
   }
 
-  async function waste(id: string) {
-    if (!confirm(t('pharmacy.stock.wasteConfirm'))) return
+  async function waste(id: string, reason: PharmacyWasteReason = 'expired') {
     busyBatchAction.value = true
     error.value = ''
     try {
-      await $fetch(`/api/vet/pharmacy/batches/${id}/waste`, { method: 'POST', body: { reason: 'expired' } })
+      await $fetch(`/api/vet/pharmacy/batches/${id}/waste`, { method: 'POST', body: { reason } })
+      await refresh()
+    }
+    catch (e: any) {
+      error.value = pharmacyErr(e, 'pharmacy.stock.errorAction')
+    }
+    finally {
+      busyBatchAction.value = false
+    }
+  }
+
+  async function adjust(id: string, delta: number) {
+    busyBatchAction.value = true
+    error.value = ''
+    try {
+      await $fetch(`/api/vet/pharmacy/batches/${id}/adjust`, {
+        method: 'POST',
+        body: { delta, detail: 'manual' },
+      })
       await refresh()
     }
     catch (e: any) {
@@ -457,13 +735,21 @@ export function usePharmacyStockPage() {
     busyOrder,
     busyInventory,
     busyBatchAction,
+    busySettings,
+    busyPricing,
     error,
     softWarn,
     bandFilter,
+    depositFilter,
     q,
     selectedMed,
     receipt,
     batches,
+    movements,
+    deposits,
+    depositForm,
+    depositMsg,
+    busyDeposit,
     reorderAlerts,
     suppliers,
     orderSupplierId,
@@ -473,14 +759,23 @@ export function usePharmacyStockPage() {
     invSession,
     invCounts,
     invMsg,
+    settings,
+    settingsMsg,
+    pricingMed,
+    pricingForm,
+    pricingMsg,
     summary,
     bandCards,
     canReceive,
     bandVariant,
     bandLabel,
     setBand,
+    setDepositFilter,
     searchMedications,
     loadBatches,
+    loadMovements,
+    loadDeposits,
+    createDeposit,
     startInventory,
     onInvCountInput,
     closeInventory,
@@ -491,6 +786,10 @@ export function usePharmacyStockPage() {
     receive,
     quarantine,
     waste,
+    adjust,
+    saveSettings,
+    savePricing,
+    onPricingMedChange,
     exportCsv,
   }
 }

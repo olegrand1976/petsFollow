@@ -248,7 +248,7 @@ test.describe('pharmacy ops (reorder + inventory + VAMReg)', { tag: ['@p1', '@ph
           qty: 1,
           ammNumber: 'BE-E2E-AB',
           unit: 'box',
-          vamregPayload: { species: 'dog', indication: 'infection', durationDays: 5 },
+          vamregPayload: { species: 'dog', indication: 'infection', durationDays: 5, posology: '1x/day' },
         }],
       },
     })
@@ -357,8 +357,23 @@ test.describe('pharmacy stock UI shell', { tag: ['@p1', '@pharmacy'] }, () => {
     await expect(page.getByTestId('stock-page')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('stock-page-dev-badge')).toBeVisible()
     await expect(page.getByTestId('stock-bands')).toBeVisible()
+    await expect(page.getByTestId('stock-settings')).toBeVisible()
+    await expect(page.getByTestId('stock-pricing')).toBeVisible()
     await expect(page.getByTestId('stock-receipt')).toBeVisible()
     await expect(page.getByTestId('stock-inventory')).toBeVisible()
     await expect(page.getByTestId('stock-batches')).toBeVisible()
+    await expect(page.getByTestId('stock-movements')).toBeVisible()
+    await expect(page.getByTestId('stock-deposits')).toBeVisible()
+    await expect(page.getByTestId('stock-receipt-deposit-hint')).toBeVisible()
+    await expect(page.getByTestId('stock-receipt-deposit')).toHaveCount(0)
+
+    const depCode = `E2E${Date.now()}${Math.floor(Math.random() * 1e6)}`
+    const createDep = await page.request.post('/api/vet/pharmacy/deposits', {
+      data: { name: `E2E Depot ${depCode}`, code: depCode, isDefault: false },
+    })
+    expect(createDep.ok()).toBeTruthy()
+    await page.reload()
+    await expect(page.getByTestId('stock-receipt-deposit')).toBeVisible()
+    await expect(page.getByTestId('stock-deposit-filter')).toBeVisible()
   })
 })
