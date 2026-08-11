@@ -20,6 +20,17 @@
 
     <p v-if="error" class="pro-alert pro-mb-md" data-testid="medicaments-error">{{ error }}</p>
 
+    <div
+      v-if="catalogReady && catalogTotal === 0"
+      class="pro-alert pro-mb-md"
+      data-testid="medicaments-catalog-empty"
+    >
+      {{ $t('pharmacy.medicaments.catalogEmpty') }}
+      <NuxtLink class="pro-link" to="/admin/afmps-imports" data-testid="medicaments-catalog-import-link">
+        {{ $t('pharmacy.medicaments.catalogEmptyLink') }}
+      </NuxtLink>
+    </div>
+
     <ProCard class="pro-mb-lg">
       <label class="pro-label" for="med-search">{{ $t('pharmacy.medicaments.searchLabel') }}</label>
       <ProCombobox
@@ -29,6 +40,100 @@
         :search-fn="searchMedications"
         data-testid="medicaments-search"
       />
+    </ProCard>
+
+    <ProCard class="pro-mb-lg" data-testid="medicaments-dictionary">
+      <div class="med-dict__head">
+        <h3>{{ $t('pharmacy.medicaments.dictionaryTitle') }}</h3>
+        <p v-if="catalogTotal > 0" class="pro-hint" data-testid="medicaments-catalog-total">
+          {{ $t('pharmacy.medicaments.catalogTotal', { count: catalogTotal }) }}
+        </p>
+      </div>
+
+      <nav class="med-alpha" :aria-label="$t('pharmacy.medicaments.dictionaryAlphabetAria')" data-testid="medicaments-alphabet">
+        <button
+          v-for="letter in MEDICAMENT_ALPHABET_LETTERS"
+          :key="letter"
+          type="button"
+          class="med-alpha__btn"
+          :class="{ 'is-active': activeLetter === letter }"
+          :disabled="!letterHasEntries(letterCounts, letter)"
+          :data-testid="`medicaments-letter-${letter === '#' ? 'hash' : letter}`"
+          @click="selectLetter(letter)"
+        >
+          {{ letter }}
+        </button>
+      </nav>
+
+      <p v-if="dictBusy" class="pro-hint" data-testid="medicaments-dict-loading">
+        {{ $t('pharmacy.medicaments.dictionaryLoading') }}
+      </p>
+      <div v-else-if="!dictItems.length" class="pro-empty" data-testid="medicaments-dict-empty">
+        {{ $t('pharmacy.medicaments.dictionaryEmpty') }}
+      </div>
+      <table v-else class="pro-table" data-testid="medicaments-dict-table">
+        <thead>
+          <tr>
+            <th>{{ $t('pharmacy.medicaments.colName') }}</th>
+            <th>{{ $t('pharmacy.medicaments.colCnk') }}</th>
+            <th>{{ $t('pharmacy.medicaments.colForm') }}</th>
+            <th>{{ $t('pharmacy.medicaments.colAtc') }}</th>
+            <th>{{ $t('pharmacy.medicaments.colLink') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in dictItems"
+            :key="row.id"
+            class="med-dict__row"
+            :class="{ 'is-selected': detail?.id === row.id }"
+            :data-testid="`medicaments-dict-row-${row.cnk}`"
+            @click="openFromDict(row)"
+          >
+            <td>
+              {{ row.name }}
+              <ProBadge v-if="row.isAntibiotic" variant="warning" class="med-dict__mini-badge">
+                {{ $t('pharmacy.antibioticWarning') }}
+              </ProBadge>
+            </td>
+            <td><code>{{ row.cnk }}</code></td>
+            <td>{{ row.pharmaceuticalForm || '—' }}</td>
+            <td>{{ row.atcCode || '—' }}</td>
+            <td>
+              <ProBadge v-if="row.cnk" variant="success" data-testid="medicaments-afmps-badge">
+                {{ $t('pharmacy.medicaments.badgeAfmps') }}
+              </ProBadge>
+              <ProBadge v-else variant="danger">{{ $t('pharmacy.medicaments.badgeUnlinked') }}</ProBadge>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="dictTotal > pageSize" class="med-dict__pager" data-testid="medicaments-dict-pager">
+        <ProButton
+          variant="secondary"
+          test-id="medicaments-dict-prev"
+          :disabled="dictBusy || dictOffset <= 0"
+          @click="pageDict(-1)"
+        >
+          {{ $t('pharmacy.medicaments.pagePrev') }}
+        </ProButton>
+        <span class="pro-hint" data-testid="medicaments-dict-page-label">
+          {{ $t('pharmacy.medicaments.pageLabel', {
+            from: dictOffset + 1,
+            to: Math.min(dictOffset + dictItems.length, dictTotal),
+            total: dictTotal,
+          }) }}
+        </span>
+        <ProButton
+          variant="secondary"
+          test-id="medicaments-dict-next"
+          :disabled="dictBusy || dictOffset + dictItems.length >= dictTotal"
+          @click="pageDict(1)"
+        >
+          {{ $t('pharmacy.medicaments.pageNext') }}
+        </ProButton>
+      </div>
     </ProCard>
 
     <ProCard v-if="detail" class="pro-mb-lg" data-testid="medicaments-detail">
@@ -41,8 +146,23 @@
             <span v-if="detail.atcCode"> · ATC {{ detail.atcCode }}</span>
             <span v-if="detail.ammNumber"> · AMM {{ detail.ammNumber }}</span>
           </p>
+          <p v-if="metaFields.manufacturer || metaFields.activeSubstance" class="pro-hint" data-testid="medicaments-detail-meta">
+            <span v-if="metaFields.manufacturer">{{ metaFields.manufacturer }}</span>
+            <span v-if="metaFields.manufacturer && metaFields.activeSubstance"> · </span>
+            <span v-if="metaFields.activeSubstance">{{ metaFields.activeSubstance }}</span>
+            <span v-if="metaFields.strength"> · {{ metaFields.strength }}</span>
+          </p>
         </div>
         <div class="med-detail__badges">
+          <ProBadge v-if="detail.cnk" variant="success" data-testid="medicaments-detail-afmps">
+            {{ $t('pharmacy.medicaments.badgeAfmps') }}
+          </ProBadge>
+          <ProBadge v-if="sourceKind === 'afmps'" variant="neutral" data-testid="medicaments-detail-source-afmps">
+            {{ $t('pharmacy.medicaments.sourceAfmps') }}
+          </ProBadge>
+          <ProBadge v-else-if="sourceKind === 'compendium'" variant="neutral" data-testid="medicaments-detail-source-compendium">
+            {{ $t('pharmacy.medicaments.sourceCompendium') }}
+          </ProBadge>
           <ProBadge v-if="detail.isAntibiotic" variant="warning">{{ $t('pharmacy.antibioticWarning') }}</ProBadge>
           <ProBadge v-if="detail.foodChainBanned" variant="danger">{{ $t('pharmacy.medicaments.foodChainBanned') }}</ProBadge>
         </div>
@@ -158,6 +278,15 @@
 
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
+import {
+  MEDICAMENT_ALPHABET_LETTERS,
+  afmpsSourceKind,
+  letterHasEntries,
+  normalizeMedicamentLetter,
+  parseAfmpsMeta,
+  parseLetterCounts,
+  type MedicamentLetter,
+} from '~/utils/medicaments-alphabet'
 import { pharmacyErrorMessage } from '~/utils/pharmacy-error'
 import { formatPharmacyCents, pharmacyPriceIsPersisted, pharmacyWithdrawalDays } from '~/utils/pharmacy-stock'
 
@@ -175,6 +304,16 @@ const busy = ref(false)
 const error = ref('')
 const wdMsg = ref('')
 const withdrawal = reactive({ meat: 0 as number | null, milk: 0 as number | null, eggs: 0 as number | null, banned: false })
+
+const pageSize = 50
+const activeLetter = ref<MedicamentLetter>('A')
+const dictItems = ref<MedRow[]>([])
+const dictTotal = ref(0)
+const dictOffset = ref(0)
+const dictBusy = ref(false)
+const letterCounts = ref(parseLetterCounts(undefined))
+const catalogTotal = ref(0)
+const catalogReady = ref(false)
 
 type MedRow = {
   id: string
@@ -199,6 +338,8 @@ type MedDetail = {
   withdrawalMilkDays?: number | null
   withdrawalEggsDays?: number | null
   foodChainBanned?: boolean
+  afmpsMeta?: unknown
+  afmpsSource?: string
 }
 
 type MedPrice = {
@@ -217,6 +358,9 @@ type MedBatch = {
   unit: string
   expiryBand: string
 }
+
+const metaFields = computed(() => parseAfmpsMeta(detail.value?.afmpsMeta))
+const sourceKind = computed(() => afmpsSourceKind(detail.value?.afmpsSource || metaFields.value.source))
 
 function unwrap<T>(res: any): T {
   return (res?.data ?? res) as T
@@ -255,6 +399,71 @@ async function searchMedications(q: string): Promise<ProComboboxItem[]> {
     badge: m.isAntibiotic ? t('pharmacy.antibioticWarning') : undefined,
     raw: m,
   }))
+}
+
+async function loadDictionary(letter: MedicamentLetter, offset = 0) {
+  dictBusy.value = true
+  error.value = ''
+  try {
+    const res = await $fetch<any>('/api/vet/pharmacy/medications', {
+      query: { letter, limit: String(pageSize), offset: String(offset) },
+    })
+    const data = unwrap<{
+      items?: MedRow[]
+      total?: number
+      letter?: string
+      letterCounts?: Record<string, unknown>
+      catalogTotal?: number
+    }>(res)
+    letterCounts.value = parseLetterCounts(data.letterCounts)
+    catalogTotal.value = data.catalogTotal ?? 0
+    catalogReady.value = true
+
+    const resolved = normalizeMedicamentLetter(data.letter) ?? letter
+    if (
+      offset === 0
+      && !letterHasEntries(letterCounts.value, resolved)
+      && catalogTotal.value > 0
+    ) {
+      const fallback = MEDICAMENT_ALPHABET_LETTERS.find((l) => letterHasEntries(letterCounts.value, l))
+      if (fallback && fallback !== resolved) {
+        await loadDictionary(fallback, 0)
+        return
+      }
+    }
+
+    dictItems.value = data.items ?? []
+    dictTotal.value = data.total ?? 0
+    dictOffset.value = offset
+    activeLetter.value = resolved
+  }
+  catch (e: any) {
+    dictItems.value = []
+    error.value = pharmacyErr(e, 'pharmacy.medicaments.errorLoad')
+  }
+  finally {
+    dictBusy.value = false
+  }
+}
+
+function selectLetter(letter: MedicamentLetter) {
+  if (!letterHasEntries(letterCounts.value, letter) && catalogReady.value && catalogTotal.value > 0) return
+  loadDictionary(letter, 0)
+}
+
+function pageDict(dir: -1 | 1) {
+  const next = dictOffset.value + dir * pageSize
+  if (next < 0 || next >= dictTotal.value) return
+  loadDictionary(activeLetter.value, next)
+}
+
+function openFromDict(row: MedRow) {
+  selected.value = {
+    id: row.id,
+    label: row.name,
+    hint: row.cnk,
+    raw: row,
+  }
 }
 
 async function loadDetail(id: string) {
@@ -321,6 +530,10 @@ watch(selected, (med) => {
     batches.value = []
   }
 })
+
+onMounted(() => {
+  loadDictionary('A', 0)
+})
 </script>
 
 <style scoped>
@@ -334,6 +547,60 @@ watch(selected, (med) => {
 .pharmacy-legal summary { cursor: pointer; font-weight: 600; }
 .pharmacy-legal__body { margin-top: 0.5rem; display: grid; gap: 0.35rem; }
 .pharmacy-legal__body p { margin: 0; font-size: 0.9rem; color: var(--pf-vet-muted); }
+.med-dict__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.med-dict__head h3 { margin: 0; }
+.med-alpha {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.85rem;
+  padding: 0.35rem 0;
+  background: var(--pf-vet-surface);
+}
+.med-alpha__btn {
+  min-width: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 6px;
+  background: var(--pf-vet-bg);
+  color: var(--pf-vet-primary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.med-alpha__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.med-alpha__btn.is-active {
+  background: var(--pf-vet-accent);
+  border-color: var(--pf-vet-accent);
+  color: #fff;
+}
+.med-dict__row { cursor: pointer; }
+.med-dict__row:hover { background: color-mix(in srgb, var(--pf-vet-accent) 8%, transparent); }
+.med-dict__row.is-selected { background: color-mix(in srgb, var(--pf-vet-accent) 14%, transparent); }
+.med-dict__mini-badge { margin-left: 0.35rem; }
+.med-dict__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
 .med-detail__head {
   display: flex;
   justify-content: space-between;

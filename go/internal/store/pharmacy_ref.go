@@ -30,6 +30,7 @@ type RefMedication struct {
 	WithdrawalEggsDays *int            `json:"withdrawalEggsDays,omitempty"`
 	FoodChainBanned    bool            `json:"foodChainBanned,omitempty"`
 	AFMPSMeta          json.RawMessage `json:"afmpsMeta,omitempty"`
+	AFMPSSource        string          `json:"afmpsSource,omitempty"`
 	UpdatedAt          string          `json:"updatedAt,omitempty"`
 }
 
@@ -113,6 +114,149 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 		out = append(out, m)
 	}
 	return out, rows.Err()
+}
+
+// ParseMedicationLetter validates a dictionary letter index: A–Z or "#".
+func ParseMedicationLetter(raw string) (string, bool) {
+	s := strings.TrimSpace(strings.ToUpper(raw))
+	if s == "#" {
+		return "#", true
+	}
+	if len(s) != 1 {
+		return "", false
+	}
+	c := s[0]
+	if c < 'A' || c > 'Z' {
+		return "", false
+	}
+	return s, true
+}
+
+func applyAFMPSMeta(m *RefMedication, meta []byte) {
+	if len(meta) == 0 || string(meta) == "null" || string(meta) == "{}" {
+		return
+	}
+	m.AFMPSMeta = json.RawMessage(meta)
+	var parsed map[string]any
+	if err := json.Unmarshal(meta, &parsed); err != nil {
+		return
+	}
+	if src, ok := parsed["source"].(string); ok {
+		m.AFMPSSource = strings.TrimSpace(src)
+	}
+}
+
+// ListRefMedicationsByLetter returns active dictionary rows for one letter index.
+// letter must be A–Z or "#" (non a–z first rune of name_normalized).
+func (s *Store) ListRefMedicationsByLetter(ctx context.Context, letter string, limit, offset int) ([]RefMedication, int, error) {
+	letter, ok := ParseMedicationLetter(letter)
+	if !ok {
+		return nil, 0, ErrValidation
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	var total int
+	var err error
+	if letter == "#" {
+		err = s.pool.QueryRow(ctx, `
+			SELECT count(*)::int FROM pharmacy.ref_medications
+			WHERE is_active AND left(name_normalized, 1) !~ '^[a-z]$'`).Scan(&total)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			SELECT count(*)::int FROM pharmacy.ref_medications
+			WHERE is_active AND left(name_normalized, 1) = lower($1)`, letter).Scan(&total)
+	}
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var rows pgx.Rows
+	if letter == "#" {
+		rows, err = s.pool.Query(ctx, `
+			SELECT id::text, cnk, name,
+			       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+			       COALESCE(amm_number, ''),
+			       is_antibiotic, is_active,
+			       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
+			       COALESCE(afmps_meta->>'source', '')
+			FROM pharmacy.ref_medications
+			WHERE is_active AND left(name_normalized, 1) !~ '^[a-z]$'
+			ORDER BY name ASC
+			LIMIT $1 OFFSET $2`, limit, offset)
+	} else {
+		rows, err = s.pool.Query(ctx, `
+			SELECT id::text, cnk, name,
+			       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+			       COALESCE(amm_number, ''),
+			       is_antibiotic, is_active,
+			       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned,
+			       COALESCE(afmps_meta->>'source', '')
+			FROM pharmacy.ref_medications
+			WHERE is_active AND left(name_normalized, 1) = lower($1)
+			ORDER BY name ASC
+			LIMIT $2 OFFSET $3`, letter, limit, offset)
+	}
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	out := make([]RefMedication, 0, limit)
+	for rows.Next() {
+		var m RefMedication
+		var atc, form, pack, amm, source string
+		if err := rows.Scan(&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
+			&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned, &source); err != nil {
+			return nil, 0, err
+		}
+		m.ATCCode = atc
+		m.PharmaceuticalForm = form
+		m.PackSize = pack
+		m.AMMNumber = amm
+		m.AFMPSSource = strings.TrimSpace(source)
+		out = append(out, m)
+	}
+	return out, total, rows.Err()
+}
+
+// CountRefMedicationsByLetter returns active counts keyed by A–Z / "#" plus catalogTotal.
+func (s *Store) CountRefMedicationsByLetter(ctx context.Context) (map[string]int, int, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			CASE
+				WHEN left(name_normalized, 1) ~ '^[a-z]$' THEN upper(left(name_normalized, 1))
+				ELSE '#'
+			END AS letter,
+			count(*)::int
+		FROM pharmacy.ref_medications
+		WHERE is_active
+		GROUP BY 1`)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int, 27)
+	for c := 'A'; c <= 'Z'; c++ {
+		counts[string(c)] = 0
+	}
+	counts["#"] = 0
+	total := 0
+	for rows.Next() {
+		var letter string
+		var n int
+		if err := rows.Scan(&letter, &n); err != nil {
+			return nil, 0, err
+		}
+		counts[letter] = n
+		total += n
+	}
+	return counts, total, rows.Err()
 }
 
 // GetRefMedicationByCNK returns an active national dictionary row by exact CNK.
