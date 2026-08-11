@@ -1,5 +1,5 @@
 /**
- * Item de nav Pro (offre / ops) vers `/flux`.
+ * Item de nav Pro (offre / contenu / ops) vers `/flux`.
  * Forme compatible `ProNavItem` (évite d’importer le SFC sidebar en tests unitaires).
  */
 export function productFlowsNavItem(

@@ -1,5 +1,5 @@
 /**
- * Item de nav Pro (offre / ops) vers `/presentation`.
+ * Item de nav Pro (offre / contenu / ops) vers `/presentation`.
  */
 export function presentationNavItem(
   label: string,

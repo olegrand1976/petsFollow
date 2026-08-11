@@ -90,6 +90,10 @@ export type ProNavIcon =
   | 'inventory_2'
   | 'local_shipping'
   | 'clinical_notes'
+  | 'tune'
+  | 'image'
+  | 'newspaper'
+  | 'menu_book'
 
 export type ProNavItem = {
   to: string
@@ -183,6 +187,10 @@ const icons: Record<ProNavIcon, string> = {
   inventory_2: 'inventory_2',
   local_shipping: 'local_shipping',
   clinical_notes: 'clinical_notes',
+  tune: 'tune',
+  image: 'image',
+  newspaper: 'newspaper',
+  menu_book: 'menu_book',
 }
 
 function iconName(name: ProNavIcon) {

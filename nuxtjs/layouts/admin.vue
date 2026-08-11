@@ -39,66 +39,73 @@ const shellReady = computed(() => !!user.value?.role)
 const isDevRole = computed(() => user.value?.role === 'dev')
 
 const navItems = computed<ProNavItem[]>(() => {
-  // DEV = support IT léger : tickets, users, flags (pas sales / brand / AI / billing).
-  if (isDevRole.value) {
-    // Pas de /usecases : middleware staging-usecases = admin/commercial/manager seulement.
-    return [
-      { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin', section: t('nav.section.ops') },
-      { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
-      { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
-      { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
-      ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
-        ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
-        : []),
-      ...(researchOn.value
-        ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
-        : []),
-    ]
-  }
-  return [
-    { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin', section: t('nav.section.ops') },
-    { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
-    { to: '/admin/client-imports', label: t('nav.adminClientImports'), icon: 'description', section: t('nav.section.ops') },
-    ...(pharmacyOn.value
-      ? [
-          { to: '/admin/afmps-imports', label: t('nav.adminAfmps'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') },
-          { to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') },
-        ]
-      : []),
-    { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: t('nav.section.ops') },
-    { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
-    { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
+  const ops = t('nav.section.ops')
+  const imports = t('nav.section.imports')
+  const content = t('nav.section.content')
+  const modules = t('nav.section.modules')
+  const salesForce = t('nav.section.salesForce')
+  const ai = t('nav.section.ai')
+  const billing = t('nav.section.billing')
+  const tagDev = t('nav.tagDev')
+
+  const opsItems: ProNavItem[] = [
+    { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin', section: ops },
+    { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: ops },
+    { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: ops },
+    { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: ops },
+  ]
+
+  const moduleItems: ProNavItem[] = [
     ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
-      ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image' as const, section: modules, tag: tagDev }]
       : []),
     ...(researchOn.value
-      ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      ? [{ to: '/admin/research', label: t('nav.adminResearch'), icon: 'analytics' as const, section: modules, tag: tagDev }]
       : []),
-    productFlowsNavItem(t('nav.productFlows'), t('nav.section.ops')),
-    { to: '/nouveautes', label: t('nav.nouveautes'), icon: 'newspaper', section: t('nav.section.ops') },
-    presentationNavItem(t('presentation.ui.navLabel'), t('nav.section.ops')),
+  ]
+
+  // DEV = support IT léger : tickets, users, flags (pas sales / brand / AI / billing).
+  // Pas de /usecases : middleware staging-usecases = admin/commercial/manager seulement.
+  if (isDevRole.value) {
+    return [...opsItems, ...moduleItems]
+  }
+
+  return [
+    ...opsItems,
+    { to: '/admin/client-imports', label: t('nav.adminClientImports'), icon: 'description', section: imports },
+    ...(pharmacyOn.value
+      ? [
+          { to: '/admin/afmps-imports', label: t('nav.adminAfmps'), icon: 'medication' as const, section: imports, tag: tagDev },
+          { to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication' as const, section: imports, tag: tagDev },
+        ]
+      : []),
+    { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: content },
+    productFlowsNavItem(t('nav.productFlows'), content),
+    { to: '/nouveautes', label: t('nav.nouveautes'), icon: 'newspaper', section: content },
+    presentationNavItem(t('presentation.ui.navLabel'), content),
     ...(isStagingLike.value
-      ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
+      ? [usecasesNavItem(t('nav.usecases'), content)]
       : []),
-    { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users', section: t('nav.section.salesForce') },
-    { to: '/admin/vet-pool', label: t('nav.adminVetPool'), icon: 'pets', section: t('nav.section.salesForce') },
-    { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: t('nav.section.salesForce') },
-    { to: '/admin/sales-branches', label: t('nav.adminSalesBranches'), icon: 'account_tree', section: t('nav.section.salesForce') },
-    { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: t('nav.section.salesForce') },
-    aiFlowsNavItem(t('nav.aiFlows'), t('nav.section.ai')),
-    { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
+    ...moduleItems,
+    { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users', section: salesForce },
+    { to: '/admin/vet-pool', label: t('nav.adminVetPool'), icon: 'pets', section: salesForce },
+    { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: salesForce },
+    { to: '/admin/sales-branches', label: t('nav.adminSalesBranches'), icon: 'account_tree', section: salesForce },
+    { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: salesForce },
+    aiFlowsNavItem(t('nav.aiFlows'), ai),
+    { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: ai },
     ...(isPublicFlagOn(runtimeConfig.public.aiCrAdvancedEnabled)
-      ? [{ to: '/admin/rag', label: t('nav.adminRag'), icon: 'menu_book', section: t('nav.section.ai'), tag: t('nav.tagDev') }]
+      ? [{ to: '/admin/rag', label: t('nav.adminRag'), icon: 'menu_book' as const, section: ai, tag: tagDev }]
       : []),
-    { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: t('nav.section.ai') },
-    { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments', section: t('nav.section.billing') },
+    { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: ai },
+    { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments', section: billing },
     ...(billitOn.value
-      ? [{ to: '/admin/invoicing', label: t('nav.adminInvoicing'), icon: 'receipt', section: t('nav.section.billing') }]
+      ? [{ to: '/admin/invoicing', label: t('nav.adminInvoicing'), icon: 'receipt' as const, section: billing }]
       : []),
-    { to: '/admin/stripe-catalog', label: t('nav.adminStripeCatalog'), icon: 'payments', section: t('nav.section.billing') },
-    { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments', section: t('nav.section.billing') },
-    { to: '/admin/commercial-commissions', label: t('nav.adminCommercialCommissions'), icon: 'payments', section: t('nav.section.billing') },
-    { to: '/admin/commercial-bonuses', label: t('nav.adminCommercialBonuses'), icon: 'payments', section: t('nav.section.billing') },
+    { to: '/admin/stripe-catalog', label: t('nav.adminStripeCatalog'), icon: 'payments', section: billing },
+    { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments', section: billing },
+    { to: '/admin/commercial-commissions', label: t('nav.adminCommercialCommissions'), icon: 'payments', section: billing },
+    { to: '/admin/commercial-bonuses', label: t('nav.adminCommercialBonuses'), icon: 'payments', section: billing },
   ]
 })
 
