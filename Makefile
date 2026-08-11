@@ -53,7 +53,7 @@ help:
 	@echo "  make gcp-invoicing-reconcile-scheduler  Scheduler horaire relecture factures en vol (INVOICING_RECONCILE_SECRET=…)"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
-	@echo "  make gcp-afmps-import-scheduler Scheduler mensuel gate 1 AFMPS (AFMPS_IMPORT_SECRET=…)"
+	@echo "  make gcp-afmps-import-scheduler Scheduler mensuel gate 1 AFMPS (AFMPS_IMPORT_SECRET=… ; PETSFOLLOW_GCP_ENV=prod pour prod)"
 	@echo "  make gcp-research-etl-scheduler Scheduler 6h ETL Research (RESEARCH_ETL_SECRET=… RESEARCH_ANON_SALT=…)"
 	@echo "  make gcp-vet-news-scheduler Scheduler veille news 06:00 (VET_NEWS_SECRET=…)"
 	@echo "  make gcp-product-digest-scheduler Scheduler digest produit 18:00 (PRODUCT_DIGEST_SECRET=…)"
@@ -101,14 +101,21 @@ migrate: env
 seed: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed
 
-# Import dictionnaire CNK. Ex.: make import-cnk FILE=go/testdata/cnk_sample.csv
-# Optionnel: ARGS='--dry-run' ou ARGS='--deactivate-missing'
-# FILE peut être relatif au repo ou absolu.
+# Import dictionnaire CNK (triple contrôle). Exemples :
+#   make import-cnk FILE=go/testdata/cnk_sample.csv ARGS='--validate'
+#   make import-cnk ARGS='--job=UUID --mark-reviewed'
+#   make import-cnk ARGS='--job=UUID --commit --confirm=IMPORT_AFMPS'
+# FILE relatif au repo ou absolu ; requis seulement pour --validate / --dry-run.
 import-cnk: env
-	@test -n "$(FILE)" || (echo "Usage: make import-cnk FILE=path.csv [ARGS='--dry-run']"; exit 1)
-	@CNK_FILE="$(FILE)"; \
-	  case "$$CNK_FILE" in /*) ;; *) CNK_FILE="$(CURDIR)/$$CNK_FILE" ;; esac; \
-	  set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api import-cnk --file=$$CNK_FILE $(ARGS)
+	@set -a && source $(ENV_FILE) && set +a && cd go && \
+	  if [ -n "$(FILE)" ]; then \
+	    CNK_FILE="$(FILE)"; \
+	    case "$$CNK_FILE" in /*) ;; *) CNK_FILE="$(CURDIR)/$$CNK_FILE" ;; esac; \
+	    GOTOOLCHAIN=local go run ./cmd/petsfollow-api import-cnk --file=$$CNK_FILE $(ARGS); \
+	  else \
+	    test -n "$(ARGS)" || (echo "Usage: make import-cnk FILE=path.csv ARGS='--validate' | ARGS='--job=UUID --mark-reviewed|commit…'" >&2; exit 1); \
+	    GOTOOLCHAIN=local go run ./cmd/petsfollow-api import-cnk $(ARGS); \
+	  fi
 
 seed-mass: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
@@ -322,6 +329,7 @@ gcp-sales-branches-scheduler:
 gcp-pharmacy-expiry-scheduler:
 	bash infra/gcp/setup-pharmacy-expiry-scheduler.sh
 
+# Prod : PETSFOLLOW_GCP_ENV=prod AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler
 gcp-afmps-import-scheduler:
 	bash infra/gcp/setup-afmps-import-scheduler.sh
 

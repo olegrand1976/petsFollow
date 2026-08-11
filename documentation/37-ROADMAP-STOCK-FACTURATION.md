@@ -4,7 +4,7 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F **staging** catalogue ✅ (prod à faire) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
+| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F catalogue ✅ (staging+prod) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
 | Dernière revue | 2026-08-11 (audit A–D + UI stock mouvements/prix/seuils/settings) |
@@ -21,7 +21,7 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 |----|----------|-------|--------|-------------------|
 | P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | 🟡 Client **readonly** listes OK ([39](39-VAMREG-AFMPS-READONLY.md)) · write déclaration + credentials live encore ouverts | Credentials SM + env test + ICD write |
 | P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente — aucun chantier S5/Phase 3 tant que credentials absents** | Credentials reseller → débloque S5 + Phase 3 |
-| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging** : CSV GCS + commit catalogue (~2738 CNK, 2026-08-11) · **prod** : même runbook à répéter | Critère staging atteint ; prod opt-in |
+| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging + prod** : CSV GCS + commit catalogue (~2738 CNK, 2026-08-11) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | Catalogue national en base staging/prod |
 | P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | ⬜ Ouvert | Spec figée avant Phase 4.B |
 | P0-5 | Contact / docs API **grossistes** (1 pilote : Covetrus / Alcyon / Crocodil) | Produit | ⬜ Ouvert | Scope Phase 5.A |
 | P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | ⬜ Ouvert | Décision build/buy écrite |
@@ -33,15 +33,70 @@ Actions ops / juridique à pousser **en parallèle** du code (pas de chantier te
 
 | ID | Prochaine action concrète | Bloque |
 |----|---------------------------|--------|
-| **P0-1** | Relancer AFMPS/VAMReg pour credentials **write** (ICD) + env test SM ; readonly déjà OK ([39](39-VAMREG-AFMPS-READONLY.md)) — suivi 2026-08-11 | 4.A production |
-| **P0-2** | Relancer Billit **accès reseller** (mail/compte) ; aucun code DAF→facture live tant qu’absent — suivi 2026-08-11 | 3.C–3.E, GA facture |
-| **P0-3** | ✅ Staging fait (CSV `afmps-imports/latest.csv` + job completed ~2738 CNK, scheduler mensuel) · reste **prod** (`petsfollow-media-prod` + secret/scheduler prod) | 2.F prod |
+| **P0-1** | **Relance ops (2026-08-11)** : mail AFMPS/VAMReg — demander credentials **write** ICD + accès env test + dépôt clé dans SM (`VAMREG_*`) ; readonly OK ([39](39-VAMREG-AFMPS-READONLY.md)). Tant qu’absent : garder `VAMREG_DRY_RUN=true`. | 4.A production |
+| **P0-2** | **Relance ops (2026-08-11)** : mail Billit — accès **reseller** (compte + credentials API) ; brancher SM puis dégeler `EnqueueInvoicesConnect`. Aucun code DAF→facture live tant qu’absent. | 3.C–3.E, GA facture |
+| **P0-3** | ✅ Staging + prod (CSV GCS + job completed ~2738 CNK, scheduler mensuel) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | — |
 | **P0-4** | Spec registre **stupéfiants BE** figée (champs, durée conservation, export) | 4.B |
 | **P0-5** | Contacter 1 grossiste pilote (docs API EDI) | 5.A |
 | **P0-6** | Décision écrite **build vs licence** Bigame/Vetcompendium notices | 5.B/C |
 | **P0-7** | Note juridique certif DAF vs disclaimer UI actuel | 4.E |
 
-**Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
+**Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` (revue dual-list + pagination) — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
+
+### Brokers mails partenaires (à envoyer hors repo)
+
+Relance ops **2026-08-11** — coller tel quel (adapter destinataire / signature).
+
+**P0-1 — VAMReg write**
+
+```
+Objet : petsFollow — accès API VAMReg déclaration (write) + env test
+
+Bonjour,
+
+Nous développons petsFollow (software house vétérinaire, Belgique).
+Le client API VAMReg en lecture seule (listes espèces / indications / substances)
+est déjà opérationnel côté produit (réf. interne doc 39-VAMREG-AFMPS-READONLY).
+
+Pour passer en déclaration live (ICD write), merci de nous communiquer :
+
+1. Credentials / certificat ICD **write** (environnement de test d’abord)
+2. URL(s) de l’environnement de test et procédure d’accès
+3. Calendrier / critères de go-live production
+4. Contacts techniques pour le dépôt des secrets (nous stockons côté Cloud Run
+   Secret Manager, variables VAMREG_*)
+
+Tant que ces éléments ne sont pas reçus, nous restons en VAMREG_DRY_RUN=true
+(aucune déclaration réelle).
+
+Merci d’avance,
+[Signature ops / juridique petsFollow]
+```
+
+**P0-2 — Billit reseller**
+
+```
+Objet : petsFollow — accès reseller API Billit
+
+Bonjour,
+
+petsFollow intègre déjà Billit côté code (mapping DAF → lignes de facture / BIL-9,
+préremplissage GET /practices/me/invoicing/prefill). Ce flux est **gelé** en attendant
+les accès reseller (réf. interne docs 33 / 34-BILLIT-RESELLER-TECH).
+
+Merci de nous fournir :
+
+1. Compte **reseller** (sandbox puis production)
+2. Credentials API (clés / tokens) et documentation d’auth
+3. Procédure Peppol / envoi cabinet → clients si applicable au modèle reseller
+4. Contact technique pour le branchement Secret Manager Cloud Run
+
+Dès réception, nous branchons les secrets et dégelons EnqueueInvoicesConnect —
+aucun pilote DAF→facture live sans ces accès.
+
+Merci,
+[Signature ops petsFollow]
+```
 
 ### Prérequis facturation — Billit reseller (figé)
 
@@ -95,7 +150,7 @@ Objectif : tourner sans Excel (hors EDI).
 | 2.C | Commandes internes | Brouillon + e-mail fournisseur (CSV) | ✅ API `orders` + UI `/stock` + `SendVetAlertWithCSV` |
 | 2.D | Réception enrichie | BL manuel (n°, fournisseur, lignes → lots) + notif | ✅ API `delivery-notes` + UI BL optionnel |
 | 2.E | Inventaire annuel | Session, écarts → adjust, export | ✅ API `inventory/sessions` + UI `/stock` + CSV |
-| 2.F | Import CNK national | Pipeline AFMPS admin/CLI ✅ · job interne mensuel gate 1 (`/internal/afmps-import/run`) ✅ · catalogue national en base | 🟢 **Staging** catalogue commité (2026-08-11) · prod = même dépôt/commit |
+| 2.F | Import CNK national | Pipeline AFMPS admin/CLI ✅ · job interne mensuel gate 1 (`/internal/afmps-import/run`) ✅ · catalogue national en base | ✅ **Staging + prod** catalogue commité (~2738 CNK, 2026-08-11) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) |
 | — | UI journal / settings | Mouvements, waste reasons, settings expiry, adjust manuel | ✅ composants `pharmacy/Stock*` |
 
 **Dépendances** : P0-3 pour 2.F ; 2.A utile à Phase 3.
@@ -183,7 +238,7 @@ flowchart TB
   P5 --> P6
 ```
 
-**Priorité actuelle** : 2.F **staging** catalogue ✅ · **prod** AFMPS + P0-1 VAMReg write / **P0-2 Billit reseller** → S5 → Phase 3 · Phase 4.A–B–E / Phase 5 après P0 restants. S6 staging clôturé.  
+**Priorité actuelle** : 2.F / P0-3 catalogue AFMPS ✅ (staging+prod) · **P0-1** VAMReg write / **P0-2** Billit reseller → S5 → Phase 3 · Phase 4.A–B–E / Phase 5 après P0 restants. S6 staging clôturé.  
 **Facturation** : dès P0-2 → S5 → Phase 3.
 
 ---

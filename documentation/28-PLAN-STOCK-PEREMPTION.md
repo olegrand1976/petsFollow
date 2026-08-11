@@ -8,7 +8,7 @@
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
 | Dernière revue | 2026-08-11 (UI stock mouvements / prix / seuils / settings + posologie VAMReg) |
-| Prochaine action | **S5** dès accès reseller Billit (**P0-2**) ; VAMReg write live (**P0-1**) ; catalogue national (**P0-3**) ; GA tag `dev` = décision produit |
+| Prochaine action | **S5** dès accès reseller Billit (**P0-2**) ; VAMReg write live (**P0-1**) ; GA tag `dev` = décision produit · **P0-3** AFMPS catalogue ✅ staging+prod |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
 
@@ -138,7 +138,7 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 |------|--------|------|
 | Workers Asynq VAMReg | 🟡 | Dry-run sync défaut ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` |
 | invoices.connect (S5) | ⏸ | Gelé jusqu’à reseller Billit (**P0-2**) |
-| Import AFMPS / CNK national | 🟡 | Code pipeline + cron gate 1 ✅ · **P0-3** dépôt CSV licencié |
+| Import AFMPS / CNK national | ✅ | Pipeline + cron gate 1 + catalogue staging/prod (~2738 CNK) — **P0-3** clos |
 | Use case commercial pharmacie | ✅ | [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
 | Staging `PHARMACY_ENABLED` + smoke S6 | ✅ | Cloud Run + `make smoke-pharmacy-s6-staging` |
 
@@ -235,9 +235,9 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | i18n `nav.medicaments` + `pharmacy.*` (6 locales) | ✅ |
 | Bloc légal `<details>` (filtre CNK/antibiotiques) | ✅ |
 | Tests search + import | ✅ |
-| Import AFMPS national complet (fichier officiel) | ⬜ (échantillon local seulement) |
+| Import AFMPS national complet (fichier officiel) | ✅ staging + prod (~2738 CNK, 2026-08-11) — [38](38-RUNBOOK-PHARMACIE-CABINET.md) |
 
-**Done when restant** : brancher un export AFMPS réel en staging (non bloquant pour S2).
+**Done when restant** : routine mensuelle ops (CSV + gates 2–3) — non bloquant pour S2.
 
 ---
 
@@ -348,7 +348,7 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 
 - [x] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
 - [x] Migrations `000081`+ / chaîne pharmacie `000107`+ appliquées (staging via job seed)
-- [ ] Import CNK national complet (🟡 code prêt — déposer CSV licencié P0-3 ; seed démo suffit pour pilote)
+- [x] Import CNK national complet (staging + prod ~2738 CNK, 2026-08-11 — [38](38-RUNBOOK-PHARMACIE-CABINET.md))
 - [x] `PHARMACY_ENABLED=true` (défaut staging Cloud Run)
 - [x] Nav Médicaments + tag **`dev`** visible
 - [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)
@@ -367,7 +367,7 @@ Les items ci-dessous ne sont **plus** un fourre-tout « ❌ » : ils sont planif
 
 | Item | Où |
 |------|-----|
-| Prix catalogue, seuils réassort, **commandes e-mail + BL + inventaire** ✅, CNK national ⏸ P0-3 | Phase 2 ([37](37-ROADMAP-STOCK-FACTURATION.md) · 2.A–2.E livrés) |
+| Prix catalogue, seuils réassort, **commandes e-mail + BL + inventaire** ✅, CNK national ✅ (P0-3 staging+prod) | Phase 2 ([37](37-ROADMAP-STOCK-FACTURATION.md) · 2.A–2.F livrés) |
 | DAF → Billit auto, avoirs, reporting marge | Phase 3 (après reseller) |
 | Stupéfiants, temps d’attente, chaîne alimentaire, VAMReg live | Phase 4 |
 | Grossistes EDI, Bigame, Vetcompendium | Phase 5 |
@@ -402,4 +402,4 @@ Les items ci-dessous ne sont **plus** un fourre-tout « ❌ » : ils sont planif
 | GCP | [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT.md) |
 | AFMPS DAF | https://www.afmps.be/fr/usage_veterinaire/medicaments/medicaments/distribution_et_delivrance/documents_veterinaires |
 
-**Prochaine action concrète** : **S5 / BIL-9** dès accès reseller Billit (**P0-2**) ; pas de code Phase 2.F / 4.A–B–E / Phase 5 / GA sans P0.
+**Prochaine action concrète** : **S5 / BIL-9** dès accès reseller Billit (**P0-2**) ; VAMReg write (**P0-1**) ; Phase 4.B–E / Phase 5 / GA après P0 restants. Phase **2.F** / P0-3 catalogue AFMPS ✅.

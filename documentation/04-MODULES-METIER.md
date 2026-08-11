@@ -55,7 +55,7 @@ Rappels care (+ seed horse pack), contacts professionnels, compétitions ; foyer
 
 ## Pharmacie cabinet (Belgique) — livré (tag `dev`)
 
-Dictionnaire CNK/AFMPS (import admin + CLI + cron mensuel gate 1), stocks multi-dépôts FEFO, DAF + PDF, VAMReg dry-run, prix/seuils/commandes/inventaire — **livré sous flag** `PHARMACY_ENABLED` ([27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md), [28](28-PLAN-STOCK-PEREMPTION.md), [37](37-ROADMAP-STOCK-FACTURATION.md)). Restants majeurs : dépôt CSV national licencié (P0-3 ops), VAMReg write live (P0-1), worker Billit (P0-2), GA. Distinct des rappels Care côté client.
+Dictionnaire CNK/AFMPS (import admin + CLI + cron mensuel gate 1), stocks multi-dépôts FEFO, DAF + PDF, VAMReg dry-run, prix/seuils/commandes/inventaire — **livré sous flag** `PHARMACY_ENABLED` ([27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md), [28](28-PLAN-STOCK-PEREMPTION.md), [37](37-ROADMAP-STOCK-FACTURATION.md)). Restants majeurs : VAMReg write live (P0-1), worker Billit (P0-2), GA. Distinct des rappels Care côté client.
 
 ## Admin plateforme
 

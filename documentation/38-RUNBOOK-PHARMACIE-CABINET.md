@@ -36,7 +36,7 @@ Secrets optionnels : `PHARMACY_EXPIRY_SECRET` (job péremption), `VAMREG_API_KEY
 
 ## Hors périmètre pilote
 
-- Catalogue CNK national en base (`2.F`) — pipeline + synchro mensuelle gate 1 **prêts** ; **staging** : CSV sur `gs://petsfollow-media/afmps-imports/latest.csv` + job `completed` (~2738 CNK, 2026-08-11) ; **prod** encore à faire (P0-3)
+- Catalogue CNK national en base (`2.F`) — pipeline + synchro mensuelle gate 1 **prêts** ; **staging** + **prod** : CSV GCS + job `completed` (~2738 CNK, 2026-08-11) — P0-3 clos
 - VAMReg production (P0-1)
 - Stupéfiants registre (P0-4)
 - EDI grossistes / Bigame / Vetcompendium (Phase 5)
@@ -66,7 +66,19 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 
 **Staging (2026-08-11)** : objet GCS déposé · secret + job Scheduler `petsfollow-afmps-import` · API remountée · premier catalogue commité (`completed`, ~2738 CNK). Re-run mensuel = skip `unchanged_checksum` tant que le fichier n’a pas changé.
 
-### UI admin (staging / local)
+<a id="prod-premier-catalogue"></a>
+<a id="prod-checklist-premier-catalogue"></a>
+
+### Prod checklist premier catalogue
+
+Même flux que staging ; préfixe secrets / bucket via `PETSFOLLOW_GCP_ENV=prod` ([`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh)).  
+**Gate UI** : en prod `PHARMACY_ENABLED` est **opt-in** (défaut off — [10](10-GCP-DEPLOIEMENT.md)). UI `/admin/afmps-imports` exige `PHARMACY_ENABLED=true` (API + `NUXT_PUBLIC_PHARMACY_ENABLED`) ; sinon gates 2–3 via CLI `import-cnk` uniquement.
+
+**Fait (2026-08-11)** : CSV `gs://petsfollow-media-prod/afmps-imports/latest.csv` · secret/job `petsfollow-prod-afmps-import-secret` / `petsfollow-prod-afmps-import` · API remountée (`AFMPS_IMPORT_SECRET` + `PHARMACY_ENABLED=true` via `make gcp-deploy-prod` / `--update-secrets`) · gate 1 job `015d2548-…` · gates 2–3 via CLI `import-cnk` (`--mark-reviewed` puis `--commit --confirm=IMPORT_AFMPS`, **sans** `--deactivate-missing`) → `upserted=2738` `deactivated=0` · `pharmacy.ref_medications` = 2738 actifs.
+
+Routine mensuelle : refresh CSV si besoin → cron gate 1 → revue/commit humain (UI si flag on, sinon CLI). Re-run = skip `unchanged_checksum` tant que le fichier n’a pas changé. Si le cron répond `pending_job`, finir ou supprimer le job `validated`/`reviewed`/`blocked` encore ouvert avant un nouveau run.
+
+### UI admin (staging / local / prod)
 
 1. Admin → **Import AFMPS** → *Importer un CSV* → choisir le fichier → *Valider (gate 1)*.
 2. Sur la fiche job : vérifier KPIs (ready / insert / update / deactivate preview) et le preview lignes.
@@ -78,18 +90,23 @@ Fixture e2e / smoke local : [`nuxtjs/tests/e2e/fixtures/afmps-mini.csv`](../nuxt
 
 ### CLI
 
+Utilise `DATABASE_URL` (rôle app) — **pas** de `migrate` intégré. Schéma à jour via `make migrate` / job Cloud Run migrate.
+
 ```bash
 # Gate 1 — validation + staging (aucune écriture dictionnaire)
 go run ./cmd/petsfollow-api import-cnk \
   --file=/chemin/export-afmps-conditionnement.csv \
   --validate
+# ou: make import-cnk FILE=… ARGS='--validate'
 
 # Gate 2
 go run ./cmd/petsfollow-api import-cnk --job=<UUID> --mark-reviewed
+# ou: make import-cnk ARGS='--job=<UUID> --mark-reviewed'
 
 # Gate 3 — commit (phrase obligatoire)
 go run ./cmd/petsfollow-api import-cnk \
   --job=<UUID> --commit --confirm=IMPORT_AFMPS
+# ou: make import-cnk ARGS='--job=<UUID> --commit --confirm=IMPORT_AFMPS'
 
 # Opt-in seulement si le compteur deactivatePreview a été lu et accepté :
 #   --deactivate-missing

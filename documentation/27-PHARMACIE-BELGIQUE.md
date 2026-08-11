@@ -33,15 +33,15 @@ Adapter PetsFollow au circuit médicament du cabinet vétérinaire en Belgique :
 
 ### Prérequis monorepo (état actuel)
 
-| Composant | État | Réemploi |
-|-----------|------|----------|
+| Composant | État (2026-08) | Réemploi |
+|-----------|----------------|----------|
 | API Go + `store` pgx | Livré | Pattern handlers → store |
-| Schémas SQL + migrations `000001`…`000038` | Livré | Nouveau schéma `pharmacy`, migrations `000039+` |
-| Redis (local Docker + staging DB **14**) | Provisionné | Config `REDIS_*` présente ; **pas encore de client Asynq** |
-| GCS `petsfollow-media` | Livré | PDF DAF via `platform/media` (`kind=daf`) |
-| Génération PDF | Absente | À introduire dans `internal/pharmacy` |
-| Nuxt Pro `vet-only` + BFF | Livré | Pages `/medicaments`, `/stock`, `/daf` |
-| Autocomplete Combobox Pro | Absent | Nouveau `ProCombobox.vue` |
+| Schémas SQL + migrations pharmacie | Livré (`000081`+) | Schéma `pharmacy` |
+| Redis + Asynq | Livré opt-in | `PHARMACY_WORKERS_ENABLED` (défaut sync) |
+| GCS `petsfollow-media` (+ prod) | Livré | PDF DAF + `afmps-imports/` + Compendium (stream auth) |
+| Génération PDF DAF | Livré | `internal/pharmacy` + media |
+| Nuxt Pro `vet-only` + BFF | Livré | Pages `/medicaments`, `/stock`, `/daf` (+ admin AFMPS/Compendium) |
+| Autocomplete Combobox Pro | Livré | `ProCombobox.vue` |
 
 Références : [02-ARCHITECTURE.md](02-ARCHITECTURE.md), [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md), [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT.md).
 
@@ -702,17 +702,18 @@ Commandes existantes à étendre lors de l’implémentation : `make test-go`, s
 
 ## 13. Checklist mise en place (ops)
 
-Avant activation staging :
+Avant / après activation staging (état **2026-08-11**) :
 
-- [ ] Migrations `000039`–`000042` appliquées (`make migrate` / job migrate Cloud Run)
-- [ ] Import CNK exécuté (job one-shot ou CI manuelle)
-- [ ] Secrets VAMReg + invoices.connect dans Secret Manager
-- [ ] `GCS_MEDIA_BUCKET=petsfollow-media` (PDF)
-- [ ] Redis DB 14 joignable depuis API **et** worker
-- [ ] Service `petsfollow-worker` déployé (ou workers in-process validés)
-- [ ] `PHARMACY_ENABLED=true` sur un cabinet pilote uniquement (si flag par practice ultérieur) ou global staging
-- [ ] `VAMREG_DRY_RUN=true` / `INVOICES_CONNECT_DRY_RUN=true` jusqu’à validation métier
-- [ ] Smoke : search CNK → entrée stock → DAF finalize → PDF → jobs `pending`→`sent` (dry-run)
+- [x] Migrations pharmacie appliquées (`000081`+ via job migrate Cloud Run — les anciens numéros `000039`–`000042` de ce doc sont historiques)
+- [x] Import CNK / AFMPS exécuté (staging + prod ~2738 CNK — [38](38-RUNBOOK-PHARMACIE-CABINET.md))
+- [ ] Secrets VAMReg **write** + invoices.connect reseller dans Secret Manager (P0-1 / P0-2)
+- [x] `GCS_MEDIA_BUCKET=petsfollow-media` (PDF DAF + `afmps-imports/`)
+- [x] Redis joignable (Asynq **opt-in** `PHARMACY_WORKERS_ENABLED` — défaut sync)
+- [x] `PHARMACY_ENABLED=true` staging (prod opt-in)
+- [x] `VAMREG_DRY_RUN=true` jusqu’à P0-1
+- [x] Smoke S6 : search CNK → stock → DAF finalize → PDF → VAMReg dry-run (`make smoke-pharmacy-s6-staging`)
+
+Worker Asynq dédié `petsfollow-worker` : optionnel tant que `PHARMACY_WORKERS_ENABLED=false`.
 
 ---
 
