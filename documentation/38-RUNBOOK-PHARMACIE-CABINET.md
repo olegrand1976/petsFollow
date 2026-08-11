@@ -36,7 +36,7 @@ Secrets optionnels : `PHARMACY_EXPIRY_SECRET` (job péremption), `VAMREG_API_KEY
 
 ## Hors périmètre pilote
 
-- Catalogue CNK national en base (`2.F`) — pipeline + synchro mensuelle gate 1 **prêts** ; déposer le CSV pack licencié sur `afmps-imports/latest.csv` (P0-3 ops)
+- Catalogue CNK national en base (`2.F`) — pipeline + synchro mensuelle gate 1 **prêts** ; **staging** : CSV sur `gs://petsfollow-media/afmps-imports/latest.csv` + job `completed` (~2738 CNK, 2026-08-11) ; **prod** encore à faire (P0-3)
 - VAMReg production (P0-1)
 - Stupéfiants registre (P0-4)
 - EDI grossistes / Bigame / Vetcompendium (Phase 5)
@@ -58,11 +58,13 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 ### Synchro mensuelle (Cloud Scheduler)
 
 1. Ops dépose le CSV pack officiel : `gsutil cp export.csv gs://$GCS_MEDIA_BUCKET/afmps-imports/latest.csv` (objet privé, hors allowlist publique).
-2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **redeploy** API.
+2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **`--update-secrets` / redeploy** API pour remonter `:latest` (sinon 401 jusqu’à nouvelle révision).
 3. Cron (1er du mois 05:00 Brussels, `0 5 1 * *`) → `POST /api/v1/internal/afmps-import/run` + `X-Afmps-Import-Secret`.
 4. Ticket system + email `OPS_NOTIFY_EMAIL` → ouvrir `/admin/afmps-imports/{id}` pour gates 2–3.
 5. Skip auto si un job `validated`/`reviewed`/`blocked` est encore ouvert, ou si le checksum = dernier commit.
 6. Local : `MEDIA_LOCAL_DIR` doit pointer vers la racine uploads du monorepo (ex. `$PWD/data/uploads`) — le défaut `./data/uploads` est relatif au cwd du process (`go/` via `make api-dev`).
+
+**Staging (2026-08-11)** : objet GCS déposé · secret + job Scheduler `petsfollow-afmps-import` · API remountée · premier catalogue commité (`completed`, ~2738 CNK). Re-run mensuel = skip `unchanged_checksum` tant que le fichier n’a pas changé.
 
 ### UI admin (staging / local)
 

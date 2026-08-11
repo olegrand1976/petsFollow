@@ -4,7 +4,7 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ (API) · 2.F code ✅ (dépôt CSV ops) · dette UI cabinet en cours · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
+| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F **staging** catalogue ✅ (prod à faire) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
 | Dernière revue | 2026-08-11 (audit A–D + UI stock mouvements/prix/seuils/settings) |
@@ -21,7 +21,7 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 |----|----------|-------|--------|-------------------|
 | P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | 🟡 Client **readonly** listes OK ([39](39-VAMREG-AFMPS-READONLY.md)) · write déclaration + credentials live encore ouverts | Credentials SM + env test + ICD write |
 | P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente — aucun chantier S5/Phase 3 tant que credentials absents** | Credentials reseller → débloque S5 + Phase 3 |
-| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit | 🟢 Licence export pack + stockage GCS **confirmés** (2026-08-11) · cadence mensuelle semi-auto · reste dépôt bucket + premier commit staging/prod | Pipeline + cron gate 1 ✅ ; catalogue en base = ops dépôt/commit |
+| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging** : CSV GCS + commit catalogue (~2738 CNK, 2026-08-11) · **prod** : même runbook à répéter | Critère staging atteint ; prod opt-in |
 | P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | ⬜ Ouvert | Spec figée avant Phase 4.B |
 | P0-5 | Contact / docs API **grossistes** (1 pilote : Covetrus / Alcyon / Crocodil) | Produit | ⬜ Ouvert | Scope Phase 5.A |
 | P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | ⬜ Ouvert | Décision build/buy écrite |
@@ -33,9 +33,9 @@ Actions ops / juridique à pousser **en parallèle** du code (pas de chantier te
 
 | ID | Prochaine action concrète | Bloque |
 |----|---------------------------|--------|
-| **P0-1** | Obtenir credentials **write** VAMReg (ICD déclaration) + env test SM | 4.A production |
-| **P0-2** | Relancer Billit pour **accès reseller** ; dès réception → dégeler S5 worker + Phase 3 | 3.C–3.E, GA facture |
-| **P0-3** | ✅ Licence + cadence figées (2026-08-11) · déposer CSV sur GCS + commit admin staging puis prod | 2.F ops (catalogue en base) |
+| **P0-1** | Relancer AFMPS/VAMReg pour credentials **write** (ICD) + env test SM ; readonly déjà OK ([39](39-VAMREG-AFMPS-READONLY.md)) — suivi 2026-08-11 | 4.A production |
+| **P0-2** | Relancer Billit **accès reseller** (mail/compte) ; aucun code DAF→facture live tant qu’absent — suivi 2026-08-11 | 3.C–3.E, GA facture |
+| **P0-3** | ✅ Staging fait (CSV `afmps-imports/latest.csv` + job completed ~2738 CNK, scheduler mensuel) · reste **prod** (`petsfollow-media-prod` + secret/scheduler prod) | 2.F prod |
 | **P0-4** | Spec registre **stupéfiants BE** figée (champs, durée conservation, export) | 4.B |
 | **P0-5** | Contacter 1 grossiste pilote (docs API EDI) | 5.A |
 | **P0-6** | Décision écrite **build vs licence** Bigame/Vetcompendium notices | 5.B/C |
@@ -95,7 +95,7 @@ Objectif : tourner sans Excel (hors EDI).
 | 2.C | Commandes internes | Brouillon + e-mail fournisseur (CSV) | ✅ API `orders` + UI `/stock` + `SendVetAlertWithCSV` |
 | 2.D | Réception enrichie | BL manuel (n°, fournisseur, lignes → lots) + notif | ✅ API `delivery-notes` + UI BL optionnel |
 | 2.E | Inventaire annuel | Session, écarts → adjust, export | ✅ API `inventory/sessions` + UI `/stock` + CSV |
-| 2.F | Import CNK national | Pipeline AFMPS admin/CLI ✅ · job interne mensuel gate 1 (`/internal/afmps-import/run`) ✅ · catalogue national en base | 🟡 Code prêt · **Attend dépôt CSV licencié** (P0-3 ops) |
+| 2.F | Import CNK national | Pipeline AFMPS admin/CLI ✅ · job interne mensuel gate 1 (`/internal/afmps-import/run`) ✅ · catalogue national en base | 🟢 **Staging** catalogue commité (2026-08-11) · prod = même dépôt/commit |
 | — | UI journal / settings | Mouvements, waste reasons, settings expiry, adjust manuel | ✅ composants `pharmacy/Stock*` |
 
 **Dépendances** : P0-3 pour 2.F ; 2.A utile à Phase 3.
