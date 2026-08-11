@@ -166,40 +166,13 @@ func ParseCompendiumExtractJSON(raw string) ([]ExtractedMedication, error) {
 func parseMedicationRaw(row json.RawMessage) (ExtractedMedication, bool) {
 	var dto extractedMedicationDTO
 	if err := json.Unmarshal(row, &dto); err != nil {
-		// Non-object / corrupt → try map salvage for whatever keys remain.
-		var loose map[string]any
-		if err2 := json.Unmarshal(row, &loose); err2 != nil || len(loose) == 0 {
-			return ExtractedMedication{}, false
-		}
-		dto = dtoFromLooseMap(loose)
+		return ExtractedMedication{}, false
 	}
 	m := dto.toExtracted()
 	if m.Name == "" && m.CNK == "" && !hasPartialSignal(m) {
 		return ExtractedMedication{}, false
 	}
 	return m, true
-}
-
-func dtoFromLooseMap(m map[string]any) extractedMedicationDTO {
-	return extractedMedicationDTO{
-		CNK:                m["cnk"],
-		Name:               m["name"],
-		Manufacturer:       m["manufacturer"],
-		ActiveSubstance:    m["activeSubstance"],
-		Strength:           m["strength"],
-		ATCCode:            m["atcCode"],
-		PharmaceuticalForm: m["pharmaceuticalForm"],
-		Route:              m["route"],
-		Species:            m["species"],
-		Posology:           m["posology"],
-		WithdrawalMeatDays: m["withdrawalMeatDays"],
-		WithdrawalMilkDays: m["withdrawalMilkDays"],
-		WithdrawalEggsDays: m["withdrawalEggsDays"],
-		PackSize:           m["packSize"],
-		PrescriptionOnly:   m["prescriptionOnly"],
-		IsAntibiotic:       m["isAntibiotic"],
-		SourcePage:         m["sourcePage"],
-	}
 }
 
 func hasPartialSignal(m ExtractedMedication) bool {

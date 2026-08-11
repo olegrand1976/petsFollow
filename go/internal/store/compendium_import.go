@@ -381,10 +381,12 @@ type PatchCompendiumRowInput struct {
 	CNK                *string `json:"cnk"`
 	Name               *string `json:"name"`
 	Manufacturer       *string `json:"manufacturer"`
+	ActiveSubstance    *string `json:"activeSubstance"`
 	ATCCode            *string `json:"atcCode"`
 	PharmaceuticalForm *string `json:"pharmaceuticalForm"`
 	PackSize           *string `json:"packSize"`
 	IsAntibiotic       *bool   `json:"isAntibiotic"`
+	SourcePage         *int    `json:"sourcePage"`
 	Excluded           *bool   `json:"excluded"`
 }
 
@@ -433,6 +435,9 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	if in.Manufacturer != nil {
 		r.Manufacturer = strings.TrimSpace(*in.Manufacturer)
 	}
+	if in.ActiveSubstance != nil {
+		r.ActiveSubstance = strings.TrimSpace(*in.ActiveSubstance)
+	}
 	if in.ATCCode != nil {
 		r.ATCCode = strings.TrimSpace(*in.ATCCode)
 	}
@@ -444,6 +449,14 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 	}
 	if in.IsAntibiotic != nil {
 		r.IsAntibiotic = *in.IsAntibiotic
+	}
+	if in.SourcePage != nil {
+		if *in.SourcePage < 1 {
+			r.SourcePage = nil
+		} else {
+			p := *in.SourcePage
+			r.SourcePage = &p
+		}
 	}
 	if in.Excluded != nil {
 		if *in.Excluded {
@@ -467,12 +480,13 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 
 	_, err = tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_rows
-		SET cnk = $3, name = $4, manufacturer = $5, atc_code = $6, pharmaceutical_form = $7, pack_size = $8,
-		    is_antibiotic = $9, status = $10,
-		    error_code = NULLIF($11,''), error_message = NULLIF($12,'')
+		SET cnk = $3, name = $4, manufacturer = $5, active_substance = $6, atc_code = $7,
+		    pharmaceutical_form = $8, pack_size = $9, is_antibiotic = $10, source_page = $11,
+		    status = $12, error_code = NULLIF($13,''), error_message = NULLIF($14,'')
 		WHERE id = $1 AND job_id = $2`,
-		rowID, jobID, r.CNK, r.Name, r.Manufacturer, r.ATCCode, r.PharmaceuticalForm, r.PackSize,
-		r.IsAntibiotic, r.Status, r.ErrorCode, r.ErrorMessage,
+		rowID, jobID, r.CNK, r.Name, r.Manufacturer, r.ActiveSubstance, r.ATCCode,
+		r.PharmaceuticalForm, r.PackSize, r.IsAntibiotic, r.SourcePage,
+		r.Status, r.ErrorCode, r.ErrorMessage,
 	)
 	if err != nil {
 		return r, err
@@ -702,7 +716,7 @@ func refreshCompendiumJobCountsTx(ctx context.Context, tx pgx.Tx, jobID string) 
 	return err
 }
 
-// ConfirmCompendiumPendingRows promotes pending rows with valid CNK+name to ready.
+// ConfirmCompendiumPendingRows promotes pending/error rows with valid CNK+name to ready.
 func (s *Store) ConfirmCompendiumPendingRows(ctx context.Context, jobID string) (int, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -727,7 +741,7 @@ func (s *Store) ConfirmCompendiumPendingRows(ctx context.Context, jobID string) 
 		UPDATE pharmacy.compendium_import_rows
 		SET status = 'ready', error_code = NULL, error_message = NULL
 		WHERE job_id = $1
-		  AND status = 'pending'
+		  AND status IN ('pending', 'error')
 		  AND TRIM(cnk) <> ''
 		  AND TRIM(name) <> ''`, jobID)
 	if err != nil {

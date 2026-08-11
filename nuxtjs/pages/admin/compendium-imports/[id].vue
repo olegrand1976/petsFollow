@@ -46,7 +46,9 @@
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-preview">
         <h3 class="pro-mb-md">{{ $t('admin.compendium.previewTitle') }}</h3>
         <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
-        <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.manualHint') }}</p>
+        <p v-if="errorRowCount > 0" class="pro-hint pro-mb-md" data-testid="admin-compendium-manual-hint">
+          {{ $t('admin.compendium.manualHint') }}
+        </p>
         <p
           v-if="refCatalogCount === 0 && job.status === 'extracted'"
           class="pro-hint pro-hint--error pro-mb-md"
@@ -73,7 +75,9 @@
               <th>{{ $t('admin.compendium.colSuggestedCnk') }}</th>
               <th>{{ $t('admin.compendium.colName') }}</th>
               <th>{{ $t('admin.compendium.colLab') }}</th>
+              <th>{{ $t('admin.compendium.colSubstance') }}</th>
               <th>{{ $t('admin.compendium.colForm') }}</th>
+              <th>{{ $t('admin.compendium.colPack') }}</th>
               <th>{{ $t('admin.compendium.colStatus') }}</th>
               <th>{{ $t('admin.compendium.colActions') }}</th>
             </tr>
@@ -87,13 +91,22 @@
             >
               <td>{{ row.rowNumber }}</td>
               <td>
-                <span
-                  class="compendium-page"
+                <input
+                  v-if="rowEditable(row)"
+                  v-model.number="row.sourcePage"
+                  type="number"
+                  min="1"
+                  class="pro-input compendium-page-input"
                   data-testid="admin-compendium-row-page"
                   :title="$t('admin.compendium.pageHint', { page: row.sourcePage ?? '—' })"
+                  :disabled="isRowBusy(row)"
+                  @change="patchSourcePage(row)"
                 >
-                  {{ row.sourcePage ?? '—' }}
-                </span>
+                <span
+                  v-else
+                  class="compendium-page"
+                  data-testid="admin-compendium-row-page"
+                >{{ row.sourcePage ?? '—' }}</span>
               </td>
               <td>
                 <input
@@ -101,6 +114,7 @@
                   v-model="row.cnk"
                   class="pro-input"
                   :placeholder="$t('admin.compendium.colCnk')"
+                  :disabled="isRowBusy(row)"
                   @change="patchRow(row, { cnk: row.cnk })"
                 >
                 <span v-else>{{ row.cnk }}</span>
@@ -111,6 +125,7 @@
                     class="pro-input"
                     data-testid="admin-compendium-cnk-candidates"
                     :value="row.cnk || row.suggestedCnk || ''"
+                    :disabled="isRowBusy(row)"
                     @change="onPickCandidate(row, ($event.target as HTMLSelectElement).value)"
                   >
                     <option value="">{{ $t('admin.compendium.pickCnk') }}</option>
@@ -132,6 +147,7 @@
                   v-model="row.name"
                   class="pro-input"
                   :placeholder="$t('admin.compendium.colName')"
+                  :disabled="isRowBusy(row)"
                   @change="patchRow(row, { name: row.name })"
                 >
                 <span v-else>{{ row.name }}</span>
@@ -142,6 +158,7 @@
                   v-model="row.manufacturer"
                   class="pro-input"
                   :placeholder="$t('admin.compendium.colLab')"
+                  :disabled="isRowBusy(row)"
                   @change="patchRow(row, { manufacturer: row.manufacturer })"
                 >
                 <span v-else>{{ row.manufacturer || '—' }}</span>
@@ -149,12 +166,35 @@
               <td>
                 <input
                   v-if="rowEditable(row)"
+                  v-model="row.activeSubstance"
+                  class="pro-input"
+                  :placeholder="$t('admin.compendium.colSubstance')"
+                  :disabled="isRowBusy(row)"
+                  @change="patchRow(row, { activeSubstance: row.activeSubstance })"
+                >
+                <span v-else>{{ row.activeSubstance || '—' }}</span>
+              </td>
+              <td>
+                <input
+                  v-if="rowEditable(row)"
                   v-model="row.pharmaceuticalForm"
                   class="pro-input"
                   :placeholder="$t('admin.compendium.colForm')"
+                  :disabled="isRowBusy(row)"
                   @change="patchRow(row, { pharmaceuticalForm: row.pharmaceuticalForm })"
                 >
                 <span v-else>{{ row.pharmaceuticalForm || '—' }}</span>
+              </td>
+              <td>
+                <input
+                  v-if="rowEditable(row)"
+                  v-model="row.packSize"
+                  class="pro-input"
+                  :placeholder="$t('admin.compendium.colPack')"
+                  :disabled="isRowBusy(row)"
+                  @change="patchRow(row, { packSize: row.packSize })"
+                >
+                <span v-else>{{ row.packSize || '—' }}</span>
               </td>
               <td>
                 <ProBadge :variant="rowStatusVariant(row.status)">{{ statusLabel(row.status) }}</ProBadge>
@@ -168,7 +208,7 @@
                   v-if="row.status === 'pending' || row.status === 'error'"
                   variant="ghost"
                   test-id="admin-compendium-lookup-cnk"
-                  :disabled="busy || lookingUpId === row.id || !row.name"
+                  :disabled="busy || isRowBusy(row) || !row.name"
                   @click="lookupCnk(row)"
                 >
                   {{ $t('admin.compendium.lookupCnk') }}
@@ -176,6 +216,7 @@
                 <ProButton
                   v-if="(row.status === 'pending' || row.status === 'error') && row.suggestedCnk && !row.cnk"
                   variant="ghost"
+                  :disabled="isRowBusy(row)"
                   @click="patchRow(row, { cnk: row.suggestedCnk })"
                 >
                   {{ $t('admin.compendium.acceptSuggested') }}
@@ -184,7 +225,7 @@
                   v-if="canConfirmRow(row)"
                   variant="ghost"
                   test-id="admin-compendium-confirm-row"
-                  :disabled="busy"
+                  :disabled="busy || isRowBusy(row)"
                   @click="patchRow(row, { name: row.name, cnk: row.cnk })"
                 >
                   {{ $t('admin.compendium.confirmRow') }}
@@ -192,6 +233,7 @@
                 <ProButton
                   v-if="rowEditable(row)"
                   variant="ghost"
+                  :disabled="isRowBusy(row)"
                   @click="patchRow(row, { excluded: true })"
                 >
                   {{ $t('admin.compendium.exclude') }}
@@ -199,6 +241,7 @@
                 <ProButton
                   v-else-if="row.status === 'excluded'"
                   variant="ghost"
+                  :disabled="isRowBusy(row)"
                   @click="patchRow(row, { excluded: false })"
                 >
                   {{ $t('admin.compendium.include') }}
@@ -239,13 +282,19 @@ const rows = ref<any[]>([])
 const refCatalogCount = ref(0)
 const commitMsg = ref('')
 const lookingUpId = ref('')
+const patchingId = ref('')
 const lookupMsg = ref<Record<string, string>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
-const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending' && r.cnk).length)
+const pendingCount = computed(() => rows.value.filter(r => canConfirmRow(r)).length)
+const errorRowCount = computed(() => rows.value.filter(r => r.status === 'error').length)
 
 function rowEditable (row: any) {
   return row?.status !== 'upserted' && row?.status !== 'excluded'
+}
+
+function isRowBusy (row: any) {
+  return patchingId.value === row?.id || lookingUpId.value === row?.id
 }
 
 function canConfirmRow (row: any) {
@@ -325,8 +374,20 @@ async function startExtract () {
   }
 }
 
+async function patchSourcePage (row: any) {
+  const n = Number(row.sourcePage)
+  if (!Number.isFinite(n) || n < 1) {
+    row.sourcePage = null
+    // 0 clears source_page server-side (*int null vs omit is ambiguous).
+    await patchRow(row, { sourcePage: 0 })
+    return
+  }
+  row.sourcePage = Math.trunc(n)
+  await patchRow(row, { sourcePage: row.sourcePage })
+}
+
 async function patchRow (row: any, body: Record<string, unknown>) {
-  busy.value = true
+  patchingId.value = row.id
   try {
     const res: any = await $fetch(`/api/admin/compendium-imports/${id.value}/rows/${row.id}`, {
       method: 'PATCH',
@@ -337,7 +398,7 @@ async function patchRow (row: any, body: Record<string, unknown>) {
     if (idx >= 0) rows.value[idx] = { ...rows.value[idx], ...updated }
     await load()
   } finally {
-    busy.value = false
+    patchingId.value = ''
   }
 }
 
@@ -431,6 +492,11 @@ onBeforeUnmount(() => stopPoll())
   background: var(--pf-vet-primary);
 }
 .compendium-page {
+  font-family: var(--pf-font-mono, ui-monospace, monospace);
+  font-weight: 600;
+}
+.compendium-page-input {
+  width: 5.5rem;
   font-family: var(--pf-font-mono, ui-monospace, monospace);
   font-weight: 600;
 }
