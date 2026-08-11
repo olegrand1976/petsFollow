@@ -541,6 +541,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.18 | P1 | UI journal mouvements + waste reasons + settings/prix | `/stock` cartes `stock-movements` / `stock-settings` / `stock-pricing` | Vitest `pharmacy-stock.spec.ts` ; e2e shell `17` ; API `GET …/movements` enrichie CNK/nom |
 | C7.19 | P1 | Dépôts multi-sites + fiche `/medicaments` | UI `stock-deposits` ; select réception si ≥2 dépôts sinon hint ; `GET …/medications/{id}` + withdrawal + lots `?medicationId=` | e2e `17` hint→create 2e dépôt→select+filtre ; Go `TestPharmacyFoodChainAndWithdrawal` assert GET medication overlay |
 | C7.20 | P1 | AFMPS admin triple contrôle UI | `/admin/afmps-imports` : input fichier UI + gate1 BFF (même endpoint) → revue → commit (sans deactivate-missing) | e2e `23-afmps-admin` ; fixture `tests/e2e/fixtures/afmps-mini.csv` ; runbook `38` |
+| C7.21 | P1 | Sync listes VAMReg readonly | `POST /internal/pharmacy/vamreg-ref-sync` (dry-run défaut) → `pharmacy.vamreg_ref_codes` ; `GET …/vamreg-refs?kind=` | Go `TestPharmacyVamregRefSyncDryRunAndApply` / `TestFetchVamregRefLists` ; secret `PHARMACY_VAMREG_REF_SYNC_SECRET` |
 
 **Consignes** (tag `dev`, code `/prescriptions`) : fiche consignes client sous flag `PRESCRIPTIONS_ENABLED` — UI label **Consignes** + badge `nav.tagDev` ; `care_advice` + `visit_id` ; pré-remplissage IA `POST …/suggest-from-visit` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). **≠ ordonnance légale** (papier carbone hors app). Pas de useCase commercial tant que tag `dev`.
 

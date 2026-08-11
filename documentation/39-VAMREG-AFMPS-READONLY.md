@@ -65,6 +65,21 @@ c := pharmacy.NewVamregAFMPSClient(cfg.VamregAfmpsBaseURL, cfg.VamregAfmpsAPIKey
 products, err := c.ListMedicinalProducts(ctx)
 ```
 
+### Sync listes → Postgres (V3.1)
+
+Job interne (dry-run par défaut) :
+
+```bash
+curl -X POST "$API/api/v1/internal/pharmacy/vamreg-ref-sync" \
+  -H "X-Pharmacy-Vamreg-Ref-Sync-Secret: $PHARMACY_VAMREG_REF_SYNC_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"dryRun":true}'
+# apply : {"dryRun":false}
+```
+
+Persiste `target_species` / `indication` / `pharmaceutical_form` dans `pharmacy.vamreg_ref_codes`.  
+Lecture cabinet : `GET /vet/pharmacy/vamreg-refs?kind=target_species` (perm `pharmacy.read`).
+
 Provisionnement staging / attach Cloud Run :
 
 ```bash
