@@ -36,7 +36,7 @@ Secrets optionnels : `PHARMACY_EXPIRY_SECRET` (job péremption), `VAMREG_API_KEY
 
 ## Hors périmètre pilote
 
-- Import CNK national AFMPS pack officiel (`2.F` / P0-3) — la **procédure 3 gates** est opérationnelle (voir ci-dessous) ; le fichier national attend la licence
+- Catalogue CNK national en base (`2.F`) — pipeline + synchro mensuelle gate 1 **prêts** ; déposer le CSV pack licencié sur `afmps-imports/latest.csv` (P0-3 ops)
 - VAMReg production (P0-1)
 - Stupéfiants registre (P0-4)
 - EDI grossistes / Bigame / Vetcompendium (Phase 5)
@@ -44,13 +44,25 @@ Secrets optionnels : `PHARMACY_EXPIRY_SECRET` (job péremption), `VAMREG_API_KEY
 
 ## Import AFMPS CSV — triple contrôle (ops)
 
-Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/admin/afmps-imports` (flag `PHARMACY_ENABLED`) · CLI `import-cnk` · e2e `23-afmps-admin` · détail technique [27 § AFMPS](27-PHARMACIE-BELGIQUE.md).
+Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/admin/afmps-imports` (flag `PHARMACY_ENABLED`) · CLI `import-cnk` · job interne mensuel (gate 1) · e2e `23-afmps-admin` · détail technique [27 § AFMPS](27-PHARMACIE-BELGIQUE.md).
 
 | Gate | Action | Statut |
 |------|--------|--------|
-| **1 — Validation** | Upload CSV → parse + KPIs (skip CNK vides, dédup, erreurs dures ≤ 5 %, collisions) | `validated` ou `blocked` |
+| **1 — Validation** | Upload CSV **ou** cron mensuel depuis GCS → parse + KPIs (skip CNK vides, dédup, erreurs dures ≤ 5 %, collisions) | `validated` ou `blocked` |
 | **2 — Revue** | UI : filtres collision + exclude lignes + checkbox accusé → **Marquer revu** (CLI : `--mark-reviewed`) | `reviewed` |
 | **3 — Commit** | Phrase `IMPORT AFMPS` ou `IMPORT_AFMPS` → upsert transactionnel + fusion `afmps_meta` | `completed` |
+
+**Décision produit (2026-08-11)** : synchro **mensuelle semi-auto** — le scheduler ne fait que la gate 1 + notif ops ; gates 2–3 restent humaines ; pas de `deactivate-missing` auto ; pas de scraper live.  
+**Licence (2026-08-11)** : usage de l’export pack officiel AFMPS + dépôt contrôlé sous `afmps-imports/` (bucket médias privé) **confirmé** pour staging/prod petsFollow.
+
+### Synchro mensuelle (Cloud Scheduler)
+
+1. Ops dépose le CSV pack officiel : `gsutil cp export.csv gs://$GCS_MEDIA_BUCKET/afmps-imports/latest.csv` (objet privé, hors allowlist publique).
+2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **redeploy** API.
+3. Cron (1er du mois 05:00 Brussels, `0 5 1 * *`) → `POST /api/v1/internal/afmps-import/run` + `X-Afmps-Import-Secret`.
+4. Ticket system + email `OPS_NOTIFY_EMAIL` → ouvrir `/admin/afmps-imports/{id}` pour gates 2–3.
+5. Skip auto si un job `validated`/`reviewed`/`blocked` est encore ouvert, ou si le checksum = dernier commit.
+6. Local : `MEDIA_LOCAL_DIR` doit pointer vers la racine uploads du monorepo (ex. `$PWD/data/uploads`) — le défaut `./data/uploads` est relatif au cwd du process (`go/` via `make api-dev`).
 
 ### UI admin (staging / local)
 

@@ -18,6 +18,8 @@ const (
 	AFMPSHardErrorMaxPct = 5.0
 	// AFMPSConfirmPhrase is the gate-3 confirmation (CLI: quote or use IMPORT_AFMPS).
 	AFMPSConfirmPhrase = "IMPORT AFMPS"
+	// DefaultAFMPSImportObjectKey is the controlled GCS/local object for monthly gate-1 sync.
+	DefaultAFMPSImportObjectKey = "afmps-imports/latest.csv"
 )
 
 // Belgian CNK is typically 7 digits; allow 6–8 to absorb leading-zero variants.

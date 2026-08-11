@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke crewai-smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke crewai-smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-afmps-import-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
 
 help:
 	@echo "petsFollow — commandes"
@@ -53,6 +53,7 @@ help:
 	@echo "  make gcp-invoicing-reconcile-scheduler  Scheduler horaire relecture factures en vol (INVOICING_RECONCILE_SECRET=…)"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
+	@echo "  make gcp-afmps-import-scheduler Scheduler mensuel gate 1 AFMPS (AFMPS_IMPORT_SECRET=…)"
 	@echo "  make gcp-research-etl-scheduler Scheduler 6h ETL Research (RESEARCH_ETL_SECRET=… RESEARCH_ANON_SALT=…)"
 	@echo "  make gcp-vet-news-scheduler Scheduler veille news 06:00 (VET_NEWS_SECRET=…)"
 	@echo "  make gcp-product-digest-scheduler Scheduler digest produit 18:00 (PRODUCT_DIGEST_SECRET=…)"
@@ -320,6 +321,9 @@ gcp-sales-branches-scheduler:
 
 gcp-pharmacy-expiry-scheduler:
 	bash infra/gcp/setup-pharmacy-expiry-scheduler.sh
+
+gcp-afmps-import-scheduler:
+	bash infra/gcp/setup-afmps-import-scheduler.sh
 
 gcp-research-etl-scheduler:
 	bash infra/gcp/setup-research-etl-scheduler.sh

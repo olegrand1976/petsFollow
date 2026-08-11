@@ -26,6 +26,7 @@ run setup-product-digest-weekly-scheduler.sh
 run setup-retention-scheduler.sh
 run setup-auth-health-scheduler.sh
 run setup-pharmacy-expiry-scheduler.sh
+run setup-afmps-import-scheduler.sh
 run setup-sales-branches-scheduler.sh
 run setup-invoicing-reconcile-scheduler.sh
 # setup-saas-invoices-scheduler.sh : Flux A en sommeil (INVOICING_SAAS_ENABLED off).

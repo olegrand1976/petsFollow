@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
+	"cloud.google.com/go/storage"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 )
 
@@ -115,6 +117,19 @@ func normalizeObjectKey(objectKey string) string {
 		return ""
 	}
 	return strings.ToLower(k)
+}
+
+// IsNotExist reports a missing local or GCS object (Open / Attrs failures).
+func IsNotExist(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, os.ErrNotExist) || errors.Is(err, storage.ErrObjectNotExist) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "object doesn't exist") ||
+		strings.Contains(msg, "nosuchkey")
 }
 
 // IsSensitiveObjectKey reports PHI object keys that must not be publicly readable.

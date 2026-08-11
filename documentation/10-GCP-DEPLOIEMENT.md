@@ -21,6 +21,7 @@ Migrations pharmacie récentes (ordre) : `000107` jobs_audit → `000108` pricin
 | `VAMREG_AFMPS_BASE_URL` | `https://app.fagg-afmps.be/vamreg/api` | Listes readonly ICD |
 | `PHARMACY_WORKERS_ENABLED` | `false` (défaut) | Enqueue **inline** (timeout détaché) ; `true` = Asynq + Redis |
 | Secret `petsfollow-pharmacy-expiry-secret` | Branché si présent | `make gcp-pharmacy-expiry-scheduler` |
+| Secret `petsfollow-afmps-import-secret` | Branché si présent | `make gcp-afmps-import-scheduler` (mensuel gate 1) ; CSV `gs://$GCS_MEDIA_BUCKET/afmps-imports/latest.csv` |
 | `RESEARCH_ENABLED` | `true` staging (défaut) ; prod opt-in | Observatoire tag `dev` — [42](42-RESEARCH.md) |
 | Secrets `petsfollow-research-etl-secret` + `petsfollow-research-anon-salt` | Branchés si présents | `make gcp-research-etl-scheduler` (6 h Brussels) |
 | Secret `petsfollow-vamreg-afmps-api-key` | → `VAMREG_AFMPS_API_KEY` | Listes GET (`FAMHP-SEC-KEY`) ; `./infra/gcp/setup-vamreg-afmps-secret.sh` |
