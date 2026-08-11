@@ -169,6 +169,8 @@ PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-${PUBLIC_SITE_URL}}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
+# Objet CSV pack AFMPS pour le cron mensuel gate 1 (privé, hors allowlist /media/).
+AFMPS_IMPORT_OBJECT_KEY: "${AFMPS_IMPORT_OBJECT_KEY:-afmps-imports/latest.csv}"
 # Déclarations DAF : dry-run FORCÉ (staging + prod). Une clé software-house (listes)
 # ne permet pas le live declare — voir documentation/39-VAMREG-AFMPS-READONLY.md.
 # Live declare = ICD write + credentials déclarant + retirer ce forçage volontairement.
@@ -364,6 +366,8 @@ pf_api_secrets() {
   secrets="${secrets}$(pf_api_mount_job_secret INVOICING_RECONCILE_SECRET invoicing-reconcile-secret)"
   # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.
   secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_EXPIRY_SECRET pharmacy-expiry-secret)"
+  # Gate 1 AFMPS mensuelle (pas de commit auto) — sans secret → 401 sur afmps-import/run.
+  secrets="${secrets}$(pf_api_mount_job_secret AFMPS_IMPORT_SECRET afmps-import-secret)"
   # Sync listes VAMReg readonly (manuel, pas de scheduler) — sans secret → 401 sur vamreg-ref-sync.
   secrets="${secrets}$(pf_api_mount_job_secret PHARMACY_VAMREG_REF_SYNC_SECRET pharmacy-vamreg-ref-sync-secret)"
   # Research ETL + salt HMAC (observatoire) — requis si RESEARCH_ENABLED hors seedable.

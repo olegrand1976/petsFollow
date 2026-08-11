@@ -94,6 +94,10 @@ type Config struct {
 	PharmacyEnabled bool
 	// PharmacyExpirySecret protège POST /internal/pharmacy/expiry-run.
 	PharmacyExpirySecret string
+	// AfmpsImportSecret protège POST /internal/afmps-import/run (gate 1 mensuelle).
+	AfmpsImportSecret string
+	// AfmpsImportObjectKey — objet média/GCS du CSV pack (défaut afmps-imports/latest.csv).
+	AfmpsImportObjectKey string
 	// PharmacyVamregRefSyncSecret protège POST /internal/pharmacy/vamreg-ref-sync.
 	PharmacyVamregRefSyncSecret string
 	// PharmacyWorkersEnabled starts Asynq server + enqueue for VAMReg (and future invoices.connect).
@@ -260,6 +264,8 @@ func Load() Config {
 		MLMOrgEnabled:               envBool("MLM_ORG_ENABLED"),
 		PharmacyEnabled:             envBool("PHARMACY_ENABLED"),
 		PharmacyExpirySecret:        envOr("PHARMACY_EXPIRY_SECRET", ""),
+		AfmpsImportSecret:           envOr("AFMPS_IMPORT_SECRET", ""),
+		AfmpsImportObjectKey:        envOr("AFMPS_IMPORT_OBJECT_KEY", "afmps-imports/latest.csv"),
 		PharmacyVamregRefSyncSecret: envOr("PHARMACY_VAMREG_REF_SYNC_SECRET", ""),
 		PharmacyWorkersEnabled:      envBool("PHARMACY_WORKERS_ENABLED"),
 		VamregDryRun:                envBoolDefault("VAMREG_DRY_RUN", true),

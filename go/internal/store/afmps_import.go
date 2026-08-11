@@ -739,6 +739,33 @@ func (s *Store) CommitAFMPSImport(ctx context.Context, id string, deactivateMiss
 	return result, nil
 }
 
+// HasOpenAFMPSImportJob is true when a gate-1/2 job still awaits human action
+// (validated/reviewed) or a blocked job must be deleted before retry.
+func (s *Store) HasOpenAFMPSImportJob(ctx context.Context) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM pharmacy.afmps_import_jobs
+			WHERE status IN ('validated', 'reviewed', 'blocked')
+		)`).Scan(&exists)
+	return exists, err
+}
+
+// LatestCompletedAFMPSChecksum returns the checksum of the most recent completed job (empty if none).
+func (s *Store) LatestCompletedAFMPSChecksum(ctx context.Context) (string, error) {
+	var sum string
+	err := s.pool.QueryRow(ctx, `
+		SELECT checksum_sha256
+		FROM pharmacy.afmps_import_jobs
+		WHERE status = 'completed'
+		ORDER BY updated_at DESC
+		LIMIT 1`).Scan(&sum)
+	if err == pgx.ErrNoRows {
+		return "", nil
+	}
+	return sum, err
+}
+
 // DeleteAFMPSImportJob removes staging (not ref_medications). Blocked while committing.
 func (s *Store) DeleteAFMPSImportJob(ctx context.Context, id string) error {
 	j, err := s.GetAFMPSImportJob(ctx, id)

@@ -425,7 +425,18 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Staging `pharmacy.afmps
 | **2 — Revue humaine** | Admin UI ou CLI : KPIs + exclude lignes ; **Marquer revu** | `reviewed` |
 | **3 — Commit** | Confirm `IMPORT AFMPS` (ou `IMPORT_AFMPS`) ; upsert lignes `ready` (transactionnel) ; `afmps_meta` **fusionné** (`\|\|`, clés AFMPS priorisées) ; `--deactivate-missing` **opt-in** après affichage du compteur | `completed` |
 
-Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PHARMACY_ENABLED`) · e2e `23-afmps-admin` (fixture `nuxtjs/tests/e2e/fixtures/afmps-mini.csv`) · runbook ops [38](38-RUNBOOK-PHARMACIE-CABINET.md) § Import AFMPS.
+Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PHARMACY_ENABLED`) · job interne mensuel `POST /internal/afmps-import/run` (**gate 1 seule**, pas de commit auto) · e2e `23-afmps-admin` (fixture `nuxtjs/tests/e2e/fixtures/afmps-mini.csv`) · runbook ops [38](38-RUNBOOK-PHARMACIE-CABINET.md) § Import AFMPS.
+
+### Synchro planifiée (mensuelle, semi-auto)
+
+| Élément | Valeur |
+|---------|--------|
+| Cadence | **Mensuelle** (1er du mois 05:00 Europe/Brussels, cron `0 5 1 * *`) — hebdo peu pertinent (référentiel lent) |
+| Source | Objet GCS/média `AFMPS_IMPORT_OBJECT_KEY` (défaut `afmps-imports/latest.csv`) — dépôt ops contrôlé, **pas** de scraper du site AFMPS |
+| Auto | Gate 1 uniquement (parse + staging) + ticket system + email `OPS_NOTIFY_EMAIL` |
+| Humain | Gates 2–3 sur `/admin/afmps-imports/{id}` ; `deactivate-missing` **jamais** en auto |
+| Garde-fous | Skip si job `validated`/`reviewed`/`blocked` encore ouvert ; skip si checksum = dernier `completed` (« rien à faire ») ; notifs dédupliquées (~1/mois ou /job) |
+| Secret | `AFMPS_IMPORT_SECRET` / header `X-Afmps-Import-Secret` · `make gcp-afmps-import-scheduler` |
 
 UI gate 2 : checkbox d’accusé de revue + filtres collision (`insert` / `update` / …) — l’accusé est **UI-only** (CLI/`mark-reviewed` API reste libre pour ops). Commit fusionne `afmps_meta` (clés AFMPS priorisées). Staging rows via `COPY`.
 
@@ -441,12 +452,12 @@ Le PDF Vetcompendium **ne contient pas de CNK** (vérifié sur l’édition FR 2
 
 1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages). Pages = **numéros PDF absolus** (Vetcompendium FR 2026 : offset imprimé ≈ −18, ex. PDF 364 = catalogue imprimé 346).
 2. **Extract chunké** : plage découpée en lots de **6 pages** ; chaque lot est trimmé (`pdfcpu`) puis envoyé à Gemini (timeout HTTP média **5 min**/chunk ; budget job ≈ 10 min + 5 min×chunks, cap 3 h). Échec trim → `trim_failed` (pas de fallback PDF entier). Progress UI = `extractDone` / `extractTotal` (nb de chunks). **Persistance par chunk** : monographies d’un lot réussi écrites tout de suite ; échec au chunk N conserve 1…N−1. **Reprise** : `POST …/extract` sur `failed` reprend à `extractDone` ; `?restart=1` efface et recommence ; extract actif (< 15 min) → 409. Staging `pharmacy.compendium_import_*` + match AFMPS.
-3. Contrôle humain : suggestion / candidat / corriger (page, labo, substance, pack), **Valider** / bulk `confirm-ready`, exclude.
-4. Commit → upsert (`afmps_meta.source=compendium-pdf` + `manufacturer` / `activeSubstance` si présents) — **CNK réel obligatoire**.
+3. Contrôle humain : suggestion / candidat / corriger (page, labo, substance, **force**, **ATC**, pack), viewer PDF inline (`GET …/pdf`, sync `#page=N`), **Valider** / bulk `confirm-ready`, exclude.
+4. Commit → upsert (`afmps_meta.source=compendium-pdf` + `manufacturer` / `activeSubstance` / `strength` si présents) — **CNK réel obligatoire**.
 
-Format catalogue (vérifié FR 2026, plage A–Z) : 2 colonnes · `NOM (Lab)` · substance: dose · forme+voie collées (`comprimépo`) · `Posologie` · espèces · retrait · conditionnement · `R/` · **pas de CNK/ATC**. Invariant extract : ne pas inventer de CNK.
+Format catalogue (vérifié FR 2026, plage A–Z) : 2 colonnes · `NOM (Lab)` · substance: dose · forme+voie collées (`comprimépo`) · `Posologie` · espèces · retrait · conditionnement · `R/` · **pas de CNK/ATC**. Invariant extract : ne pas inventer de CNK. Colonne staging `strength` (migration 000175) + backfill depuis `raw_json`.
 
-Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store, catalogue AFMPS recommandé. `DELETE` job : staging + PDF ; pas de rollback des upserts ; 409 si `extracting`/`committing`.
+Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store, catalogue AFMPS recommandé. `DELETE` job : staging + PDF ; pas de rollback des upserts ; 409 si `extracting`/`committing`. Stream PDF auth admin (pas d’URL publique — clé `compendium-imports/` sensible).
 
 ---
 

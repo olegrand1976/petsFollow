@@ -131,6 +131,10 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"compendium-imports/",
 		"compendium-imports/job1.pdf",
 		"Compendium-Imports/x",
+		"afmps-imports",
+		"afmps-imports/",
+		"afmps-imports/latest.csv",
+		"Afmps-Imports/x",
 		// Base documentaire RAG (guides) — privée, stream auth uniquement.
 		"rag-docs",
 		"rag-docs/",

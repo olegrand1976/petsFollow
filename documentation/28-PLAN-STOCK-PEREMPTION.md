@@ -138,7 +138,7 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 |------|--------|------|
 | Workers Asynq VAMReg | 🟡 | Dry-run sync défaut ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` |
 | invoices.connect (S5) | ⏸ | Gelé jusqu’à reseller Billit (**P0-2**) |
-| Import AFMPS / CNK national | ⏸ | **P0-3** |
+| Import AFMPS / CNK national | 🟡 | Code pipeline + cron gate 1 ✅ · **P0-3** dépôt CSV licencié |
 | Use case commercial pharmacie | ✅ | [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
 | Staging `PHARMACY_ENABLED` + smoke S6 | ✅ | Cloud Run + `make smoke-pharmacy-s6-staging` |
 
@@ -348,7 +348,7 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 
 - [x] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
 - [x] Migrations `000081`+ / chaîne pharmacie `000107`+ appliquées (staging via job seed)
-- [ ] Import CNK national complet (⏸ **P0-3** — seed démo suffit pour pilote)
+- [ ] Import CNK national complet (🟡 code prêt — déposer CSV licencié P0-3 ; seed démo suffit pour pilote)
 - [x] `PHARMACY_ENABLED=true` (défaut staging Cloud Run)
 - [x] Nav Médicaments + tag **`dev`** visible
 - [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)

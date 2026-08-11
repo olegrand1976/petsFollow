@@ -265,6 +265,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
+	r.Post("/internal/afmps-import/run", a.internalAfmpsImportRun)
 	r.Post("/internal/pharmacy/vamreg-ref-sync", a.internalPharmacyVamregRefSync)
 	r.Post("/internal/research-etl/run", a.internalRunResearchETL)
 	r.Post("/internal/visit-reminders/run", a.internalRunVisitReminders)
