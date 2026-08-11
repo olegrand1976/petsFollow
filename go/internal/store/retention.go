@@ -19,12 +19,14 @@ type InactiveAccount struct {
 	Email string
 }
 
-// ListInactiveAccounts liste les comptes (hors admin, hors comptes déjà anonymisés)
-// sans connexion depuis cutoff — purge « 3 ans d'inactivité » des textes légaux.
+// ListInactiveAccounts liste les comptes (hors admin, hors comptes déjà anonymisés,
+// hors placeholders walk-in immutables) sans connexion depuis cutoff — purge
+// « 3 ans d'inactivité » des textes légaux.
 func (s *Store) ListInactiveAccounts(ctx context.Context, cutoff time.Time, limit int) ([]InactiveAccount, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id, role, email FROM identity.users
 		WHERE role <> 'admin'
+		  AND COALESCE(is_walkin_placeholder, false) = false
 		  AND email NOT LIKE '%'||$3
 		  AND COALESCE(last_login_at, created_at) < $1
 		ORDER BY COALESCE(last_login_at, created_at)

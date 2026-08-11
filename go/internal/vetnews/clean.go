@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"html"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ func StripHTML(raw string) string {
 }
 
 // NormalizeURL canonicalizes for dedup (trim, drop fragment, lowercase host scheme).
+// Non-https URLs are rejected (empty) to avoid javascript:/data: poisoning in UI links.
 func NormalizeURL(u string) string {
 	u = strings.TrimSpace(u)
 	if u == "" {
@@ -37,7 +39,14 @@ func NormalizeURL(u string) string {
 		u = u[:i]
 	}
 	u = strings.TrimRight(u, "/")
-	return u
+	parsed, err := url.Parse(u)
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+		return ""
+	}
+	parsed.Scheme = "https"
+	parsed.Host = strings.ToLower(parsed.Host)
+	parsed.Fragment = ""
+	return strings.TrimRight(parsed.String(), "/")
 }
 
 // ContentHash fingerprints title/url/summary/category/importance for change detection.

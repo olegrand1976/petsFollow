@@ -77,6 +77,62 @@ func TestGoogleLoginCreateClientRequiresConsent(t *testing.T) {
 	}
 }
 
+func TestGoogleLoginCreateProRequiresConsent(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
+	email := uniqueEmail("google-pro-noconsent")
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
+		Subject: "sub-" + email, Email: email, EmailVerified: true, Name: "Google Vet",
+	})
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
+		"idToken":  "tok",
+		"audience": "pro",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("want 400 got %d %#v", code, env)
+	}
+	if errMsgKey(env) != "consent_required" {
+		t.Fatalf("error %#v", env["error"])
+	}
+}
+
+func TestGoogleLoginCreateProOK(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")
+	email := uniqueEmail("google-pro-new")
+	sub := "sub-" + email
+	stubGoogleClaims(t, api, handlers.GoogleIDTokenClaims{
+		Subject: sub, Email: email, EmailVerified: true, Name: "Google Vet",
+	})
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/google", map[string]any{
+		"idToken":  "tok",
+		"audience": "pro",
+		"consent":  true,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("want 200 got %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	tok, _ := data["accessToken"].(string)
+	if tok == "" || data["refreshToken"] == nil {
+		t.Fatalf("tokens missing %#v", data)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("me %d %#v", code, env)
+	}
+	me := dataMap(t, env)
+	if me["role"] != "vet" {
+		t.Fatalf("role %#v", me)
+	}
+	if me["termsAcceptedAt"] == nil || me["termsAcceptedAt"] == "" {
+		t.Fatalf("termsAcceptedAt missing %#v", me)
+	}
+}
+
 func TestGoogleLoginCreateClientOK(t *testing.T) {
 	api := newTestAPI(t)
 	api.api.TestSetGoogleOAuthClientID("test-google-client.apps.googleusercontent.com")

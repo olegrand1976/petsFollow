@@ -1083,7 +1083,8 @@ func (s *Store) CancelStaleConsultationOrphans(ctx context.Context, olderThan ti
 		SET status = 'cancelled',
 			proposed_scheduled_at = NULL,
 			pending_action_by = NULL,
-			status_before_reschedule = NULL
+			status_before_reschedule = NULL,
+			callback_phone = ''
 		FROM stale
 		WHERE v.id = stale.id`,
 		olderThan, limit,

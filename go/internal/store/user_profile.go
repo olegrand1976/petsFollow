@@ -172,6 +172,13 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		WHERE t.created_by = $1`); err != nil {
 		return a, err
 	}
+	// Pending / failed / mid-index RAG uploads by this user (approved corpus stays with practice).
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(source_object_key,'') FROM rag.documents
+		WHERE uploaded_by = $1::uuid
+		  AND status IN ('pending','rejected','failed','indexing')`); err != nil {
+		return a, err
+	}
 	if err := collect(&a.SubscriptionIDs, `
 		SELECT COALESCE(stripe_subscription_id,'') FROM billing.pet_entitlements
 		WHERE owner_user_id=$1 AND status IN ('active','past_due','pending')`); err != nil {
@@ -344,6 +351,45 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	}
 	// CR clinical rows stay; purge multi-agent audit trails (steps/citations PHI).
 	if _, err := tx.Exec(ctx, `DELETE FROM rag.improve_runs WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	// Drop non-indexed personal RAG uploads; unlink authorship on retained corpus.
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM rag.documents
+		WHERE uploaded_by = $1::uuid AND status IN ('pending','rejected','failed','indexing')`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE rag.documents SET uploaded_by = NULL WHERE uploaded_by = $1::uuid`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE rag.documents SET reviewed_by = NULL WHERE reviewed_by = $1::uuid`, userID); err != nil {
+		return err
+	}
+	// Commercial CRM: redact PII on sends (FK kept — tombstone is UPDATE not DELETE).
+	if _, err := tx.Exec(ctx, `
+		UPDATE sales.email_sends SET
+			to_email = '[redacted]',
+			subject = '[redacted]',
+			body_html_rendered = '',
+			open_token = 'redacted-' || id::text,
+			error = CASE WHEN error = '' THEN '' ELSE 'redacted' END
+		WHERE commercial_user_id = $1::uuid`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE sales.prospect_events
+		SET actor_user_id = NULL, body = CASE WHEN body = '' THEN '' ELSE '[redacted]' END
+		WHERE actor_user_id = $1::uuid`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE sales.activities
+		SET created_by = NULL,
+		    title = CASE WHEN title = '' THEN title ELSE '[redacted]' END,
+		    updated_at = NOW()
+		WHERE created_by = $1::uuid OR assignee_user_id = $1::uuid`, userID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

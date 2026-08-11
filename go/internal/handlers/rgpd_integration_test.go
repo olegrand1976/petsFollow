@@ -411,3 +411,78 @@ func TestRGPDImproveRunsExportAndProPurge(t *testing.T) {
 		t.Fatalf("visit_reports should remain after pro tombstone, count=%d", reportLeft)
 	}
 }
+
+func TestRGPDRAGDocumentsUnlinkedOnProTombstone(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	adminTok := ensureAdminToken(t, api)
+	_, _, commTok := createCommercial(t, api, adminTok, "rgpd-rag", "RGPD RAG Comm")
+
+	vetEmail := uniqueEmail("rgpd-rag-v")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr RGPD RAG",
+		"practiceName": "Cab RGPD RAG",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode vet %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+	if vetID == "" {
+		t.Fatalf("missing vet userId %#v", env)
+	}
+	vetTok := loginToken(t, api.handler, vetEmail, "VetDemo123!")
+
+	var practiceID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT practice_id::text FROM identity.users WHERE id = $1`, vetID).Scan(&practiceID); err != nil || practiceID == "" {
+		t.Fatalf("practice for vet: %v %q", err, practiceID)
+	}
+
+	pendingID := uuid.NewString()
+	readyID := uuid.NewString()
+	indexingID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO rag.documents (
+			id, scope, practice_id, title, filename, mime_type, content_sha256,
+			source_object_key, byte_size, status, uploaded_by
+		) VALUES
+		($1::uuid, 'practice', $4::uuid, 'Pending', 'p.pdf', 'application/pdf', 'sha-p',
+		 $6, 10, 'pending', $5::uuid),
+		($2::uuid, 'practice', $4::uuid, 'Ready', 'r.pdf', 'application/pdf', 'sha-r',
+		 $7, 10, 'ready', $5::uuid),
+		($3::uuid, 'practice', $4::uuid, 'Indexing', 'i.pdf', 'application/pdf', 'sha-i',
+		 $8, 10, 'indexing', $5::uuid)`,
+		pendingID, readyID, indexingID, practiceID, vetID,
+		"rag-docs/"+pendingID+".pdf", "rag-docs/"+readyID+".pdf", "rag-docs/"+indexingID+".pdf"); err != nil {
+		t.Fatalf("insert rag docs: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me vet %d %#v", code, env)
+	}
+
+	var pendingLeft, indexingLeft int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM rag.documents WHERE id = $1`, pendingID).Scan(&pendingLeft); err != nil {
+		t.Fatal(err)
+	}
+	if pendingLeft != 0 {
+		t.Fatalf("pending rag doc should be deleted, count=%d", pendingLeft)
+	}
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM rag.documents WHERE id = $1`, indexingID).Scan(&indexingLeft); err != nil {
+		t.Fatal(err)
+	}
+	if indexingLeft != 0 {
+		t.Fatalf("indexing rag doc should be deleted, count=%d", indexingLeft)
+	}
+	var uploader any
+	if err := api.pool.QueryRow(ctx, `
+		SELECT uploaded_by FROM rag.documents WHERE id = $1`, readyID).Scan(&uploader); err != nil {
+		t.Fatal(err)
+	}
+	if uploader != nil {
+		t.Fatalf("ready rag uploaded_by must be null after tombstone, got %#v", uploader)
+	}
+}

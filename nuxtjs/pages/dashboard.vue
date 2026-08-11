@@ -106,6 +106,7 @@
         <ul v-else class="pro-dashboard-list">
           <li v-for="item in afscaItems" :key="item.url" class="pro-dashboard-list__item">
             <a
+              v-if="isSafeExternalUrl(item.url)"
               :href="item.url"
               class="pro-dashboard-list__link"
               target="_blank"
@@ -124,11 +125,24 @@
               </span>
               <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
             </a>
+            <div v-else class="pro-dashboard-list__link">
+              <ProIcon name="campaign" :size="20" class="pro-dashboard-list__icon" />
+              <span class="pro-dashboard-list__main">
+                <strong class="pro-dashboard-list__title">{{ item.title }}</strong>
+                <span class="pro-dashboard-list__meta">
+                  {{ formatAfscaDate(item.date) }}
+                  <template v-if="item.label"> · {{ item.label }}</template>
+                  <template v-if="item.scope && item.scope !== 'both'">
+                    · {{ $t(`dashboard.afscaScope.${item.scope}`) }}
+                  </template>
+                </span>
+              </span>
+            </div>
           </li>
         </ul>
         <div class="pro-dashboard-afsca-footer">
           <a
-            v-if="afscaSourceUrl"
+            v-if="isSafeExternalUrl(afscaSourceUrl)"
             :href="afscaSourceUrl"
             class="pro-dashboard-afsca-more"
             target="_blank"
@@ -176,6 +190,7 @@
         <ul v-else class="pro-dashboard-list">
           <li v-for="item in vetNewsItems" :key="item.id || item.sourceUrl" class="pro-dashboard-list__item">
             <a
+              v-if="isSafeExternalUrl(item.sourceUrl)"
               :href="item.sourceUrl"
               class="pro-dashboard-list__link"
               target="_blank"
@@ -195,6 +210,20 @@
               </span>
               <ProIcon name="open_in_new" :size="18" class="pro-dashboard-list__icon" />
             </a>
+            <div v-else class="pro-dashboard-list__link">
+              <span
+                class="pro-dashboard-importance"
+                :data-importance="item.importance || 'low'"
+                :title="$t(`dashboard.vetNewsImportance.${item.importance || 'low'}`)"
+              />
+              <span class="pro-dashboard-list__main">
+                <strong class="pro-dashboard-list__title">{{ item.title }}</strong>
+                <span>
+                  {{ item.sourceName }}
+                  <template v-if="item.publishedAt"> · {{ formatDay(item.publishedAt) }}</template>
+                </span>
+              </span>
+            </div>
           </li>
         </ul>
       </ProCard>
@@ -206,6 +235,11 @@
 import type { CalendarVisit } from '~/composables/useCalendarGrid'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 import { welcomeDisplayName } from '~/utils/welcome-display-name'
+import { isValidHttpsUrl } from '~/utils/headerLinks'
+
+function isSafeExternalUrl(raw: string | undefined | null): boolean {
+  return !!raw && isValidHttpsUrl(raw)
+}
 
 definePageMeta({ middleware: 'vet-only' })
 

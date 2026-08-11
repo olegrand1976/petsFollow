@@ -47,6 +47,22 @@
         <div v-if="googleEnabled" class="pro-login-divider">
           <span>{{ $t('auth.login.or') }}</span>
         </div>
+        <label v-if="googleEnabled" class="pro-consent">
+          <input
+            v-model="googleConsent"
+            type="checkbox"
+            name="googleConsent"
+            data-testid="login-google-consent"
+          >
+          <i18n-t keypath="auth.register.consent" tag="span" scope="global">
+            <template #terms>
+              <NuxtLink to="/legal/terms" target="_blank">{{ $t('legal.terms.link') }}</NuxtLink>
+            </template>
+            <template #privacy>
+              <NuxtLink to="/legal/privacy" target="_blank">{{ $t('legal.privacy.link') }}</NuxtLink>
+            </template>
+          </i18n-t>
+        </label>
         <div
           v-if="googleEnabled"
           ref="googleBtnRef"
@@ -134,6 +150,7 @@ const error = ref(
 )
 const loading = ref(false)
 const googleBtnRef = ref<HTMLElement | null>(null)
+const googleConsent = ref(false)
 
 async function handleAuthResult(res: unknown) {
   const data = unwrapAuthData(res)
@@ -206,12 +223,16 @@ async function handleGoogleCredential(idToken: string) {
   error.value = ''
   loading.value = true
   try {
-    const res = await $fetch('/api/auth/google', { method: 'POST', body: { idToken } })
+    const res = await $fetch('/api/auth/google', {
+      method: 'POST',
+      body: { idToken, consent: googleConsent.value },
+    })
     await handleAuthResult(res)
   } catch (e: any) {
     const code = e?.data?.error?.code
     if (code === 'not_configured') error.value = t('auth.google.notConfigured')
     else if (code === 'forbidden') error.value = t('auth.google.forbidden')
+    else if (code === 'consent_required') error.value = t('auth.register.consentRequired')
     else error.value = t('auth.google.failed')
   } finally {
     loading.value = false
@@ -275,6 +296,24 @@ watch(step, async (s) => {
   display: block;
   width: 100%;
   min-height: 44px;
+}
+
+.pro-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--pf-vet-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.pro-consent input {
+  margin-top: 0.2rem;
+}
+
+.pro-consent a {
+  color: var(--pf-vet-accent);
+  font-weight: 600;
 }
 
 .pro-login-back {

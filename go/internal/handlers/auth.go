@@ -66,7 +66,7 @@ type googleLoginReq struct {
 	InviteCode string `json:"inviteCode,omitempty"`
 	// CommercialUserID — optional nearby commercial pick when no invite code (client audience).
 	CommercialUserID string `json:"commercialUserId,omitempty"`
-	Consent          bool   `json:"consent,omitempty"` // requis pour create-if-absent audience=client (RGPD)
+	Consent          bool   `json:"consent,omitempty"` // requis pour create-if-absent (Pro et client)
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -196,11 +196,11 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 		return store.User{}, err
 	}
 
-	// Unknown email: Pro can auto-register a vet; clients can create-if-absent via Google.
+	// Unknown email: create-if-absent requires explicit CGU consent (Pro and client).
+	if !consent {
+		return store.User{}, errGoogleConsentRequired
+	}
 	if audience == "client" {
-		if !consent {
-			return store.User{}, errGoogleConsentRequired
-		}
 		locale := localeOf(r)
 		return a.store.RegisterGoogleClient(ctx, store.RegisterGoogleClientInput{
 			Email: email, FullName: fullName, GoogleSub: googleSub, PreferredLocale: locale,
@@ -213,7 +213,7 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 	return a.store.RegisterGoogleVet(ctx, store.RegisterGoogleVetInput{
 		Email: email, FullName: fullName, GoogleSub: googleSub, PracticeName: practiceName,
 		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
-		TermsAccepted: consent,
+		TermsAccepted: true,
 	})
 }
 
@@ -300,7 +300,7 @@ func (a *API) issueLoginResponseWithExtra(w http.ResponseWriter, r *http.Request
 }
 
 // totpReplayGuard — anti-replay : un code TOTP accepté ne peut pas être rejoué
-// dans sa fenêtre de validité (~90 s avec skew ±1). En mémoire, par instance.
+// dans sa fenêtre de validité (~90 s avec skew ±1). Mémoire locale = repli si Redis down.
 type totpReplayGuard struct {
 	mu   sync.Mutex
 	last map[string]totpUse
@@ -313,23 +313,37 @@ type totpUse struct {
 
 var totpGuard = totpReplayGuard{last: make(map[string]totpUse)}
 
+const totpReplayWindow = 2 * time.Minute
+
 // checkAndRemember retourne false si le même code vient d'être consommé pour cet utilisateur.
 func (g *totpReplayGuard) checkAndRemember(userID, code string) bool {
-	const replayWindow = 2 * time.Minute
 	now := time.Now()
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	if use, ok := g.last[userID]; ok && use.code == code && now.Sub(use.at) < replayWindow {
+	if use, ok := g.last[userID]; ok && use.code == code && now.Sub(use.at) < totpReplayWindow {
 		return false
 	}
 	// GC opportuniste.
 	for k, use := range g.last {
-		if now.Sub(use.at) >= replayWindow {
+		if now.Sub(use.at) >= totpReplayWindow {
 			delete(g.last, k)
 		}
 	}
 	g.last[userID] = totpUse{code: code, at: now}
 	return true
+}
+
+// totpCheckAndRemember prefers Redis (shared across Cloud Run replicas) then falls back in-memory.
+// If Redis was reachable for the first consume then fails on replay, the in-memory guard on
+// another replica may not see it — acceptable degradation vs blocking 2FA when Redis blips.
+func (a *API) totpCheckAndRemember(ctx context.Context, userID, code string) bool {
+	if a != nil && a.redis != nil {
+		ok, err := a.redis.SetNX(ctx, "totp:"+userID+":"+code, "1", totpReplayWindow)
+		if err == nil {
+			return ok
+		}
+	}
+	return totpGuard.checkAndRemember(userID, code)
 }
 
 type verify2FAReq struct {
@@ -353,7 +367,7 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
+	if !totp.Validate(req.Code, secret) || !a.totpCheckAndRemember(r.Context(), id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
@@ -497,7 +511,7 @@ func (a *API) twoFactorDisable(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
+	if !totp.Validate(req.Code, secret) || !a.totpCheckAndRemember(r.Context(), id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}

@@ -1,6 +1,7 @@
 package vetnews
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -134,6 +135,33 @@ func TestNormalizeURL(t *testing.T) {
 	if got := NormalizeURL("https://x.test/a/#frag"); got != "https://x.test/a" {
 		t.Fatalf("%q", got)
 	}
+	if got := NormalizeURL("javascript:alert(1)"); got != "" {
+		t.Fatalf("want empty for javascript, got %q", got)
+	}
+	if got := NormalizeURL("http://insecure.test/a"); got != "" {
+		t.Fatalf("want empty for http, got %q", got)
+	}
+}
+
+func TestRejectPrivateOrNonHTTPS(t *testing.T) {
+	if err := rejectPrivateOrNonHTTPS(mustURL(t, "https://example.com/x")); err != nil {
+		t.Fatal(err)
+	}
+	if err := rejectPrivateOrNonHTTPS(mustURL(t, "http://example.com/x")); err == nil {
+		t.Fatal("want https_required")
+	}
+	if err := rejectPrivateOrNonHTTPS(mustURL(t, "https://127.0.0.1/x")); err == nil {
+		t.Fatal("want private_ip_forbidden")
+	}
+}
+
+func mustURL(t *testing.T, raw string) *url.URL {
+	t.Helper()
+	u, err := url.Parse(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return u
 }
 
 func TestResolveURL(t *testing.T) {

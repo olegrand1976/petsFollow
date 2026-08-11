@@ -4,7 +4,9 @@
 # Staging (défaut) ou prod : PETSFOLLOW_GCP_ENV=prod …
 # Usage:
 #   AFMPS_IMPORT_SECRET=... ./infra/gcp/setup-afmps-import-scheduler.sh
-# Prérequis : CSV pack licencié déposé sur gs://$GCS_MEDIA_BUCKET/afmps-imports/latest.csv
+# Prérequis : CSV pack licencié déposé sur gs://$GCS_MEDIA_BUCKET/$AFMPS_IMPORT_OBJECT_KEY
+# (préférer une clé opaque, ex. afmps-imports/<uuid>.csv — latest.csv est prévisible sur
+# un bucket allUsers ; hors allowlist URL publique app mais lisible si le chemin est connu).
 #
 # Note : ne pas combiner day-of-month + day-of-week (OR GCP) — ex. « 1-7 * 1 » ≠ 1er lundi.
 set -euo pipefail
@@ -24,6 +26,7 @@ API_URL="${PUBLIC_API_URL%/}"
 ENDPOINT="${API_URL}/api/v1/internal/afmps-import/run"
 # Parse + COPY ~2.7k CNK : deadline élargie (max Scheduler HTTP = 1800s).
 ATTEMPT_DEADLINE="${ATTEMPT_DEADLINE:-540s}"
+OBJECT_KEY="${AFMPS_IMPORT_OBJECT_KEY:-afmps-imports/latest.csv}"
 
 pf_scheduler_ensure_secret "$SECRET_NAME" "${AFMPS_IMPORT_SECRET:-}"
 
@@ -31,7 +34,10 @@ SECRET="$(gcloud secrets versions access latest \
   --secret="$SECRET_NAME" --project="$GCP_PROJECT_ID")"
 
 echo "→ Redeploy API with AFMPS_IMPORT_SECRET=${SECRET_NAME}:latest if not yet wired."
-echo "→ Déposer le CSV : gsutil cp pack.csv gs://\$GCS_MEDIA_BUCKET/afmps-imports/latest.csv"
+echo "→ Déposer le CSV : gsutil cp pack.csv gs://\$GCS_MEDIA_BUCKET/${OBJECT_KEY}"
+if [[ "$OBJECT_KEY" == "afmps-imports/latest.csv" ]]; then
+  echo "⚠ Clé prévisible sur bucket allUsers — préférer AFMPS_IMPORT_OBJECT_KEY=afmps-imports/<uuid>.csv"
+fi
 
 HEADERS="Content-Type=application/json,X-Afmps-Import-Secret=${SECRET}"
 pf_scheduler_upsert_http

@@ -53,12 +53,16 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 | **3 — Commit** | Phrase `IMPORT AFMPS` ou `IMPORT_AFMPS` → upsert transactionnel + fusion `afmps_meta` | `completed` |
 
 **Décision produit (2026-08-11)** : synchro **mensuelle semi-auto** — le scheduler ne fait que la gate 1 + notif ops ; gates 2–3 restent humaines ; pas de `deactivate-missing` auto ; pas de scraper live.  
-**Licence (2026-08-11)** : usage de l’export pack officiel AFMPS + dépôt contrôlé sous `afmps-imports/` (bucket médias privé) **confirmé** pour staging/prod petsFollow.
+**Licence (2026-08-11)** : usage de l’export pack officiel AFMPS + dépôt contrôlé sous `afmps-imports/` **confirmé** pour staging/prod petsFollow.  
+**Médias** : le bucket GCS a `allUsers` → `objectViewer` (avatars/photos) ; l’app n’émet pas d’URL pour `afmps-imports/` (allowlist fail-closed). Residual : objet à chemin **prévisible** (`latest.csv`) lisible si l’URL est connue → préférer `AFMPS_IMPORT_OBJECT_KEY` opaque (pas de PHI patient, risque licence catalogue).
 
 ### Synchro mensuelle (Cloud Scheduler)
 
-1. Ops dépose le CSV pack officiel : `gsutil cp export.csv gs://$GCS_MEDIA_BUCKET/afmps-imports/latest.csv` (objet privé, hors allowlist publique).
-2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **`--update-secrets` / redeploy** API pour remonter `:latest` (sinon 401 jusqu’à nouvelle révision).
+1. Ops dépose le CSV pack officiel sous une clé **non prévisible** :
+   `gsutil cp export.csv gs://$GCS_MEDIA_BUCKET/$AFMPS_IMPORT_OBJECT_KEY`
+   (ex. `afmps-imports/<uuid>.csv` ; défaut historique `afmps-imports/latest.csv` à migrer).
+   Hors allowlist d’URL publique app — mais le bucket reste lisible `allUsers` si le chemin est connu.
+2. Provisionner : `AFMPS_IMPORT_SECRET=… make gcp-afmps-import-scheduler` puis **`--update-secrets` / redeploy** API pour remonter `:latest` (sinon 401 jusqu’à nouvelle révision). Aligner `AFMPS_IMPORT_OBJECT_KEY` sur le chemin déposé.
 3. Cron (1er du mois 05:00 Brussels, `0 5 1 * *`) → `POST /api/v1/internal/afmps-import/run` + `X-Afmps-Import-Secret`.
 4. Ticket system + email `OPS_NOTIFY_EMAIL` → ouvrir `/admin/afmps-imports/{id}` pour gates 2–3.
 5. Skip auto si un job `validated`/`reviewed`/`blocked` est encore ouvert, ou si le checksum SHA-256 du fichier = dernier commit (**hash avant parse**, UTF-8 BOM ignoré — pas de re-parse du pack inchangé).

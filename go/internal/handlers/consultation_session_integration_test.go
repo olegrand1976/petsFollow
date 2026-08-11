@@ -730,7 +730,7 @@ func TestConsultationSessionOrphanPurge(t *testing.T) {
 
 	ctx := context.Background()
 	if _, err := api.pool.Exec(ctx, `
-		UPDATE visits.visits SET scheduled_at = NOW() - INTERVAL '7 hours' WHERE id = $1`, orphanID); err != nil {
+		UPDATE visits.visits SET scheduled_at = NOW() - INTERVAL '7 hours', callback_phone = '0470 99 88 77' WHERE id = $1`, orphanID); err != nil {
 		t.Fatalf("backdate orphan: %v", err)
 	}
 	if _, err := api.pool.Exec(ctx, `
@@ -753,6 +753,13 @@ func TestConsultationSessionOrphanPurge(t *testing.T) {
 	}
 	if orphanStatus != "cancelled" {
 		t.Fatalf("orphan status=%s want cancelled", orphanStatus)
+	}
+	var orphanPhone string
+	if err := api.pool.QueryRow(ctx, `SELECT COALESCE(callback_phone,'') FROM visits.visits WHERE id=$1`, orphanID).Scan(&orphanPhone); err != nil {
+		t.Fatalf("orphan phone: %v", err)
+	}
+	if orphanPhone != "" {
+		t.Fatalf("orphan callback_phone must be cleared, got %q", orphanPhone)
 	}
 	if err := api.pool.QueryRow(ctx, `SELECT status FROM visits.visits WHERE id=$1`, keptID).Scan(&keptStatus); err != nil {
 		t.Fatalf("kept status: %v", err)

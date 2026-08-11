@@ -44,9 +44,13 @@ func (c *Client) base() string {
 	return strings.TrimRight(strings.TrimSpace(c.BaseURL), "/")
 }
 
-// Configured reports whether the client has a base URL.
+// Configured reports whether the client has a base URL and an auth mechanism
+// (shared secret and/or Cloud Run ID token). URL alone is fail-closed.
 func (c *Client) Configured() bool {
-	return c != nil && c.base() != ""
+	if c == nil || c.base() == "" {
+		return false
+	}
+	return strings.TrimSpace(c.Secret) != "" || c.UseIDToken
 }
 
 func (c *Client) authorize(ctx context.Context, req *http.Request) error {

@@ -23,7 +23,7 @@ func (a *API) registerClientImportRoutes(r chi.Router) {
 	r.Put("/admin/client-imports/{id}/mapping", a.adminPutClientImportMapping)
 	r.Patch("/admin/client-imports/{id}/rows/{rowId}", a.adminPatchClientImportRow)
 	r.Post("/admin/client-imports/{id}/commit", a.adminCommitClientImport)
-	r.Get("/admin/client-imports/{id}/credentials", a.adminDownloadClientImportCredentials)
+	r.Get("/admin/client-imports/{id}/credentials/{token}", a.adminDownloadClientImportCredentials)
 }
 
 func (a *API) adminCreateClientImport(w http.ResponseWriter, r *http.Request) {
@@ -286,7 +286,7 @@ func (a *API) adminDownloadClientImportCredentials(w http.ResponseWriter, r *htt
 		return
 	}
 	id := chi.URLParam(r, "id")
-	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	token := strings.TrimSpace(chi.URLParam(r, "token"))
 	if token == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "token_required")
 		return

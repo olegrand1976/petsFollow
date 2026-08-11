@@ -96,7 +96,11 @@ type Config struct {
 	PharmacyExpirySecret string
 	// AfmpsImportSecret protège POST /internal/afmps-import/run (gate 1 mensuelle).
 	AfmpsImportSecret string
-	// AfmpsImportObjectKey — objet média/GCS du CSV pack (défaut afmps-imports/latest.csv).
+	// AfmpsImportObjectKey — objet média/GCS du CSV pack.
+	// Défaut historique afmps-imports/latest.csv : prévisible sur le bucket médias
+	// (allUsers objectViewer). Préférer une clé opaque via AFMPS_IMPORT_OBJECT_KEY
+	// (ex. afmps-imports/<uuid>.csv) — namespace hors allowlist URL publique, mais
+	// l’objet reste lisible si le chemin est connu.
 	AfmpsImportObjectKey string
 	// PharmacyVamregRefSyncSecret protège POST /internal/pharmacy/vamreg-ref-sync.
 	PharmacyVamregRefSyncSecret string

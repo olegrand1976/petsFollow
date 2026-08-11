@@ -323,7 +323,7 @@ async function commit() {
 
 function downloadCredentials() {
   if (!credentialsToken.value) return
-  window.location.href = `/api/admin/client-imports/${id.value}/credentials?token=${encodeURIComponent(credentialsToken.value)}`
+  window.location.href = `/api/admin/client-imports/${id.value}/credentials/${encodeURIComponent(credentialsToken.value)}`
 }
 
 onMounted(() => load())

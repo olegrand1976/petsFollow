@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
 func TestWalkinPlaceholdersEnsureAndImmutability(t *testing.T) {
@@ -199,5 +201,36 @@ func TestWalkinIdentifyCreateAndExisting(t *testing.T) {
 	pet2 := env["data"].(map[string]any)["pet"].(map[string]any)
 	if pet2["id"] == walkinPetID || pet2["id"] == newPetID {
 		t.Fatalf("expected another new pet, got %#v", pet2)
+	}
+}
+
+func TestWalkinPlaceholdersExcludedFromInactiveRetentionList(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := t.Context()
+	st := store.New(api.pool)
+
+	var walkinID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users
+		WHERE is_walkin_placeholder AND role = 'client'
+		LIMIT 1`).Scan(&walkinID); err != nil || walkinID == "" {
+		t.Fatalf("need seeded walk-in: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE identity.users
+		SET last_login_at = NOW() - INTERVAL '4 years', created_at = NOW() - INTERVAL '4 years'
+		WHERE id = $1`, walkinID); err != nil {
+		t.Fatal(err)
+	}
+
+	cutoff := time.Now().Add(-3 * 365 * 24 * time.Hour)
+	accounts, err := st.ListInactiveAccounts(ctx, cutoff, 500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range accounts {
+		if a.ID == walkinID {
+			t.Fatalf("walk-in placeholder %s must not appear in inactive retention list", walkinID)
+		}
 	}
 }

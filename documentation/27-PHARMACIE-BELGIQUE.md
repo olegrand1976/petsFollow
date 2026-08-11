@@ -434,7 +434,7 @@ Surfaces : CLI `import-cnk` · admin `/admin/afmps-imports` (tag `dev`, flag `PH
 | Élément | Valeur |
 |---------|--------|
 | Cadence | **Mensuelle** (1er du mois 05:00 Europe/Brussels, cron `0 5 1 * *`) — hebdo peu pertinent (référentiel lent) |
-| Source | Objet GCS/média `AFMPS_IMPORT_OBJECT_KEY` (défaut `afmps-imports/latest.csv`) — dépôt ops contrôlé, **pas** de scraper du site AFMPS |
+| Source | Objet GCS/média `AFMPS_IMPORT_OBJECT_KEY` (défaut historique `afmps-imports/latest.csv`) — dépôt ops contrôlé, **pas** de scraper du site AFMPS. **Sécurité** : le bucket médias est en lecture `allUsers` ; le namespace `afmps-imports/` est hors allowlist d’URL publique app, mais un chemin **prévisible** reste téléchargeable. En staging/prod, poser `AFMPS_IMPORT_OBJECT_KEY=afmps-imports/<secret-uuid>.csv` (ou équivalent opaque) et aligner le dépôt `gsutil`. |
 | Auto | Gate 1 uniquement (parse + staging) + ticket system + email `OPS_NOTIFY_EMAIL` |
 | Humain | Gates 2–3 sur `/admin/afmps-imports/{id}` ; `deactivate-missing` **jamais** en auto |
 | Garde-fous | Skip si job `validated`/`reviewed`/`blocked` encore ouvert ; skip si checksum = dernier `completed` (« rien à faire ») ; notifs dédupliquées (~1/mois ou /job) |

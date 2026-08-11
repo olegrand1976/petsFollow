@@ -62,6 +62,15 @@ func (c *Client) Set(ctx context.Context, k, v string, ttl time.Duration) error 
 	return c.rdb.Set(ctx, c.key(k), v, ttl).Err()
 }
 
+// SetNX sets key only if it does not exist. Returns true when the key was set.
+// When Redis is unavailable, returns true (caller should fall back to local guard).
+func (c *Client) SetNX(ctx context.Context, k, v string, ttl time.Duration) (bool, error) {
+	if c == nil || c.rdb == nil {
+		return true, redis.Nil
+	}
+	return c.rdb.SetNX(ctx, c.key(k), v, ttl).Result()
+}
+
 func (c *Client) LPush(ctx context.Context, k string, values ...any) error {
 	if c == nil || c.rdb == nil {
 		return nil

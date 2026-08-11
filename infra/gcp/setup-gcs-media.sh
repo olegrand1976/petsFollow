@@ -38,6 +38,10 @@ gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
 
 # Avatars / photos : lecture publique (URLs storage.googleapis.com).
 # GCP interdit une condition allUsers qui exclurait visit-reports/ —
+# la protection PHI repose sur l’app (pas d’URL + stream auth + UUID).
+# Residual : préfixes sensibles (documents/, afmps-imports/, …) restent
+# lisibles si le chemin objet est connu — utiliser des clés opaques
+# (surtout AFMPS_IMPORT_OBJECT_KEY, pas latest.csv en prod).
 # les objets PHI n’exposent pas d’URL publique (media.Upload → "").
 echo "→ IAM objectViewer public (allUsers) pour médias non-PHI"
 gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \

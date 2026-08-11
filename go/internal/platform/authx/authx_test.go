@@ -7,6 +7,18 @@ import (
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
+func TestParseRejectsNonHMACAlg(t *testing.T) {
+	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
+	// Hand-crafted header with alg=none (classic confusion). Must not parse as access.
+	noneTok := "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyLTEiLCJlbWFpbCI6InZldEB0ZXN0LmNvbSIsInJvbGUiOiJ2ZXQiLCJ0eXAiOiJhY2Nlc3MifQ."
+	if _, err := issuer.Parse(noneTok); err == nil {
+		t.Fatal("expected alg=none rejected by Parse")
+	}
+	if _, err := issuer.ParseMFA(noneTok); err == nil {
+		t.Fatal("expected alg=none rejected by ParseMFA")
+	}
+}
+
 func TestIssueAndParseAccessToken(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
 	pair, err := issuer.IssueProfile("user-1", "vet@test.com", kernel.RoleVet, "practice-1", "", 3)

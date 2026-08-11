@@ -66,10 +66,22 @@ func TestClientUnauthorized(t *testing.T) {
 func TestClientNotConfigured(t *testing.T) {
 	c := &crewai.Client{}
 	if c.Configured() {
-		t.Fatal("expected not configured")
+		t.Fatal("empty client must not be configured")
 	}
 	if err := c.Health(context.Background()); err == nil {
 		t.Fatal("expected error")
+	}
+	c = &crewai.Client{BaseURL: "https://crew.example"}
+	if c.Configured() {
+		t.Fatal("URL without auth must not be configured")
+	}
+	c = &crewai.Client{BaseURL: "https://crew.example", Secret: "sekrit"}
+	if !c.Configured() {
+		t.Fatal("URL+secret must be configured")
+	}
+	c = &crewai.Client{BaseURL: "https://crew.example", UseIDToken: true}
+	if !c.Configured() {
+		t.Fatal("URL+UseIDToken must be configured")
 	}
 }
 

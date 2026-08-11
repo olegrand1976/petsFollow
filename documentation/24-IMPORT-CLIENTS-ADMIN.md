@@ -35,7 +35,7 @@ Préfixe : `/api/v1/admin/client-imports` (rôle admin).
 | `PUT` | `/{id}/mapping` |
 | `PATCH` | `/{id}/rows/{rowId}` |
 | `POST` | `/{id}/commit` |
-| `GET` | `/{id}/credentials?token=` |
+| `GET` | `/{id}/credentials/{token}` |
 
 BFF Nuxt : `/api/admin/client-imports/*` · UI : `/admin/client-imports`.
 

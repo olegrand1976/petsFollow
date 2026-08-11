@@ -111,7 +111,7 @@ Parcours minimum avant toute dist / staging.
 | B1.3 | P1 | Register véto | `/register` → email | Page `/register/sent` |
 | B1.4 | P1 | Confirm email | `/confirm-email?token=demo-confirm-email` | Compte confirmé / login OK |
 | B1.5 | P1 | Forgot / reset | Forgot → `/reset-password?token=demo-reset-password` (`vet.reset`) | Nouveau MDP utilisable |
-| B1.6 | P2 | Google OAuth (si configuré) | Bouton Google login | Session Pro ; bouton masqué si pas de client ID |
+| B1.6 | P2 | Google OAuth (si configuré) | Bouton Google login + case CGU | Session Pro existante sans consent ; **create-if-absent** exige `consent:true` (`consent_required` sinon) — **auto** : `TestGoogleLoginCreateProRequiresConsent` + `TestGoogleLoginCreateProOK` ; UI `login-google-consent` |
 | B1.7 | P2 | 2FA | Settings → activer TOTP → logout → login + code | Gate 2FA ; refuse code faux |
 | B1.8 | P1 | Must-change password | Compte force change | `/change-password` puis accès app |
 | B1.9 | P2 | Pages légales | `/legal/mentions` `/privacy` `/terms` | Contenu + i18n |
@@ -127,7 +127,7 @@ Parcours minimum avant toute dist / staging.
 | B2.3 | P0 | Login véto dans Flutter | Compte `vet.demo` | Message « utilisez Pro web » / refus |
 | B2.4 | P1 | Register client | Self-signup → confirm email | Compte client créé |
 | B2.5 | P1 | Forgot / reset | Flux MDP | Reset OK |
-| B2.6 | P1 | Google client (si config) | Sign-In Google email inconnu | Create-if-absent client — **auto** : `TestGoogleLoginCreateClientOK` + `login_google_test` (audience=client) |
+| B2.6 | P1 | Google client (si config) | Sign-In Google email inconnu | Create-if-absent client — **auto** : `TestGoogleLoginCreateClientRequiresConsent` + `TestGoogleLoginCreateClientOK` + `login_google_test` (audience=client) |
 | B2.7 | P1 | Google email Pro | Compte véto via Google | Erreur `google_client_only` — **auto** : `TestGoogleLoginClientOnlyForVetEmail` + mapping `register_social_buttons_test` |
 | B2.8 | P2 | Force change password | Compte temporaire | Écran dédié |
 | B2.9 | P2 | Logout | Settings → logout | Retour login ; token invalidé |
@@ -189,7 +189,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
 | C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal setup pet → visite `confirmDirect` + `consultationSession` → **workspace** `/consultations/{id}` | Même écran que l’historique CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda ; close → confirm Enregistrer/Annuler ; **Finaliser** → hub direct (`consultation-next-steps`) ; **Enregistrer** → confirmation (`consultation-next-prompt` → `consultation-next-continue`) — « Continuer le CR » garde le panel, hub rejoignable ensuite via `consultation-goto-next-steps` (`03b`, `03e`) |
-| C2.14 | P1 | Consultation anti-orphelins | Fermeture workspace / setup sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel désactivé ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; leave-save forceSave+done ; dirty post-save → prompt `abandon` (pas cancel visite) ; `beforeunload` si dirty/unsaved ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
+| C2.14 | P1 | Consultation anti-orphelins | Fermeture workspace / setup sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel désactivé ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; leave-save forceSave+done ; dirty post-save → prompt `abandon` (pas cancel visite) ; `beforeunload` si dirty/unsaved ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) — **auto** : `TestConsultationSessionOrphanPurge` vide aussi `callback_phone` ; walk-ins exclus de `ListInactiveAccounts` (`TestWalkinPlaceholdersExcludedFromInactiveRetentionList`) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
 | C2.16 | P1 | CTA post-CR DAF / facture | Après Finaliser (hub) ou Enregistrer + confirmation → CTA | `/daf/nouveau?visitId=` · finalize inline · `/invoicing?visitId=&mode=direct|fromDaf` + contextes ; badge draft DAF oublié `/consultations` |
 | C2.17 | P1 | Historique consultations | `/consultations` liste **walk-in + RDV avec CR** date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR → **même workspace** `/consultations/{id}` (hub DAF/facture si éditable) ; icône fiche animal (`pets`) ; supprimer (confirm) si **walk-in** ou statut **done/cancelled** ; RDV agenda sans CR **hors** liste ; supprimer → hors liste **et** agenda (`deleted_at`) ; player modal affiche durée persistée |
@@ -782,6 +782,27 @@ Fichiers : `go/internal/handlers/security_hardening_integration_test.go`, `pitch
 | S19 | URL mock billing signée puis **modifiée** (plan, propriétaire, animal, paramètre ajouté/retiré) | **Rejetée** — la signature couvre tous les paramètres, pas seulement leur présence |
 | S20 | Nom de fichier hostile sur un document (`"`, CRLF, `../`) | `Content-Disposition` inoffensif ; extension issue du **content type stocké**, jamais du nom d'origine |
 
+#### Remédiations auth / RGPD (revue sécu)
+
+```bash
+# Unitaires
+go test ./internal/vetnews/ ./internal/platform/crewai/ ./internal/platform/authx/ ./internal/platform/redisx/ -count=1
+
+# Intégration (DB seedée)
+go test ./internal/handlers/ -run 'TestGoogleLoginCreate(Pro|Client)|TestGoogleLoginProAudience|TestRGPDRAGDocuments|TestWalkinPlaceholdersExcluded|TestConsultationSessionOrphanPurge|TestRGPDImproveRuns' -count=1 -p 1
+```
+
+| ID | Cas | Attendu |
+|----|-----|---------|
+| S21 | Google Pro create-if-absent sans consent | **400** `consent_required` — `TestGoogleLoginCreateProRequiresConsent` |
+| S22 | Google Pro create-if-absent + consent | **200** + `termsAcceptedAt` — `TestGoogleLoginCreateProOK` |
+| S23 | Orphan walk-in cancelled | `callback_phone` vidé — `TestConsultationSessionOrphanPurge` |
+| S24 | Walk-in dans cron 3 ans | Absent de `ListInactiveAccounts` — `TestWalkinPlaceholdersExcludedFromInactiveRetentionList` |
+| S25 | Tombstone Pro + RAG | pending/indexing deleted ; ready `uploaded_by` NULL — `TestRGPDRAGDocumentsUnlinkedOnProTombstone` |
+| S26 | JWT `alg=none` | Rejeté par `Parse` / `ParseMFA` — `TestParseRejectsNonHMACAlg` |
+| S27 | Redis `SetNX` | 1ʳᵉ fois true, 2ᵉ false (anti-replay TOTP) — `TestSetNX` |
+| S28 | CrewAI URL seule | `Configured()=false` sans secret / ID token |
+
 Conséquence assumée de S7/S8 : l'access token reste valide jusqu'à son expiration (~15 min) — la révocation est vérifiée au refresh, pas à chaque requête. Le bump est **global au compte** : un logout web ferme aussi la session Flutter.
 
 Au premier déploiement, les tokens émis avant la migration n'ont pas de claim `tv` (lu à 0 ≠ 1 en base) : toutes les sessions actives tombent au premier refresh et chacun se reconnecte une fois.
@@ -865,6 +886,8 @@ Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 | F16 | RGPD staff | `DELETE /me` `vet_assistant` / `secretary` | tombstone (pas 404) ; rétention inclut ces rôles |
 | F17 | RGPD dual | care_pro + pet `owner_user_id` | `DELETE /me` purge pets puis tombstone |
 | F18 | RGPD consent | client `terms_accepted_at` NULL | `POST /me/accept-terms` `{consent:true}` → `termsAcceptedAt` ; **API 403** hors allowlist (`/pets`…) jusqu’à accept |
+| F19 | RGPD RAG | Pro avec docs `pending`/`indexing`/`ready` | `DELETE /me` : pending+indexing purgés (+ média) ; ready garde corpus, `uploaded_by` NULL — **auto** : `TestRGPDRAGDocumentsUnlinkedOnProTombstone` |
+| F20 | RGPD CRM | Commercial avec `email_sends` / events / activities | Tombstone : redact `to_email`/`subject`/`body` ; events actor NULL ; activities title `[redacted]` |
 
 #### Vue filiation (API + Pro UI)
 

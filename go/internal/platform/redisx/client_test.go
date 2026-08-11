@@ -34,3 +34,28 @@ func TestPublishSubscribe(t *testing.T) {
 		t.Fatal("timeout waiting pubsub")
 	}
 }
+
+func TestSetNX(t *testing.T) {
+	c, err := redisx.New("127.0.0.1:6379", "petsfollow-test:")
+	if err != nil || c == nil {
+		t.Skip("redis unavailable")
+	}
+	t.Cleanup(func() { _ = c.Close() })
+
+	ctx := context.Background()
+	key := "totp-unit-" + time.Now().Format("150405.000")
+	ok, err := c.SetNX(ctx, key, "1", 2*time.Minute)
+	if err != nil || !ok {
+		t.Fatalf("first SetNX want true nil, got %v %v", ok, err)
+	}
+	ok, err = c.SetNX(ctx, key, "1", 2*time.Minute)
+	if err != nil || ok {
+		t.Fatalf("second SetNX want false nil, got %v %v", ok, err)
+	}
+
+	var nilClient *redisx.Client
+	ok, err = nilClient.SetNX(ctx, key, "1", time.Minute)
+	if err == nil || !ok {
+		t.Fatalf("nil client want (true, err), got %v %v", ok, err)
+	}
+}
