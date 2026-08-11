@@ -1,105 +1,108 @@
-# 45 — Specs brouillon P0-4…P0-7 (pharmacie)
+# 45 — Specs P0-4…P0-7 (pharmacie) — décisions produit
 
-**Statut** : brouillons produit/juridique — **pas** encore figés.  
+**Statut** : **finalisé produit (2026-08-11)** — validation juridique / commerciale encore ouverte (cases ☐).  
 **Parent** : [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) §0.  
-**Date** : 2026-08-11.
+**Effet** : ces décisions **cadrent** les Phases 4.B / 4.E / 5.A–C ; le **code** ne démarre qu’après coche juridique/commercial ci-dessous (ou amendement écrit).
 
-Ces cadres permettent de démarrer les discussions ; la Phase code (4.B / 4.E / 5.A–C) reste bloquée jusqu’à validation écrite (critère de sortie P0).
+| P0 | Décision produit | Validation restante |
+|----|------------------|---------------------|
+| P0-4 | Modèle registre + rétention 5 ans + exports | ☐ Juridique BE |
+| P0-5 | Process pilote EDI (1 grossiste) | ☐ Commercial (choix nom) |
+| P0-6 | Hybride : AFMPS + Compendium build ; licence notices plus tard | ☐ Produit / budget |
+| P0-7 | Rester en disclaimer non certifié jusqu’à trajectoire certif claire | ☐ Juridique |
 
 ---
 
 ## P0-4 — Registre stupéfiants BE (→ Phase 4.B)
 
-### Objectif
-Tenir un registre conforme des substances contrôlées (stupéfiants / psychotropes vétérinaires) au niveau cabinet.
+### Décision produit
+1. **Périmètre** : substances contrôlées (stupéfiants / psychotropes) utilisées en cabinet — flag sur le référentiel + journal d’écritures immuable.
+2. **Liste** : démarrer par flag manuel admin (`is_controlled` sur `ref_medications`) + import/annotation ; pas de scraper légal inventé. La liste officielle BE exacte = **validation juridique** (annexe / ATC / CNK).
+3. **Rétention** : **5 ans** minimum, alignée sur 4.F (`pharmacy.*` déjà hors purge destructive mouvements).
+4. **Responsable** : le **vétérinaire** (profil `vet`) clôture / atteste ; assistante peut saisir sous supervision (ACL à préciser en 4.B).
+5. **Export** : **PDF horodaté + CSV** à la demande (période) ; pas d’obligation de cron annuel en V1.
 
-### Questions ouvertes (juridique)
-1. Liste de référence officielle BE (codes CNK / ATC / annexe) à synchroniser ?
-2. Durée de conservation minimale (souvent 5 ans — confirmer) vs rétention `pharmacy.*` déjà 5 ans (4.F) ?
-3. Qui signe / clôture le registre (vétérinaire responsable vs assistante) ?
-4. Export exigé : PDF horodaté, CSV, ou les deux ? Fréquence (à la demande / annuel) ?
-
-### Modèle de données (proposition)
+### Modèle de données (cible 4.B)
 | Entité | Champs clés |
 |--------|-------------|
-| `ref_medications` | flag `is_controlled` (+ classe si besoin) |
-| `controlled_movements` | lot, qty signée, motif (`receipt`/`daf`/`waste`/`adjust`), acteur, animal?, DAF?, timestamp |
+| `ref_medications` | `is_controlled` (+ `controlled_class` optionnel) |
+| `controlled_movements` ou vue sur `stock_movements` filtrée | lot, qty signée, motif (`receipt`/`daf`/`waste`/`adjust`), acteur, animal?, DAF?, timestamp |
 | Export | snapshot période + hash + auteur |
 
-### UI cible (après spec)
-- Filtre `/stock` + journal dédié `/stock/controlled` (tag `dev`)
-- Blocage finalize DAF si substance contrôlée sans motif / n° ordonnance interne
+### UI cible (4.B)
+- Filtre `/stock` + journal `/stock/controlled` (tag `dev`)
+- Finalize DAF : si ligne contrôlée → motif / n° interne requis
 
 ### Critère de sortie P0-4
-Spec figée (ce doc ou annexe juridique) signée produit + juridique → ouvre 4.B.
+- [x] Décision produit écrite (ce §)
+- [ ] Validation juridique BE (liste + signature + export) → ouvre **4.B**
 
 ---
 
 ## P0-5 — Grossiste pilote EDI (→ Phase 5.A)
 
-### Objectif
-Choisir **1** grossiste pilote et obtenir docs API (catalogue, commande, BL).
+### Décision produit
+1. **Un seul pilote** avant tout code EDI.
+2. **Candidats** (ordre de prise de contact commercial) : Covetrus → Alcyon → Crocodil.
+3. **Critères de choix** : API/docs sandbox, auth claire, catalogue + commande + BL, coût pilote acceptable.
+4. **Hors V1 pharmacie** tant qu’aucun pilote n’a répondu favorablement — le réassort e-mail CSV actuel reste le filet.
 
-### Candidats
-| Grossiste | Contact / docs | Décision |
-|-----------|----------------|----------|
-| Covetrus | ⬜ | |
-| Alcyon | ⬜ | |
-| Crocodil | ⬜ | |
-
-### Checklist contact
-1. Existence d’une API / EDI (REST, AS2, SFTP, portail) ?
+### Checklist contact (commercial)
+1. API / EDI (REST, AS2, SFTP, portail) ?
 2. Auth (clé, OAuth, VPN) ?
 3. Formats catalogue + tarifs + n° dépôt ?
 4. Flux commande → confirmation → BL électronique ?
 5. Coût / contrat pilote staging ?
 
+| Grossiste | Contacté | Docs reçues | Retenu |
+|-----------|----------|-------------|--------|
+| Covetrus | ☐ | ☐ | ☐ |
+| Alcyon | ☐ | ☐ | ☐ |
+| Crocodil | ☐ | ☐ | ☐ |
+
 ### Critère de sortie P0-5
-Un pilote nommé + lien docs + accès sandbox → ouvre 5.A.
+- [x] Process + ordre de contact figés (ce §)
+- [ ] Pilote nommé + docs sandbox → ouvre **5.A**
 
 ---
 
 ## P0-6 — Bigame / Vetcompendium build vs licence (→ Phase 5.B/C)
 
 ### Contexte
-Admin Compendium PDF (`/admin/compendium-imports`, D11b) = **outil interne** d’enrichissement dictionnaire — **≠** licence notices commerciales Vetcompendium / Bigame.
+Admin Compendium PDF (`/admin/compendium-imports`, D11b) = **outil interne** d’enrichissement dictionnaire — **≠** licence notices commerciales.
 
-### Options
-| Option | Pros | Cons |
-|--------|------|------|
-| **A — Build** (étendre extract PDF + matching AFMPS) | Contrôle, pas de licence tierce | Couverture / màj manuelle, risque juridique notices |
-| **B — Licence** Vetcompendium / Bigame | Contenu officiel, màj fournisseur | Coût, dépendance, intégration |
-| **C — Hybride** | AFMPS = CNK source ; notices via licence | Complexité produit |
+### Décision produit (hybride / différé)
+| Couche | Choix |
+|--------|--------|
+| CNK / catalogue national | **AFMPS** (P0-3 ✅) |
+| Enrichissement fiches (labo, substance, force, matching) | **Build** via Compendium admin (D11b) — poursuivre sous tag `dev` |
+| Notices / posologies commerciales Vetcompendium | **Différé** — pas de licence V1 ; pas de promesse UI « notice officielle » |
+| Bigame (animaux de production) | **Hors V1** compagnon — réévaluer après GA pharmacie cœur |
 
-### Décision à écrire
-- Choix A/B/C + budget + calendrier
-- Périmètre espèces (compagnon vs production / Bigame)
-- Qui porte la responsabilité éditoriale des posologies
+Responsabilité éditoriale des textes extraits PDF : **cabinet / ops** (revue humaine gates) — l’IA n’est qu’assistant d’extraction.
 
 ### Critère de sortie P0-6
-Note décisionnelle signée produit → ouvre 5.B et/ou 5.C.
+- [x] Décision produit écrite (ce §)
+- [ ] OK budget / roadmap commerciale (pas de licence V1) → **5.B/C reportés** ; D11b reste le chemin build
 
 ---
 
 ## P0-7 — Certification DAF vs disclaimer (→ Phase 4.E)
 
-### État actuel
-PDF DAF généré avec **disclaimer « non certifié »** (module tag `dev`).
-
-### Questions juridiques
-1. Existe-t-il un chemin de certification AFMPS / organisme pour un DAF logiciel ?
-2. Mentions obligatoires manquantes vs export papier carbone ?
-3. Peut-on rester en disclaimer indéfiniment en GA pharmacie (hors facture) ?
-4. Responsabilité cabinet vs éditeur petsFollow ?
-
-### Livrable attendu
-Note 1–2 pages : trajectoire (certifier / rester disclaimer / hors scope) + impacts UI PDF (4.E).
+### Décision produit
+1. **Rester en disclaimer « non certifié »** pour le PDF DAF tant qu’aucune trajectoire de certification AFMPS / organisme n’est ouverte et budgétée.
+2. **GA pharmacie** (Phase 6) possible **avec** disclaimer visible — ne pas présenter le PDF comme substitut légal d’un document certifié.
+3. Mentions PDF : améliorer clarté du disclaimer + champs déjà livrés (retrait, chaîne alimentaire) ; **pas** de chantier « certif » sans note juridique.
+4. Responsabilité : le **cabinet** reste émetteur du DAF ; petsFollow = outil logiciel.
 
 ### Critère de sortie P0-7
-Note validée juridique + produit → ouvre 4.E.
+- [x] Décision produit écrite (ce §)
+- [ ] Validation juridique (disclaimer suffisant pour GA) → ouvre polish **4.E** (mentions) sans certif
 
 ---
 
-## Lien roadmap
+## Après validation
 
-Après chaque P0 clos : mettre à jour le tableau §0 de [37](37-ROADMAP-STOCK-FACTURATION.md) et le runbook [38](38-RUNBOOK-PHARMACIE-CABINET.md) si parcours cabinet impacté.
+1. Cocher les ☐ ci-dessus (ou amender).
+2. Mettre à jour [37](37-ROADMAP-STOCK-FACTURATION.md) §0 (P0-4…7 → 🟢 / 🟡).
+3. Ouvrir le chantier code correspondant (4.B / 4.E / 5.A…) **uniquement** alors.

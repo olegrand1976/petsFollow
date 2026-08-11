@@ -7,7 +7,7 @@
 | Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 2.F catalogue ✅ (staging+prod) · 4.C/4.D/4.F ✅ · S6 ✅ · S5 / Phase 3 gelés (P0-2) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
-| Dernière revue | 2026-08-11 (audit A–D + UI stock mouvements/prix/seuils/settings) |
+| Dernière revue | 2026-08-11 (P0-1/P0-2 mails envoyés · 45 décisions produit finalisées) |
 
 **Hors scope** (retour véto clinique / offline) : normes vitals, templates dentaires UGent, canvas protocoles, mode offline Flutter — backlog séparé.
 
@@ -19,13 +19,13 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 
 | ID | Livrable | Owner | Statut | Critère de sortie |
 |----|----------|-------|--------|-------------------|
-| P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | 🟡 Client **readonly** listes OK ([39](39-VAMREG-AFMPS-READONLY.md)) · write déclaration + credentials live encore ouverts | Credentials SM + env test + ICD write |
-| P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente — aucun chantier S5/Phase 3 tant que credentials absents** | Credentials reseller → débloque S5 + Phase 3 |
-| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging + prod** : CSV GCS + commit catalogue (~2738 CNK, 2026-08-11) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | Catalogue national en base staging/prod |
-| P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | ⬜ Ouvert | Spec figée avant Phase 4.B |
-| P0-5 | Contact / docs API **grossistes** (1 pilote : Covetrus / Alcyon / Crocodil) | Produit | ⬜ Ouvert | Scope Phase 5.A |
-| P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | ⬜ Ouvert | Décision build/buy écrite |
-| P0-7 | Trajectoire **certification DAF** vs disclaimer actuel | Juridique | ⬜ Ouvert | Écrit produit + juridique |
+| P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | 🟡 Readonly OK · **mail write envoyé (2026-08-11)** — attente credentials | Credentials SM + env test + ICD write |
+| P0-2 | **Accès reseller Billit** | Ops | 🟡 **Mail reseller envoyé (2026-08-11)** — attente accès ; S5/Phase 3 gelés | Credentials reseller → débloque S5 + Phase 3 |
+| P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit / Ops | 🟢 Licence + cadence + pipeline cron ✅ · **staging + prod** (~2738 CNK) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | Catalogue national en base staging/prod |
+| P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | 🟡 Décision produit figée ([45](45-PHARMACY-P0-SPECS.md)) — ☐ juridique | Spec + OK juridique → Phase 4.B |
+| P0-5 | Contact / docs API **grossistes** (1 pilote) | Produit | 🟡 Process figé ([45](45-PHARMACY-P0-SPECS.md)) — ☐ choix pilote commercial | Pilote + docs → Phase 5.A |
+| P0-6 | **Bigame / Vetcompendium** — build vs licence | Produit | 🟡 Décision produit : build Compendium + licence différée ([45](45-PHARMACY-P0-SPECS.md)) — ☐ budget | OK produit → 5.B/C reportés |
+| P0-7 | Trajectoire **certification DAF** vs disclaimer | Juridique | 🟡 Décision produit : rester disclaimer ([45](45-PHARMACY-P0-SPECS.md)) — ☐ juridique | OK juridique → polish 4.E |
 
 ### Suivi P0 partenaires (hors code) — 2026-08-11
 
@@ -33,21 +33,22 @@ Actions ops / juridique à pousser **en parallèle** du code (pas de chantier te
 
 | ID | Prochaine action concrète | Bloque |
 |----|---------------------------|--------|
-| **P0-1** | **Relance déclenchée (2026-08-11)** : ticket staging [`527c7803…`](https://petsfollow.ll-it-sc.be/admin/support/527c7803-b27e-43d4-bb46-33aa175b4c8f) + brouillon mail (ci-dessous) → **à forwarder** AFMPS/VAMReg write. Readonly OK ([39](39-VAMREG-AFMPS-READONLY.md)). Garder `VAMREG_DRY_RUN=true` jusqu’aux credentials. | 4.A production |
-| **P0-2** | **Relance déclenchée (2026-08-11)** : ticket staging [`572d88c4…`](https://petsfollow.ll-it-sc.be/admin/support/572d88c4-9489-4668-bc82-b07dee145be8) + brouillon mail → **à forwarder** Billit reseller. Aucun code DAF→facture live tant qu’absent. | 3.C–3.E, GA facture |
-| **P0-3** | ✅ Staging + prod (CSV GCS + job completed ~2738 CNK, scheduler mensuel) — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | — |
-| **P0-4** | Spec brouillon [45 § P0-4](45-PHARMACY-P0-SPECS.md#p0-4--registre-stupéfiants-be--phase-4b) — à figer juridique | 4.B |
-| **P0-5** | Spec brouillon [45 § P0-5](45-PHARMACY-P0-SPECS.md#p0-5--grossiste-pilote-edi--phase-5a) — contacter 1 pilote | 5.A |
-| **P0-6** | Spec brouillon [45 § P0-6](45-PHARMACY-P0-SPECS.md#p0-6--bigame--vetcompendium-build-vs-licence--phase-5bc) — décision build/buy | 5.B/C |
-| **P0-7** | Spec brouillon [45 § P0-7](45-PHARMACY-P0-SPECS.md#p0-7--certification-daf-vs-disclaimer--phase-4e) — note juridique | 4.E |
+| **P0-1** | **Mail envoyé (2026-08-11)** — attente credentials write ; ticket [`527c7803…`](https://petsfollow.ll-it-sc.be/admin/support/527c7803-b27e-43d4-bb46-33aa175b4c8f) · garder `VAMREG_DRY_RUN=true` ([39](39-VAMREG-AFMPS-READONLY.md)) | 4.A production |
+| **P0-2** | **Mail envoyé (2026-08-11)** — attente reseller ; ticket [`572d88c4…`](https://petsfollow.ll-it-sc.be/admin/support/572d88c4-9489-4668-bc82-b07dee145be8) · S5/Phase 3 gelés | 3.C–3.E, GA facture |
+| **P0-3** | ✅ Staging + prod — [38 § Prod](38-RUNBOOK-PHARMACIE-CABINET.md#prod-premier-catalogue) | — |
+| **P0-4** | Décisions produit [45 § P0-4](45-PHARMACY-P0-SPECS.md) — ☐ validation juridique | 4.B |
+| **P0-5** | Process [45 § P0-5](45-PHARMACY-P0-SPECS.md) — ☐ retenir 1 pilote | 5.A |
+| **P0-6** | Décision [45 § P0-6](45-PHARMACY-P0-SPECS.md) (build + licence différée) — ☐ OK budget | 5.B/C reportés |
+| **P0-7** | Décision [45 § P0-7](45-PHARMACY-P0-SPECS.md) (disclaimer) — ☐ validation juridique | 4.E |
 
 **Note** : l’admin Compendium PDF (`/admin/compendium-imports`, D11b) est **livré** sous flag `dev` (revue dual-list + pagination) — distinct de P0-6 / Phase 5.C (notices commerciales Vetcompendium).
 
-### Brokers mails partenaires (à envoyer hors repo)
+### Archive mails partenaires (envoyés 2026-08-11)
 
-Relance ops **2026-08-11** — tickets support créés (notif inbox) ; **forwarder** le corps ci-dessous au destinataire partenaire (adapter signature).
+Mails **envoyés** — corps conservé pour relance / audit. Tickets : P0-1 [`527c7803…`](https://petsfollow.ll-it-sc.be/admin/support/527c7803-b27e-43d4-bb46-33aa175b4c8f) · P0-2 [`572d88c4…`](https://petsfollow.ll-it-sc.be/admin/support/572d88c4-9489-4668-bc82-b07dee145be8).
 
-**P0-1 — VAMReg write**
+<details>
+<summary>Corps P0-1 — VAMReg write</summary>
 
 ```
 Objet : petsFollow — accès API VAMReg déclaration (write) + env test
@@ -73,7 +74,10 @@ Merci d’avance,
 [Signature ops / juridique petsFollow]
 ```
 
-**P0-2 — Billit reseller**
+</details>
+
+<details>
+<summary>Corps P0-2 — Billit reseller</summary>
 
 ```
 Objet : petsFollow — accès reseller API Billit
@@ -97,6 +101,8 @@ aucun pilote DAF→facture live sans ces accès.
 Merci,
 [Signature ops petsFollow]
 ```
+
+</details>
 
 ### Prérequis facturation — Billit reseller (figé)
 
@@ -247,8 +253,9 @@ flowchart TB
   P5 --> P6
 ```
 
-**Priorité actuelle** : 2.F / P0-3 ✅ · tickets **P0-1 / P0-2** ouverts (forward mails) · specs brouillon **P0-4…7** ([45](45-PHARMACY-P0-SPECS.md)) · Phase 3 / 4.A **gelées** jusqu’aux credentials. S6 staging clôturé.  
-**Facturation** : dès P0-2 → S5 → Phase 3.
+**Priorité actuelle** : P0-3 ✅ · **P0-1/P0-2** mails envoyés (attente credentials) · **P0-4…7** décisions produit dans [45](45-PHARMACY-P0-SPECS.md) (☐ juridique/commercial) · Phase 3 / 4.A **gelées**.  
+**Facturation** : dès credentials P0-2 → S5 → Phase 3.  
+**Prochain code** : uniquement après réponse P0-1 ou P0-2 (ou coche juridique 45 pour 4.B/4.E).
 
 ---
 
