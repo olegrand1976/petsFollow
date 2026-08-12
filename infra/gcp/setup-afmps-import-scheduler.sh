@@ -14,6 +14,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/scheduler-env.sh
 source "${SCRIPT_DIR}/lib/scheduler-env.sh"
+# shellcheck source=lib/deploy-run-args.sh
+source "${SCRIPT_DIR}/lib/deploy-run-args.sh"
 
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
 
@@ -26,15 +28,8 @@ API_URL="${PUBLIC_API_URL%/}"
 ENDPOINT="${API_URL}/api/v1/internal/afmps-import/run"
 # Parse + COPY ~2.7k CNK : deadline élargie (max Scheduler HTTP = 1800s).
 ATTEMPT_DEADLINE="${ATTEMPT_DEADLINE:-540s}"
-OBJECT_KEY="${AFMPS_IMPORT_OBJECT_KEY:-}"
-if [[ -z "$OBJECT_KEY" ]]; then
-  # Aligné sur pf_resolve_afmps_import_object_key (Secret Manager).
-  _obj_secret="${PF_SCHED_PREFIX}-afmps-import-object-key"
-  if gcloud secrets versions access latest --secret="$_obj_secret" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    OBJECT_KEY="$(gcloud secrets versions access latest --secret="$_obj_secret" --project="$GCP_PROJECT_ID")"
-  fi
-fi
-OBJECT_KEY="${OBJECT_KEY:-afmps-imports/latest.csv}"
+# Message ops uniquement (le scheduler n’envoie pas la clé — l’API lit son env Cloud Run).
+OBJECT_KEY="$(pf_resolve_afmps_import_object_key)"
 
 pf_scheduler_ensure_secret "$SECRET_NAME" "${AFMPS_IMPORT_SECRET:-}"
 
@@ -43,9 +38,6 @@ SECRET="$(gcloud secrets versions access latest \
 
 echo "→ Redeploy API with AFMPS_IMPORT_SECRET=${SECRET_NAME}:latest if not yet wired."
 echo "→ Déposer le CSV : gsutil cp pack.csv gs://\$GCS_MEDIA_BUCKET/${OBJECT_KEY}"
-if [[ "$OBJECT_KEY" == "afmps-imports/latest.csv" ]]; then
-  echo "⚠ Clé prévisible sur bucket allUsers — préférer AFMPS_IMPORT_OBJECT_KEY=afmps-imports/<uuid>.csv"
-fi
 
 HEADERS="Content-Type=application/json,X-Afmps-Import-Secret=${SECRET}"
 pf_scheduler_upsert_http

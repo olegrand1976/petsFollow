@@ -28,20 +28,48 @@ pf_sm_has_secret() {
   gcloud secrets versions access latest --secret="$name" --project="$GCP_PROJECT_ID" >/dev/null 2>&1
 }
 
-# Chemin CSV AFMPS gate-1 : env explicite > Secret Manager > défaut historique (prévisible).
+# Aligné sur pharmacy.IsPredictableAFMPSImportObjectKey (basename latest.csv).
+pf_afmps_object_key_is_predictable() {
+  local k="${1:-}"
+  local base="${k##*/}"
+  [[ "$k" == "afmps-imports/latest.csv" || "$base" == "latest.csv" ]]
+}
+
+# Chemin CSV AFMPS gate-1 : env explicite > Secret Manager (non vide).
+# Fail-closed si absent ou prévisible (latest.csv) — sauf AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY=1.
 # Secret : petsfollow-afmps-import-object-key (staging) / petsfollow-prod-afmps-import-object-key (prod).
 pf_resolve_afmps_import_object_key() {
+  local key="" secret sm_val
   if [[ -n "${AFMPS_IMPORT_OBJECT_KEY:-}" ]]; then
-    printf '%s' "$AFMPS_IMPORT_OBJECT_KEY"
-    return 0
+    key="${AFMPS_IMPORT_OBJECT_KEY}"
+  elif [[ -n "${GCP_PROJECT_ID:-}" ]]; then
+    secret="$(pf_sm_job_secret afmps-import-object-key)"
+    sm_val="$(gcloud secrets versions access latest --secret="$secret" --project="$GCP_PROJECT_ID" 2>/dev/null || true)"
+    # gcloud ajoute souvent un \n final ; ignorer un secret « présent » mais vide.
+    key="$(printf '%s' "$sm_val" | tr -d '\r' | sed 's/[[:space:]]*$//')"
   fi
-  local secret
-  secret="$(pf_sm_job_secret afmps-import-object-key)"
-  if [[ -n "${GCP_PROJECT_ID:-}" ]] && pf_sm_has_secret "$secret"; then
-    gcloud secrets versions access latest --secret="$secret" --project="$GCP_PROJECT_ID" 2>/dev/null || true
-    return 0
+
+  if [[ -z "$key" ]]; then
+    if [[ "${AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY:-}" == "1" ]]; then
+      echo "WARN: AFMPS_IMPORT_OBJECT_KEY absent — fallback afmps-imports/latest.csv (AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY=1)." >&2
+      printf '%s' 'afmps-imports/latest.csv'
+      return 0
+    fi
+    echo "ERROR: AFMPS_IMPORT_OBJECT_KEY unset et secret $(pf_sm_job_secret afmps-import-object-key) manquant/vide — créer une clé opaque en SM (ex. afmps-imports/<uuid>.csv) ou exporter AFMPS_IMPORT_OBJECT_KEY." >&2
+    return 1
   fi
-  printf '%s' 'afmps-imports/latest.csv'
+
+  if pf_afmps_object_key_is_predictable "$key"; then
+    if [[ "${AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY:-}" == "1" ]]; then
+      echo "WARN: AFMPS_IMPORT_OBJECT_KEY=$key est prévisible (AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY=1)." >&2
+      printf '%s' "$key"
+      return 0
+    fi
+    echo "ERROR: AFMPS_IMPORT_OBJECT_KEY=$key est prévisible sur le bucket allUsers — poser une clé opaque dans $(pf_sm_job_secret afmps-import-object-key) (ou AFMPS_ALLOW_PREDICTABLE_OBJECT_KEY=1 en secours)." >&2
+    return 1
+  fi
+
+  printf '%s' "$key"
 }
 
 pf_api_mount_job_secret() {
@@ -98,9 +126,6 @@ pf_write_api_env_file() {
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   afmps_import_object_key="$(pf_resolve_afmps_import_object_key)"
-  if [[ "$afmps_import_object_key" == "afmps-imports/latest.csv" || "$afmps_import_object_key" == *"/latest.csv" ]]; then
-    echo "WARN: AFMPS_IMPORT_OBJECT_KEY=$afmps_import_object_key est prévisible — poser le secret $(pf_sm_job_secret afmps-import-object-key) (opaque) avant le prochain cron." >&2
-  fi
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
   # Billit Access Point : staging → sandbox API ; prod (main) → api.billit.be (whitelist).
   # Docs : https://docs.accesspoint.billit.eu/docs/sandbox-vs-production
