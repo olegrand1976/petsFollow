@@ -219,6 +219,19 @@ func (a *API) adminDeleteSupportTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := chi.URLParam(r, "id")
+	// List blob keys before CASCADE wipe so we can purge PHI from the media store.
+	keys, err := a.store.ListSupportAttachmentObjectKeysForTicket(r.Context(), id)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if a.media != nil {
+		for _, key := range keys {
+			if err := a.media.Delete(r.Context(), key); err != nil {
+				log.Printf("support ticket %s: media delete %s: %v", id, key, err)
+			}
+		}
+	}
 	if err := a.store.DeleteSupportTicket(r.Context(), id); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")

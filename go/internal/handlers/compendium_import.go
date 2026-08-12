@@ -363,6 +363,8 @@ func (a *API) runCompendiumExtract(jobID string, resumeFromChunk int) {
 	}
 
 	extractor := &pharmacy.CompendiumExtractor{Gemini: a.gemini}
+	seenCNK := make(map[string]struct{})
+	seenName := make(map[string]struct{})
 	for i := resumeFromChunk; i < len(chunks); i++ {
 		ch := chunks[i]
 		start, end := ch[0], ch[1]
@@ -390,8 +392,8 @@ func (a *API) runCompendiumExtract(jobID string, resumeFromChunk int) {
 		if len(chunkMeds) == 0 {
 			log.Printf("compendium extract %s: empty chunk %d/%d p%d-%d (advancing)", jobID, i+1, len(chunks), start, end)
 		}
-		// Gemini / PDF overlap can emit the same CNK (or nameless-CNK name) twice in a chunk.
-		chunkMeds = pharmacy.DedupExtractedMedications(chunkMeds)
+		// Cross-chunk + intra-chunk: Gemini/PDF overlap can re-emit the same CNK/name.
+		chunkMeds = pharmacy.DedupExtractedMedicationsInto(chunkMeds, seenCNK, seenName)
 		// Fallback sourcePage = chunk start (not job.PageStart) so mid-PDF rows keep a useful hint.
 		inserts := a.compendiumRowsFromMeds(ctx, jobID, start, chunkMeds)
 		if err := a.store.AppendCompendiumExtractRows(ctx, jobID, inserts); err != nil {

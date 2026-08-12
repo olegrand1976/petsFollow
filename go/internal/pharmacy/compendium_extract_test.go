@@ -22,6 +22,30 @@ func TestDedupExtractedMedications(t *testing.T) {
 	}
 }
 
+func TestDedupExtractedMedicationsInto_CrossChunk(t *testing.T) {
+	seenCNK := map[string]struct{}{}
+	seenName := map[string]struct{}{}
+	chunk1 := DedupExtractedMedicationsInto([]ExtractedMedication{
+		{CNK: "111", Name: "A"},
+		{CNK: "", Name: "Solo"},
+	}, seenCNK, seenName)
+	if len(chunk1) != 2 {
+		t.Fatalf("chunk1 %#v", chunk1)
+	}
+	chunk2 := DedupExtractedMedicationsInto([]ExtractedMedication{
+		{CNK: "111", Name: "A again"},
+		{CNK: "333", Name: "C"},
+		{CNK: "", Name: "solo"},
+		{CNK: "", Name: "Other"},
+	}, seenCNK, seenName)
+	if len(chunk2) != 2 {
+		t.Fatalf("chunk2 %#v", chunk2)
+	}
+	if chunk2[0].CNK != "333" || chunk2[1].Name != "Other" {
+		t.Fatalf("%#v", chunk2)
+	}
+}
+
 func TestParseCompendiumExtractJSON(t *testing.T) {
 	raw := `{"medications":[{"cnk":"2712345","name":"Amoxi Vet","atcCode":"J01CA04","isAntibiotic":true,"sourcePage":2}]}`
 	meds, err := ParseCompendiumExtractJSON(raw)

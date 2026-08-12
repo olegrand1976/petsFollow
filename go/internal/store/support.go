@@ -646,6 +646,31 @@ func (s *Store) ListSupportAttachmentObjectKeysForUser(ctx context.Context, user
 	return keys, rows.Err()
 }
 
+// ListSupportAttachmentObjectKeysForTicket returns media object keys for a ticket
+// (call before hard-delete so blobs can be purged).
+func (s *Store) ListSupportAttachmentObjectKeysForTicket(ctx context.Context, ticketID string) ([]string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT COALESCE(object_key, '')
+		FROM ops.support_ticket_attachments
+		WHERE ticket_id = $1`, ticketID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keys := []string{}
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		if key = strings.TrimSpace(key); key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys, rows.Err()
+}
+
 // AnonymizeUserSupportTickets clears ticket PII and all user references.
 func (s *Store) AnonymizeUserSupportTickets(ctx context.Context, userID string) error {
 	return anonymizeUserSupportTicketsExec(ctx, s.pool, userID)

@@ -121,11 +121,22 @@ func (e *CompendiumExtractor) ExtractChunk(ctx context.Context, pdfChunk []byte,
 // DedupExtractedMedications keeps the first row per CNK (case-insensitive).
 // Rows without CNK are deduped by name; empty name+CNK rows are dropped.
 func DedupExtractedMedications(meds []ExtractedMedication) []ExtractedMedication {
+	return DedupExtractedMedicationsInto(meds, nil, nil)
+}
+
+// DedupExtractedMedicationsInto is like DedupExtractedMedications but reuses/updates
+// seenCNK/seenName so callers can dedupe across PDF chunks in one extract job.
+// Nil maps are allocated locally (intra-chunk only).
+func DedupExtractedMedicationsInto(meds []ExtractedMedication, seenCNK, seenName map[string]struct{}) []ExtractedMedication {
 	if len(meds) == 0 {
 		return meds
 	}
-	seenCNK := make(map[string]struct{}, len(meds))
-	seenName := make(map[string]struct{}, len(meds))
+	if seenCNK == nil {
+		seenCNK = make(map[string]struct{}, len(meds))
+	}
+	if seenName == nil {
+		seenName = make(map[string]struct{}, len(meds))
+	}
 	out := make([]ExtractedMedication, 0, len(meds))
 	for _, m := range meds {
 		cnk := strings.ToLower(strings.TrimSpace(m.CNK))

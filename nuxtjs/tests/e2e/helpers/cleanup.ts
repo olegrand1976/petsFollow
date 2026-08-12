@@ -9,11 +9,23 @@ function asDeleter(pageOrReq: Page | APIRequestContext): Deleter {
   return pageOrReq as APIRequestContext
 }
 
+/** Best-effort DELETE: never throws; logs non-404 failures so pollution is visible. */
+async function bestEffortDelete(deleter: Deleter, url: string, label: string) {
+  try {
+    const res = await deleter.delete(url)
+    if (!res.ok() && res.status() !== 404) {
+      console.warn(`[e2e cleanup] ${label} ${url} → HTTP ${res.status()}`)
+    }
+  } catch (err) {
+    console.warn(`[e2e cleanup] ${label} ${url} failed:`, err)
+  }
+}
+
 /** Soft-delete walk-in consultation (hidden from /consultations). Best-effort. */
 export async function softDeleteVisit(pageOrReq: Page | APIRequestContext, visitId: string) {
   const id = String(visitId || '').trim()
   if (!id) return
-  await asDeleter(pageOrReq).delete(`/api/visits/${id}`).catch(() => undefined)
+  await bestEffortDelete(asDeleter(pageOrReq), `/api/visits/${id}`, 'softDeleteVisit')
 }
 
 export async function softDeleteVisits(
@@ -29,7 +41,9 @@ export async function softDeleteVisits(
 export async function deleteSupportTicket(pageOrReq: Page | APIRequestContext, ticketId: string) {
   const id = String(ticketId || '').trim()
   if (!id) return
-  await asDeleter(pageOrReq)
-    .delete(`/api/admin/support/tickets/${id}`)
-    .catch(() => undefined)
+  await bestEffortDelete(
+    asDeleter(pageOrReq),
+    `/api/admin/support/tickets/${id}`,
+    'deleteSupportTicket',
+  )
 }

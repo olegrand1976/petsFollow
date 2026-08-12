@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
@@ -461,6 +462,25 @@ func TestSupportTicketStatusWorkflowAndAttachments(t *testing.T) {
 	api.handler.ServeHTTP(rec, req)
 	if rec.Code == http.StatusOK {
 		t.Fatalf("vet must not download support attachment, got 200")
+	}
+
+	var objectKey string
+	if err := api.pool.QueryRow(context.Background(),
+		`SELECT object_key FROM ops.support_ticket_attachments WHERE id = $1`, attID,
+	).Scan(&objectKey); err != nil || strings.TrimSpace(objectKey) == "" {
+		t.Fatalf("attachment object_key: %v %q", err, objectKey)
+	}
+	if _, _, err := bundle.Store.Open(context.Background(), objectKey); err != nil {
+		t.Fatalf("blob should exist before delete: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusNoContent {
+		t.Fatalf("admin delete with attachment %d %#v", code, env)
+	}
+	ticketID = "" // Cleanup already deleted
+	if _, _, err := bundle.Store.Open(context.Background(), objectKey); err == nil {
+		t.Fatalf("blob still present after hard delete: %s", objectKey)
 	}
 }
 
