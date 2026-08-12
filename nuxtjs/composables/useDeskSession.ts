@@ -25,6 +25,11 @@ export type DeskMember = {
 
 export type DeskPromptMode = 'lock' | 'switch' | null
 
+export type DeskAuthResult =
+  | { ok: true; role: string | null }
+  | { ok: false; reason: 'mfa'; mfaToken: string }
+  | { ok: false; reason: 'error' | 'proOnly' }
+
 const ROSTER_KEY = 'pf_desk_roster'
 const PATHS_KEY = 'pf_desk_last_paths'
 const LOCKED_KEY = 'pf_desk_locked'
@@ -366,12 +371,7 @@ export function useDeskSession() {
     await navigateTo('/login')
   }
 
-  type AuthResult =
-    | { ok: true; role: string | null }
-    | { ok: false; reason: 'mfa'; mfaToken: string }
-    | { ok: false; reason: 'error' | 'proOnly' }
-
-  async function authenticate(email: string, password: string): Promise<AuthResult> {
+  async function authenticate(email: string, password: string): Promise<DeskAuthResult> {
     if (!emailAllowedForDesk(email)) return { ok: false, reason: 'error' }
     try {
       const res = await $fetch('/api/auth/login', {
@@ -394,7 +394,7 @@ export function useDeskSession() {
     }
   }
 
-  async function verify2fa(mfaToken: string, code: string): Promise<AuthResult> {
+  async function verify2fa(mfaToken: string, code: string): Promise<DeskAuthResult> {
     try {
       const res = await $fetch('/api/auth/2fa/verify', {
         method: 'POST',

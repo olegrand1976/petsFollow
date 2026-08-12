@@ -19,7 +19,7 @@ export function useLocaleSync() {
 
   async function applyPreferredLocale(preferred?: string | null) {
     if (preferred && SUPPORTED_LOCALES.includes(preferred as AppLocale)) {
-      await setLocale(preferred)
+      await setLocale(preferred as AppLocale)
       localeCookie.value = preferred
     }
   }

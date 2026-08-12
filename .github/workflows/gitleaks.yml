@@ -1,0 +1,46 @@
+# Gitleaks — secrets dans le diff de la PR / push (pas tout l'historique).
+name: Gitleaks
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: "8.24.0"
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+      - name: Detect secrets (PR / push range only)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            LOG_OPTS="${BASE_SHA}..${HEAD_SHA}"
+          elif [ -n "${BEFORE_SHA:-}" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            LOG_OPTS="${BEFORE_SHA}..${AFTER_SHA}"
+          else
+            # Premier push / shallow fallback : dernier commit seulement.
+            LOG_OPTS="-n 1"
+          fi
+          echo "gitleaks log-opts: ${LOG_OPTS}"
+          gitleaks detect --source . --config .gitleaks.toml \
+            --log-opts="${LOG_OPTS}" --verbose --redact --exit-code 1

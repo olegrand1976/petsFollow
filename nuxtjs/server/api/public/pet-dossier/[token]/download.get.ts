@@ -19,7 +19,8 @@ export default defineEventHandler(async (event) => {
     // Sans ce relais, le passage en flux prive le navigateur de la progression
     // du téléchargement, que la version bufferisée fournissait implicitement.
     const len = res.headers.get('content-length')
-    if (len) setHeader(event, 'Content-Length', len)
+    const n = len ? Number.parseInt(len, 10) : NaN
+    if (Number.isFinite(n) && n >= 0) setHeader(event, 'Content-Length', n)
     return res._data as ReadableStream
   } catch (e: any) {
     // En mode stream, le corps d'erreur amont est lui aussi un flux : on ne

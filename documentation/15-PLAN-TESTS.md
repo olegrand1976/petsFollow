@@ -663,9 +663,9 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 ### API (smoke)
 
-`make smoke` — profile `full` (défaut) : health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404. Les écritures smoke sont purgées ensuite sur staging (`make staging-quality-cleanup` / job `cleanup-quality`).
+`make smoke` — profile `full` (défaut) : health/ready, **CORS OPTIONS** (Allow-Origin depuis `CORS_ORIGIN` / site Pro), **login invalide → 401** (pas 5xx), auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404. Les écritures smoke sont purgées ensuite sur staging (`make staging-quality-cleanup` / job `cleanup-quality`).
 
-`make smoke-prod` — profile `prod` (post-deploy main) : **aucune écriture** — health/ready + `GET /billing/plans` + dossier public 404 + media visit-reports deny.
+`make smoke-prod` — profile `prod` (post-deploy main) : **aucune écriture** — health/ready + CORS/login contrat + `GET /billing/plans` + dossier public 404 + media visit-reports deny.
 
 ### SMS transactionnel Telnyx (Go — C3.12→C3.15, F4.9)
 
@@ -966,9 +966,9 @@ Prérequis : API `:8291` + Nuxt `:3002` + seed (`AUTH_RATE_LIMIT_PER_MIN=1000` v
 
 CI PR : job `playwright` — stack Postgres + API + Nuxt preview, exécute `--grep @p0`.
 
-Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt → **puis** job `cleanup-quality` (`if: always()` — tourne même si deploy/Playwright échouent) qui purge **tous** les artefacts smoke/e2e (`infra/gcp/cleanup-staging-quality.sh` : users éphémères, mesures, visites/CR, salles/sites, prospects, tickets support, pharmacie — hors `saas_master` et factures delivered). Les smoke manuels staging (`make gcp-smoke`, `make smoke-pharmacy-s6-staging`, `infra/gcp/postdeploy.sh`) enchaînent la même purge. Garde-fou : `tests/unit/e2e-cleanup-coverage.spec.ts` casse `make test-nuxt` si un préfixe email e2e n'est pas couvert par le SQL de purge — toute nouvelle donnée e2e doit porter un marqueur `e2e`/`E2E` purgé par le script. Manuel : `make gcp-staging-quality-cleanup` ou `PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup`.
+Staging (`deploy-gcp-staging.yml`) : **preflight GCP** (secrets SM + Run Ready + baseline `/health`/`/ready`/homepage) → Cloud Build → smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt → **puis** job `cleanup-quality` (`if: always()` — tourne même si deploy/Playwright échouent) qui purge **tous** les artefacts smoke/e2e (`infra/gcp/cleanup-staging-quality.sh` : users éphémères, mesures, visites/CR, salles/sites, prospects, tickets support, pharmacie — hors `saas_master` et factures delivered). Les smoke manuels staging (`make gcp-smoke`, `make smoke-pharmacy-s6-staging`, `infra/gcp/postdeploy.sh`) enchaînent la même purge. Garde-fou : `tests/unit/e2e-cleanup-coverage.spec.ts` casse `make test-nuxt` si un préfixe email e2e n'est pas couvert par le SQL de purge — toute nouvelle donnée e2e doit porter un marqueur `e2e`/`E2E` purgé par le script. Manuel : `make gcp-staging-quality-cleanup` ou `PF_CLEANUP_TARGET=staging DATABASE_URL=… make staging-quality-cleanup`.
 
-Prod (`deploy-gcp-prod.yml`) : **pas** de suite CI complète (déjà validée sur PR + staging) — deploy puis smoke **non mutatif** (`SMOKE_PROFILE=prod`). Local : `make smoke-prod`.
+Prod (`deploy-gcp-prod.yml`) : **pas** de suite CI complète (déjà validée sur PR + staging) — **preflight GCP** → deploy puis smoke **non mutatif** (`SMOKE_PROFILE=prod`). Local : `make smoke-prod`.
 
 **Rollback staging** si Playwright / smoke post-deploy rouge : workflow en échec (pas de rollback auto). Revenir à la révision Cloud Run précédente :
 
@@ -981,9 +981,12 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 ### Go / Nuxt unit / Flutter
 
 - Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; seed preserve : `TestSeedPreservesSupportTickets` / `TestSeedPreservesClientGraph` / `TestSeedPreservesProtectedRoles` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
+- **OpenAPI** : `go test ./api/ -run TestOpenAPISpecCriticalPaths` — parse `go/api/openapi.yaml` + paths critiques (`/health`, `/api/v1/auth/login`, …) ; inclus dans `make test-go` / CI backend
 - **Base partagée (`-p 1`)** : aucun test du paquet `handlers` ne doit lancer `seed.Run` — un reset à mi-suite régénère staff et graphe démo (401 / `pet_not_found` aléatoires sur les tests suivants ; indolore en CI où la base vient d'être seedée, cassant en local après un run e2e). `POST /admin/staging/seed` est couvert avec un runner stubbé (`TestSetStagingSeedRunner`, garde-fou de câblage `StagingSeedRunnerIsDefault`) ; le vrai seed reste couvert dans `internal/seed`, et le parcours HTTP complet en opt-in : `PF_TEST_REAL_STAGING_SEED=1 go test ./internal/handlers/ -run TestAdminStagingSeedRealRun`
 - Billit / invoicing : `go test ./internal/invoicing/...` + intégration `TestInvoicing*` / `TestInvoicingWebhook*` / `TestInvoicingAdminMarkPartner` ; Playwright `@p1` `@invoicing` `18-invoicing.spec.ts` (UI métier si `INVOICING_UI_ENABLED`) ; admin `/admin/invoicing` (`06-admin.spec.ts`) — checklist **I7**
-- Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
+- Nuxt unit : `make test-nuxt` = usecases-check + **`nuxi typecheck`** + **ESLint** + Vitest — inclus dans `make test` / CI job `nuxt`
+- **Dette typecheck** : [`nuxtjs/types/nitro-fetch-relax.d.ts`](../nuxtjs/types/nitro-fetch-relax.d.ts) élargit `InternalApi` (évite TS2589 sur 200+ routes BFF) + quelques `$fetch as any` — le gate bloque le TS/Vue structurel, pas encore le typage fin des routes Nitro. Backlog : retirer le shim route par route.
+- **Secrets** : workflow [`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml) sur le **diff PR/push** (pas tout l’historique) ; Dependabot [`.github/dependabot.yml`](../.github/dependabot.yml) (go / nuxtjs / flutter / Actions)
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API
 

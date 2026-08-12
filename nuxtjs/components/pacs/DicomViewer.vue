@@ -174,9 +174,9 @@ async function loadPreview(instanceId: string, frame: number): Promise<string> {
   const key = `${instanceId}:${frame}`
   const cached = imageCache.get(key)
   if (cached) return cached
-  const blob = await $fetch<Blob>(`/api/pacs/instances/${instanceId}/frames/${frame}/preview`, {
+  const blob = await ($fetch as any)(`/api/pacs/instances/${instanceId}/frames/${frame}/preview`, {
     responseType: 'blob',
-  })
+  }) as Blob
   const ct = (blob.type || '').toLowerCase()
   if (ct.includes('json') || ct.includes('text')) {
     throw new Error('preview_not_image')
@@ -427,7 +427,7 @@ async function downloadDicom() {
   if (!id || downloadBusy.value) return
   downloadBusy.value = true
   try {
-    const blob = await $fetch<Blob>(`/api/pacs/instances/${id}/file`, { responseType: 'blob' })
+    const blob = await ($fetch as any)(`/api/pacs/instances/${id}/file`, { responseType: 'blob' }) as Blob
     const head = new Uint8Array(await blob.slice(0, 132).arrayBuffer())
     if (!looksLikeDicom(head)) {
       throw new Error('not_dicom')
@@ -457,7 +457,7 @@ watch(() => props.leftInstanceId, async (id) => {
   left.arrow = null
   if (id) {
     try {
-      const res: any = await $fetch(`/api/pacs/instances/${id}/metadata`)
+      const res: any = await ($fetch as any)(`/api/pacs/instances/${id}/metadata`)
       const data = res.data ?? res
       const n = Number(data.numberOfFrames)
       if (Number.isFinite(n) && n > 0) maxFrame.value = n - 1

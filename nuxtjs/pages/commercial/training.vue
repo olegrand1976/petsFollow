@@ -459,9 +459,9 @@ async function uploadRecording(blob: Blob | null) {
 async function loadPitchAudio(id: string) {
   if (!id || pitchAudioUrls.value[id]) return
   try {
-    const blob = await $fetch<Blob>(`/api/commercial/pitch-sims/${id}/audio`, {
+    const blob = await ($fetch as any)(`/api/commercial/pitch-sims/${id}/audio`, {
       responseType: 'blob',
-    })
+    }) as Blob
     // Prefer server Content-Type; fall back so WebM dictation still plays.
     const typed = blob.type && !blob.type.includes('octet-stream') && !blob.type.includes('json')
       ? blob

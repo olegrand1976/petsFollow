@@ -7,7 +7,10 @@
     "build": "nuxt build",
     "preview": "nuxt preview",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "typecheck": "nuxt prepare && nuxi typecheck",
+    "lint": "nuxt prepare && eslint .",
+    "lint:fix": "nuxt prepare && eslint . --fix"
   },
   "dependencies": {
     "@cornerstonejs/core": "^5.6.12",
@@ -25,9 +28,14 @@
     "turndown": "^7.2.4"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
     "@playwright/test": "^1.49.0",
+    "@types/node": "^22.13.10",
     "@types/turndown": "^5.0.6",
     "@vue/test-utils": "^2.4.6",
-    "vitest": "^2.1.8"
+    "eslint": "^9.22.0",
+    "typescript": "~5.8.3",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^2.2.8"
   }
 }

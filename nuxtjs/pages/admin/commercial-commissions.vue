@@ -31,7 +31,7 @@
         </div>
         <div class="pro-field pro-field-inline">
           <label class="pro-label" for="com-period-ym">{{ $t('admin.commercialCommissions.period') }}</label>
-          <select id="com-period-ym" v-model="periodYm" class="pro-input" @change="loadPeriod">
+          <select id="com-period-ym" v-model="periodYm" class="pro-input" @change="() => loadPeriod()">
             <option v-for="p in periodsForTab" :key="p" :value="p">{{ p }}</option>
           </select>
         </div>

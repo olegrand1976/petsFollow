@@ -91,9 +91,9 @@ export async function openVisitReportPdfBlob(
   }
 
   const qs = opts?.stripCitations ? '?stripCitations=1' : ''
-  const blob = await $fetch<Blob>(`/api/visits/${id}/report-pdf${qs}`, {
+  const blob = await ($fetch as any)(`/api/visits/${id}/report-pdf${qs}`, {
     responseType: 'blob',
-  })
+  }) as Blob
 
   const type = (blob.type || '').toLowerCase()
   if (type.includes('json') || type.includes('text/html') || type.includes('text/plain')) {

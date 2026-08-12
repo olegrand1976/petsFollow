@@ -14,6 +14,7 @@ export type CompendiumRowLike = {
   packSize?: string
   errorCode?: string
   rowNumber?: number
+  sourcePage?: number | null
 }
 
 export type CompendiumReviewStatusFilter = 'all' | 'pending' | 'error'

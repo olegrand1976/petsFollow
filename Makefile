@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke crewai-smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-afmps-import-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test fmt-go fmt-go-check test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke crewai-smoke smoke-prod billit-sandbox-smoke billit-saas-master-smoke invoicing-staging-cleanup staging-quality-cleanup gcp-staging-quality-cleanup gcp-setup gcp-setup-prod gcp-github gcp-setup-media gcp-setup-stripe gcp-bff-proxy-secret gcp-retention-scheduler gcp-visit-reminders-scheduler gcp-saas-invoices-scheduler gcp-invoicing-reconcile-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-afmps-import-scheduler gcp-research-etl-scheduler gcp-vet-news-scheduler gcp-product-digest-scheduler gcp-product-digest-weekly-scheduler gcp-all-schedulers gcp-seed-scheduler gcp-delete-seed-scheduler gcp-preflight gcp-deploy gcp-deploy-prod gcp-domain gcp-domain-prod gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk rotate-pet-documents
 
 help:
 	@echo "petsFollow — commandes"
@@ -34,8 +34,9 @@ help:
 	@echo "  make gcp-staging-quality-cleanup  idem via Cloud SQL staging (gcloud + proxy)"
 	@echo "  make gcp-setup      Bootstrap staging (SQL/secrets/bucket)"
 	@echo "  make gcp-setup-prod Bootstrap prod (SQL petsfollow-db-prod + secrets *-prod)"
-	@echo "  make gcp-deploy     Cloud Build staging"
-	@echo "  make gcp-deploy-prod  Cloud Build production (cloudbuild-prod.yaml)"
+	@echo "  make gcp-preflight  Prérequis GCP + baseline (avant deploy)"
+	@echo "  make gcp-deploy     Cloud Build staging (preflight inclus)"
+	@echo "  make gcp-deploy-prod  Cloud Build production (preflight inclus)"
 	@echo "  make gcp-domain     Domaines staging (LB + cert)"
 	@echo "  make gcp-domain-prod Domaines petsfollow.app + api.petsfollow.app"
 	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS (staging + prod)"
@@ -217,7 +218,7 @@ test-flutter-smoke:
 
 test-nuxt:
 	$(MAKE) usecases-check
-	cd nuxtjs && npm install && npm test
+	cd nuxtjs && npm install && npm run typecheck && npm run lint && npm test
 
 # Garde-fou connexion / reset — à lancer avant deploy (DB seedée pour le volet Go).
 test-auth:
@@ -354,13 +355,18 @@ gcp-seed-scheduler: gcp-delete-seed-scheduler
 gcp-delete-seed-scheduler:
 	bash infra/gcp/delete-seed-scheduler.sh
 
+gcp-preflight:
+	bash infra/gcp/preflight-deploy.sh --env $${PETSFOLLOW_GCP_ENV:-staging}
+
 gcp-deploy:
 	@echo "→ Préférer push branche staging (CI + smoke + Playwright). Deploy nu = hors filet."
+	bash infra/gcp/preflight-deploy.sh --env staging
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
 
 # Production : préférer workflow_dispatch deploy-gcp-prod.yml. Garde-fou SQL FIXME dans le YAML.
 gcp-deploy-prod:
 	@echo "→ Deploy prod (services *-prod). Prérequis : SQL/DNS/secrets — doc 10-GCP § Production."
+	bash infra/gcp/preflight-deploy.sh --env prod
 	gcloud builds submit --config=infra/gcp/cloudbuild-prod.yaml .
 
 gcp-domain:

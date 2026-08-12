@@ -7,10 +7,80 @@ API="${PETSFOLLOW_API_URL:-http://localhost:${PETSFOLLOW_API_PORT:-8291}}"
 # prod : post-deploy main — health/ready + GET publics uniquement (pas de seed, pas d'écritures).
 SMOKE_PROFILE="${SMOKE_PROFILE:-full}"
 
+# Origine Pro pour le preflight CORS (allowlist API).
+# Priorité : CORS_ORIGIN explicite → site public → défaut selon API / local.
+if [ -n "${CORS_ORIGIN:-}" ]; then
+  :
+elif [ -n "${PETSFOLLOW_PUBLIC_SITE_URL:-}" ]; then
+  CORS_ORIGIN="${PETSFOLLOW_PUBLIC_SITE_URL}"
+elif [[ "$API" == *"api.petsfollow.app"* ]]; then
+  CORS_ORIGIN="https://petsfollow.app"
+elif [[ "$API" == *"api.petsfollow.ll-it-sc.be"* ]] || [[ "$API" == *"a.run.app"* ]]; then
+  CORS_ORIGIN="https://petsfollow.ll-it-sc.be"
+else
+  CORS_ORIGIN="http://localhost:3002"
+fi
+CORS_ORIGIN="${CORS_ORIGIN%/}"
+
 echo "== petsFollow smoke ($API) profile=$SMOKE_PROFILE =="
 
 curl -sf "$API/health" | grep -q ok
 curl -sf "$API/ready" | grep -q ready
+
+# Contrat HTTP : CORS preflight + login invalide ≠ 5xx (régression CSRF/proxy).
+echo "--- Contrat HTTP (CORS + login) ---"
+CORS_HEADERS=$(mktemp)
+trap 'rm -f "$CORS_HEADERS"' EXIT
+CORS_CODE=$(curl -sS -D "$CORS_HEADERS" -o /dev/null -w '%{http_code}' --max-time 30 \
+  -X OPTIONS "$API/api/v1/auth/login" \
+  -H "Origin: ${CORS_ORIGIN}" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: authorization,content-type" || echo "000")
+if [ "$CORS_CODE" != "204" ] && [ "$CORS_CODE" != "200" ]; then
+  echo "ERREUR: preflight CORS HTTP ${CORS_CODE} (attendu 200/204)" >&2
+  exit 1
+fi
+# Comparaison littérale (pas de regex) — les '.' de l'origine ne doivent pas matcher.
+if ! python3 - "$CORS_HEADERS" "$CORS_ORIGIN" <<'PY'
+import sys
+path, origin = sys.argv[1], sys.argv[2]
+want = f"access-control-allow-origin: {origin}".lower()
+with open(path, "r", encoding="utf-8", errors="replace") as f:
+    for raw in f:
+        line = raw.strip().rstrip("\r").lower()
+        if line == want:
+            raise SystemExit(0)
+raise SystemExit(1)
+PY
+then
+  echo "ERREUR: CORS Allow-Origin manquant pour ${CORS_ORIGIN}" >&2
+  echo "--- response headers ---" >&2
+  cat "$CORS_HEADERS" >&2 || true
+  exit 1
+fi
+echo "OK CORS preflight (${CORS_CODE}) Origin=${CORS_ORIGIN}"
+
+LOGIN_BAD=$(curl -sS -o /tmp/pf-smoke-login-bad.json -w '%{http_code}' --max-time 30 \
+  -X POST "$API/api/v1/auth/login" \
+  -H 'Content-Type: application/json' \
+  -H "Origin: ${CORS_ORIGIN}" \
+  -d '{"email":"smoke-invalid@petsfollow.test","password":"wrong"}' || echo "000")
+case "$LOGIN_BAD" in
+  401|422|400) echo "OK login invalide → ${LOGIN_BAD}" ;;
+  5*)
+    echo "ERREUR: login invalide HTTP ${LOGIN_BAD} (attendu 401/422/400, pas 5xx)" >&2
+    cat /tmp/pf-smoke-login-bad.json >&2 || true
+    rm -f /tmp/pf-smoke-login-bad.json
+    exit 1
+    ;;
+  *)
+    echo "ERREUR: login invalide HTTP ${LOGIN_BAD} (attendu 401/422/400)" >&2
+    cat /tmp/pf-smoke-login-bad.json >&2 || true
+    rm -f /tmp/pf-smoke-login-bad.json
+    exit 1
+    ;;
+esac
+rm -f /tmp/pf-smoke-login-bad.json
 
 if [ "$SMOKE_PROFILE" = "prod" ]; then
   # Catalogue public (pas d'auth) — prouve le routeur API + billing domain.
@@ -21,7 +91,7 @@ if [ "$SMOKE_PROFILE" = "prod" ]; then
   test "$DOSSIER" = "404"
   MEDIA_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$API/media/visit-reports/smoke-forbidden.m4a")
   test "$MEDIA_CODE" = "403" -o "$MEDIA_CODE" = "404"
-  echo "OK — smoke prod (health/ready/plans/dossier/media) passed"
+  echo "OK — smoke prod (health/ready/cors/login/plans/dossier/media) passed"
   exit 0
 fi
 

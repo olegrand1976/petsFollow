@@ -28,7 +28,7 @@ function onDebug(entry: PacsDebugEntry) {
 
 async function apiFetch<T = any>(url: string, opts?: Record<string, any>) {
   if (props.debug) return pacsDebugFetch<T>(url, opts, onDebug)
-  return $fetch<T>(url, opts)
+  return ($fetch as any)(url, opts) as T
 }
 
 const { status, loading, waking, hasPolled, error, wake, wakeUntilReady, refresh } = usePacsStatus({

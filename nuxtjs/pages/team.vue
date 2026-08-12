@@ -220,10 +220,10 @@ function isHardDenied(role: string, key: string) {
 async function load() {
   await fetchUser(true)
   const fetches: Promise<any>[] = [
-    $fetch<{ data?: { members?: TeamMember[]; deskIdleMinutes?: number } | TeamMember[] } | TeamMember[]>('/api/vet/team'),
+    ($fetch as any)('/api/vet/team'),
   ]
   if (sitesUiEnabled.value) {
-    fetches.push($fetch('/api/vet/sites'))
+    fetches.push(($fetch as any)('/api/vet/sites'))
   }
   const [res, sitesRes] = await Promise.all(fetches)
   const payload = Array.isArray(res) ? res : (res.data ?? [])

@@ -9,6 +9,23 @@ Projet partagé : `premedica-prod-2025` · région Run : `europe-west9` · LB : 
 
 Infra partagée : Cloud SQL `premedica-db-staging` (DB `petsfollow`), Redis VM `shared-redis` (DB **14**), VPC connector `premedica-connector`. Pattern domaine = LB Premedica + Serverless NEG (comme Kore).
 
+### Preflight deploy (gate avant Cloud Build)
+
+Avant tout `gcloud builds submit` (workflow staging/prod + `make gcp-deploy*`), [`infra/gcp/preflight-deploy.sh`](../infra/gcp/preflight-deploy.sh) vérifie :
+
+1. Secrets SM critiques (DB, migrate, JWT, Redis, BFF proxy, retention) accessibles
+2. Cloud SQL rattaché au service API + VPC connector + Artifact Registry
+3. Services Cloud Run API + Nuxt **Ready** (service **absent** = WARN bootstrap premier deploy ; présent mais non Ready = fail)
+4. Baseline HTTP `/health` + `/ready` + homepage (`200`/`304`) — `502`/`503`/`504` = WARN recovery autorisé ; `SKIP_BASELINE=1` pour forcer
+
+Le check cloudbuild vérifie la présence de `pf_api_secrets` / `--set-secrets` / noms de services (pas les littéraux `DATABASE_URL`/`JWT_SIGNING_KEY`, assemblés à runtime).
+
+```bash
+make gcp-preflight                          # staging
+PETSFOLLOW_GCP_ENV=prod make gcp-preflight   # prod
+SKIP_BASELINE=1 ./infra/gcp/preflight-deploy.sh --env staging
+```
+
 **Pharmacie (S6)** — voir aussi [28](28-PLAN-STOCK-PEREMPTION.md) · [37](37-ROADMAP-STOCK-FACTURATION.md) :
 
 Migrations pharmacie récentes (ordre) : `000107` jobs_audit → `000108` pricing/reorder → `000109` orders/BL → `000110` inventaire → `000111` withdrawal → `000112` food_chain (après `000100` visit_soft_delete / `000101` consultation_share). Si une base locale a déjà appliqué d’anciens numéros `000100_pharmacy_*` / `000103–106`, préférer DB propre ou `seed` reset. La migration `000081` exige **`pg_trgm`**.
@@ -43,7 +60,8 @@ DAF→Billit (S5) **gelé** tant que reseller Billit absent.
 ```bash
 make gcp-setup         # AR + bucket médias + checklist secrets / DB / Redis
 make gcp-github        # SA GitHub + WIF
-make gcp-deploy        # Cloud Build → images + deploy Run
+make gcp-preflight     # Secrets SM + Cloud Run Ready + baseline HTTP (avant deploy)
+make gcp-deploy        # Preflight + Cloud Build → images + deploy Run
 make gcp-domain        # NEG + backends + host rules + certs managés
 make gcp-smoke         # smoke contre api.petsfollow.ll-it-sc.be
 
@@ -141,7 +159,8 @@ Fichiers :
 
 | Fichier | Rôle |
 |---------|------|
-| [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer ; **smoke post-deploy** (`SMOKE_PROFILE=prod`) — pas de suite CI complète (filet = PR + staging) |
+| [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer ; **preflight GCP** puis Cloud Build puis smoke post-deploy (`SMOKE_PROFILE=prod`) — pas de suite CI complète (filet = PR + staging) |
+| [`infra/gcp/preflight-deploy.sh`](../infra/gcp/preflight-deploy.sh) | Gate secrets / Ready / baseline avant Cloud Build |
 | [`infra/gcp/cloudbuild-prod.yaml`](../infra/gcp/cloudbuild-prod.yaml) | Build + deploy `APP_ENV=production`, seed off, modules tag-dev off ; refuse SQL staging |
 | [`infra/gcp/setup-gcp-prod.sh`](../infra/gcp/setup-gcp-prod.sh) | Bootstrap SQL / secrets / bucket |
 | [`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh) | Overrides domaines / services `*-prod` / Redis |

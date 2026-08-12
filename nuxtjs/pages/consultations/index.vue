@@ -487,9 +487,9 @@ async function playAudio(row: ConsultationRow) {
   revokeAudioUrl()
   audioOpen.value = true
   try {
-    const blob = await $fetch<Blob>(`/api/visits/${row.id}/report/audio`, {
+    const blob = await ($fetch as any)(`/api/visits/${row.id}/report/audio`, {
       responseType: 'blob',
-    })
+    }) as Blob
     if (blob.type && blob.type.includes('application/json')) {
       const text = await blob.text()
       try {

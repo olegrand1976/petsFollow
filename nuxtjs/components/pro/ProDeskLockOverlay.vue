@@ -103,6 +103,8 @@
 </template>
 
 <script setup lang="ts">
+import type { DeskAuthResult } from '~/composables/useDeskSession'
+
 const desk = useDeskSession()
 const { t } = useI18n()
 
@@ -175,18 +177,19 @@ async function submitPassword() {
   if (!selectedEmail.value || !password.value) return
   loading.value = true
   try {
-    const result = await desk.authenticate(selectedEmail.value, password.value)
+    const result: DeskAuthResult = await desk.authenticate(selectedEmail.value, password.value)
     if (result.ok) {
       desk.completeUnlock(selectedEmail.value, result.role)
       return
     }
-    if (result.reason === 'mfa') {
-      mfaToken.value = result.mfaToken
+    const fail = result as Extract<DeskAuthResult, { ok: false }>
+    if (fail.reason === 'mfa') {
+      mfaToken.value = fail.mfaToken
       step.value = '2fa'
       totpCode.value = ''
       return
     }
-    error.value = mapAuthFail(result.reason)
+    error.value = mapAuthFail(fail.reason)
   } finally {
     loading.value = false
   }
@@ -196,17 +199,18 @@ async function submit2fa() {
   error.value = ''
   loading.value = true
   try {
-    const result = await desk.verify2fa(mfaToken.value, totpCode.value)
+    const result: DeskAuthResult = await desk.verify2fa(mfaToken.value, totpCode.value)
     if (result.ok) {
       desk.completeUnlock(selectedEmail.value, result.role)
       return
     }
-    if (result.reason === 'mfa') {
-      mfaToken.value = result.mfaToken
+    const fail = result as Extract<DeskAuthResult, { ok: false }>
+    if (fail.reason === 'mfa') {
+      mfaToken.value = fail.mfaToken
       error.value = t('desk.twoFaInvalid')
       return
     }
-    error.value = result.reason === 'proOnly' ? t('desk.proOnly') : t('desk.twoFaInvalid')
+    error.value = fail.reason === 'proOnly' ? t('desk.proOnly') : t('desk.twoFaInvalid')
   } finally {
     loading.value = false
   }

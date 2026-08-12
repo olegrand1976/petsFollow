@@ -40,6 +40,12 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
+      - name: Preflight GCP (secrets + Ready + baseline)
+        env:
+          SKIP_BASELINE: ${{ vars.SKIP_BASELINE || '0' }}
+        run: |
+          chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
+          bash infra/gcp/preflight-deploy.sh --env prod
       - name: Deploy (Cloud Build prod)
         run: |
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true

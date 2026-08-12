@@ -465,10 +465,10 @@ async function loadMeta() {
   try {
     const siteQ = targetSiteId.value
     const fetches: Promise<any>[] = [
-      $fetch('/api/clients'),
-      $fetch('/api/vet/visit-types?active=1'),
-      $fetch(withSiteQuery('/api/vet/schedule', siteQ)),
-      $fetch('/api/vet/team'),
+      ($fetch as any)('/api/clients'),
+      ($fetch as any)('/api/vet/visit-types?active=1'),
+      ($fetch as any)(withSiteQuery('/api/vet/schedule', siteQ)),
+      ($fetch as any)('/api/vet/team'),
     ]
     const [clientsRes, typesRes, schedRes, teamRes] = await Promise.all(fetches)
     const cl = clientsRes.data ?? clientsRes ?? []

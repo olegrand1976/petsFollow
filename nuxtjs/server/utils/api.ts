@@ -257,11 +257,11 @@ export async function proxyPublicApi<T>(
   options: { method?: string, body?: unknown, headers?: Record<string, string> } = {},
 ): Promise<T> {
   try {
-    return await $fetch<T>(`${apiBase()}${path}`, {
+    return await ($fetch as any)(`${apiBase()}${path}`, {
       method: options.method,
       body: options.body,
       headers: { ...localeHeaders(event), ...options.headers },
-    })
+    }) as T
   } catch (e: any) {
     throw toProxyError(e)
   }
@@ -287,14 +287,14 @@ export async function proxyApi<T>(
 ): Promise<T> {
   const url = `${apiBase()}${path}`
   const fetchOnce = (accessToken?: string) =>
-    $fetch<T>(url, {
+    ($fetch as any)(url, {
       method: options.method,
       body: options.body,
       query: options.query,
       headers: accessToken
         ? bearerHeaders(event, accessToken, options.headers)
         : { ...apiHeaders(event), ...options.headers },
-    })
+    }) as Promise<T>
 
   try {
     return await fetchOnce()
@@ -376,7 +376,7 @@ export async function proxyBinary(
     const ct = res.headers.get('content-type') || 'application/octet-stream'
     setHeader(event, 'content-type', ct)
     setHeader(event, 'cache-control', res.headers.get('cache-control') || 'private, no-store')
-    setHeader(event, 'content-length', String(buf.length))
+    setHeader(event, 'content-length', buf.length)
     const cd = res.headers.get('content-disposition') || opts?.contentDispositionFallback
     if (cd) setHeader(event, 'content-disposition', cd)
     return buf

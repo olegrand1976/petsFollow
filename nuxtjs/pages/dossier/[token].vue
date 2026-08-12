@@ -131,9 +131,9 @@ async function download() {
   downloading.value = true
   const token = String(route.params.token || '')
   try {
-    const blob = await $fetch<Blob>(`/api/public/pet-dossier/${encodeURIComponent(token)}/download`, {
+    const blob = await ($fetch as any)(`/api/public/pet-dossier/${encodeURIComponent(token)}/download`, {
       responseType: 'blob',
-    })
+    }) as Blob
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url

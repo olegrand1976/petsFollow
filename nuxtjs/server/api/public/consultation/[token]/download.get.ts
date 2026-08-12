@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Content-Disposition', cd)
     setHeader(event, 'Cache-Control', 'private, no-store')
     const len = res.headers.get('content-length')
-    if (len) setHeader(event, 'Content-Length', len)
+    const n = len ? Number.parseInt(len, 10) : NaN
+    if (Number.isFinite(n) && n >= 0) setHeader(event, 'Content-Length', n)
     return res._data as ReadableStream
   } catch (e: any) {
     throw createError({

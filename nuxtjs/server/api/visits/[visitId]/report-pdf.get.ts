@@ -10,7 +10,5 @@ export default defineEventHandler(async (event) => {
   const path = strip
     ? `/api/v1/visits/${visitId}/report/pdf?stripCitations=1`
     : `/api/v1/visits/${visitId}/report/pdf`
-  return proxyBinary(event, path, {
-    method: 'GET',
-  })
+  return proxyBinary(event, path)
 })

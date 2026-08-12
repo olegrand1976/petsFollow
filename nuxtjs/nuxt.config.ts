@@ -3,7 +3,14 @@ import { publicFeatureFlag } from './utils/public-feature-flag'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-15',
-  modules: ['@nuxtjs/i18n'],
+  modules: ['@nuxtjs/i18n', '@nuxt/eslint'],
+  eslint: {
+    // Génère `.nuxt/eslint.config.mjs` pour `withNuxt` dans eslint.config.mjs.
+  },
+  typescript: {
+    typeCheck: false, // gate explicite via `npm run typecheck` (évite de doubler le build Cloud Run)
+    strict: false,
+  },
   i18n: {
     restructureDir: false,
     locales: [

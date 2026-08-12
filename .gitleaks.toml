@@ -1,0 +1,16 @@
+# Allowlist / config minimale gitleaks (heuristiques défaut + paths bruit).
+title = "petsFollow gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Artefacts générés / fixtures non-secrets"
+paths = [
+  '''(?i)go\.sum$''',
+  '''(?i)package-lock\.json$''',
+  '''(?i)pubspec\.lock$''',
+  '''(?i)\.nuxt/''',
+  '''(?i)node_modules/''',
+  '''(?i)nuxtjs/data/usecases/catalog\.json$''',
+]

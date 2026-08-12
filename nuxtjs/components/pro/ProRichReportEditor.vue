@@ -148,9 +148,9 @@ onMounted(() => {
     },
     onUpdate: ({ editor: ed }) => {
       if (applyingExternal) return
-      emitCanonicalFromEditor(ed)
+      emitCanonicalFromEditor(ed as Editor)
     },
-  })
+  }) as Editor
 })
 
 onBeforeUnmount(() => {

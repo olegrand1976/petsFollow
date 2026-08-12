@@ -111,6 +111,10 @@ jobs:
       - name: Use cases catalog in sync
         working-directory: .
         run: make usecases-check
+      - name: Typecheck
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
       - run: npm test
 
   flutter:

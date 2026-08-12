@@ -86,7 +86,7 @@ const byDay = computed(() => visitsByDay(props.visits))
 const todayKey = dayKey(startOfDay(new Date()))
 
 const weekdayHeaders = computed(() => {
-  const loc = dateLocale.value
+  const loc = dateLocale()
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(2024, 0, 1 + i)
     return d.toLocaleDateString(loc, { weekday: 'short' })

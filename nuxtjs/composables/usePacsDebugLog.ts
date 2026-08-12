@@ -40,7 +40,7 @@ export async function pacsDebugFetch<T = any>(
   const started = Date.now()
   const isStatusPoll = method === 'GET' && url.split('?')[0] === '/api/pacs/status'
   try {
-    const res = await $fetch<T>(url, opts)
+    const res = await ($fetch as any)(url, opts) as T
     // Skip successful status polls — they flood the admin debug ring every few seconds.
     if (!isStatusPoll) {
       onDebug?.({

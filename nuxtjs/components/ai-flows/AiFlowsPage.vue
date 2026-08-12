@@ -67,7 +67,7 @@
             :key="`${activeDiagram.id}-${locale}`"
             :diagram-id="activeDiagram.id"
             :source="resolvedSource"
-            :aria-label="$t(`aiFlows.diagrams.${activeDiagram.id}.title`)"
+            :ariaLabel="$t(`aiFlows.diagrams.${activeDiagram.id}.title`)"
           />
           <template #fallback>
             <p class="pro-hint">{{ $t('aiFlows.loading') }}</p>

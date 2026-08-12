@@ -57,7 +57,7 @@ async function exportData() {
   exporting.value = true
   exportError.value = ''
   try {
-    const res = await $fetch<Blob>('/api/me/export', { responseType: 'blob' })
+    const res = await ($fetch as any)('/api/me/export', { responseType: 'blob' }) as Blob
     const url = URL.createObjectURL(res)
     const a = document.createElement('a')
     a.href = url

@@ -16,7 +16,7 @@
         <div>
           <strong>{{ s.title }}</strong>
           <span class="text-muted"> — {{ s.slug }}</span>
-          <ProBadge :variant="s.isActive ? 'success' : 'default'">
+          <ProBadge :variant="s.isActive ? 'success' : 'neutral'">
             {{ s.isActive ? $t('training.badgeOn') : $t('training.badgeOff') }}
           </ProBadge>
         </div>

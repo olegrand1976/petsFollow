@@ -2,7 +2,8 @@ export function useFormatters() {
   const { locale } = useI18n()
 
   function dateLocale(): string {
-    switch (locale.value) {
+    const code = String(locale.value)
+    switch (code) {
       case 'nl':
         return 'nl-NL'
       case 'en':

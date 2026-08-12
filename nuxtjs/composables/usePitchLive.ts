@@ -283,7 +283,7 @@ export function usePitchLive() {
       workletNode = new AudioWorkletNode(captureCtx, 'pf-pcm-capture')
       workletNode.port.onmessage = (e: MessageEvent<Int16Array>) => {
         if (ws?.readyState === WebSocket.OPEN) {
-          ws.send(e.data.buffer)
+          ws.send(e.data.buffer as ArrayBuffer)
         }
       }
       // Keep-alive : certains navigateurs n'exécutent process() que si branché à destination.

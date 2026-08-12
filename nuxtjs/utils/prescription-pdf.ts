@@ -9,9 +9,9 @@ export async function openPrescriptionPdfBlob(
     throw err
   }
 
-  const blob = await $fetch<Blob>(`/api/vet/prescriptions/${id}/pdf`, {
+  const blob = await ($fetch as any)(`/api/vet/prescriptions/${id}/pdf`, {
     responseType: 'blob',
-  })
+  }) as Blob
 
   const type = (blob.type || '').toLowerCase()
   if (type.includes('json') || type.includes('text/html') || type.includes('text/plain')) {

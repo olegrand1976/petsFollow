@@ -1111,9 +1111,9 @@ async function load() {
   initFromStorage()
   try {
     const fetches: Promise<any>[] = [
-      $fetch(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`)),
-      $fetch(withSiteQuery('/api/vet/schedule', concreteSiteId.value)),
-      $fetch(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`)),
+      ($fetch as any)(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`)),
+      ($fetch as any)(withSiteQuery('/api/vet/schedule', concreteSiteId.value)),
+      ($fetch as any)(withSiteQuery(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`)),
     ]
     if (viewMode.value === 'day' && !isAggregatedView.value) {
       fetches.push(loadDayResources())

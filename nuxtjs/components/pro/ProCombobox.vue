@@ -8,7 +8,11 @@ export type ProComboboxItem = {
   label: string
   hint?: string
   badge?: string
-  raw?: unknown
+  /** Opaque payload from search (e.g. pharmacy catalogue fields). */
+  raw?: {
+    isAntibiotic?: boolean
+    [key: string]: unknown
+  }
 }
 
 const props = withDefaults(

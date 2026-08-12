@@ -503,7 +503,7 @@ async function createProspect() {
 async function patch(id: string, body: Record<string, unknown>) {
   actionError.value = ''
   try {
-    await $fetch(`/api/commercial/prospects/${id}`, { method: 'PATCH', body })
+    await ($fetch as any)(`/api/commercial/prospects/${id}`, { method: 'PATCH', body })
     await load()
   } catch (e: any) {
     actionError.value = mapError(e)
@@ -525,7 +525,7 @@ async function onAppt(id: string, value: string) {
 async function remove(id: string) {
   actionError.value = ''
   try {
-    await $fetch(`/api/commercial/prospects/${id}`, { method: 'DELETE' })
+    await ($fetch as any)(`/api/commercial/prospects/${id}`, { method: 'DELETE' })
     await load()
   } catch (e: any) {
     actionError.value = mapError(e)
