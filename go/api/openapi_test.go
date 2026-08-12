@@ -25,7 +25,7 @@ func TestOpenAPISpecCriticalPaths(t *testing.T) {
 	}
 
 	var doc struct {
-		OpenAPI string `yaml:"openapi"`
+		OpenAPI string         `yaml:"openapi"`
 		Paths   map[string]any `yaml:"paths"`
 	}
 	if err := yaml.Unmarshal(raw, &doc); err != nil {
