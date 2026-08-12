@@ -49,6 +49,8 @@ jobs:
       - name: Deploy (Cloud Build prod)
         run: |
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
+          # AFMPS_IMPORT_OBJECT_KEY opaque : Secret Manager petsfollow-prod-afmps-import-object-key
+          # (lu par pf_resolve_afmps_import_object_key au deploy).
           gcloud builds submit --config=infra/gcp/cloudbuild-prod.yaml --project="${GCP_PROJECT_ID}" .
       - name: Summary
         run: |

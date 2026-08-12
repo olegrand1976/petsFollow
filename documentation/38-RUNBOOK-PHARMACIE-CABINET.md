@@ -70,6 +70,8 @@ Aucun upsert silencieux dans `pharmacy.ref_medications`. Surfaces : admin Pro `/
 
 **Staging (2026-08-11)** : objet GCS déposé · secret + job Scheduler `petsfollow-afmps-import` · API remountée · premier catalogue commité (`completed`, ~2738 CNK). Re-run mensuel = skip `unchanged_checksum` tant que le fichier n’a pas changé.
 
+**Ops (2026-08-12)** : staging + prod passés sur clé **opaque** (`AFMPS_IMPORT_OBJECT_KEY=afmps-imports/<uuid>.csv`). Persistance deploy : Secret Manager `petsfollow-afmps-import-object-key` / `petsfollow-prod-afmps-import-object-key` (lu par `pf_resolve_afmps_import_object_key`) + variable GH `AFMPS_IMPORT_OBJECT_KEY` (staging). Smoke gate-1 staging → `200` / `validated` (plus `afmps_object_key_predictable`).
+
 <a id="prod-premier-catalogue"></a>
 <a id="prod-checklist-premier-catalogue"></a>
 

@@ -48,6 +48,8 @@ jobs:
       - name: Deploy (Cloud Build)
         run: |
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
+          # AFMPS_IMPORT_OBJECT_KEY opaque : Secret Manager petsfollow-afmps-import-object-key
+          # (lu par pf_resolve_afmps_import_object_key au deploy — pas latest.csv).
           gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
       - name: Postdeploy (jobs + smoke, sans seed)
         # Seed staging : manuel uniquement (admin Pro « RESET STAGING » ou postdeploy.sh --seed).

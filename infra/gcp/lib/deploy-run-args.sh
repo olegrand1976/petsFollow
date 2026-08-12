@@ -28,6 +28,22 @@ pf_sm_has_secret() {
   gcloud secrets versions access latest --secret="$name" --project="$GCP_PROJECT_ID" >/dev/null 2>&1
 }
 
+# Chemin CSV AFMPS gate-1 : env explicite > Secret Manager > défaut historique (prévisible).
+# Secret : petsfollow-afmps-import-object-key (staging) / petsfollow-prod-afmps-import-object-key (prod).
+pf_resolve_afmps_import_object_key() {
+  if [[ -n "${AFMPS_IMPORT_OBJECT_KEY:-}" ]]; then
+    printf '%s' "$AFMPS_IMPORT_OBJECT_KEY"
+    return 0
+  fi
+  local secret
+  secret="$(pf_sm_job_secret afmps-import-object-key)"
+  if [[ -n "${GCP_PROJECT_ID:-}" ]] && pf_sm_has_secret "$secret"; then
+    gcloud secrets versions access latest --secret="$secret" --project="$GCP_PROJECT_ID" 2>/dev/null || true
+    return 0
+  fi
+  printf '%s' 'afmps-imports/latest.csv'
+}
+
 pf_api_mount_job_secret() {
   # $1 = env var name (PRODUCT_DIGEST_SECRET), $2 = SM short name (product-digest-secret)
   local env_name="$1"
@@ -78,8 +94,13 @@ pf_write_api_env_file() {
   local billing_mock
   local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled vet_news_enabled client_ai_enabled
   local ai_cr_advanced_enabled sms_enabled crewai_base_url crewai_use_id_token
+  local afmps_import_object_key
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
+  afmps_import_object_key="$(pf_resolve_afmps_import_object_key)"
+  if [[ "$afmps_import_object_key" == "afmps-imports/latest.csv" || "$afmps_import_object_key" == *"/latest.csv" ]]; then
+    echo "WARN: AFMPS_IMPORT_OBJECT_KEY=$afmps_import_object_key est prévisible — poser le secret $(pf_sm_job_secret afmps-import-object-key) (opaque) avant le prochain cron." >&2
+  fi
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
   # Billit Access Point : staging → sandbox API ; prod (main) → api.billit.be (whitelist).
   # Docs : https://docs.accesspoint.billit.eu/docs/sandbox-vs-production
@@ -170,7 +191,7 @@ CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-${PUBLIC_SITE_URL}}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
 # Objet CSV pack AFMPS pour le cron mensuel gate 1 (privé, hors allowlist /media/).
-AFMPS_IMPORT_OBJECT_KEY: "${AFMPS_IMPORT_OBJECT_KEY:-afmps-imports/latest.csv}"
+AFMPS_IMPORT_OBJECT_KEY: "${afmps_import_object_key}"
 # Déclarations DAF : dry-run FORCÉ (staging + prod). Une clé software-house (listes)
 # ne permet pas le live declare — voir documentation/39-VAMREG-AFMPS-READONLY.md.
 # Live declare = ICD write + credentials déclarant + retirer ce forçage volontairement.

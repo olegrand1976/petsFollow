@@ -26,7 +26,15 @@ API_URL="${PUBLIC_API_URL%/}"
 ENDPOINT="${API_URL}/api/v1/internal/afmps-import/run"
 # Parse + COPY ~2.7k CNK : deadline élargie (max Scheduler HTTP = 1800s).
 ATTEMPT_DEADLINE="${ATTEMPT_DEADLINE:-540s}"
-OBJECT_KEY="${AFMPS_IMPORT_OBJECT_KEY:-afmps-imports/latest.csv}"
+OBJECT_KEY="${AFMPS_IMPORT_OBJECT_KEY:-}"
+if [[ -z "$OBJECT_KEY" ]]; then
+  # Aligné sur pf_resolve_afmps_import_object_key (Secret Manager).
+  _obj_secret="${PF_SCHED_PREFIX}-afmps-import-object-key"
+  if gcloud secrets versions access latest --secret="$_obj_secret" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    OBJECT_KEY="$(gcloud secrets versions access latest --secret="$_obj_secret" --project="$GCP_PROJECT_ID")"
+  fi
+fi
+OBJECT_KEY="${OBJECT_KEY:-afmps-imports/latest.csv}"
 
 pf_scheduler_ensure_secret "$SECRET_NAME" "${AFMPS_IMPORT_SECRET:-}"
 
