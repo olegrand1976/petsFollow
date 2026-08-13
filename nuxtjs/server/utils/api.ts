@@ -49,6 +49,54 @@ export function localeHeaders(event: H3Event) {
   return headers
 }
 
+/** Normalize to scheme://host ; empty if not http(s). */
+function cleanWebEidOrigin(raw: string): string {
+  const trimmed = raw.trim().replace(/\/$/, '')
+  if (!trimmed || trimmed === 'null') return ''
+  try {
+    const u = new URL(trimmed.includes('://') ? trimmed : `http://${trimmed}`)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
+    if (!u.host) return ''
+    return `${u.protocol}//${u.host}`
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Origine de l’onglet pour le binding Web eID.
+ * Les GET same-origin n’envoient souvent pas `Origin` — retomber sur l’URL BFF
+ * (Host) puis Referer, sinon localhost↔127.0.0.1 diverge de EID_SITE_ORIGIN.
+ */
+export function resolveWebEidOrigin(event: H3Event): string {
+  const fromOrigin = cleanWebEidOrigin(getRequestHeader(event, 'origin') || '')
+  if (fromOrigin) return fromOrigin
+  try {
+    const origin = cleanWebEidOrigin(getRequestURL(event).origin || '')
+    if (origin) return origin
+  } catch {
+    /* getRequestURL can throw without a request URL */
+  }
+  return cleanWebEidOrigin(getRequestHeader(event, 'referer') || '')
+}
+
+/**
+ * Headers BFF→API pour challenge/verify Web eID.
+ * Envoie X-PF-Web-Eid-Origin ; y joint X-PF-Proxy-Secret si configuré
+ * (même sans IP client — sinon Go ignore l’origine). Sans secret, l’origine
+ * part quand même mais reste inerte côté API.
+ */
+export function webEidUpstreamHeaders(event: H3Event): Record<string, string> {
+  const origin = resolveWebEidOrigin(event)
+  if (!origin) return {}
+  const headers: Record<string, string> = { 'X-PF-Web-Eid-Origin': origin }
+  const secret = (useRuntimeConfig().bffProxySecret as string | undefined) || ''
+  if (secret) {
+    headers['X-PF-Proxy-Secret'] = secret
+  }
+  return headers
+}
+
 export function apiHeaders(event: H3Event) {
   return { ...authHeaders(event), ...localeHeaders(event) }
 }

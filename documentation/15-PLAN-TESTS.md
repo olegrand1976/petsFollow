@@ -682,7 +682,7 @@ make smoke-eid-staging    # Cloud Run
 | Viewer import BE | 200 + identité sans photo ; Go `TestEidImportViewer_BE` |
 | Flag off / non-BE | 404 `eid_disabled` / `eid_not_available` |
 | Web eID challenge | nonce + origin (`EID_SITE_ORIGIN`) ; Redis obligatoire hors local |
-| Origin BFF | `X-PF-Web-Eid-Origin` honoré **seulement** avec `X-PF-Proxy-Secret` ; alias localhost↔127.0.0.1 |
+| Origin BFF | `X-PF-Web-Eid-Origin` honoré **seulement** avec `X-PF-Proxy-Secret` ; alias localhost↔127.0.0.1 ; BFF dérive Host/Referer si `Origin` absent (GET same-origin) — Vitest `webEidOrigin.spec.ts` |
 | Verify bad token | 422 puis 2ᵉ appel → `eid_nonce_expired` |
 | Playwright | mock Viewer upload + mock Web eID (`__PF_WEB_EID_MOCK__`) + origin mismatch |
 | QA terrain | PIN réel non automatisable (lecteur + extension) |

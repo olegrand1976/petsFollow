@@ -87,10 +87,13 @@ Rétention : purge automatique **1 an** via `POST /internal/retention/run`
   Communication via **native messaging** (hors CSP HTTP) — pas d’élargissement
   `connect-src` requis pour l’extension.
   En local, `localhost` et `127.0.0.1` sont des origines distinctes pour Web eID : le
-  challenge reprend l’`Origin` navigateur (via BFF `X-PF-Web-Eid-Origin`) tant que
-  c’est un alias loopback de `EID_SITE_ORIGIN`. Le header n’est honoré que si
-  `X-PF-Proxy-Secret` matche `BFF_PROXY_SECRET` (même gate que `X-PF-Client-IP`) —
-  un appel API direct ne peut pas spoofe l’origine du challenge.
+  challenge reprend l’origine de l’onglet (via BFF `X-PF-Web-Eid-Origin`) tant que
+  c’est un alias loopback de `EID_SITE_ORIGIN`. Les GET same-origin n’envoient
+  souvent **pas** le header `Origin` : la BFF dérive alors `getRequestURL` (Host)
+  puis `Referer` (`resolveWebEidOrigin` / `webEidUpstreamHeaders`). Le header n’est
+  honoré côté Go que si `X-PF-Proxy-Secret` matche `BFF_PROXY_SECRET` (même gate
+  que `X-PF-Client-IP`, forcé avec l’origine même sans IP client) — un appel API
+  direct ne peut pas spoofe l’origine du challenge.
 - **Viewer** : eID Viewer / BEid → export `.eid` → upload.
   Pas de détection d’extensions Chrome tierces (beID Connect, etc.) côté Pro.
 
