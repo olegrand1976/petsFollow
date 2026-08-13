@@ -79,7 +79,9 @@ Rétention : purge automatique **1 an** via `POST /internal/retention/run`
 
 - **Viewer** : eID Viewer / BEid → export `.eid` → upload.
 - **Web eID** : lecteur + app native + extension navigateur + PIN.
-  Lib JS : `@web-eid/web-eid-library` (GitHub `web-eid/web-eid.js`).
+  Lib JS : `@web-eid/web-eid-library` (pin commit SHA GitHub `web-eid/web-eid.js`).
+  Communication via **native messaging** (hors CSP HTTP) — pas d’élargissement
+  `connect-src` requis pour l’extension.
 
 ## Tests
 

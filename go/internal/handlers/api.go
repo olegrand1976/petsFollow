@@ -65,10 +65,12 @@ type API struct {
 	pharmacyOrderSendRL *httpx.RateLimiter
 	clientAiTriageRL    *httpx.RateLimiter
 	clientAiExplainRL   *httpx.RateLimiter
-	authPulse           *authPulse
-	redis               *redisx.Client
-	afsca               *afsca.Client
-	orthancClient       *orthancClient
+	// eidRL — soft limit on Viewer import + Web eID challenge/verify (OCSP cost).
+	eidRL         *httpx.RateLimiter
+	authPulse     *authPulse
+	redis         *redisx.Client
+	afsca         *afsca.Client
+	orthancClient *orthancClient
 	// stagingSeedRun — seed destructif de POST /admin/staging/seed (défaut seed.Run).
 	// Injectable pour que les tests d'intégration couvrent l'endpoint sans tronquer
 	// la base partagée en cours de run (cf. TestSetStagingSeedRunner).
@@ -134,6 +136,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		pharmacyOrderSendRL: httpx.NewRateLimiter(10, time.Minute),
 		clientAiTriageRL:    httpx.NewRateLimiter(20, time.Hour),
 		clientAiExplainRL:   httpx.NewRateLimiter(10, time.Hour),
+		eidRL:               httpx.NewRateLimiter(20, time.Minute),
 		authPulse:           newAuthPulse(),
 		stagingSeedRun:      seed.Run,
 	}

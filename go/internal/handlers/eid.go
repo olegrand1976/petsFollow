@@ -51,6 +51,10 @@ func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request) (authx.Identi
 		writeErr(w, r, http.StatusNotFound, "not_found", "eid_not_available")
 		return authx.Identity{}, false
 	}
+	if a.eidRL != nil && !a.eidRL.Allow("eid:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return authx.Identity{}, false
+	}
 	return id, true
 }
 

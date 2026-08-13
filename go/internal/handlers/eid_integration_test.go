@@ -61,6 +61,53 @@ func TestEidReadings_PurgeOld(t *testing.T) {
 	}
 }
 
+func TestEidExport_IncludesEidReadings(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	var practiceID, userID string
+	err := api.pool.QueryRow(ctx, `
+		SELECT practice_id::text, id::text
+		FROM identity.users
+		WHERE email = 'vet.demo@petsfollow.test'`).Scan(&practiceID, &userID)
+	if err != nil || practiceID == "" || userID == "" {
+		t.Skip("seed vet/practice unavailable")
+	}
+	readingID := uuid.NewString()
+	_, err = api.pool.Exec(ctx, `
+		INSERT INTO practice.eid_readings (
+			id, practice_id, user_id, tool, success, fields_read, niss_hash, error_code
+		) VALUES ($1,$2,$3,'eid_viewer_xml',true,'{niss,firstname}','deadbeef','')`,
+		readingID, practiceID, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(ctx, `DELETE FROM practice.eid_readings WHERE id=$1`, readingID)
+	})
+
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("export %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	rows, ok := data["eidReadings"].([]any)
+	if !ok {
+		t.Fatalf("export missing eidReadings: %#v", data["eidReadings"])
+	}
+	found := false
+	for _, raw := range rows {
+		m, _ := raw.(map[string]any)
+		if str(m["id"]) == readingID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("export eidReadings missing %s: %#v", readingID, rows)
+	}
+}
+
 func TestEidImportViewer_BE(t *testing.T) {
 	api := newTestAPI(t)
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
