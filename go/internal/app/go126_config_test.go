@@ -62,11 +62,14 @@ func TestCloudRunAPIRuntimeEnv(t *testing.T) {
 
 func TestGoModTargets126(t *testing.T) {
 	content := readRepoFile(t, "go/go.mod")
-	if !strings.Contains(content, "\ngo 1.26\n") {
-		t.Error("go/go.mod must declare go 1.26")
+	// Go ≥1.21 : `go 1.26.5` (tidy moderne) ou `go 1.26` + `toolchain go1.26.x`.
+	hasLanguage := strings.Contains(content, "\ngo 1.26\n") || strings.Contains(content, "\ngo 1.26.")
+	if !hasLanguage {
+		t.Error("go/go.mod must declare go 1.26 or go 1.26.x")
 	}
-	if !strings.Contains(content, "toolchain go1.26") {
-		t.Error("go/go.mod must pin a go1.26.x toolchain")
+	hasToolchain := strings.Contains(content, "toolchain go1.26") || strings.Contains(content, "\ngo 1.26.")
+	if !hasToolchain {
+		t.Error("go/go.mod must pin go 1.26.x (language line or toolchain directive)")
 	}
 }
 
