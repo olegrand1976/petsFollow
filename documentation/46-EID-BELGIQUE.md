@@ -89,6 +89,11 @@ Rétention : purge automatique **1 an** via `POST /internal/retention/run`
 cd go && go test ./internal/eid/ -count=1
 cd go && go test ./internal/handlers/ -run 'TestEid' -count=1
 # Playwright : scénario prefill mock dans 03-clients.spec.ts
+# Smoke staging (Viewer + challenge origin) :
+bash scripts/smoke-eid-staging.sh
 ```
 
 Réf. checklist : `documentation/15-PLAN-TESTS.md` (C2.3 / C2.6).
+
+**QA terrain** : Web eID avec PIN réel nécessite lecteur + extension sur un poste BE
+(non automatisable). Le smoke vérifie import Viewer + binding `EID_SITE_ORIGIN`.

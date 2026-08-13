@@ -277,6 +277,10 @@ smoke-staging:
 	bash infra/gcp/cleanup-staging-quality.sh || echo "WARN: purge quality échouée — relancer make gcp-staging-quality-cleanup" >&2; \
 	exit $$rc
 
+# eID BE : import Viewer + challenge Web eID (origin) sur staging.
+smoke-eid-staging:
+	@PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-eid-staging.sh
+
 # Pharmacie S6 : receipt → DAF → VAMReg dry-run → movements (local ou PETSFOLLOW_API_URL=staging).
 smoke-pharmacy-s6:
 	@bash scripts/smoke-pharmacy-s6.sh
