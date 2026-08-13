@@ -28,6 +28,21 @@ async function openVisitTypesSection(page: import('@playwright/test').Page) {
   }
 }
 
+async function setInvoiceDocType(
+  page: import('@playwright/test').Page,
+  type: 'invoice' | 'credit_note' | 'proforma',
+) {
+  await page.getByTestId(`invoicing-doc-type-${type}`).click()
+  await expect(page.getByTestId('invoicing-doc-type')).toHaveAttribute('data-value', type)
+}
+
+async function expectInvoiceCustomerKind(
+  page: import('@playwright/test').Page,
+  kind: 'individual' | 'business',
+) {
+  await expect(page.getByTestId('invoicing-cp-kind')).toHaveAttribute('data-value', kind)
+}
+
 test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -83,9 +98,17 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
 
     await expect(page.getByTestId('invoicing-create')).toBeVisible({ timeout: 20000 })
     // Particulier par défaut : les champs fiscaux disparaissent.
-    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('individual')
+    await expectInvoiceCustomerKind(page, 'individual')
     await expect(page.getByTestId('invoicing-cp-vat')).toHaveCount(0)
     await expect(page.getByTestId('invoicing-cp-company')).toHaveCount(0)
+
+    // Toggle Particulier ↔ Pro : affiche / masque les champs fiscaux sans recharger.
+    await page.getByTestId('invoicing-cp-kind-business').click()
+    await expectInvoiceCustomerKind(page, 'business')
+    await expect(page.getByTestId('invoicing-cp-vat')).toBeVisible()
+    await page.getByTestId('invoicing-cp-kind-individual').click()
+    await expectInvoiceCustomerKind(page, 'individual')
+    await expect(page.getByTestId('invoicing-cp-vat')).toHaveCount(0)
 
     await fillField(page, 'invoicing-cp-name', `Particulier E2E ${Date.now()}`)
     await fillField(page, 'invoicing-cp-email', 'particulier.e2e@petsfollow.test')
@@ -134,11 +157,11 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     await expect(delivery).toContainText(/E-?mail/)
 
     // Avoir sur cette facture : la contrepartie reprise reste un particulier.
-    await page.getByTestId('invoicing-doc-type').selectOption('credit_note')
+    await setInvoiceDocType(page, 'credit_note')
     await page.getByTestId('invoicing-related-invoice').selectOption(String(docId))
-    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('individual')
+    await expectInvoiceCustomerKind(page, 'individual')
     await expect(page.getByTestId('invoicing-cp-vat')).toHaveCount(0)
-    await page.getByTestId('invoicing-doc-type').selectOption('invoice')
+    await setInvoiceDocType(page, 'invoice')
 
     // Sans email, la facture d'un particulier n'a pas de canal de livraison.
     const noEmail = await page.request.post('/api/invoicing/documents', {
@@ -188,7 +211,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     }
 
     await expect(page.getByTestId('invoicing-create')).toBeVisible({ timeout: 20000 })
-    await expect(page.getByTestId('invoicing-doc-type')).toHaveValue('invoice')
+    await expect(page.getByTestId('invoicing-doc-type')).toHaveAttribute('data-value', 'invoice')
 
     // Autocomplete client.demo (billing seed) → préremplit la contrepartie
     const clientSearch = page.getByTestId('invoicing-client-search').getByTestId('pro-combobox-input')
@@ -197,7 +220,7 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
     await page.getByTestId('pro-combobox-list').locator('[role="option"]').first().click()
     await expect(page.getByTestId('invoicing-cp-name')).toHaveValue(/Sophie/)
     // Type repris de la fiche client (billingCustomerKind), sans ressaisie.
-    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('business')
+    await expectInvoiceCustomerKind(page, 'business')
     await expect(page.getByTestId('invoicing-cp-vat')).toHaveValue('BE1000000021')
     await expect(page.getByTestId('invoicing-cp-street')).toHaveValue(/Loi/)
     await expect(page.getByTestId('invoicing-cp-city')).toHaveValue('Bruxelles')
@@ -357,11 +380,11 @@ test.describe('Billit invoicing (mock)', { tag: ['@p1', '@invoicing'] }, () => {
 
     // Avoir sur une facture pro : la contrepartie doit rester professionnelle,
     // sinon la TVA saute du document et l'avoir part par email au lieu de Peppol.
-    await page.getByTestId('invoicing-doc-type').selectOption('credit_note')
+    await setInvoiceDocType(page, 'credit_note')
     await page.getByTestId('invoicing-related-invoice').selectOption(String(docId))
-    await expect(page.getByTestId('invoicing-cp-kind')).toHaveValue('business')
+    await expectInvoiceCustomerKind(page, 'business')
     await expect(page.getByTestId('invoicing-cp-vat')).toHaveValue('BE1000000021')
-    await page.getByTestId('invoicing-doc-type').selectOption('invoice')
+    await setInvoiceDocType(page, 'invoice')
 
     await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toBeVisible()
     await expect(page.getByTestId(`invoicing-doc-${pfId}`)).toContainText(/proforma/i)
