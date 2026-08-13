@@ -24,7 +24,7 @@ func TestParseViewerExport_Sample(t *testing.T) {
 	if id.Firstname != "Camille" {
 		t.Fatalf("firstname=%q", id.Firstname)
 	}
-	if id.NISS != "96072399828" {
+	if id.NISS != "96072399886" {
 		t.Fatalf("niss=%q", id.NISS)
 	}
 	if id.Country != "BE" {
@@ -46,7 +46,7 @@ func TestParseViewerExport_PDFRejected(t *testing.T) {
 }
 
 func TestExtractNISSFromEIDAS(t *testing.T) {
-	if got := ExtractNISSFromEIDAS("PNOBE-96072399828"); got != "96072399828" {
+	if got := ExtractNISSFromEIDAS("PNOBE-96072399886"); got != "96072399886" {
 		t.Fatalf("got %q", got)
 	}
 }

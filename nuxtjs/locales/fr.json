@@ -1746,6 +1746,17 @@
       "callbackPhone": "Téléphone de rappel",
       "callbackPhonePlaceholder": "04xx xx xx xx",
       "callbackPhoneHint": "Obligatoire pour rappeler le client en cas de problème (le créneau Nouveau client reste inchangé)."
+    },
+    "eid": {
+      "title": "Carte d’identité belge",
+      "hint": "Importez une fiche eID Viewer (.eid) ou lisez la carte (Web eID) pour préremplir le formulaire. L’e-mail et le téléphone restent à saisir.",
+      "importViewer": "Importer fiche eID Viewer",
+      "readCard": "Lire la carte (Web eID)",
+      "helpBosa": "Aide eID (BOSA)",
+      "localSoftwareHint": "Logiciel eID local détecté — exportez une fiche .eid puis importez-la ici.",
+      "prefillSuccess": "Champs préremplis depuis la carte / fiche eID",
+      "importError": "Import eID impossible",
+      "readError": "Lecture de la carte impossible"
     }
   },
   "consultations": {

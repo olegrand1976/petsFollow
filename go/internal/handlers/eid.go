@@ -218,12 +218,7 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "token_required")
 		return
 	}
-	nonce, okNonce := a.takeEidNonce(r.Context(), id.UserID)
-	if !okNonce {
-		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_nonce_expired")
-		writeErr(w, r, http.StatusUnprocessableEntity, "validation_error", "eid_nonce_expired")
-		return
-	}
+	// Prepare validator before consuming the nonce so infra failures do not burn the challenge.
 	cas, err := eid.LoadTrustedCAs()
 	if err != nil || len(cas) == 0 {
 		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_ca_certs_missing")
@@ -234,6 +229,12 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_validator_failed")
 		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_validator_failed")
+		return
+	}
+	nonce, okNonce := a.takeEidNonce(r.Context(), id.UserID)
+	if !okNonce {
+		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_nonce_expired")
+		writeErr(w, r, http.StatusUnprocessableEntity, "validation_error", "eid_nonce_expired")
 		return
 	}
 	identity, err := eid.VerifyAuthToken(r.Context(), validator, req.Token, nonce)

@@ -76,8 +76,10 @@ func parseXMLExport(raw []byte) (Identity, error) {
 		"nationalnumber", "national_number", "rijksregisternummer", "nnin",
 		"insz", "niss", "rrn",
 	))
+	// Named fields: keep digits even if checksum fails (demo / Viewer quirks).
+	// Free-text blob fallback: only accept a mod-97 valid NISS (avoid false positives).
 	if niss == "" {
-		if m := nissBlobRe.FindStringSubmatch(textBlob); len(m) == 2 {
+		if m := nissBlobRe.FindStringSubmatch(textBlob); len(m) == 2 && ValidBelgianNISS(m[1]) {
 			niss = m[1]
 		}
 	}

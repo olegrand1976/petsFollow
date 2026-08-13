@@ -17,7 +17,7 @@ describe('applyEidIdentityToForm', () => {
     const filled = applyEidIdentityToForm(form, {
       firstname: 'Camille',
       lastname: 'Testeur',
-      niss: '96072399828',
+      niss: '96072399886',
       country: 'BE',
       address_street: 'Rue Demo',
       address_number: '1',
@@ -27,7 +27,7 @@ describe('applyEidIdentityToForm', () => {
 
     expect(form.firstName).toBe('Camille')
     expect(form.lastName).toBe('Testeur')
-    expect(form.nationalRegistryNumber).toBe('96072399828')
+    expect(form.nationalRegistryNumber).toBe('96072399886')
     expect(form.address).toBe('Rue Demo 1')
     expect(form.billingStreet).toBe('Rue Demo 1')
     expect(form.billingPostal).toBe('1000')
@@ -40,13 +40,13 @@ describe('applyEidIdentityToForm', () => {
 
   it('does not overwrite an existing billingCustomerKind', () => {
     const form: EidFormTarget = { billingCustomerKind: 'business' }
-    applyEidIdentityToForm(form, { firstname: 'A', lastname: 'B', niss: '96072399828' })
+    applyEidIdentityToForm(form, { firstname: 'A', lastname: 'B', niss: '96072399886' })
     expect(form.billingCustomerKind).toBe('business')
   })
 
   it('sets billingCountry BE from niss alone (Web eID without address)', () => {
     const form: EidFormTarget = {}
-    applyEidIdentityToForm(form, { firstname: 'A', lastname: 'B', niss: '96072399828' })
+    applyEidIdentityToForm(form, { firstname: 'A', lastname: 'B', niss: '96072399886' })
     expect(form.billingCountry).toBe('BE')
     expect(form.address).toBeUndefined()
   })

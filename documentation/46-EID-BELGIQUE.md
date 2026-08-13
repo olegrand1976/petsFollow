@@ -11,6 +11,13 @@ l’onglet **Identité** depuis :
 Hors scope v1 : IdP OIDC e-Contract, import PDF via IA, photo carte, date de
 naissance persistée sur le compte client.
 
+## Trust model
+
+| Chemin | Confiance |
+|--------|-----------|
+| **Web eID** | Jeton signé, chaîne CA BE embarquée, OCSP (sauf `WEB_EID_DISABLE_OCSP`) |
+| **Viewer `.eid`** | Fichier fourni par un pro authentifié (`clients.write`) — **pas** de signature crypto vérifiée côté serveur (`signature_verified=false`). Un XML forgé peut préremplir ; le staff reste responsable de la saisie. |
+
 ## Flags
 
 | Variable | Rôle |
@@ -36,9 +43,10 @@ Export RGPD (`GET /me/export`) : agrégat `eidReadings` (audit hashé du véto).
 |---------|--------|-------------|
 | `POST` | `/api/v1/vet/eid/import` | Multipart `file` → identité JSON |
 | `GET` | `/api/v1/vet/eid/web-eid/challenge` | Nonce (Redis obligatoire hors local ; mémoire en local/dev/test, TTL 5 min) |
-| `POST` | `/api/v1/vet/eid/web-eid/verify` | `{ "token": … }` → identité JSON (sans photo) |
+| `POST` | `/api/v1/vet/eid/web-eid/verify` | `{ "token": … }` → identité JSON (préremplissage) |
 
-Réponse import/verify : identité publique uniquement — **pas** de `photo_jpeg_base64`.
+Réponse import/verify : champs utiles au formulaire seulement (noms, NISS, adresse,
+pays, outil) — **pas** de photo / date de naissance / genre / n° de carte.
 
 Staging/prod sans Redis → `503 eid_redis_required` (fail-closed multi-instances Cloud Run).
 

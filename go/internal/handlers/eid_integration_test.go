@@ -74,7 +74,7 @@ func TestEidImportViewer_BE(t *testing.T) {
 	if data["lastname"] != "Testeur" || data["firstname"] != "Camille" {
 		t.Fatalf("identity %#v", data)
 	}
-	if data["niss"] != "96072399828" {
+	if data["niss"] != "96072399886" {
 		t.Fatalf("niss %#v", data)
 	}
 	if data["country"] != "BE" {
@@ -92,7 +92,7 @@ func TestEidImport_StripsPhotoFromResponse(t *testing.T) {
 <Export>
   <surname>Dupont</surname>
   <firstname>Jean</firstname>
-  <nationalnumber>85010112345</nationalnumber>
+  <nationalnumber>85010112387</nationalnumber>
   <photo>` + "aGVsbG8=" + `</photo>
 </Export>`)
 	code, env := doEidUpload(t, api.handler, vetTok, raw, "with-photo.eid")

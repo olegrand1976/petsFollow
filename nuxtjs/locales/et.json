@@ -1037,6 +1037,17 @@
       "callbackPhone": "Tagasihelistamise number",
       "callbackPhonePlaceholder": "Telefoninumber",
       "callbackPhoneHint": "Kohustuslik kliendi tagasihelistamiseks (Uus klient koht jääb muutmata)."
+    },
+    "eid": {
+      "title": "Belgia ID-kaart",
+      "hint": "Impordi eID Viewer fail (.eid) või loe kaart (Web eID), et vorm eelnevalt täita. E-post ja telefon jäävad käsitsi.",
+      "importViewer": "Impordi eID Viewer fail",
+      "readCard": "Loe kaart (Web eID)",
+      "helpBosa": "eID abi (BOSA)",
+      "localSoftwareHint": "Kohalik eID tarkvara tuvastatud — ekspordi .eid ja impordi siia.",
+      "prefillSuccess": "Väljad eeltäidetud eID-st",
+      "importError": "eID import ebaõnnestus",
+      "readError": "Kaardi lugemine ebaõnnestus"
     }
   },
   "consultations": {

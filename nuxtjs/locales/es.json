@@ -1037,6 +1037,17 @@
       "callbackPhone": "Teléfono de contacto",
       "callbackPhonePlaceholder": "Número de teléfono",
       "callbackPhoneHint": "Obligatorio para llamar al cliente si hay un problema (el hueco Nuevo cliente no cambia)."
+    },
+    "eid": {
+      "title": "Tarjeta de identidad belga",
+      "hint": "Importe un fichero eID Viewer (.eid) o lea la tarjeta (Web eID) para rellenar el formulario. El correo y el teléfono se introducen a mano.",
+      "importViewer": "Importar ficha eID Viewer",
+      "readCard": "Leer tarjeta (Web eID)",
+      "helpBosa": "Ayuda eID (BOSA)",
+      "localSoftwareHint": "Software eID local detectado: exporte un .eid e impórtelo aquí.",
+      "prefillSuccess": "Campos rellenados desde la eID",
+      "importError": "Error al importar eID",
+      "readError": "No se pudo leer la tarjeta"
     }
   },
   "consultations": {

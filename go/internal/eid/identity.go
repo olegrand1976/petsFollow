@@ -68,11 +68,38 @@ func (id Identity) HasUsefulIdentity() bool {
 		strings.TrimSpace(id.NISS) != ""
 }
 
-// PublicPrefill returns a copy safe to send to the browser (no photo bytes).
+// PublicPrefill returns fields used for client form prefill only (no photo / unused PHI).
 func (id Identity) PublicPrefill() Identity {
-	out := id
-	out.PhotoJPEGBase64 = ""
-	return out
+	return Identity{
+		Lastname:          id.Lastname,
+		Firstname:         id.Firstname,
+		Firstnames:        id.Firstnames,
+		Country:           id.Country,
+		NISS:              id.NISS,
+		AddressStreet:     id.AddressStreet,
+		AddressNumber:     id.AddressNumber,
+		AddressZip:        id.AddressZip,
+		AddressCity:       id.AddressCity,
+		SignatureVerified: id.SignatureVerified,
+		ImportTool:        id.ImportTool,
+	}
+}
+
+// ValidBelgianNISS checks length + mod-97 control digits (RRN / NISS).
+// Persons born in 2000+ use a leading "2" on the first 9 digits for the checksum.
+func ValidBelgianNISS(niss string) bool {
+	niss = DigitsOnly(niss)
+	if len(niss) != 11 {
+		return false
+	}
+	ctrl := atoi2(niss[9:11])
+	base9 := niss[:9]
+	if 97-(atoi2(base9)%97) == ctrl {
+		return true
+	}
+	// Post-1999 births: checksum over "2" + first 9 digits.
+	withCentury := 2_000_000_000 + atoi2(base9)
+	return 97-(withCentury%97) == ctrl
 }
 
 // DigitsOnly strips non-digit characters from a NISS / national number.

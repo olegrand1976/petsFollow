@@ -67,7 +67,7 @@ test('création client : prefill eID Viewer (mock BFF)', async ({ page }) => {
         data: {
           firstname: 'Camille',
           lastname: 'Testeur',
-          niss: '96072399828',
+          niss: '96072399886',
           country: 'BE',
           address_street: 'Rue Demo 1',
           address_zip: '1000',
@@ -90,12 +90,12 @@ test('création client : prefill eID Viewer (mock BFF)', async ({ page }) => {
     name: 'sample_valid.eid',
     mimeType: 'application/xml',
     buffer: Buffer.from(
-      '<?xml version="1.0"?><Export><surname>Testeur</surname><firstname>Camille</firstname><nationalnumber>96072399828</nationalnumber></Export>',
+      '<?xml version="1.0"?><Export><surname>Testeur</surname><firstname>Camille</firstname><nationalnumber>96072399886</nationalnumber></Export>',
     ),
   })
   await expect(page.getByTestId('create-client-first-name')).toHaveValue('Camille', { timeout: 10000 })
   await expect(page.getByTestId('create-client-last-name')).toHaveValue('Testeur')
-  await expect(page.getByTestId('create-client-niss')).toHaveValue('96072399828')
+  await expect(page.getByTestId('create-client-niss')).toHaveValue('96072399886')
   await expect(page.getByTestId('create-client-billing-country')).toHaveValue('BE')
   await expect(page.getByTestId('create-client-billing-postal')).toHaveValue('1000')
   await expect(page.getByTestId('eid-reader-msg')).toBeVisible()

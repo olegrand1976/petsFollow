@@ -16,7 +16,14 @@
 
     <div class="pro-eid-reader__actions">
       <label class="pro-eid-reader__file" data-testid="eid-import-label">
-        <span class="pro-btn pro-btn--secondary">{{ $t('clients.eid.importViewer') }}</span>
+        <ProButton
+          type="button"
+          variant="secondary"
+          :disabled="busy"
+          tabindex="-1"
+        >
+          {{ $t('clients.eid.importViewer') }}
+        </ProButton>
         <input
           data-testid="eid-import-input"
           type="file"
@@ -57,7 +64,7 @@ import { applyEidIdentityToForm } from '~/utils/eid-prefill'
 
 const props = defineProps<{
   form: EidFormTarget
-  /** Cabinet BE — si false, le bloc est masqué. */
+  /** Cabinet BE — si false/undefined, le bloc est masqué (fail-closed). */
   practiceIsBe?: boolean
 }>()
 
@@ -79,13 +86,15 @@ const msg = ref('')
 const error = ref('')
 const webEidReady = ref(false)
 const localEidHint = ref(false)
+const probesDone = ref(false)
 
-const show = computed(() => enabled.value && props.practiceIsBe !== false)
+const show = computed(() => enabled.value && props.practiceIsBe === true)
 
 const { mapError } = useApiError()
 
-onMounted(async () => {
-  if (!show.value) return
+async function probeLocalTools() {
+  if (probesDone.value) return
+  probesDone.value = true
   try {
     const ext = await detectInstalledEidExtensions()
     localEidHint.value = Boolean(ext.beidconnect || ext.eid_chrome)
@@ -96,7 +105,12 @@ onMounted(async () => {
   } catch {
     webEidReady.value = false
   }
-})
+}
+
+// Country arrives async (overview) — remonter la détection quand le bloc devient visible.
+watch(show, (visible) => {
+  if (visible) void probeLocalTools()
+}, { immediate: true })
 
 async function applyIdentity(identity: EidIdentity) {
   const keys = applyEidIdentityToForm(props.form, identity)
@@ -184,14 +198,5 @@ async function onReadCard() {
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: var(--pf-vet-primary, #1e3a5f);
-}
-.pro-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid var(--pf-vet-border, #d0d7de);
-  background: var(--pf-vet-surface, #fff);
-  font: inherit;
 }
 </style>
