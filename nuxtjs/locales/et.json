@@ -1040,15 +1040,15 @@
     },
     "eid": {
       "title": "Belgia ID-kaart",
-      "hint": "Impordi eID Viewer fail (.eid) või loe kaart (Web eID), et vorm eelnevalt täita. E-post ja telefon jäävad käsitsi.",
+      "hint": "Loe kaarti Web eID-ga (ametlik rakendus / CSAM) või impordi eID Viewer fail (.eid). E-post ja telefon jäävad käsitsi.",
       "importViewer": "Impordi eID Viewer fail",
-      "readCard": "Loe kaart (Web eID)",
-      "helpBosa": "eID abi (BOSA)",
-      "localSoftwareHint": "Kohalik eID tarkvara tuvastatud — ekspordi .eid ja impordi siia.",
+      "readCard": "Loe kaart — Web eID",
+      "helpBosa": "Paigalda Web eID (eid.belgium.be)",
       "prefillSuccess": "Väljad eeltäidetud eID-st",
       "importError": "eID import ebaõnnestus",
       "readError": "Kaardi lugemine ebaõnnestus",
-      "webEidNotReady": "Web eID pole saadaval — kontrollige laiendust ja natiivrakendust ning proovige uuesti."
+      "webEidNotReady": "Web eID pole saadaval — paigaldage ametlik rakendus ja laiendus (CSAM / eid.belgium.be) ning proovige uuesti.",
+      "originMismatch": "Vale saidi päritolu Web eID jaoks — kontrollige EID_SITE_ORIGIN / avatud URL-i."
     }
   },
   "consultations": {

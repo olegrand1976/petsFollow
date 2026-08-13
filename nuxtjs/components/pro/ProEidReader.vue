@@ -10,11 +10,15 @@
     </div>
     <p class="pro-hint">{{ $t('clients.eid.hint') }}</p>
 
-    <div v-if="localEidHint" class="pro-eid-reader__info" data-testid="eid-local-hint">
-      {{ $t('clients.eid.localSoftwareHint') }}
-    </div>
-
     <div class="pro-eid-reader__actions">
+      <ProButton
+        type="button"
+        test-id="eid-read-card"
+        :disabled="busy"
+        @click="onReadCard"
+      >
+        {{ $t('clients.eid.readCard') }}
+      </ProButton>
       <label class="pro-eid-reader__file" data-testid="eid-import-label">
         <ProButton
           type="button"
@@ -32,15 +36,6 @@
           @change="onFile"
         >
       </label>
-      <ProButton
-        type="button"
-        variant="secondary"
-        test-id="eid-read-card"
-        :disabled="busy"
-        @click="onReadCard"
-      >
-        {{ $t('clients.eid.readCard') }}
-      </ProButton>
       <a
         class="pro-eid-reader__help"
         data-testid="eid-help-link"
@@ -74,7 +69,6 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const {
   enabled,
-  detectInstalledEidExtensions,
   checkWebEidStatus,
   uploadViewerFile,
   readCard,
@@ -84,23 +78,22 @@ const busy = ref(false)
 const msg = ref('')
 const error = ref('')
 const webEidReady = ref(false)
-const localEidHint = ref(false)
 
 const show = computed(() => enabled.value && props.practiceIsBe === true)
 
 const { mapError } = useApiError()
 
 let probeRetryTimer: ReturnType<typeof setTimeout> | null = null
+let probeGen = 0
 
-async function probeLocalTools() {
-  try {
-    const ext = await detectInstalledEidExtensions()
-    localEidHint.value = Boolean(ext.beidconnect || ext.eid_chrome)
-  } catch { /* ignore */ }
+async function probeWebEid() {
+  const gen = ++probeGen
   try {
     const st = await checkWebEidStatus()
+    if (gen !== probeGen) return
     webEidReady.value = st.ok && st.hasExtension && st.hasNativeApp
   } catch {
+    if (gen !== probeGen) return
     webEidReady.value = false
   }
 }
@@ -110,28 +103,28 @@ function scheduleProbeRetry() {
     clearTimeout(probeRetryTimer)
     probeRetryTimer = null
   }
-  // Native app / extension may appear a moment after page open.
   probeRetryTimer = setTimeout(() => {
     probeRetryTimer = null
-    if (show.value && !webEidReady.value) void probeLocalTools()
+    if (show.value && !webEidReady.value) void probeWebEid()
   }, 2000)
 }
 
-// Country arrives async (overview) — (re)probe whenever the block becomes visible.
 watch(show, (visible) => {
-  if (!visible) {
+  if (!import.meta.client || !visible) {
+    probeGen++
     if (probeRetryTimer) {
       clearTimeout(probeRetryTimer)
       probeRetryTimer = null
     }
     return
   }
-  void probeLocalTools().then(() => {
+  void probeWebEid().then(() => {
     if (show.value && !webEidReady.value) scheduleProbeRetry()
   })
 }, { immediate: true })
 
 onBeforeUnmount(() => {
+  probeGen++
   if (probeRetryTimer) clearTimeout(probeRetryTimer)
 })
 
@@ -165,17 +158,20 @@ async function onReadCard() {
   msg.value = ''
   error.value = ''
   try {
-    if (!webEidReady.value) {
-      await probeLocalTools()
-    }
-    if (!webEidReady.value) {
-      error.value = t('clients.eid.webEidNotReady')
-      return
-    }
+    // Soft probe only — status() can flake; authenticate is the source of truth.
     const identity = await readCard()
+    webEidReady.value = true
     await applyIdentity(identity)
   } catch (e: any) {
-    error.value = mapError(e) || t('clients.eid.readError')
+    const raw = String(e?.message || e || '')
+    if (raw.startsWith('eid_origin_mismatch')) {
+      error.value = t('clients.eid.originMismatch')
+    } else if (raw === 'web_eid_unavailable') {
+      webEidReady.value = false
+      error.value = t('clients.eid.webEidNotReady')
+    } else {
+      error.value = mapError(e) || t('clients.eid.readError')
+    }
   } finally {
     busy.value = false
   }
@@ -223,10 +219,5 @@ async function onReadCard() {
   font-size: 0.875rem;
   color: var(--pf-vet-accent, #0d9488);
   text-decoration: underline;
-}
-.pro-eid-reader__info {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--pf-vet-primary, #1e3a5f);
 }
 </style>

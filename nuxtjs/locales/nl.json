@@ -1040,15 +1040,15 @@
     },
     "eid": {
       "title": "Belgische identiteitskaart",
-      "hint": "Importeer een eID Viewer-bestand (.eid) of lees de kaart (Web eID) om het formulier vooraf in te vullen. E-mail en telefoon blijven manueel.",
+      "hint": "Lees de kaart via Web eID (officiële app / CSAM) of importeer een eID Viewer-bestand (.eid). E-mail en telefoon blijven manueel.",
       "importViewer": "eID Viewer-bestand importeren",
-      "readCard": "Kaart lezen (Web eID)",
-      "helpBosa": "eID-hulp (BOSA)",
-      "localSoftwareHint": "Lokale eID-software gedetecteerd — exporteer een .eid-bestand en importeer het hier.",
+      "readCard": "Kaart lezen — Web eID",
+      "helpBosa": "Web eID installeren (eid.belgium.be)",
       "prefillSuccess": "Velden vooraf ingevuld vanuit eID",
       "importError": "eID-import mislukt",
       "readError": "Kaart lezen mislukt",
-      "webEidNotReady": "Web eID niet beschikbaar — controleer de browserextensie en native app, en probeer opnieuw."
+      "webEidNotReady": "Web eID niet beschikbaar — installeer de officiële app en extensie (CSAM / eid.belgium.be) en probeer opnieuw.",
+      "originMismatch": "Verkeerde site-origin voor Web eID — controleer EID_SITE_ORIGIN / de geopende URL."
     }
   },
   "consultations": {

@@ -229,7 +229,9 @@
     "eid_validator_failed": "Web eID-validator niet beschikbaar",
     "eid_nonce_failed": "eID-challenge kon niet worden gegenereerd",
     "eid_nonce_store_failed": "eID-challenge kon niet worden opgeslagen",
-    "eid_redis_required": "Web eID vereist Redis (multi-instance)"
+    "eid_redis_required": "Web eID vereist Redis (multi-instance)",
+    "eid_token_infra": "eID-verificatie tijdelijk niet beschikbaar (OCSP/netwerk)",
+    "eid_site_origin_missing": "eID-site-origin niet geconfigureerd (EID_SITE_ORIGIN)"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

@@ -1705,15 +1705,15 @@
     },
     "eid": {
       "title": "Carta d’identità belga",
-      "hint": "Importa un file eID Viewer (.eid) o leggi la carta (Web eID) per precompilare il modulo. Email e telefono restano da inserire.",
+      "hint": "Leggi la carta con Web eID (app ufficiale / CSAM) o importa un file eID Viewer (.eid). Email e telefono restano da inserire.",
       "importViewer": "Importa scheda eID Viewer",
-      "readCard": "Leggi carta (Web eID)",
-      "helpBosa": "Guida eID (BOSA)",
-      "localSoftwareHint": "Software eID locale rilevato — esporta un .eid e importalo qui.",
+      "readCard": "Leggi carta — Web eID",
+      "helpBosa": "Installa Web eID (eid.belgium.be)",
       "prefillSuccess": "Campi precompilati dall’eID",
       "importError": "Importazione eID non riuscita",
       "readError": "Lettura carta non riuscita",
-      "webEidNotReady": "Web eID non disponibile — verificare estensione e app nativa, poi riprovare."
+      "webEidNotReady": "Web eID non disponibile — installa l’app e l’estensione ufficiali (CSAM / eid.belgium.be), poi riprova.",
+      "originMismatch": "Origine sito errata per Web eID — verificare EID_SITE_ORIGIN / l’URL aperta."
     }
   },
   "consultations": {

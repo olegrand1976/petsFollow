@@ -229,7 +229,9 @@
     "eid_validator_failed": "Validateur Web eID indisponible",
     "eid_nonce_failed": "Impossible de générer le challenge eID",
     "eid_nonce_store_failed": "Impossible d’enregistrer le challenge eID",
-    "eid_redis_required": "Web eID nécessite Redis (multi-instances)"
+    "eid_redis_required": "Web eID nécessite Redis (multi-instances)",
+    "eid_token_infra": "Vérification eID temporairement indisponible (OCSP/réseau)",
+    "eid_site_origin_missing": "Origine du site eID non configurée (EID_SITE_ORIGIN)"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

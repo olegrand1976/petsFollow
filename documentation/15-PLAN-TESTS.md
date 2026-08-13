@@ -177,11 +177,11 @@ Compte : `vet.demo@petsfollow.test`
 |----|-----|-----|--------|---------|
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed ; cabinets **BE** : carte Actualités AFSCA (newsletters véto, `GET /vet/afsca-newsletters`, filtrées par `animal_scope` small/large/both, masquée hors BE) ; si `VET_NEWS_ENABLED` : carte Veille (tag `dev`, pastilles importance + légende, `GET /vet/news`) ; topbar **Liens utiles** (`GET /vet/header-links`, catalogue pays + customs) |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
-| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) ; préremplissage eID BE (`ProEidReader`) si `EID_ENABLED` + cabinet BE (auto = Go `TestEid*` + Playwright mock import) |
+| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) ; préremplissage eID BE (`ProEidReader`) si `EID_ENABLED` + cabinet BE (auto = Go `TestEid*` + Playwright `@p0` Viewer/Web eID mock + `make smoke-eid`) |
 | C2.4 | P0 | Dossier pet | Chart FR, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
 | C2.4b | P1 | Tension & labos | Onglet vitals : saisir tension Pro (site/commentaire) ; créer/éditer panel labo (`valueNum`/`valueText`) ; timeline `blood_pressure` / `lab_panel` ; client Flutter sheet tension + lecture panels | Go `TestBloodPressure*` / `TestLabPanel*` ; Flutter `pet_quick_actions_test` + `lab_panels_screen_test` ; Playwright `09-pet-detail` `@p1` ; `make smoke` BP/labs |
 | C2.5 | P1 | Liste pets | `/pets` (+ `?unread=1` depuis KPI dashboard) | Animaux transverses ; filtre **Non lus** ; badge relevé non lu ; colonne **Type de relevé** (FR) ; **Dernière visite** = dernière consultation `done` OU `confirmed` avec CR sauvé (aligné timeline ; Go `TestVetPetsLastVisitAtAfterConfirmedReportSave`) ; Vitest `vet-pets-list.spec.ts` |
-| C2.6 | P1 | Créer / rattacher client | Nouveau client (prénom/nom/email/tél/adresse/NISS, **sans** MDP temporaire) → lien cabinet + invite app ; client existant → link ; option eID BE pour préremplir identité/billing | 409 enrichi + link OK ; identité visible get/patch ; create sans password OK (`TestClientIdentityCreateWithoutPasswordAndPatch`) ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) ; eID import (`TestEidImportViewer_BE`) |
+| C2.6 | P1 | Créer / rattacher client | Nouveau client (prénom/nom/email/tél/adresse/NISS, **sans** MDP temporaire) → lien cabinet + invite app ; client existant → link ; option eID BE pour préremplir identité/billing | 409 enrichi + link OK ; identité visible get/patch ; create sans password OK (`TestClientIdentityCreateWithoutPasswordAndPatch`) ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) ; eID import (`TestEidImportViewer_BE`) + Playwright `03-clients` eID BE + smoke `make smoke-eid` |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
 | C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié ; **modale fermée automatiquement** quand plus aucune invitation en attente (Vitest `useVetLinkRequests.spec.ts` ; Playwright `08-requests`) |
@@ -664,6 +664,30 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 ### API (smoke)
 
 `make smoke` — profile `full` (défaut) : health/ready, **CORS OPTIONS** (Allow-Origin depuis `CORS_ORIGIN` / site Pro), **login invalide → 401** (pas 5xx), auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404. Les écritures smoke sont purgées ensuite sur staging (`make staging-quality-cleanup` / job `cleanup-quality`).
+
+### eID BE (Viewer + Web eID — C2.3 / C2.6)
+
+```
+cd go && go test ./internal/eid/ -count=1
+cd go && go test ./internal/handlers/ -run 'TestEid' -count=1 -p 1
+cd nuxtjs && npm test -- tests/unit/eid-prefill.spec.ts tests/unit/use-eid-prefill.spec.ts
+# Playwright @p0 (API :8291 + Nuxt :3002 + seed + NUXT_PUBLIC_EID_ENABLED) :
+cd nuxtjs && npx playwright test tests/e2e/specs/03-clients.spec.ts --grep 'eID'
+make smoke-eid            # local API
+make smoke-eid-staging    # Cloud Run
+```
+
+| Cas | Attendu |
+|-----|---------|
+| Viewer import BE | 200 + identité sans photo ; Go `TestEidImportViewer_BE` |
+| Flag off / non-BE | 404 `eid_disabled` / `eid_not_available` |
+| Web eID challenge | nonce + origin (`EID_SITE_ORIGIN`) ; Redis obligatoire hors local |
+| Origin BFF | `X-PF-Web-Eid-Origin` honoré **seulement** avec `X-PF-Proxy-Secret` ; alias localhost↔127.0.0.1 |
+| Verify bad token | 422 puis 2ᵉ appel → `eid_nonce_expired` |
+| Playwright | mock Viewer upload + mock Web eID (`__PF_WEB_EID_MOCK__`) + origin mismatch |
+| QA terrain | PIN réel non automatisable (lecteur + extension) |
+
+Doc module : [46-EID-BELGIQUE.md](46-EID-BELGIQUE.md).
 
 `make smoke-prod` — profile `prod` (post-deploy main) : **aucune écriture** — health/ready + CORS/login contrat + `GET /billing/plans` + dossier public 404 + media visit-reports deny.
 

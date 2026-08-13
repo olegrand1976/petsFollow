@@ -20,7 +20,30 @@ func TestAllowsInMemoryEidNonce(t *testing.T) {
 	}
 
 	cfg.DevSeedEnabled = true
-	if !cfg.AllowsInMemoryEidNonce() {
-		t.Fatal("DEV_SEED must allow memory nonce even in production label")
+	if cfg.AllowsInMemoryEidNonce() {
+		t.Fatal("production must refuse memory nonce even with DEV_SEED (multi-replica)")
+	}
+
+	t.Setenv("APP_ENV", "staging")
+	if cfg.AllowsInMemoryEidNonce() {
+		t.Fatal("staging must refuse memory nonce")
+	}
+}
+
+func TestValidateEid_OCSPDisable(t *testing.T) {
+	t.Setenv("APP_ENV", "local")
+	cfg := config.Config{WebEidDisableOCSP: true}
+	if err := cfg.ValidateEid(); err != nil {
+		t.Fatalf("local may disable OCSP: %v", err)
+	}
+
+	t.Setenv("APP_ENV", "production")
+	if err := cfg.ValidateEid(); err == nil {
+		t.Fatal("production must refuse WEB_EID_DISABLE_OCSP")
+	}
+
+	cfg.WebEidDisableOCSP = false
+	if err := cfg.ValidateEid(); err != nil {
+		t.Fatalf("OCSP on must always pass: %v", err)
 	}
 }

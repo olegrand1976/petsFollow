@@ -291,6 +291,11 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		DELETE FROM practice.commercial_referrals WHERE commercial_user_id = $1`, userID); err != nil {
 		return err
 	}
+	// Audit eID (niss_hash) — art. 17 : ne pas laisser jusqu’à la purge rétention 1 an.
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.eid_readings WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
 	// Dual profil : purger pets / threads client avant tombstone (art. 17).
 	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
 		return err

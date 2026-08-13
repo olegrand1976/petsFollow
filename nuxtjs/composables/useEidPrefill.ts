@@ -1,71 +1,73 @@
-import { applyEidIdentityToForm, type EidFormTarget, type EidIdentity } from '~/utils/eid-prefill'
-
-export type { EidFormTarget, EidIdentity }
-
-const KNOWN_EID_EXTENSIONS = Object.freeze({
-  beidconnect: 'pencgnkbgaekikmiahiaakjdgaibiipp',
-  eid_chrome: 'bkbdaodnaecdijpajecpncpdomgcoakc',
-})
-
-const PASSIVE_DETECT_TIMEOUT_MS = 800
+import { applyEidIdentityToForm, type EidIdentity } from '~/utils/eid-prefill'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 function unwrapData<T>(res: any): T {
   return (res?.data ?? res) as T
 }
 
-function detectChromeExtension(extensionId: string): Promise<boolean> {
-  const chromeApi = (globalThis as any).chrome
-  if (!chromeApi?.runtime?.sendMessage) {
-    return Promise.resolve(false)
+/** E2E / Vitest : stub sans extension native (cf. `13b-desk-switch` pattern). */
+export type PfWebEidMock = {
+  status?: () => Promise<{ extension: boolean; nativeApp: boolean }>
+  authenticate?: (nonce: string) => Promise<unknown>
+}
+
+declare global {
+  interface Window {
+    __PF_WEB_EID_MOCK__?: PfWebEidMock
   }
-  return new Promise((resolve) => {
-    let settled = false
-    const finish = (value: boolean) => {
-      if (settled) return
-      settled = true
-      resolve(value)
+}
+
+/** Browser / Vitest with window stub (import.meta.client is false under Node Vitest). */
+function isBrowserLike(): boolean {
+  return Boolean(import.meta.client) || typeof window !== 'undefined'
+}
+
+function getWebEidMock(): PfWebEidMock | null {
+  if (!isBrowserLike() || typeof window === 'undefined') return null
+  return window.__PF_WEB_EID_MOCK__ ?? null
+}
+
+/** Lib Web eID touches `window` at module top-level — never import on SSR. */
+async function loadWebEidLibrary() {
+  if (!isBrowserLike()) {
+    throw new Error('web_eid_client_only')
+  }
+  const mock = getWebEidMock()
+  if (mock) {
+    return {
+      status: mock.status ?? (async () => ({ extension: true, nativeApp: true })),
+      authenticate: mock.authenticate ?? (async () => ({ mocked: true })),
     }
-    const timer = setTimeout(() => finish(false), PASSIVE_DETECT_TIMEOUT_MS)
-    try {
-      chromeApi.runtime.sendMessage(extensionId, { ping: true }, () => {
-        clearTimeout(timer)
-        const lastError = chromeApi.runtime.lastError
-        if (!lastError) {
-          finish(true)
-          return
-        }
-        const msg = String(lastError.message || '')
-        if (/Could not establish connection|message port closed|did not respond|disconnected/i.test(msg)) {
-          finish(true)
-          return
-        }
-        finish(false)
-      })
-    } catch {
-      clearTimeout(timer)
-      finish(false)
-    }
-  })
+  }
+  return import('@web-eid/web-eid-library')
+}
+
+function isWebEidUnavailableError(e: unknown): boolean {
+  const msg = String((e as any)?.message || e || '').toLowerCase()
+  const code = String((e as any)?.code || (e as any)?.name || '').toLowerCase()
+  return (
+    code.includes('extensionunavailable')
+    || code.includes('nativeappunavailable')
+    || msg.includes('extension')
+    || msg.includes('native app')
+    || msg.includes('web-eid')
+    || msg.includes('webeid')
+  )
 }
 
 export function useEidPrefill() {
   const config = useRuntimeConfig()
-  const enabled = computed(() => Boolean(config.public.eidEnabled))
-
-  async function detectInstalledEidExtensions() {
-    const [beidconnect, eidChrome] = await Promise.all([
-      detectChromeExtension(KNOWN_EID_EXTENSIONS.beidconnect),
-      detectChromeExtension(KNOWN_EID_EXTENSIONS.eid_chrome),
-    ])
-    return { beidconnect, eid_chrome: eidChrome }
-  }
+  const enabled = computed(() => isPublicFlagOn(config.public.eidEnabled))
 
   async function checkWebEidStatus(): Promise<
     | { ok: true; hasExtension: boolean; hasNativeApp: boolean }
     | { ok: false; message: string }
   > {
+    if (!isBrowserLike()) {
+      return { ok: false, message: 'web_eid_client_only' }
+    }
     try {
-      const { status } = await import('@web-eid/web-eid-library')
+      const { status } = await loadWebEidLibrary()
       const { extension, nativeApp } = await status()
       const hasExtension = Boolean(extension)
       const hasNativeApp = Boolean(nativeApp)
@@ -83,13 +85,31 @@ export function useEidPrefill() {
   }
 
   async function readCard(): Promise<EidIdentity> {
+    if (!isBrowserLike()) {
+      throw new Error('web_eid_client_only')
+    }
     const challengeRes: any = await $fetch('/api/vet/eid/web-eid/challenge')
     const challenge = unwrapData<{ nonce: string; origin?: string }>(challengeRes)
     if (!challenge?.nonce) {
       throw new Error('eid_nonce_missing')
     }
-    const { authenticate } = await import('@web-eid/web-eid-library')
-    const token = await authenticate(challenge.nonce)
+    // Mismatch site origin ↔ tab origin fails late in the extension — fail fast with a clear code.
+    if (challenge.origin && typeof window !== 'undefined') {
+      const pageOrigin = window.location.origin
+      if (challenge.origin !== pageOrigin) {
+        throw new Error(`eid_origin_mismatch:${challenge.origin}!=${pageOrigin}`)
+      }
+    }
+    let token: unknown
+    try {
+      const { authenticate } = await loadWebEidLibrary()
+      token = await authenticate(challenge.nonce)
+    } catch (e) {
+      if (isWebEidUnavailableError(e)) {
+        throw new Error('web_eid_unavailable')
+      }
+      throw e
+    }
     const verifyRes: any = await $fetch('/api/vet/eid/web-eid/verify', {
       method: 'POST',
       body: { token },
@@ -99,7 +119,6 @@ export function useEidPrefill() {
 
   return {
     enabled,
-    detectInstalledEidExtensions,
     checkWebEidStatus,
     uploadViewerFile,
     readCard,

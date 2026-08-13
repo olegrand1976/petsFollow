@@ -229,7 +229,9 @@
     "eid_validator_failed": "Валідатор Web eID недоступний",
     "eid_nonce_failed": "Не вдалося створити challenge eID",
     "eid_nonce_store_failed": "Не вдалося зберегти challenge eID",
-    "eid_redis_required": "Web eID потребує Redis (мульти-інстанс)"
+    "eid_redis_required": "Web eID потребує Redis (мульти-інстанс)",
+    "eid_token_infra": "Перевірка eID тимчасово недоступна (OCSP/мережа)",
+    "eid_site_origin_missing": "Походження сайту eID не налаштовано (EID_SITE_ORIGIN)"
   },
   "success": {
     "confirm_email_sent": "Лист для підтвердження надіслано.",

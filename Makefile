@@ -277,9 +277,18 @@ smoke-staging:
 	bash infra/gcp/cleanup-staging-quality.sh || echo "WARN: purge quality échouée — relancer make gcp-staging-quality-cleanup" >&2; \
 	exit $$rc
 
-# eID BE : import Viewer + challenge Web eID (origin) sur staging.
+# eID BE : import Viewer + challenge/verify Web eID (local API :8291).
+smoke-eid:
+	@PETSFOLLOW_API_URL=http://localhost:$${PETSFOLLOW_API_PORT:-8291} \
+		EID_SITE_ORIGIN_EXPECT=$${EID_SITE_ORIGIN:-http://localhost:3002} \
+		BFF_PROXY_SECRET=$${BFF_PROXY_SECRET:-dev-bff-proxy-secret} \
+		bash scripts/smoke-eid.sh
+
+# eID BE contre staging Cloud Run.
 smoke-eid-staging:
-	@PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-eid-staging.sh
+	@PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be \
+		EID_SITE_ORIGIN_EXPECT=https://petsfollow.ll-it-sc.be \
+		bash scripts/smoke-eid.sh
 
 # Pharmacie S6 : receipt → DAF → VAMReg dry-run → movements (local ou PETSFOLLOW_API_URL=staging).
 smoke-pharmacy-s6:

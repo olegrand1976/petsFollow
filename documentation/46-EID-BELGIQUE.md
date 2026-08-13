@@ -5,8 +5,9 @@
 Sur les cabinets **BE**, permettre de préremplir la modale **Nouveau client** et
 l’onglet **Identité** depuis :
 
-1. un export **eID Viewer** (`.eid` / `.xml`) — chemin par défaut ;
-2. **Web eID** (lecteur USB + extension + PIN) — si le poste est équipé.
+1. **Web eID** (parcours officiel CSAM / BOSA : lecteur USB + app native + extension
+   navigateur + PIN) — chemin privilégié ;
+2. un export **eID Viewer** (`.eid` / `.xml`) — chemin alternatif.
 
 Hors scope v1 : IdP OIDC e-Contract, import PDF via IA, photo carte, date de
 naissance persistée sur le compte client.
@@ -49,6 +50,9 @@ Réponse import/verify : champs utiles au formulaire seulement (noms, NISS, adre
 pays, outil) — **pas** de photo / date de naissance / genre / n° de carte.
 
 Staging/prod sans Redis → `503 eid_redis_required` (fail-closed multi-instances Cloud Run).
+`WEB_EID_DISABLE_OCSP` est refusé hors local/dev/test (fail-fast au boot). Une panne
+OCSP/réseau au verify → `503 eid_token_infra` (challenge restauré) ; erreur Redis au
+take nonce → `503 eid_nonce_store_failed` (≠ expired).
 
 BFF Nuxt : `/api/vet/eid/import`, `/api/vet/eid/web-eid/challenge`, `/api/vet/eid/web-eid/verify`.
 
@@ -77,23 +81,36 @@ Rétention : purge automatique **1 an** via `POST /internal/retention/run`
 
 ## Prérequis poste
 
-- **Viewer** : eID Viewer / BEid → export `.eid` → upload.
-- **Web eID** : lecteur + app native + extension navigateur + PIN.
+- **Web eID (prioritaire)** : lecteur USB + application native officielle + extension
+  navigateur Web eID (écosystème CSAM / BOSA, install via https://eid.belgium.be/) + PIN.
   Lib JS : `@web-eid/web-eid-library` (pin commit SHA GitHub `web-eid/web-eid.js`).
   Communication via **native messaging** (hors CSP HTTP) — pas d’élargissement
   `connect-src` requis pour l’extension.
+  En local, `localhost` et `127.0.0.1` sont des origines distinctes pour Web eID : le
+  challenge reprend l’`Origin` navigateur (via BFF `X-PF-Web-Eid-Origin`) tant que
+  c’est un alias loopback de `EID_SITE_ORIGIN`. Le header n’est honoré que si
+  `X-PF-Proxy-Secret` matche `BFF_PROXY_SECRET` (même gate que `X-PF-Client-IP`) —
+  un appel API direct ne peut pas spoofe l’origine du challenge.
+- **Viewer** : eID Viewer / BEid → export `.eid` → upload.
+  Pas de détection d’extensions Chrome tierces (beID Connect, etc.) côté Pro.
 
 ## Tests
+
+Flux complet (auto) :
 
 ```bash
 cd go && go test ./internal/eid/ -count=1
 cd go && go test ./internal/handlers/ -run 'TestEid' -count=1
-# Playwright : scénario prefill mock dans 03-clients.spec.ts
-# Smoke staging (Viewer + challenge origin) :
-bash scripts/smoke-eid-staging.sh
+cd nuxtjs && npm test -- tests/unit/eid-prefill.spec.ts tests/unit/use-eid-prefill.spec.ts
+# Playwright @p0 — mock Viewer + Web eID (pas de PIN) :
+cd nuxtjs && npx playwright test tests/e2e/specs/03-clients.spec.ts --grep 'eID'
+make smoke-eid            # local :8291 (Viewer + challenge + verify bad token + gate BFF)
+make smoke-eid-staging
 ```
 
-Réf. checklist : `documentation/15-PLAN-TESTS.md` (C2.3 / C2.6).
+Réf. checklist : `documentation/15-PLAN-TESTS.md` (C2.3 / C2.6 + section Z eID).
 
 **QA terrain** : Web eID avec PIN réel nécessite lecteur + extension sur un poste BE
-(non automatisable). Le smoke vérifie import Viewer + binding `EID_SITE_ORIGIN`.
+(non automatisable). Le smoke vérifie import Viewer + binding `EID_SITE_ORIGIN` +
+contrat verify (422 / nonce one-shot). E2E utilise `__PF_WEB_EID_MOCK__` pour
+simuler la lib sans extension.

@@ -215,6 +215,122 @@ func TestEidImport_RequiresAuth(t *testing.T) {
 	}
 }
 
+func TestEidImport_NonBERejected(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	_, err := api.pool.Exec(ctx, `
+		UPDATE practice.practices
+		SET country_code = 'FR'
+		WHERE id = (SELECT practice_id FROM identity.users WHERE email = 'vet.demo@petsfollow.test')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(ctx, `
+			UPDATE practice.practices
+			SET country_code = 'BE'
+			WHERE id = (SELECT practice_id FROM identity.users WHERE email = 'vet.demo@petsfollow.test')`)
+	})
+
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env := doEidUpload(t, api.handler, vetTok, loadEidFixture(t), "sample_valid.eid")
+	if code != http.StatusNotFound || errorMsgKey(env) != "eid_not_available" {
+		t.Fatalf("want eid_not_available 404 got %d %#v", code, env)
+	}
+}
+
+func TestEidReadings_PurgedOnProTombstone(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	adminTok := ensureAdminToken(t, api)
+	_, _, commTok := createCommercial(t, api, adminTok, "eid-tomb", "EID Tomb Comm")
+
+	vetEmail := uniqueEmail("eid-tomb-v")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr EID Tomb",
+		"practiceName": "Cab EID Tomb",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create vet %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+	if vetID == "" {
+		t.Fatalf("missing vet userId %#v", env)
+	}
+	var practiceID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT practice_id::text FROM identity.users WHERE id = $1`, vetID).Scan(&practiceID); err != nil || practiceID == "" {
+		t.Fatalf("practice: %v %q", err, practiceID)
+	}
+	readingID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO practice.eid_readings (
+			id, practice_id, user_id, tool, success, fields_read, niss_hash, error_code
+		) VALUES ($1,$2,$3,'eid_viewer_xml',true,'{niss}','deadbeef','')`,
+		readingID, practiceID, vetID); err != nil {
+		t.Fatal(err)
+	}
+
+	vetTok := loginToken(t, api.handler, vetEmail, "VetDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", vetTok, nil)
+	if code != http.StatusOK && code != http.StatusNoContent {
+		t.Fatalf("DELETE /me %d %#v", code, env)
+	}
+	var n int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM practice.eid_readings WHERE user_id = $1`, vetID).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("eid_readings after pro tombstone count=%d want 0", n)
+	}
+}
+
+func TestEidWebEidChallenge_LoopbackOriginAlias(t *testing.T) {
+	t.Setenv("BFF_PROXY_SECRET", "test-bff-eid-secret")
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/vet/eid/web-eid/challenge", nil)
+	req.Header.Set("Authorization", "Bearer "+vetTok)
+	req.Header.Set("X-PF-Proxy-Secret", "test-bff-eid-secret")
+	req.Header.Set("X-PF-Web-Eid-Origin", "http://127.0.0.1:3002")
+	rr := httptest.NewRecorder()
+	api.handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("challenge %d %s", rr.Code, rr.Body.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &env); err != nil {
+		t.Fatal(err)
+	}
+	data := dataMap(t, env)
+	if origin, _ := data["origin"].(string); origin != "http://127.0.0.1:3002" {
+		t.Fatalf("want loopback alias origin, got %#v", data["origin"])
+	}
+}
+
+func TestEidWebEidChallenge_IgnoresForgedOriginWithoutProxySecret(t *testing.T) {
+	t.Setenv("BFF_PROXY_SECRET", "test-bff-eid-secret")
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/vet/eid/web-eid/challenge", nil)
+	req.Header.Set("Authorization", "Bearer "+vetTok)
+	req.Header.Set("X-PF-Web-Eid-Origin", "http://127.0.0.1:3002")
+	rr := httptest.NewRecorder()
+	api.handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("challenge %d %s", rr.Code, rr.Body.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &env); err != nil {
+		t.Fatal(err)
+	}
+	data := dataMap(t, env)
+	if origin, _ := data["origin"].(string); origin != "http://localhost:3002" {
+		t.Fatalf("want configured origin without proxy secret, got %#v", data["origin"])
+	}
+}
+
 func TestEidWebEidChallengeAndBadToken(t *testing.T) {
 	api := newTestAPI(t)
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")

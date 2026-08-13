@@ -73,6 +73,10 @@ export default defineNuxtConfig({
       exclude: ['@cornerstonejs/dicom-image-loader'],
       include: ['dicom-parser', 'mermaid'],
     },
+    // @web-eid/web-eid-library binds window at module load — keep it out of SSR bundle.
+    ssr: {
+      external: ['@web-eid/web-eid-library'],
+    },
     worker: {
       format: 'es',
     },

@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import {
+  eidMockIdentity,
+  installWebEidLibMock,
+  mockEidViewerImport,
+  mockEidWebEidApi,
+} from '../helpers/eid'
 
 /** /clients peut ouvrir un ProModal (invitations) qui bloque les clics. */
 async function dismissProModals(page: Page) {
@@ -12,6 +18,20 @@ async function dismissProModals(page: Page) {
       break
     }
   }
+}
+
+async function openCreateClientWithEid(page: Page) {
+  await page.goto('/clients')
+  await expect(page.getByTestId('clients-page')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await dismissProModals(page)
+  await page.getByTestId('create-client-open').click()
+  await expect(page.getByTestId('create-client-modal')).toBeVisible()
+  const eid = page.getByTestId('eid-reader')
+  if (!(await eid.isVisible().catch(() => false))) {
+    test.skip(true, 'eID UI masquée (NUXT_PUBLIC_EID_ENABLED / cabinet BE)')
+  }
+  return eid
 }
 
 test('liste clients avec recherche', { tag: '@p0' }, async ({ page }) => {
@@ -52,52 +72,65 @@ test('création client : le type particulier masque TVA et n° d\'entreprise', a
   await expect(page.getByTestId('create-client-billing-vat')).toBeVisible()
 })
 
-test('création client : prefill eID Viewer (mock BFF)', async ({ page }) => {
-  await loginAsVet(page)
-  await page.goto('/clients')
-  await expect(page.getByTestId('clients-page')).toBeVisible()
-  await page.waitForLoadState('networkidle')
-  await dismissProModals(page)
+test.describe('eID BE prefill', { tag: '@p0' }, () => {
+  test('création client : prefill eID Viewer (mock BFF)', async ({ page }) => {
+    await loginAsVet(page)
+    await mockEidViewerImport(page)
+    await openCreateClientWithEid(page)
 
-  await page.route('**/api/vet/eid/import', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: {
-          firstname: 'Camille',
-          lastname: 'Testeur',
-          niss: '96072399886',
-          country: 'BE',
-          address_street: 'Rue Demo 1',
-          address_zip: '1000',
-          address_city: 'Bruxelles',
-          import_tool: 'eid_viewer_xml',
-        },
-      }),
+    await expect(page.getByTestId('eid-read-card')).toBeVisible()
+    await expect(page.getByTestId('eid-import-input')).toBeAttached()
+    await expect(page.getByTestId('eid-local-hint')).toHaveCount(0)
+    await expect(page.getByTestId('eid-dev-badge')).toBeVisible()
+
+    await page.getByTestId('eid-import-input').setInputFiles({
+      name: 'sample_valid.eid',
+      mimeType: 'application/xml',
+      buffer: Buffer.from(
+        '<?xml version="1.0"?><Export><surname>Testeur</surname><firstname>Camille</firstname><nationalnumber>96072399886</nationalnumber></Export>',
+      ),
     })
+    await expect(page.getByTestId('create-client-first-name')).toHaveValue(eidMockIdentity.firstname, {
+      timeout: 10000,
+    })
+    await expect(page.getByTestId('create-client-last-name')).toHaveValue(eidMockIdentity.lastname)
+    await expect(page.getByTestId('create-client-niss')).toHaveValue(eidMockIdentity.niss)
+    await expect(page.getByTestId('create-client-billing-country')).toHaveValue('BE')
+    await expect(page.getByTestId('create-client-billing-postal')).toHaveValue(eidMockIdentity.address_zip)
+    await expect(page.getByTestId('eid-reader-msg')).toBeVisible()
   })
 
-  await page.getByTestId('create-client-open').click()
-  const eid = page.getByTestId('eid-reader')
-  // Flag off / cabinet non-BE → skip soft (pas d’échec CI).
-  if (!(await eid.isVisible().catch(() => false))) {
-    test.skip(true, 'eID UI masquée (NUXT_PUBLIC_EID_ENABLED / cabinet BE)')
-    return
-  }
+  test('création client : prefill Web eID (mock lib + BFF)', async ({ page }) => {
+    await installWebEidLibMock(page)
+    await loginAsVet(page)
+    await mockEidWebEidApi(page)
+    await openCreateClientWithEid(page)
 
-  await page.getByTestId('eid-import-input').setInputFiles({
-    name: 'sample_valid.eid',
-    mimeType: 'application/xml',
-    buffer: Buffer.from(
-      '<?xml version="1.0"?><Export><surname>Testeur</surname><firstname>Camille</firstname><nationalnumber>96072399886</nationalnumber></Export>',
-    ),
+    await page.getByTestId('eid-read-card').click()
+    await expect(page.getByTestId('create-client-first-name')).toHaveValue('Camille', { timeout: 10000 })
+    await expect(page.getByTestId('create-client-last-name')).toHaveValue('Testeur')
+    await expect(page.getByTestId('create-client-niss')).toHaveValue('96072399886')
+    await expect(page.getByTestId('create-client-billing-country')).toHaveValue('BE')
+    await expect(page.getByTestId('eid-reader-msg')).toBeVisible()
+    await expect(page.getByTestId('eid-reader-error')).toHaveCount(0)
   })
-  await expect(page.getByTestId('create-client-first-name')).toHaveValue('Camille', { timeout: 10000 })
-  await expect(page.getByTestId('create-client-last-name')).toHaveValue('Testeur')
-  await expect(page.getByTestId('create-client-niss')).toHaveValue('96072399886')
-  await expect(page.getByTestId('create-client-billing-country')).toHaveValue('BE')
-  await expect(page.getByTestId('create-client-billing-postal')).toHaveValue('1000')
-  await expect(page.getByTestId('eid-reader-msg')).toBeVisible()
+
+  test('création client : Web eID origin mismatch affiche l’erreur', async ({ page }) => {
+    await installWebEidLibMock(page)
+    await loginAsVet(page)
+    await page.route('**/api/vet/eid/web-eid/challenge', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: { nonce: 'e2e-nonce-mismatch', origin: 'https://evil.example' },
+        }),
+      })
+    })
+    await openCreateClientWithEid(page)
+
+    await page.getByTestId('eid-read-card').click()
+    await expect(page.getByTestId('eid-reader-error')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('create-client-first-name')).toHaveValue('')
+  })
 })
-

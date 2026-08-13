@@ -30,7 +30,13 @@ var (
 
 type eidMemNonceEntry struct {
 	Nonce     string
+	Origin    string
 	ExpiresAt time.Time
+}
+
+type eidChallenge struct {
+	Nonce  string
+	Origin string
 }
 
 func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request, rlKind string) (authx.Identity, bool) {
@@ -43,7 +49,11 @@ func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request, rlKind string
 		return authx.Identity{}, false
 	}
 	country, err := a.store.GetPracticeCountryCode(r.Context(), id.PracticeID)
-	if err != nil && !errors.Is(err, store.ErrNotFound) {
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "eid_not_available")
+			return authx.Identity{}, false
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return authx.Identity{}, false
 	}
@@ -69,6 +79,20 @@ func (a *API) eidSiteOrigin() string {
 	return eid.SiteOrigin(a.cfg.ProPublicSiteURL)
 }
 
+func (a *API) resolveEidOrigin(r *http.Request) string {
+	// BFF forwards browser Origin as X-PF-Web-Eid-Origin (Origin is often stripped on
+	// proxy). Trust that header only when X-PF-Proxy-Secret matches — same gate as
+	// X-PF-Client-IP — so a direct API caller cannot spoof the challenge origin.
+	reqOrigin := ""
+	if secretHeaderOK(r, httpx.HeaderPFProxySecret, a.cfg.BFFProxySecret) {
+		reqOrigin = r.Header.Get("X-PF-Web-Eid-Origin")
+	}
+	if reqOrigin == "" {
+		reqOrigin = r.Header.Get("Origin")
+	}
+	return eid.ResolveChallengeOrigin(a.eidSiteOrigin(), reqOrigin)
+}
+
 func (a *API) eidAuditHashSecret() string {
 	return a.cfg.JWTSigningKey
 }
@@ -92,44 +116,75 @@ func (a *API) recordEidReading(ctx context.Context, id authx.Identity, tool stri
 	}
 }
 
-func (a *API) storeEidNonce(ctx context.Context, userID, nonce string) error {
+func (a *API) storeEidChallenge(ctx context.Context, userID string, ch eidChallenge) error {
 	key := "eid:webeid:nonce:" + userID
+	payload, err := json.Marshal(ch)
+	if err != nil {
+		return err
+	}
 	if a.redis != nil {
-		return a.redis.Set(ctx, key, nonce, eidNonceTTL)
+		return a.redis.Set(ctx, key, string(payload), eidNonceTTL)
 	}
 	if !a.cfg.AllowsInMemoryEidNonce() {
 		return errEidRedisRequired
 	}
-	eidMemNonce.Store(userID, eidMemNonceEntry{Nonce: nonce, ExpiresAt: time.Now().Add(eidNonceTTL)})
+	eidMemNonce.Store(userID, eidMemNonceEntry{
+		Nonce:     ch.Nonce,
+		Origin:    ch.Origin,
+		ExpiresAt: time.Now().Add(eidNonceTTL),
+	})
 	return nil
 }
 
-var errEidRedisRequired = errors.New("eid_redis_required")
+var (
+	errEidRedisRequired    = errors.New("eid_redis_required")
+	errEidNonceExpired     = errors.New("eid_nonce_expired")
+	errEidNonceStoreFailed = errors.New("eid_nonce_store_failed")
+)
 
-func (a *API) takeEidNonce(ctx context.Context, userID string) (string, bool) {
+func parseEidChallengePayload(raw string) (eidChallenge, bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return eidChallenge{}, false
+	}
+	var ch eidChallenge
+	if err := json.Unmarshal([]byte(raw), &ch); err == nil && ch.Nonce != "" {
+		return ch, true
+	}
+	// Legacy: bare nonce string (pre-origin binding).
+	return eidChallenge{Nonce: raw}, true
+}
+
+// takeEidChallenge atomically consumes the pending Web eID challenge.
+func (a *API) takeEidChallenge(ctx context.Context, userID string) (eidChallenge, error) {
 	key := "eid:webeid:nonce:" + userID
 	if a.redis != nil {
 		v, err := a.redis.GetDel(ctx, key)
 		if err != nil {
-			if !errors.Is(err, redis.Nil) {
-				log.Printf("eid nonce getdel: %v", err)
+			if errors.Is(err, redis.Nil) {
+				return eidChallenge{}, errEidNonceExpired
 			}
-			return "", false
+			log.Printf("eid nonce getdel: %v", err)
+			return eidChallenge{}, errEidNonceStoreFailed
 		}
-		return v, v != ""
+		ch, ok := parseEidChallengePayload(v)
+		if !ok {
+			return eidChallenge{}, errEidNonceExpired
+		}
+		return ch, nil
 	}
 	if !a.cfg.AllowsInMemoryEidNonce() {
-		return "", false
+		return eidChallenge{}, errEidRedisRequired
 	}
 	raw, ok := eidMemNonce.LoadAndDelete(userID)
 	if !ok {
-		return "", false
+		return eidChallenge{}, errEidNonceExpired
 	}
 	entry, ok := raw.(eidMemNonceEntry)
-	if !ok || time.Now().After(entry.ExpiresAt) {
-		return "", false
+	if !ok || time.Now().After(entry.ExpiresAt) || entry.Nonce == "" {
+		return eidChallenge{}, errEidNonceExpired
 	}
-	return entry.Nonce, true
+	return eidChallenge{Nonce: entry.Nonce, Origin: entry.Origin}, nil
 }
 
 // importVetEidViewer POST /vet/eid/import — multipart file (.eid/.xml).
@@ -197,7 +252,13 @@ func (a *API) challengeVetWebEid(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "eid_nonce_failed")
 		return
 	}
-	if err := a.storeEidNonce(r.Context(), id.UserID, nonce); err != nil {
+	origin := a.resolveEidOrigin(r)
+	if origin == "" {
+		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_site_origin_missing")
+		return
+	}
+	ch := eidChallenge{Nonce: nonce, Origin: origin}
+	if err := a.storeEidChallenge(r.Context(), id.UserID, ch); err != nil {
 		if errors.Is(err, errEidRedisRequired) {
 			writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_redis_required")
 			return
@@ -207,7 +268,7 @@ func (a *API) challengeVetWebEid(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"nonce":  nonce,
-		"origin": a.eidSiteOrigin(),
+		"origin": origin,
 	})
 }
 
@@ -226,9 +287,29 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "token_required")
 		return
 	}
-	// Prepare validator before consuming the nonce so infra failures do not burn the challenge.
-	validator, err := eid.CachedAuthTokenValidator(a.eidSiteOrigin(), a.cfg.WebEidDisableOCSP)
+	ch, err := a.takeEidChallenge(r.Context(), id.UserID)
 	if err != nil {
+		switch {
+		case errors.Is(err, errEidNonceStoreFailed), errors.Is(err, errEidRedisRequired):
+			a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_nonce_store_failed")
+			writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_nonce_store_failed")
+		default:
+			a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_nonce_expired")
+			writeErr(w, r, http.StatusUnprocessableEntity, "validation_error", "eid_nonce_expired")
+		}
+		return
+	}
+	// Validator must match the origin stored with the challenge (localhost ↔ 127.0.0.1).
+	origin := ch.Origin
+	if origin == "" {
+		origin = a.resolveEidOrigin(r)
+		if origin == "" {
+			origin = a.eidSiteOrigin()
+		}
+	}
+	validator, err := eid.CachedAuthTokenValidator(origin, a.cfg.WebEidDisableOCSP)
+	if err != nil {
+		_ = a.storeEidChallenge(r.Context(), id.UserID, ch)
 		code := "eid_validator_failed"
 		if errors.Is(err, eid.ErrCACertsMissing) {
 			code = "eid_ca_certs_missing"
@@ -237,14 +318,16 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", code)
 		return
 	}
-	nonce, okNonce := a.takeEidNonce(r.Context(), id.UserID)
-	if !okNonce {
-		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_nonce_expired")
-		writeErr(w, r, http.StatusUnprocessableEntity, "validation_error", "eid_nonce_expired")
-		return
-	}
-	identity, err := eid.VerifyAuthToken(r.Context(), validator, req.Token, nonce)
+	identity, err := eid.VerifyAuthToken(r.Context(), validator, req.Token, ch.Nonce)
 	if err != nil {
+		if eid.IsWebEidInfraError(err) {
+			if storeErr := a.storeEidChallenge(r.Context(), id.UserID, ch); storeErr != nil {
+				log.Printf("eid nonce restore after infra error: %v", storeErr)
+			}
+			a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_token_infra")
+			writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_token_infra")
+			return
+		}
 		code := "eid_token_invalid"
 		msg := err.Error()
 		switch {

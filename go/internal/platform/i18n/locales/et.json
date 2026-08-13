@@ -229,7 +229,9 @@
     "eid_validator_failed": "Web eID validaator pole saadaval",
     "eid_nonce_failed": "eID challenge’i ei õnnestunud luua",
     "eid_nonce_store_failed": "eID challenge’i ei õnnestunud salvestada",
-    "eid_redis_required": "Web eID vajab Redist (mitme eksemplari jaoks)"
+    "eid_redis_required": "Web eID vajab Redist (mitme eksemplari jaoks)",
+    "eid_token_infra": "eID kontroll ajutiselt kättesaamatu (OCSP/võrk)",
+    "eid_site_origin_missing": "eID saidi päritolu pole seadistatud (EID_SITE_ORIGIN)"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

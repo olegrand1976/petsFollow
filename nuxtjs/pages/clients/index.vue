@@ -80,106 +80,121 @@
       </ProTable>
     </ProModal>
 
-    <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
-      <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
-      <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
-        <ProEidReader
-          :form="clientForm"
-          :practice-is-be="practiceIsBe"
-        />
-        <ProInput v-model="clientForm.firstName" test-id="create-client-first-name" :label="$t('clients.create.firstName')" required />
-        <ProInput v-model="clientForm.lastName" test-id="create-client-last-name" :label="$t('clients.create.lastName')" required />
-        <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
-        <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" :maxlength="40" />
-        <ProInput v-model="clientForm.address" test-id="create-client-address" :label="$t('clients.create.address')" :maxlength="500" />
-        <ProInput
-          v-model="clientForm.nationalRegistryNumber"
-          test-id="create-client-niss"
-          :label="$t('clients.create.nationalRegistryNumber')"
-          :maxlength="20"
-        />
-        <h4 class="create-client-billing-title" data-testid="create-client-billing-section">{{ $t('clients.billing.title') }}</h4>
-        <p class="pro-hint">{{ $t('clients.billing.hintOptional') }}</p>
-        <label class="pro-field">
-          <span class="pro-field__label">{{ $t('clients.billing.customerKind') }}</span>
-          <select v-model="clientForm.billingCustomerKind" class="pro-input" data-testid="create-client-billing-customer-kind">
-            <option value="">{{ $t('clients.billing.customerKindUnset') }}</option>
-            <option value="individual">{{ $t('clients.billing.customerKindIndividual') }}</option>
-            <option value="business">{{ $t('clients.billing.customerKindBusiness') }}</option>
-          </select>
-        </label>
-        <label class="pro-field">
-          <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
-          <select v-model="clientForm.billingCountry" class="pro-input" data-testid="create-client-billing-country">
-            <option value="">—</option>
-            <option value="BE">BE</option>
-            <option value="FR">FR</option>
-            <option value="IT">IT</option>
-            <option value="ES">ES</option>
-          </select>
-        </label>
-        <ProInput
-          v-if="!createIsIndividual"
-          v-model="clientForm.billingVatNumber"
-          test-id="create-client-billing-vat"
-          :label="$t('clients.billing.vatNumber')"
-          :maxlength="120"
-        />
-        <ProInput
-          v-if="!createIsIndividual"
-          v-model="clientForm.billingCompanyNumber"
-          test-id="create-client-billing-company"
-          :label="$t('clients.billing.companyNumber')"
-          :maxlength="120"
-        />
-        <ProInput
-          v-model="clientForm.billingStreet"
-          test-id="create-client-billing-street"
-          :label="$t('clients.billing.street')"
-          :maxlength="120"
-        />
-        <ProInput
-          v-model="clientForm.billingPostal"
-          test-id="create-client-billing-postal"
-          :label="$t('clients.billing.postal')"
-          :maxlength="120"
-        />
-        <ProInput
-          v-model="clientForm.billingCity"
-          test-id="create-client-billing-city"
-          :label="$t('clients.billing.city')"
-          :maxlength="120"
-        />
-        <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
-        <p v-if="clientError" class="pro-error">{{ clientError }}</p>
-        <div class="create-client-actions">
-          <ProButton variant="secondary" type="button" @click="createOpen = false">
-            {{ $t('common.cancel') }}
-          </ProButton>
-          <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">
-            {{ $t('clients.create.submit') }}
-          </ProButton>
-        </div>
-      </form>
-      <div v-else class="pro-form" data-testid="vet-link-existing-client">
-        <p class="pro-hint">
-          {{ $t('clients.create.existsHint', { name: linkCandidate.displayName || linkCandidate.email }) }}
-        </p>
-        <p v-if="linkCandidate.alreadyLinked" class="pro-error">{{ $t('clients.create.alreadyLinked') }}</p>
-        <p v-if="clientError" class="pro-error">{{ clientError }}</p>
-        <p v-if="clientMsg" class="pro-hint">{{ clientMsg }}</p>
-        <div class="create-client-actions">
-          <ProButton variant="secondary" type="button" @click="linkCandidate = null">
-            {{ $t('common.cancel') }}
-          </ProButton>
-          <ProButton
-            v-if="linkCandidate.linkable && !linkCandidate.alreadyLinked"
-            test-id="link-existing-client"
-            :disabled="clientSaving"
-            @click="linkExistingClient"
-          >
-            {{ $t('clients.create.linkExisting') }}
-          </ProButton>
+    <ProModal
+      v-model:open="createOpen"
+      size="xl"
+      contain-scroll
+      expandable
+      test-id="create-client-modal"
+      :title="$t('clients.create.title')"
+    >
+      <div class="create-client-modal-scroll">
+        <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
+        <form v-if="!linkCandidate" class="pro-form create-client-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
+          <div class="create-client-grid">
+            <div class="create-client-col create-client-col--identity">
+              <ProEidReader
+                :form="clientForm"
+                :practice-is-be="practiceIsBe"
+              />
+              <ProInput v-model="clientForm.firstName" test-id="create-client-first-name" :label="$t('clients.create.firstName')" required />
+              <ProInput v-model="clientForm.lastName" test-id="create-client-last-name" :label="$t('clients.create.lastName')" required />
+              <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
+              <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" :maxlength="40" />
+              <ProInput v-model="clientForm.address" test-id="create-client-address" :label="$t('clients.create.address')" :maxlength="500" />
+              <ProInput
+                v-model="clientForm.nationalRegistryNumber"
+                test-id="create-client-niss"
+                :label="$t('clients.create.nationalRegistryNumber')"
+                :maxlength="20"
+              />
+            </div>
+            <div class="create-client-col create-client-col--billing">
+              <h4 class="create-client-billing-title" data-testid="create-client-billing-section">{{ $t('clients.billing.title') }}</h4>
+              <p class="pro-hint">{{ $t('clients.billing.hintOptional') }}</p>
+              <label class="pro-field">
+                <span class="pro-field__label">{{ $t('clients.billing.customerKind') }}</span>
+                <select v-model="clientForm.billingCustomerKind" class="pro-input" data-testid="create-client-billing-customer-kind">
+                  <option value="">{{ $t('clients.billing.customerKindUnset') }}</option>
+                  <option value="individual">{{ $t('clients.billing.customerKindIndividual') }}</option>
+                  <option value="business">{{ $t('clients.billing.customerKindBusiness') }}</option>
+                </select>
+              </label>
+              <label class="pro-field">
+                <span class="pro-field__label">{{ $t('clients.billing.country') }}</span>
+                <select v-model="clientForm.billingCountry" class="pro-input" data-testid="create-client-billing-country">
+                  <option value="">—</option>
+                  <option value="BE">BE</option>
+                  <option value="FR">FR</option>
+                  <option value="IT">IT</option>
+                  <option value="ES">ES</option>
+                </select>
+              </label>
+              <ProInput
+                v-if="!createIsIndividual"
+                v-model="clientForm.billingVatNumber"
+                test-id="create-client-billing-vat"
+                :label="$t('clients.billing.vatNumber')"
+                :maxlength="120"
+              />
+              <ProInput
+                v-if="!createIsIndividual"
+                v-model="clientForm.billingCompanyNumber"
+                test-id="create-client-billing-company"
+                :label="$t('clients.billing.companyNumber')"
+                :maxlength="120"
+              />
+              <ProInput
+                v-model="clientForm.billingStreet"
+                test-id="create-client-billing-street"
+                :label="$t('clients.billing.street')"
+                :maxlength="120"
+              />
+              <ProInput
+                v-model="clientForm.billingPostal"
+                test-id="create-client-billing-postal"
+                :label="$t('clients.billing.postal')"
+                :maxlength="120"
+              />
+              <ProInput
+                v-model="clientForm.billingCity"
+                test-id="create-client-billing-city"
+                :label="$t('clients.billing.city')"
+                :maxlength="120"
+              />
+            </div>
+          </div>
+          <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
+          <p v-if="clientError" class="pro-error">{{ clientError }}</p>
+          <div class="create-client-actions">
+            <ProButton variant="secondary" type="button" @click="createOpen = false">
+              {{ $t('common.cancel') }}
+            </ProButton>
+            <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">
+              {{ $t('clients.create.submit') }}
+            </ProButton>
+          </div>
+        </form>
+        <div v-else class="pro-form" data-testid="vet-link-existing-client">
+          <p class="pro-hint">
+            {{ $t('clients.create.existsHint', { name: linkCandidate.displayName || linkCandidate.email }) }}
+          </p>
+          <p v-if="linkCandidate.alreadyLinked" class="pro-error">{{ $t('clients.create.alreadyLinked') }}</p>
+          <p v-if="clientError" class="pro-error">{{ clientError }}</p>
+          <p v-if="clientMsg" class="pro-hint">{{ clientMsg }}</p>
+          <div class="create-client-actions">
+            <ProButton variant="secondary" type="button" @click="linkCandidate = null">
+              {{ $t('common.cancel') }}
+            </ProButton>
+            <ProButton
+              v-if="linkCandidate.linkable && !linkCandidate.alreadyLinked"
+              test-id="link-existing-client"
+              :disabled="clientSaving"
+              @click="linkExistingClient"
+            >
+              {{ $t('clients.create.linkExisting') }}
+            </ProButton>
+          </div>
         </div>
       </div>
     </ProModal>
@@ -664,11 +679,40 @@ watch(
   margin-right: 0.5rem;
   vertical-align: middle;
 }
+.create-client-modal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-bottom: 0.25rem;
+}
+.create-client-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+}
+@media (min-width: 720px) {
+  .create-client-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+}
+.create-client-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.create-client-billing-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
 .create-client-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pf-vet-border, #d0d7de);
 }
 :deep(.pro-btn--icon) {
   min-width: 44px;

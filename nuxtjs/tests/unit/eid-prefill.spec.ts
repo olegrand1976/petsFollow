@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyEidIdentityToForm, type EidFormTarget } from '../../utils/eid-prefill'
+import { isPublicFlagOn } from '../../utils/public-feature-flag'
 
 describe('applyEidIdentityToForm', () => {
   it('maps identity + address into client create fields', () => {
@@ -56,5 +57,13 @@ describe('applyEidIdentityToForm', () => {
     applyEidIdentityToForm(form, { firstname: '', lastname: 'Only' })
     expect(form.firstName).toBe('Keep')
     expect(form.lastName).toBe('Only')
+  })
+})
+
+describe('eidEnabled flag (isPublicFlagOn)', () => {
+  it('treats string "false" as off (never Boolean())', () => {
+    expect(isPublicFlagOn('false')).toBe(false)
+    expect(isPublicFlagOn(false)).toBe(false)
+    expect(isPublicFlagOn('true')).toBe(true)
   })
 })

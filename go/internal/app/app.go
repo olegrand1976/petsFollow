@@ -66,6 +66,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	if err := cfg.ValidateResearch(); err != nil {
 		return nil, err
 	}
+	if err := cfg.ValidateEid(); err != nil {
+		return nil, err
+	}
 	if err := cfg.ValidateSMS(); err != nil {
 		return nil, err
 	}

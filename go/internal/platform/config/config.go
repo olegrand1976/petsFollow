@@ -343,14 +343,29 @@ func Load() Config {
 }
 
 // AllowsInMemoryEidNonce permits the sync.Map Web eID nonce fallback (single-instance only).
-// Staging/prod require Redis so challenge/verify work across Cloud Run replicas.
+// Staging/prod require Redis so challenge/verify work across Cloud Run replicas —
+// never fall back to memory there, even with DEV_SEED_ENABLED.
 func (c Config) AllowsInMemoryEidNonce() bool {
 	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
 	switch env {
 	case "local", "development", "dev", "test":
 		return true
+	default:
+		return false
 	}
-	return c.DevSeedEnabled
+}
+
+// ValidateEid refuses WEB_EID_DISABLE_OCSP outside local/dev/test (revocation must stay on).
+func (c Config) ValidateEid() error {
+	if !c.WebEidDisableOCSP {
+		return nil
+	}
+	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	switch env {
+	case "local", "development", "dev", "test":
+		return nil
+	}
+	return errors.New("WEB_EID_DISABLE_OCSP is not allowed outside local/dev/test")
 }
 
 // ValidateResearch refuses RESEARCH_ENABLED without salt + ETL secret outside seedable envs.

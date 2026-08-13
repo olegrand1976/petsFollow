@@ -45,6 +45,25 @@ func IsLocalhostHTTP(origin string) bool {
 	return h == "localhost" || h == "127.0.0.1" || h == "::1"
 }
 
+// ResolveChallengeOrigin picks the Web eID site origin for a challenge.
+// Prefer the browser Origin when it matches the configured site, or when both
+// are local http loopback aliases (localhost ↔ 127.0.0.1) — Web eID binds the
+// tab origin strictly.
+func ResolveChallengeOrigin(configured, requestOrigin string) string {
+	configured = SiteOrigin(configured)
+	req := SiteOrigin(requestOrigin)
+	if req == "" {
+		return configured
+	}
+	if req == configured {
+		return req
+	}
+	if IsLocalhostHTTP(configured) && IsLocalhostHTTP(req) {
+		return req
+	}
+	return configured
+}
+
 // NewAuthTokenValidator builds a Web eID validator for the given site origin.
 func NewAuthTokenValidator(origin string, cas []*x509.Certificate, disableOCSP bool) (webeid.AuthTokenValidator, error) {
 	origin = SiteOrigin(origin)
@@ -117,6 +136,34 @@ func VerifyAuthToken(ctx context.Context, validator webeid.AuthTokenValidator, t
 	return IdentityFromCertificate(cert)
 }
 
+// IsWebEidInfraError reports OCSP/network/timeout failures (retryable; do not treat as bad PIN/token).
+func IsWebEidInfraError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	for _, needle := range []string{
+		"ocsp",
+		"timeout",
+		"i/o timeout",
+		"connection refused",
+		"connection reset",
+		"temporary failure",
+		"no such host",
+		"tls handshake",
+		"eof",
+		"network is unreachable",
+	} {
+		if strings.Contains(msg, needle) {
+			return true
+		}
+	}
+	return false
+}
+
 // IdentityFromCertificate maps a validated auth certificate to Identity.
 func IdentityFromCertificate(cert *x509.Certificate) (Identity, error) {
 	if cert == nil {
@@ -131,12 +178,13 @@ func IdentityFromCertificate(cert *x509.Certificate) (Identity, error) {
 		country = "BE"
 	}
 	id := Identity{
-		Lastname:   TitleCase(lastname),
-		Firstname:  TitleCase(firstname),
-		BirthDate:  BirthDateFromNISS(niss),
-		Country:    strings.ToUpper(country),
-		NISS:       niss,
-		ImportTool: "web_eid",
+		Lastname:          TitleCase(lastname),
+		Firstname:         TitleCase(firstname),
+		BirthDate:         BirthDateFromNISS(niss),
+		Country:           strings.ToUpper(country),
+		NISS:              niss,
+		ImportTool:        "web_eid",
+		SignatureVerified: true, // caller must only invoke after Validate succeeded
 	}
 	if id.Lastname == "" && id.Firstname == "" && id.NISS == "" {
 		return Identity{}, fmt.Errorf("eid_identity_empty")

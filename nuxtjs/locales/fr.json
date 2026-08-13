@@ -1749,15 +1749,15 @@
     },
     "eid": {
       "title": "Carte d’identité belge",
-      "hint": "Importez une fiche eID Viewer (.eid) ou lisez la carte (Web eID) pour préremplir le formulaire. L’e-mail et le téléphone restent à saisir.",
+      "hint": "Lisez la carte via Web eID (application officielle / CSAM) ou importez une fiche eID Viewer (.eid). L’e-mail et le téléphone restent à saisir.",
       "importViewer": "Importer fiche eID Viewer",
-      "readCard": "Lire la carte (Web eID)",
-      "helpBosa": "Aide eID (BOSA)",
-      "localSoftwareHint": "Logiciel eID local détecté — exportez une fiche .eid puis importez-la ici.",
+      "readCard": "Lire la carte — Web eID",
+      "helpBosa": "Installer Web eID (eid.belgium.be)",
       "prefillSuccess": "Champs préremplis depuis la carte / fiche eID",
       "importError": "Import eID impossible",
       "readError": "Lecture de la carte impossible",
-      "webEidNotReady": "Web eID non disponible — vérifiez l’extension et l’application native, puis réessayez."
+      "webEidNotReady": "Web eID non disponible — installez l’application et l’extension officielles (CSAM / eid.belgium.be), puis réessayez.",
+      "originMismatch": "Origine du site incorrecte pour Web eID — vérifiez EID_SITE_ORIGIN / l’URL ouverte."
     }
   },
   "consultations": {
