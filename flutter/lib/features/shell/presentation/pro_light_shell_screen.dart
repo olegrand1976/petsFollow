@@ -1492,7 +1492,7 @@ Future<Position?> _captureGps() async {
     }
     final enabled = await Geolocator.isLocationServiceEnabled();
     if (!enabled) return null;
-    return Geolocator.getCurrentPosition(
+    return await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
         timeLimit: Duration(seconds: 12),

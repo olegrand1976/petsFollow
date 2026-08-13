@@ -12,24 +12,24 @@ import (
 
 // Identity is the normalized payload returned to the Pro UI for form prefill.
 type Identity struct {
-	Lastname           string `json:"lastname,omitempty"`
-	Firstname          string `json:"firstname,omitempty"`
-	Firstnames         string `json:"firstnames,omitempty"`
-	BirthDate          string `json:"birth_date,omitempty"`
-	BirthPlace         string `json:"birth_place,omitempty"`
-	Gender             string `json:"gender,omitempty"`
-	Country            string `json:"country,omitempty"`
-	NISS               string `json:"niss,omitempty"`
-	CardNumber         string `json:"card_number,omitempty"`
-	ValidityFrom       string `json:"validity_from,omitempty"`
-	ValidityTo         string `json:"validity_to,omitempty"`
-	AddressStreet      string `json:"address_street,omitempty"`
-	AddressNumber      string `json:"address_number,omitempty"`
-	AddressZip         string `json:"address_zip,omitempty"`
-	AddressCity        string `json:"address_city,omitempty"`
-	SignatureVerified  bool   `json:"signature_verified"`
-	ImportTool         string `json:"import_tool,omitempty"`
-	PhotoJPEGBase64    string `json:"photo_jpeg_base64,omitempty"`
+	Lastname          string `json:"lastname,omitempty"`
+	Firstname         string `json:"firstname,omitempty"`
+	Firstnames        string `json:"firstnames,omitempty"`
+	BirthDate         string `json:"birth_date,omitempty"`
+	BirthPlace        string `json:"birth_place,omitempty"`
+	Gender            string `json:"gender,omitempty"`
+	Country           string `json:"country,omitempty"`
+	NISS              string `json:"niss,omitempty"`
+	CardNumber        string `json:"card_number,omitempty"`
+	ValidityFrom      string `json:"validity_from,omitempty"`
+	ValidityTo        string `json:"validity_to,omitempty"`
+	AddressStreet     string `json:"address_street,omitempty"`
+	AddressNumber     string `json:"address_number,omitempty"`
+	AddressZip        string `json:"address_zip,omitempty"`
+	AddressCity       string `json:"address_city,omitempty"`
+	SignatureVerified bool   `json:"signature_verified"`
+	ImportTool        string `json:"import_tool,omitempty"`
+	PhotoJPEGBase64   string `json:"photo_jpeg_base64,omitempty"`
 }
 
 // NonEmptyFieldKeys lists populated identity field names (for audit).

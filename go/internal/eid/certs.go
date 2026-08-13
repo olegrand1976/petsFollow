@@ -2,8 +2,8 @@ package eid
 
 import (
 	"crypto/x509"
-	"encoding/pem"
 	"embed"
+	"encoding/pem"
 	"fmt"
 	"sync"
 )
