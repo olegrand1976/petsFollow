@@ -106,7 +106,7 @@ export function useEidPrefill() {
       token = await authenticate(challenge.nonce)
     } catch (e) {
       if (isWebEidUnavailableError(e)) {
-        throw new Error('web_eid_unavailable')
+        throw new Error('web_eid_unavailable', { cause: e })
       }
       throw e
     }
