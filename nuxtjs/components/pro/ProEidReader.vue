@@ -33,7 +33,6 @@
         >
       </label>
       <ProButton
-        v-if="webEidReady"
         type="button"
         variant="secondary"
         test-id="eid-read-card"
@@ -86,15 +85,14 @@ const msg = ref('')
 const error = ref('')
 const webEidReady = ref(false)
 const localEidHint = ref(false)
-const probesDone = ref(false)
 
 const show = computed(() => enabled.value && props.practiceIsBe === true)
 
 const { mapError } = useApiError()
 
+let probeRetryTimer: ReturnType<typeof setTimeout> | null = null
+
 async function probeLocalTools() {
-  if (probesDone.value) return
-  probesDone.value = true
   try {
     const ext = await detectInstalledEidExtensions()
     localEidHint.value = Boolean(ext.beidconnect || ext.eid_chrome)
@@ -107,10 +105,35 @@ async function probeLocalTools() {
   }
 }
 
-// Country arrives async (overview) — remonter la détection quand le bloc devient visible.
+function scheduleProbeRetry() {
+  if (probeRetryTimer) {
+    clearTimeout(probeRetryTimer)
+    probeRetryTimer = null
+  }
+  // Native app / extension may appear a moment after page open.
+  probeRetryTimer = setTimeout(() => {
+    probeRetryTimer = null
+    if (show.value && !webEidReady.value) void probeLocalTools()
+  }, 2000)
+}
+
+// Country arrives async (overview) — (re)probe whenever the block becomes visible.
 watch(show, (visible) => {
-  if (visible) void probeLocalTools()
+  if (!visible) {
+    if (probeRetryTimer) {
+      clearTimeout(probeRetryTimer)
+      probeRetryTimer = null
+    }
+    return
+  }
+  void probeLocalTools().then(() => {
+    if (show.value && !webEidReady.value) scheduleProbeRetry()
+  })
 }, { immediate: true })
+
+onBeforeUnmount(() => {
+  if (probeRetryTimer) clearTimeout(probeRetryTimer)
+})
 
 async function applyIdentity(identity: EidIdentity) {
   const keys = applyEidIdentityToForm(props.form, identity)
@@ -142,6 +165,13 @@ async function onReadCard() {
   msg.value = ''
   error.value = ''
   try {
+    if (!webEidReady.value) {
+      await probeLocalTools()
+    }
+    if (!webEidReady.value) {
+      error.value = t('clients.eid.webEidNotReady')
+      return
+    }
     const identity = await readCard()
     await applyIdentity(identity)
   } catch (e: any) {

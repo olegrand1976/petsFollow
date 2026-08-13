@@ -1047,7 +1047,8 @@
       "localSoftwareHint": "Software eID local detectado: exporte un .eid e impórtelo aquí.",
       "prefillSuccess": "Campos rellenados desde la eID",
       "importError": "Error al importar eID",
-      "readError": "No se pudo leer la tarjeta"
+      "readError": "No se pudo leer la tarjeta",
+      "webEidNotReady": "Web eID no disponible — compruebe la extensión y la app nativa, luego reintente."
     }
   },
   "consultations": {

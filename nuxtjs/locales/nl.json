@@ -1047,7 +1047,8 @@
       "localSoftwareHint": "Lokale eID-software gedetecteerd — exporteer een .eid-bestand en importeer het hier.",
       "prefillSuccess": "Velden vooraf ingevuld vanuit eID",
       "importError": "eID-import mislukt",
-      "readError": "Kaart lezen mislukt"
+      "readError": "Kaart lezen mislukt",
+      "webEidNotReady": "Web eID niet beschikbaar — controleer de browserextensie en native app, en probeer opnieuw."
     }
   },
   "consultations": {

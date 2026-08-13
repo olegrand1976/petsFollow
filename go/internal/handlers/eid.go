@@ -33,7 +33,7 @@ type eidMemNonceEntry struct {
 	ExpiresAt time.Time
 }
 
-func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
+func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request, rlKind string) (authx.Identity, bool) {
 	if !a.cfg.EidEnabled {
 		writeErr(w, r, http.StatusNotFound, "not_found", "eid_disabled")
 		return authx.Identity{}, false
@@ -51,7 +51,11 @@ func (a *API) requireEidBE(w http.ResponseWriter, r *http.Request) (authx.Identi
 		writeErr(w, r, http.StatusNotFound, "not_found", "eid_not_available")
 		return authx.Identity{}, false
 	}
-	if a.eidRL != nil && !a.eidRL.Allow("eid:"+id.UserID) {
+	kind := strings.TrimSpace(rlKind)
+	if kind == "" {
+		kind = "any"
+	}
+	if a.eidRL != nil && !a.eidRL.Allow("eid:"+kind+":"+id.UserID) {
 		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
 		return authx.Identity{}, false
 	}
@@ -130,7 +134,7 @@ func (a *API) takeEidNonce(ctx context.Context, userID string) (string, bool) {
 
 // importVetEidViewer POST /vet/eid/import — multipart file (.eid/.xml).
 func (a *API) importVetEidViewer(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireEidBE(w, r)
+	id, ok := a.requireEidBE(w, r, "import")
 	if !ok {
 		return
 	}
@@ -184,7 +188,7 @@ func (a *API) importVetEidViewer(w http.ResponseWriter, r *http.Request) {
 
 // challengeVetWebEid GET /vet/eid/web-eid/challenge
 func (a *API) challengeVetWebEid(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireEidBE(w, r)
+	id, ok := a.requireEidBE(w, r, "webeid")
 	if !ok {
 		return
 	}
@@ -213,7 +217,7 @@ type webEidVerifyReq struct {
 
 // verifyVetWebEid POST /vet/eid/web-eid/verify
 func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireEidBE(w, r)
+	id, ok := a.requireEidBE(w, r, "webeid")
 	if !ok {
 		return
 	}
@@ -223,16 +227,14 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Prepare validator before consuming the nonce so infra failures do not burn the challenge.
-	cas, err := eid.LoadTrustedCAs()
-	if err != nil || len(cas) == 0 {
-		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_ca_certs_missing")
-		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_ca_certs_missing")
-		return
-	}
-	validator, err := eid.NewAuthTokenValidator(a.eidSiteOrigin(), cas, a.cfg.WebEidDisableOCSP)
+	validator, err := eid.CachedAuthTokenValidator(a.eidSiteOrigin(), a.cfg.WebEidDisableOCSP)
 	if err != nil {
-		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_validator_failed")
-		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_validator_failed")
+		code := "eid_validator_failed"
+		if errors.Is(err, eid.ErrCACertsMissing) {
+			code = "eid_ca_certs_missing"
+		}
+		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, code)
+		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", code)
 		return
 	}
 	nonce, okNonce := a.takeEidNonce(r.Context(), id.UserID)

@@ -1756,7 +1756,8 @@
       "localSoftwareHint": "Logiciel eID local détecté — exportez une fiche .eid puis importez-la ici.",
       "prefillSuccess": "Champs préremplis depuis la carte / fiche eID",
       "importError": "Import eID impossible",
-      "readError": "Lecture de la carte impossible"
+      "readError": "Lecture de la carte impossible",
+      "webEidNotReady": "Web eID non disponible — vérifiez l’extension et l’application native, puis réessayez."
     }
   },
   "consultations": {

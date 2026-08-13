@@ -1712,7 +1712,8 @@
       "localSoftwareHint": "Software eID locale rilevato — esporta un .eid e importalo qui.",
       "prefillSuccess": "Campi precompilati dall’eID",
       "importError": "Importazione eID non riuscita",
-      "readError": "Lettura carta non riuscita"
+      "readError": "Lettura carta non riuscita",
+      "webEidNotReady": "Web eID non disponibile — verificare estensione e app nativa, poi riprovare."
     }
   },
   "consultations": {

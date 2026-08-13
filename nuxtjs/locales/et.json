@@ -1047,7 +1047,8 @@
       "localSoftwareHint": "Kohalik eID tarkvara tuvastatud — ekspordi .eid ja impordi siia.",
       "prefillSuccess": "Väljad eeltäidetud eID-st",
       "importError": "eID import ebaõnnestus",
-      "readError": "Kaardi lugemine ebaõnnestus"
+      "readError": "Kaardi lugemine ebaõnnestus",
+      "webEidNotReady": "Web eID pole saadaval — kontrollige laiendust ja natiivrakendust ning proovige uuesti."
     }
   },
   "consultations": {

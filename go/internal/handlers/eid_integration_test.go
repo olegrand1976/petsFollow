@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
@@ -28,6 +29,28 @@ func TestEidWebEidChallenge_RedisRequiredOutsideLocal(t *testing.T) {
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/eid/web-eid/challenge", vetTok, nil)
 	if code != http.StatusServiceUnavailable || errorMsgKey(env) != "eid_redis_required" {
 		t.Fatalf("want eid_redis_required 503 got %d %#v", code, env)
+	}
+}
+
+func TestEidImport_RateLimited(t *testing.T) {
+	api := newTestAPI(t)
+	api.api.TestSetEidRL(httpx.NewRateLimiter(2, time.Minute))
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	raw := loadEidFixture(t)
+	for i := 0; i < 2; i++ {
+		code, env := doEidUpload(t, api.handler, vetTok, raw, "sample_valid.eid")
+		if code != http.StatusOK {
+			t.Fatalf("import #%d %d %#v", i+1, code, env)
+		}
+	}
+	code, env := doEidUpload(t, api.handler, vetTok, raw, "sample_valid.eid")
+	if code != http.StatusTooManyRequests || errorMsgKey(env) != "too_many_requests" {
+		t.Fatalf("want rate limit 429 got %d %#v", code, env)
+	}
+	// Web eID challenge uses a separate bucket — must still succeed.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/eid/web-eid/challenge", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("webeid challenge should not share import RL: %d %#v", code, env)
 	}
 }
 

@@ -169,6 +169,9 @@ func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEna
 
 func (a *API) TestSetDevSeedEnabled(v bool) { a.cfg.DevSeedEnabled = v }
 
+// TestSetEidRL replaces the eID soft rate limiter (integration tests only).
+func (a *API) TestSetEidRL(rl *httpx.RateLimiter) { a.eidRL = rl }
+
 // TestSetStagingSeedRunner remplace le seed destructif de POST /admin/staging/seed
 // (integration tests only) — évite de tronquer la base partagée pendant la suite.
 // fn == nil restaure seed.Run.

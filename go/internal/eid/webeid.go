@@ -5,13 +5,18 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 
 	webeid "github.com/gmb-lib/go-web-eid"
 	"github.com/gmb-lib/go-web-eid/certificate"
 )
+
+// ErrCACertsMissing is returned when no Belgian eID CA could be loaded.
+var ErrCACertsMissing = errors.New("eid_ca_certs_missing")
 
 // SiteOrigin cleans EID_SITE_ORIGIN / Pro public URL for Web eID binding.
 func SiteOrigin(raw string) string {
@@ -47,7 +52,7 @@ func NewAuthTokenValidator(origin string, cas []*x509.Certificate, disableOCSP b
 		return nil, fmt.Errorf("eid_site_origin_missing")
 	}
 	if len(cas) == 0 {
-		return nil, fmt.Errorf("eid_ca_certs_missing")
+		return nil, ErrCACertsMissing
 	}
 	b := webeid.NewAuthTokenValidatorBuilder().
 		WithSiteOrigin(origin).
@@ -59,6 +64,41 @@ func NewAuthTokenValidator(origin string, cas []*x509.Certificate, disableOCSP b
 		b = b.WithoutUserCertificateRevocationCheckWithOcsp()
 	}
 	return b.Build()
+}
+
+type validatorCacheKey struct {
+	origin      string
+	disableOCSP bool
+}
+
+var (
+	validatorMu    sync.Mutex
+	validatorCache = map[validatorCacheKey]webeid.AuthTokenValidator{}
+)
+
+// CachedAuthTokenValidator returns a process-wide validator for origin+OCSP mode
+// (embedded BE CAs). Safe for concurrent use after Build.
+func CachedAuthTokenValidator(origin string, disableOCSP bool) (webeid.AuthTokenValidator, error) {
+	origin = SiteOrigin(origin)
+	key := validatorCacheKey{origin: origin, disableOCSP: disableOCSP}
+	validatorMu.Lock()
+	defer validatorMu.Unlock()
+	if v, ok := validatorCache[key]; ok {
+		return v, nil
+	}
+	cas, err := LoadTrustedCAs()
+	if err != nil || len(cas) == 0 {
+		if err == nil {
+			err = ErrCACertsMissing
+		}
+		return nil, err
+	}
+	v, err := NewAuthTokenValidator(origin, cas, disableOCSP)
+	if err != nil {
+		return nil, err
+	}
+	validatorCache[key] = v
+	return v, nil
 }
 
 // VerifyAuthToken validates a Web eID auth token JSON and extracts identity.

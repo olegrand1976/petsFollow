@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"embed"
 	"encoding/pem"
-	"fmt"
 	"sync"
 )
 
@@ -37,7 +36,7 @@ func LoadTrustedCAs() ([]*x509.Certificate, error) {
 			out = append(out, parseCertBytes(raw)...)
 		}
 		if len(out) == 0 {
-			cachedCAErr = fmt.Errorf("eid_ca_certs_missing")
+			cachedCAErr = ErrCACertsMissing
 			return
 		}
 		cachedCAs = out
