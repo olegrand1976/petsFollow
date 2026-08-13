@@ -1172,6 +1172,10 @@
     "amountRequired": "Enter a valid excl. VAT amount (> 0).",
     "newDocument": "New document",
     "docType": "Document type",
+    "sectionDocument": "Document",
+    "sectionClient": "Client",
+    "sectionAddress": "Address",
+    "sectionLines": "Lines",
     "typeInvoice": "Invoice",
     "typeCreditNote": "Credit note",
     "typeProforma": "Proforma / quote",
@@ -1242,7 +1246,9 @@
       "qty": "Qty",
       "unitPrice": "Unit excl. (€)",
       "vat": "VAT %",
-      "actions": "Actions"
+      "actions": "Actions",
+      "lineN": "Line {n}",
+      "lineSubtotal": "Subtotal"
     },
     "sendToClient": "Send to client"
   },

@@ -83,6 +83,10 @@
     <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
       <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
       <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
+        <ProEidReader
+          :form="clientForm"
+          :practice-is-be="practiceIsBe"
+        />
         <ProInput v-model="clientForm.firstName" test-id="create-client-first-name" :label="$t('clients.create.firstName')" required />
         <ProInput v-model="clientForm.lastName" test-id="create-client-last-name" :label="$t('clients.create.lastName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
@@ -408,6 +412,17 @@ const clientForm = reactive(emptyClientForm())
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
+const practiceCountryCode = ref<string | null>(null)
+/** Fail-closed : masquer eID tant que le pays cabinet n'est pas connu / ≠ BE. */
+const practiceIsBe = computed(() => (practiceCountryCode.value || '').toUpperCase() === 'BE')
+
+async function loadPracticeCountry() {
+  try {
+    const res: any = await $fetch('/api/vet/overview')
+    const data = res.data ?? res
+    if (data?.countryCode) practiceCountryCode.value = String(data.countryCode).toUpperCase()
+  } catch { /* ignore */ }
+}
 const linkCandidate = ref<{
   userId?: string
   displayName?: string
@@ -612,7 +627,7 @@ const kanbanColumns = computed(() => [
 ])
 
 onMounted(async () => {
-  await Promise.all([loadClients(), loadLinkRequests()])
+  await Promise.all([loadClients(), loadLinkRequests(), loadPracticeCountry()])
   // Ne pas empiler la modale invitations au-dessus d'une consultation (reprise desk / CTA).
   const forceInvites = route.query.invitations === '1'
   if (

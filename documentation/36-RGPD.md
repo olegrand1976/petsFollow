@@ -57,7 +57,7 @@ Aligner périodiquement les pages légales (`nuxtjs/locales/*/legal.privacy`, Fl
 | Droit | Couverture | Chemin |
 |-------|------------|--------|
 | Transparence | Oui | `/legal/privacy`, Flutter legal in-app |
-| Accès / portabilité | Oui (JSON) | `GET /api/v1/me/export` — inclut `imagingStudies` (métadonnées PACS) ; Pro `/settings` + `/commercial/settings` ; Flutter profil |
+| Accès / portabilité | Oui (JSON) | `GET /api/v1/me/export` — inclut `imagingStudies` (métadonnées PACS) + `eidReadings` (audit eID BE hashé, [46](46-EID-BELGIQUE.md)) ; Pro `/settings` + `/commercial/settings` ; Flutter profil |
 | Effacement | Oui | `DELETE /api/v1/me` — client = purge (pets CASCADE `imaging.pet_studies` + delete Orthanc studies best-effort) ; pro = tombstone |
 | Rectification | Partiel | `PATCH /me` (nom, téléphone commercial), locale, mot de passe |
 | Restriction / opposition | Support | `support@ll-it-sc.be` / tickets — pas d’UI dédiée |

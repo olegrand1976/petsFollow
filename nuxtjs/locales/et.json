@@ -1176,6 +1176,10 @@
     "create": "Loo arve",
     "createDocument": "Loo dokument",
     "docType": "Dokumendi tüüp",
+    "sectionDocument": "Dokument",
+    "sectionClient": "Klient",
+    "sectionAddress": "Aadress",
+    "sectionLines": "Read",
     "lineAmountExcl": "Summa käibemaksuta (€)",
     "lineDescription": "Rida — kirjeldus",
     "newDocument": "Uus dokument",
@@ -1242,7 +1246,9 @@
       "qty": "Kogus",
       "unitPrice": "Ühik ilma KM (€)",
       "vat": "KM %",
-      "actions": "Tegevused"
+      "actions": "Tegevused",
+      "lineN": "Rida {n}",
+      "lineSubtotal": "Vahesumma"
     },
     "sendToClient": "Saada kliendile"
   },

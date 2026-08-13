@@ -116,6 +116,13 @@ type Config struct {
 	VamregAfmpsAPIKey  string
 	// PrescriptionsEnabled enables veterinary prescription drafts + PDF preview — default off.
 	PrescriptionsEnabled bool
+	// EidEnabled enables Belgian eID Viewer import + Web eID prefill for BE practices — default off.
+	EidEnabled bool
+	// EidSiteOrigin is the Nuxt Pro origin bound into Web eID tokens (https://host[:port]).
+	// Empty → ProPublicSiteURL.
+	EidSiteOrigin string
+	// WebEidDisableOCSP skips OCSP revocation checks (dev only).
+	WebEidDisableOCSP bool
 	// PacsEnabled enables Orthanc PACS orchestration (status/wake/viewer proxy) — default off.
 	PacsEnabled bool
 	// PacsOrthancURL is the Orthanc Cloud Run / local base URL (no trailing slash).
@@ -278,6 +285,9 @@ func Load() Config {
 		VamregAfmpsBaseURL:          envOr("VAMREG_AFMPS_BASE_URL", ""),
 		VamregAfmpsAPIKey:           envOr("VAMREG_AFMPS_API_KEY", ""),
 		PrescriptionsEnabled:        envBool("PRESCRIPTIONS_ENABLED"),
+		EidEnabled:                  envBool("EID_ENABLED"),
+		EidSiteOrigin:               envOr("EID_SITE_ORIGIN", ""),
+		WebEidDisableOCSP:           envBool("WEB_EID_DISABLE_OCSP"),
 		PacsEnabled:                 envBool("PACS_ENABLED"),
 		PacsOrthancURL:              envOr("PACS_ORTHANC_URL", ""),
 		PacsOrthancUser:             envOr("PACS_ORTHANC_USER", "petsfollow"),
@@ -330,6 +340,17 @@ func Load() Config {
 		SeedNotifyStaff:            envBool("SEED_NOTIFY_STAFF"),
 		AdminStagingSeedEnabled:    envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}
+}
+
+// AllowsInMemoryEidNonce permits the sync.Map Web eID nonce fallback (single-instance only).
+// Staging/prod require Redis so challenge/verify work across Cloud Run replicas.
+func (c Config) AllowsInMemoryEidNonce() bool {
+	env := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	switch env {
+	case "local", "development", "dev", "test":
+		return true
+	}
+	return c.DevSeedEnabled
 }
 
 // ValidateResearch refuses RESEARCH_ENABLED without salt + ETL secret outside seedable envs.

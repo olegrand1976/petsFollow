@@ -207,6 +207,10 @@
             </p>
             <template v-if="canWriteClients && !client.isWalkinPlaceholder">
               <form class="client-identity-edit pro-form" data-testid="client-identity-form" @submit.prevent="saveIdentity">
+                <ProEidReader
+                  :form="identityDraft"
+                  :practice-is-be="practiceIsBe"
+                />
                 <ProInput v-model="identityDraft.firstName" test-id="client-first-name" :label="$t('clients.detail.firstName')" />
                 <ProInput v-model="identityDraft.lastName" test-id="client-last-name" :label="$t('clients.detail.lastName')" />
                 <ProInput
@@ -393,6 +397,17 @@ const identityDraft = reactive({
 const identitySaving = ref(false)
 const identityMsg = ref('')
 const identityError = ref('')
+const practiceCountryCode = ref<string | null>(null)
+/** Fail-closed : masquer eID tant que le pays cabinet n'est pas connu / ≠ BE. */
+const practiceIsBe = computed(() => (practiceCountryCode.value || '').toUpperCase() === 'BE')
+
+async function loadPracticeCountry() {
+  try {
+    const res: any = await $fetch('/api/vet/overview')
+    const data = res.data ?? res
+    if (data?.countryCode) practiceCountryCode.value = String(data.countryCode).toUpperCase()
+  } catch { /* ignore */ }
+}
 
 function syncIdentityDraft(c: ClientRow | null) {
   identityDraft.firstName = c?.firstName || ''
@@ -599,6 +614,7 @@ async function sendAppLink() {
 }
 
 onMounted(async () => {
+  void loadPracticeCountry()
   try {
     const clientRes: any = await $fetch(`/api/clients/${clientId}`)
     client.value = clientRes.data ?? clientRes

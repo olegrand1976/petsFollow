@@ -120,7 +120,7 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
-  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled research_enabled vet_news_enabled client_ai_enabled
+  local pharmacy_enabled billit_enabled prescriptions_enabled eid_enabled pacs_enabled research_enabled vet_news_enabled client_ai_enabled
   local ai_cr_advanced_enabled sms_enabled crewai_base_url crewai_use_id_token
   local afmps_import_object_key
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
@@ -139,6 +139,8 @@ pf_write_api_env_file() {
     pharmacy_enabled="${PHARMACY_ENABLED:-true}"
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
+    # eID BE : Redis requis (nonce Web eID) — staging a Redis ; OCSP live (pas de WEB_EID_DISABLE_OCSP).
+    eid_enabled="${EID_ENABLED:-true}"
     research_enabled="${RESEARCH_ENABLED:-true}"
     vet_news_enabled="${VET_NEWS_ENABLED:-true}"
     client_ai_enabled="${CLIENT_AI_ENABLED:-true}"
@@ -170,6 +172,7 @@ pf_write_api_env_file() {
     pharmacy_enabled="${PHARMACY_ENABLED:-false}"
     billit_enabled="${BILLIT_ENABLED:-false}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
+    eid_enabled="${EID_ENABLED:-false}"
     pacs_enabled="${PACS_ENABLED:-false}"
     research_enabled="${RESEARCH_ENABLED:-false}"
     vet_news_enabled="${VET_NEWS_ENABLED:-false}"
@@ -225,6 +228,8 @@ PHARMACY_WORKERS_ENABLED: "${PHARMACY_WORKERS_ENABLED:-false}"
 BILLIT_ENABLED: "${billit_enabled}"
 BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
+EID_ENABLED: "${eid_enabled}"
+EID_SITE_ORIGIN: "${EID_SITE_ORIGIN:-${PUBLIC_SITE_URL}}"
 PACS_ENABLED: "${pacs_enabled}"
 RESEARCH_ENABLED: "${research_enabled}"
 VET_NEWS_ENABLED: "${vet_news_enabled}"
@@ -289,7 +294,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub pacs_pub research_pub vet_news_pub sites_pub ai_cr_pub
+  local pharmacy_pub billit_pub prescriptions_pub eid_pub pacs_pub research_pub vet_news_pub sites_pub ai_cr_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -298,6 +303,7 @@ pf_write_frontend_env_file() {
     pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-true}"
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
+    eid_pub="${NUXT_PUBLIC_EID_ENABLED:-true}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-true}"
     vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-true}"
     sites_pub="${NUXT_PUBLIC_SITES_UI_ENABLED:-true}"
@@ -311,6 +317,7 @@ pf_write_frontend_env_file() {
     pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-}"
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
+    eid_pub="${NUXT_PUBLIC_EID_ENABLED:-}"
     pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
     research_pub="${NUXT_PUBLIC_RESEARCH_ENABLED:-}"
     vet_news_pub="${NUXT_PUBLIC_VET_NEWS_ENABLED:-}"
@@ -327,6 +334,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$prescriptions_pub" == "true" || "$prescriptions_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PRESCRIPTIONS_ENABLED: \"true\"
+"
+  fi
+  if [[ "$eid_pub" == "true" || "$eid_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_EID_ENABLED: \"true\"
 "
   fi
   if [[ "$pacs_pub" == "true" || "$pacs_pub" == "1" ]]; then

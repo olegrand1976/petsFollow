@@ -52,6 +52,8 @@ export default defineNuxtConfig({
       billitEnabled: publicFeatureFlag('NUXT_PUBLIC_BILLIT_ENABLED'),
       /** Prescriptions (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
       prescriptionsEnabled: publicFeatureFlag('NUXT_PUBLIC_PRESCRIPTIONS_ENABLED'),
+      /** Lecture eID belge (Viewer + Web eID) — mirror EID_ENABLED. */
+      eidEnabled: publicFeatureFlag('NUXT_PUBLIC_EID_ENABLED'),
       /** PACS Orthanc (imagerie DICOM) — mirror PACS_ENABLED. */
       pacsEnabled: publicFeatureFlag('NUXT_PUBLIC_PACS_ENABLED'),
       /** PACS viewer engine: canvas (default) | cornerstone (P2.1 opt-in). */

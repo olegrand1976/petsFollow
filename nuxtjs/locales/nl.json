@@ -1172,6 +1172,10 @@
     "amountRequired": "Geef een geldig bedrag excl. btw op (> 0).",
     "newDocument": "Nieuw document",
     "docType": "Documenttype",
+    "sectionDocument": "Document",
+    "sectionClient": "Klant",
+    "sectionAddress": "Adres",
+    "sectionLines": "Regels",
     "typeInvoice": "Factuur",
     "typeCreditNote": "Creditnota",
     "typeProforma": "Proforma / offerte",
@@ -1242,7 +1246,9 @@
       "qty": "Aantal",
       "unitPrice": "EP excl. (€)",
       "vat": "Btw %",
-      "actions": "Acties"
+      "actions": "Acties",
+      "lineN": "Regel {n}",
+      "lineSubtotal": "Subtotaal"
     },
     "sendToClient": "Naar klant sturen"
   },

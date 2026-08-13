@@ -71,6 +71,22 @@ func (c *Client) SetNX(ctx context.Context, k, v string, ttl time.Duration) (boo
 	return c.rdb.SetNX(ctx, c.key(k), v, ttl).Result()
 }
 
+// GetDel atomically gets and deletes a key. Returns redis.Nil when missing.
+func (c *Client) GetDel(ctx context.Context, k string) (string, error) {
+	if c == nil || c.rdb == nil {
+		return "", redis.Nil
+	}
+	return c.rdb.GetDel(ctx, c.key(k)).Result()
+}
+
+// Del removes a key.
+func (c *Client) Del(ctx context.Context, k string) error {
+	if c == nil || c.rdb == nil {
+		return nil
+	}
+	return c.rdb.Del(ctx, c.key(k)).Err()
+}
+
 func (c *Client) LPush(ctx context.Context, k string, values ...any) error {
 	if c == nil || c.rdb == nil {
 		return nil

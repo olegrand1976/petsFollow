@@ -1881,6 +1881,10 @@
     "amountRequired": "Indiquez un montant HT valide (> 0).",
     "newDocument": "Nouveau document",
     "docType": "Type de document",
+    "sectionDocument": "Document",
+    "sectionClient": "Client",
+    "sectionAddress": "Adresse",
+    "sectionLines": "Lignes",
     "typeInvoice": "Facture",
     "typeCreditNote": "Note de crédit",
     "typeProforma": "Proforma / devis",
@@ -1951,7 +1955,9 @@
       "qty": "Qté",
       "unitPrice": "PU HT (€)",
       "vat": "TVA %",
-      "actions": "Actions"
+      "actions": "Actions",
+      "lineN": "Ligne {n}",
+      "lineSubtotal": "Sous-total"
     },
     "sendToClient": "Envoyer au client"
   },

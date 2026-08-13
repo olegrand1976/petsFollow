@@ -20,6 +20,7 @@
     "@tiptap/pm": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
     "@tiptap/vue-3": "^3.29.2",
+    "@web-eid/web-eid-library": "github:web-eid/web-eid.js#v2.1.0-beta.2",
     "isomorphic-dompurify": "^3.19.0",
     "marked": "^18.0.7",
     "mermaid": "^11.6.0",

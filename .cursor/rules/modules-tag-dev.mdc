@@ -28,6 +28,7 @@ V1 = brouillons + preview fiche PDF + pré-remplissage IA depuis CR. Ne pas pré
 
 - Facturation `/invoicing` — Billit — `BILLIT_ENABLED` / `NUXT_PUBLIC_BILLIT_ENABLED` (nav + API) ; UI métier + CTA Facturer gated par `INVOICING_UI_ENABLED` ([`nuxtjs/utils/invoicing-ui.ts`](../../nuxtjs/utils/invoicing-ui.ts), `false` = écran WIP)
 - Pharmacie `/medicaments`, `/stock`, `/daf` — `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED`
+- **eID BE** préremplissage Nouveau client / Identité (`ProEidReader`) — `EID_ENABLED` / `NUXT_PUBLIC_EID_ENABLED` — doc [`46-EID-BELGIQUE.md`](documentation/46-EID-BELGIQUE.md) (Viewer `.eid` + Web eID ; Redis obligatoire hors local)
 - **PACS** onglet Imagerie fiche animal + `/admin/pacs` — `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` — doc [`40-PACS.md`](documentation/40-PACS.md)
 - **AFMPS / Compendium** admin `/admin/afmps-imports` + `/admin/compendium-imports` — même flag `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED` — doc [`27-PHARMACIE-BELGIQUE.md`](documentation/27-PHARMACIE-BELGIQUE.md) (triple contrôle CSV ; PDF + matching CNK)
 - **Research** `/research` (+ `/admin/research` opt-ins) — `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` — doc [`42-RESEARCH.md`](documentation/42-RESEARCH.md)

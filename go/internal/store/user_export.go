@@ -205,6 +205,18 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			'updatedAt', t.updated_at
 		) ORDER BY t.updated_at), '[]'::jsonb)
 			FROM notifications.device_tokens t WHERE t.user_id = $1`,
+		// Audit lectures eID BE effectuées par le pro (NISS hashé, pas de brut).
+		"eidReadings": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'id', r.id,
+			'practiceId', r.practice_id,
+			'tool', r.tool,
+			'success', r.success,
+			'fieldsRead', r.fields_read,
+			'nissHash', r.niss_hash,
+			'errorCode', r.error_code,
+			'createdAt', r.created_at
+		) ORDER BY r.created_at), '[]'::jsonb)
+			FROM practice.eid_readings r WHERE r.user_id = $1`,
 		"smsNotifications": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
 			'kind', l.kind,
 			'toPhone', l.to_phone,

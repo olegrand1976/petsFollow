@@ -47,6 +47,7 @@ Index des documents de référence du projet.
 | 42 | [42-RESEARCH.md](42-RESEARCH.md) | petsFollow Research — observatoire épidémio anonymisé (tag `dev`) |
 | 44 | [44-SMS-TELNYX.md](44-SMS-TELNYX.md) | SMS transactionnel Telnyx — confirmation / rappel J-1 / reprogrammation RDV (tag `dev`, dry-run) |
 | 45 | [45-PHARMACY-P0-SPECS.md](45-PHARMACY-P0-SPECS.md) | P0-4…7 — décisions produit finalisées (☐ validation juridique/commercial) |
+| 46 | [46-EID-BELGIQUE.md](46-EID-BELGIQUE.md) | Lecture eID belge — préremplissage client Pro (Viewer + Web eID) |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

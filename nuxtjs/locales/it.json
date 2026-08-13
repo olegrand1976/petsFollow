@@ -1841,6 +1841,10 @@
     "create": "Crea la fattura",
     "createDocument": "Crea il documento",
     "docType": "Tipo di documento",
+    "sectionDocument": "Documento",
+    "sectionClient": "Cliente",
+    "sectionAddress": "Indirizzo",
+    "sectionLines": "Righe",
     "lineAmountExcl": "Importo IVA esclusa (€)",
     "lineDescription": "Riga — descrizione",
     "newDocument": "Nuovo documento",
@@ -1907,7 +1911,9 @@
       "qty": "Qtà",
       "unitPrice": "PU IVA escl. (€)",
       "vat": "IVA %",
-      "actions": "Azioni"
+      "actions": "Azioni",
+      "lineN": "Riga {n}",
+      "lineSubtotal": "Subtotale"
     },
     "sendToClient": "Invia al cliente"
   },

@@ -51,3 +51,53 @@ test('création client : le type particulier masque TVA et n° d\'entreprise', a
   await page.getByTestId('create-client-billing-customer-kind').selectOption('business')
   await expect(page.getByTestId('create-client-billing-vat')).toBeVisible()
 })
+
+test('création client : prefill eID Viewer (mock BFF)', async ({ page }) => {
+  await loginAsVet(page)
+  await page.goto('/clients')
+  await expect(page.getByTestId('clients-page')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await dismissProModals(page)
+
+  await page.route('**/api/vet/eid/import', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          firstname: 'Camille',
+          lastname: 'Testeur',
+          niss: '96072399828',
+          country: 'BE',
+          address_street: 'Rue Demo 1',
+          address_zip: '1000',
+          address_city: 'Bruxelles',
+          import_tool: 'eid_viewer_xml',
+        },
+      }),
+    })
+  })
+
+  await page.getByTestId('create-client-open').click()
+  const eid = page.getByTestId('eid-reader')
+  // Flag off / cabinet non-BE → skip soft (pas d’échec CI).
+  if (!(await eid.isVisible().catch(() => false))) {
+    test.skip(true, 'eID UI masquée (NUXT_PUBLIC_EID_ENABLED / cabinet BE)')
+    return
+  }
+
+  await page.getByTestId('eid-import-input').setInputFiles({
+    name: 'sample_valid.eid',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      '<?xml version="1.0"?><Export><surname>Testeur</surname><firstname>Camille</firstname><nationalnumber>96072399828</nationalnumber></Export>',
+    ),
+  })
+  await expect(page.getByTestId('create-client-first-name')).toHaveValue('Camille', { timeout: 10000 })
+  await expect(page.getByTestId('create-client-last-name')).toHaveValue('Testeur')
+  await expect(page.getByTestId('create-client-niss')).toHaveValue('96072399828')
+  await expect(page.getByTestId('create-client-billing-country')).toHaveValue('BE')
+  await expect(page.getByTestId('create-client-billing-postal')).toHaveValue('1000')
+  await expect(page.getByTestId('eid-reader-msg')).toBeVisible()
+})
+

@@ -1176,6 +1176,10 @@
     "create": "Crear la factura",
     "createDocument": "Crear el documento",
     "docType": "Tipo de documento",
+    "sectionDocument": "Documento",
+    "sectionClient": "Cliente",
+    "sectionAddress": "Dirección",
+    "sectionLines": "Líneas",
     "lineAmountExcl": "Importe sin IVA (€)",
     "lineDescription": "Línea — descripción",
     "newDocument": "Nuevo documento",
@@ -1242,7 +1246,9 @@
       "qty": "Cant.",
       "unitPrice": "PU s/IVA (€)",
       "vat": "IVA %",
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "lineN": "Línea {n}",
+      "lineSubtotal": "Subtotal"
     },
     "sendToClient": "Enviar al cliente"
   },

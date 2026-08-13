@@ -109,6 +109,14 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	// montage) et dry-run — aucun appel Telnyx. Les tests injectent un faux Sender.
 	_ = os.Setenv("SMS_ENABLED", "true")
 	_ = os.Setenv("SMS_DRY_RUN", "true")
+	// eID BE : monté par défaut en intégration (Viewer import). Extinction via t.Setenv("EID_ENABLED","false").
+	if os.Getenv("EID_ENABLED") == "" {
+		_ = os.Setenv("EID_ENABLED", "true")
+	}
+	_ = os.Setenv("WEB_EID_DISABLE_OCSP", "true")
+	if os.Getenv("EID_SITE_ORIGIN") == "" {
+		_ = os.Setenv("EID_SITE_ORIGIN", "http://localhost:3002")
+	}
 	// seed.Run refuse de tourner hors environnement seedable (allowlist APP_ENV).
 	_ = os.Setenv("APP_ENV", "test")
 	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).
