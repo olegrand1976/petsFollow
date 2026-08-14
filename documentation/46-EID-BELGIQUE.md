@@ -30,8 +30,32 @@ naissance persistée sur le compte client.
 
 `make api-dev` / `make nuxtjs-dev` posent ces flags à `true` en local.
 Staging Cloud Run : `EID_ENABLED` + `NUXT_PUBLIC_EID_ENABLED` on par défaut
-(`infra/gcp/lib/deploy-run-args.sh`) ; prod opt-in. Module tag **dev**
+(`infra/gcp/lib/deploy-run-args.sh`) ; **prod opt-in** (défaut `false`). Module tag **dev**
 (badge `nav.tagDev` sur `ProEidReader`).
+
+### Production (checklist)
+
+Les CA belges sont **embarqués dans le binaire API** (`//go:embed certs/*.crt`) —
+pas d’upload GCS / Secret Manager. Au prochain `deploy-gcp-prod` qui inclut le
+pack (~430 CA, commit trust store sur `staging` / `main`), elles sont déjà là.
+
+Pour activer le module sur prod (toujours tag `dev` côté UI) :
+
+1. Merge / promote le commit trust store jusqu’à la branche déployée en prod.
+2. Deploy : `workflow_dispatch` [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml)
+   ou `make gcp-deploy-prod`, avec opt-in explicite :
+   - `EID_ENABLED=true`
+   - `NUXT_PUBLIC_EID_ENABLED=true`
+   - `EID_SITE_ORIGIN=https://petsfollow.app` (ou laisser le défaut =
+     `PETSFOLLOW_PUBLIC_SITE_URL`)
+3. Prérequis : Redis prod branché (`REDIS_ADDR`) — sinon `503 eid_redis_required`.
+   OCSP **live** (ne pas poser `WEB_EID_DISABLE_OCSP` en prod — fail-fast au boot).
+4. Post-deploy : `make smoke-eid` contre l’API prod **uniquement** si un compte
+   véto BE de test existe (le smoke écrit un `eid_readings`) ; sinon QA terrain
+   Web eID sur https://petsfollow.app + carte réelle.
+
+Ne pas activer en prod tant que le parcours n’est pas validé en staging (PIN réel).
+
 
 L’API refuse aussi les cabinets dont `practice.country_code ≠ BE`
 (`eid_not_available`).
