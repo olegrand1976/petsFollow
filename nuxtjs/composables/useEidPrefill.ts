@@ -171,7 +171,7 @@ export function useEidPrefill() {
     // even when the same install works on staging — skip hard gate and try authenticate.
     const st = await checkWebEidStatus()
     if (!onLoopback) {
-      if (!st.ok) {
+      if (st.ok === false) {
         throw new Error(st.code || 'web_eid_unavailable', { cause: new Error(st.message) })
       }
       if (!st.hasExtension) {
