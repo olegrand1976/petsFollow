@@ -28,10 +28,10 @@ Envoyer un message depuis le cabinet (Web **ou** app Pro Light) et le retrouver 
 
 1. **Web** — login `vet.demo` → **Messages** → ouvrir le thread avec `client.demo` (ou le client seed correspondant).
 2. Envoyer un message texte unique (ex. `UC-X-01 web 14:32`).
-3. **App client** — login `client.demo` → onglet **Messages** → ouvrir le même fil → vérifier le message.
-4. (Optionnel) Répondre depuis l’app client → rafraîchir le thread côté Web.
-5. **App Pro Light staff** — login `vet.demo` → onglet **Messages** → composer/texte utilisable → envoyer un second message (ex. `UC-X-01 mobile 14:35`) → vérifier côté client.
-6. **App Pro Light care_pro** — login `vetlight.demo` → onglet **Messages** → composer vers `client.demo` / Spirit → envoyer (ex. `UC-X-01 care 14:40`) → vérifier côté client (fil distinct du cabinet) → (optionnel) réponse client.
+3. **App client** — login `client.demo` → onglet **Messages** → choisir le **véto** puis l’**animal** dans les 2 selects du haut → vérifier le message du même fil.
+4. (Optionnel) Répondre depuis l’app client (zone texte en bas) → rafraîchir le thread côté Web.
+5. **App Pro Light staff** — login `vet.demo` → onglet **Messages** → selects **client / animal** → zone texte → envoyer un second message (ex. `UC-X-01 mobile 14:35`) → vérifier côté client.
+6. **App Pro Light care_pro** — login `vetlight.demo` → onglet **Messages** → selects `client.demo` / Spirit → envoyer (ex. `UC-X-01 care 14:40`) → vérifier côté client (fil distinct du cabinet) → (optionnel) réponse client.
 
 ## Résultat attendu
 

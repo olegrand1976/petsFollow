@@ -77,7 +77,7 @@ void main() {
     expect(find.text('Filmer une vidéo'), findsOneWidget);
   });
 
-  testWidgets('messaging locked and compose keys are findable', (tester) async {
+  testWidgets('messaging select and locked keys are findable', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr'),
@@ -87,22 +87,28 @@ void main() {
           builder: (context) {
             final l10n = AppLocalizations.of(context)!;
             return Scaffold(
-              floatingActionButton: FloatingActionButton.extended(
-                key: const Key('message_compose_fab'),
-                onPressed: () {},
-                label: Text(l10n.messageNewConversation),
-              ),
               body: Column(
                 children: [
+                  DropdownButtonFormField<String>(
+                    key: const Key('message_select_vet'),
+                    value: 'p1',
+                    items: const [
+                      DropdownMenuItem(value: 'p1', child: Text('VetPlus')),
+                    ],
+                    onChanged: (_) {},
+                  ),
+                  DropdownButtonFormField<String>(
+                    key: const Key('message_select_pet'),
+                    value: 'pet-1',
+                    items: const [
+                      DropdownMenuItem(value: 'pet-1', child: Text('Rex')),
+                    ],
+                    onChanged: (_) {},
+                  ),
                   FilledButton(
                     key: const Key('message_link_vet_cta'),
                     onPressed: () {},
                     child: Text(l10n.linkVetAfterSaveTitle),
-                  ),
-                  FilledButton(
-                    key: const Key('message_compose_confirm'),
-                    onPressed: () {},
-                    child: Text(l10n.messageStartConversation),
                   ),
                 ],
               ),
@@ -111,9 +117,9 @@ void main() {
         ),
       ),
     );
-    expect(find.byKey(const Key('message_compose_fab')), findsOneWidget);
+    expect(find.byKey(const Key('message_select_vet')), findsOneWidget);
+    expect(find.byKey(const Key('message_select_pet')), findsOneWidget);
     expect(find.byKey(const Key('message_link_vet_cta')), findsOneWidget);
-    expect(find.byKey(const Key('message_compose_confirm')), findsOneWidget);
   });
 
   testWidgets('preconsult_submit and commercial_logout keys', (tester) async {

@@ -68,9 +68,17 @@ class _MessagingScreenState extends State<MessagingScreen>
   bool loading = true;
   bool sending = false;
   bool _refreshing = false;
+  bool _ensuringThread = false;
+  /// Bumped on each selection apply so stale ensure/load responses are ignored.
+  int _selectionEpoch = 0;
   bool _hasLinkedVets = true;
   List<Pet> _clientPets = [];
-  bool _autoComposeAttempted = false;
+  List<VetLink> _vets = [];
+  List<Map<String, dynamic>> _staffClients = [];
+  List<Map<String, dynamic>> _staffPets = [];
+  String? _selectedPracticeId;
+  String? _selectedClientId;
+  String? _selectedPetId;
   Timer? _pollTimer;
 
   @override
@@ -81,22 +89,13 @@ class _MessagingScreenState extends State<MessagingScreen>
     if (widget.embedded) {
       PushNavigation.instance.onOpenMessageThread = _openThreadFromPush;
     }
+    _staffClients = List<Map<String, dynamic>>.from(widget.staffClients);
+    _staffPets = List<Map<String, dynamic>>.from(widget.staffPets);
     initThreads().then((_) {
       if (!mounted) return;
       _consumePendingPushThread();
       if (widget.active) _startPolling();
-      _maybeAutoComposeClient();
     });
-  }
-
-  /// Client mode only: when the thread list is empty but the client already has
-  /// linked vets, jump straight into the compose wizard instead of an empty screen.
-  /// Guarded by [_autoComposeAttempted] so it only ever fires once per screen instance.
-  void _maybeAutoComposeClient() {
-    if (widget.staffMode || _autoComposeAttempted) return;
-    if (!_hasLinkedVets || threads.isNotEmpty || _clientPets.isEmpty) return;
-    _autoComposeAttempted = true;
-    _composeConversationClient();
   }
 
   void _consumePendingPushThread() {
@@ -109,6 +108,12 @@ class _MessagingScreenState extends State<MessagingScreen>
   @override
   void didUpdateWidget(MessagingScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(widget.staffClients, oldWidget.staffClients)) {
+      _staffClients = List<Map<String, dynamic>>.from(widget.staffClients);
+    }
+    if (!identical(widget.staffPets, oldWidget.staffPets)) {
+      _staffPets = List<Map<String, dynamic>>.from(widget.staffPets);
+    }
     if (widget.active && !oldWidget.active) {
       _silentRefresh();
       _startPolling();
@@ -166,9 +171,11 @@ class _MessagingScreenState extends State<MessagingScreen>
 
   Future<void> initThreads() async {
     if (mounted) setState(() => loading = true);
-    await _fetchThreadsAndMessages(showErrors: true);
+    // Load lists/threads without blocking the shell on ensure POST.
+    await _fetchThreadsAndMessages(showErrors: true, ensureMissing: false);
     if (threadId != null) await _markThreadReadIfNeeded(threadId!);
     if (mounted) setState(() => loading = false);
+    await _applySelection(ensureIfMissing: true);
   }
 
   /// Refresh threads + open conversation without blanking the UI.
@@ -176,21 +183,337 @@ class _MessagingScreenState extends State<MessagingScreen>
     if (_refreshing || !mounted) return;
     _refreshing = true;
     try {
-      await _fetchThreadsAndMessages(showErrors: false);
+      await _fetchThreadsAndMessages(showErrors: false, ensureMissing: false);
     } finally {
       _refreshing = false;
     }
   }
 
-  Future<void> _fetchThreadsAndMessages({required bool showErrors}) async {
+  String _clientIdOf(Map<String, dynamic> c) =>
+      (c['userId'] as String?) ?? (c['id'] as String?) ?? '';
+
+  List<Pet> _petsForSelectedVet() {
+    final practiceId = _selectedPracticeId;
+    if (practiceId == null || practiceId.isEmpty) return _clientPets;
+    return _clientPets.where((p) {
+      final pid = p.practiceId?.trim() ?? '';
+      return pid.isEmpty || pid == practiceId;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _petsForSelectedClient() {
+    final clientId = _selectedClientId;
+    if (clientId == null || clientId.isEmpty) return const [];
+    return _staffPets.where((p) {
+      final owner = (p['ownerUserId'] as String?) ??
+          (p['clientUserId'] as String?) ??
+          '';
+      return owner == clientId;
+    }).toList();
+  }
+
+  bool get _selectionComplete {
+    if (widget.staffMode) {
+      return _selectedClientId != null && _selectedClientId!.isNotEmpty;
+    }
+    return _selectedPracticeId != null &&
+        _selectedPracticeId!.isNotEmpty &&
+        _selectedPetId != null &&
+        _selectedPetId!.isNotEmpty;
+  }
+
+  String _incompleteSelectionHint(AppLocalizations l10n) {
+    if (widget.staffMode) {
+      if (_selectedClientId == null || _selectedClientId!.isEmpty) {
+        return l10n.messageChooseClient;
+      }
+      return l10n.messageChoosePetOptional;
+    }
+    if (_selectedPracticeId == null || _selectedPracticeId!.isEmpty) {
+      return l10n.messageChoosePro;
+    }
+    return l10n.messageChoosePet;
+  }
+
+  int _unreadSum({
+    String? practiceId,
+    String? clientId,
+    String? petId,
+    bool generalPetOnly = false,
+  }) {
+    var total = 0;
+    for (final t in threads) {
+      if (practiceId != null && t.practiceId != practiceId) continue;
+      if (clientId != null && t.clientUserId != clientId) continue;
+      if (generalPetOnly) {
+        if ((t.petId ?? '').trim().isNotEmpty) continue;
+      } else if (petId != null && t.petId != petId) {
+        continue;
+      }
+      total += t.unreadCount;
+    }
+    return total;
+  }
+
+  String _labelWithUnread(String label, int unread) {
+    if (unread <= 0) return label;
+    return '$label ($unread)';
+  }
+
+  MessageThread? _findThreadForSelection() {
+    if (!_selectionComplete) return null;
+    if (widget.staffMode) {
+      final clientId = _selectedClientId!;
+      final petId = _selectedPetId;
+      return threads.where((t) {
+        if (t.clientUserId != clientId) return false;
+        final tp = t.petId?.trim() ?? '';
+        final want = petId?.trim() ?? '';
+        return tp == want;
+      }).firstOrNull;
+    }
+    final practiceId = _selectedPracticeId!;
+    final petId = _selectedPetId!;
+    return threads
+        .where((t) => t.practiceId == practiceId && t.petId == petId)
+        .firstOrNull;
+  }
+
+  void _syncSelectionFromThread(MessageThread t) {
+    if (widget.staffMode) {
+      _selectedClientId = t.clientUserId;
+      _selectedPetId = t.petId;
+    } else {
+      _selectedPracticeId = t.practiceId;
+      _selectedPetId = t.petId;
+    }
+  }
+
+  void _bootstrapSelection() {
+    final preferredPet = widget.initialPetId?.trim();
+
+    if (threadId != null) {
+      final current = threads.where((t) => t.id == threadId).firstOrNull;
+      if (current != null) {
+        _syncSelectionFromThread(current);
+        return;
+      }
+    }
+
+    if (preferredPet != null && preferredPet.isNotEmpty) {
+      final byPet = threads.where((t) => t.petId == preferredPet).firstOrNull;
+      if (byPet != null) {
+        threadId = byPet.id;
+        _syncSelectionFromThread(byPet);
+        return;
+      }
+      _selectedPetId = preferredPet;
+    }
+
+    if (widget.staffMode) {
+      if (_selectedClientId != null &&
+          _staffClients.any((c) => _clientIdOf(c) == _selectedClientId)) {
+        final pets = _petsForSelectedClient();
+        if (_selectedPetId != null &&
+            !pets.any((p) => p['id'] == _selectedPetId)) {
+          _selectedPetId = null;
+        }
+        return;
+      }
+      if (threads.isNotEmpty) {
+        threadId = threads.first.id;
+        _syncSelectionFromThread(threads.first);
+        return;
+      }
+      if (_staffClients.length == 1) {
+        _selectedClientId = _clientIdOf(_staffClients.first);
+        final pets = _petsForSelectedClient();
+        if (pets.length == 1) {
+          _selectedPetId = pets.first['id'] as String?;
+        }
+      }
+      return;
+    }
+
+    if (_selectedPracticeId != null &&
+        _vets.any((v) => v.practiceId == _selectedPracticeId)) {
+      final pets = _petsForSelectedVet();
+      if (_selectedPetId != null && !pets.any((p) => p.id == _selectedPetId)) {
+        _selectedPetId = pets.length == 1 ? pets.first.id : null;
+      }
+      return;
+    }
+
+    if (threads.isNotEmpty) {
+      threadId = threads.first.id;
+      _syncSelectionFromThread(threads.first);
+      return;
+    }
+
+    if (_vets.length == 1) {
+      _selectedPracticeId = _vets.first.practiceId;
+    } else if (_vets.isNotEmpty && _selectedPracticeId == null) {
+      _selectedPracticeId = _vets.first.practiceId;
+    }
+    final pets = _petsForSelectedVet();
+    if (_selectedPetId == null && pets.length == 1) {
+      _selectedPetId = pets.first.id;
+    } else if (_selectedPetId == null &&
+        preferredPet != null &&
+        pets.any((p) => p.id == preferredPet)) {
+      _selectedPetId = preferredPet;
+    } else if (_selectedPetId == null && pets.isNotEmpty) {
+      _selectedPetId = pets.first.id;
+    }
+  }
+
+  Future<void> _applySelection({required bool ensureIfMissing}) async {
+    final epoch = ++_selectionEpoch;
+
+    if (!_selectionComplete) {
+      if (!mounted || epoch != _selectionEpoch) return;
+      setState(() {
+        threadId = null;
+        messages = const [];
+        _ensuringThread = false;
+      });
+      return;
+    }
+
+    final existing = _findThreadForSelection();
+    if (existing != null) {
+      if (epoch != _selectionEpoch) return;
+      if (existing.id != threadId) {
+        await selectThread(existing.id);
+      } else {
+        await loadMessages();
+        if (epoch != _selectionEpoch) return;
+        await _markThreadReadIfNeeded(existing.id);
+      }
+      if (mounted && epoch == _selectionEpoch && _ensuringThread) {
+        setState(() => _ensuringThread = false);
+      }
+      return;
+    }
+
+    if (!ensureIfMissing) {
+      if (!mounted || epoch != _selectionEpoch) return;
+      setState(() {
+        threadId = null;
+        messages = const [];
+        _ensuringThread = false;
+      });
+      return;
+    }
+
+    if (mounted) setState(() => _ensuringThread = true);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final MessageThread thread;
+      if (widget.staffMode) {
+        thread = await ApiClient.instance.ensureMessageThread(
+          clientUserId: _selectedClientId,
+          petId: _selectedPetId,
+        );
+      } else {
+        thread = await ApiClient.instance.ensureMessageThread(
+          practiceId: _selectedPracticeId,
+          petId: _selectedPetId,
+        );
+      }
+      if (!mounted || epoch != _selectionEpoch) return;
+      setState(() {
+        if (!threads.any((t) => t.id == thread.id)) {
+          threads = [thread, ...threads];
+        }
+        threadId = thread.id;
+        _ensuringThread = false;
+      });
+      await loadMessages();
+      if (epoch != _selectionEpoch) return;
+      await _markThreadReadIfNeeded(thread.id);
+    } catch (e) {
+      if (mounted && epoch == _selectionEpoch) {
+        setState(() => _ensuringThread = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mapApiError(e, l10n))),
+        );
+      }
+    } finally {
+      if (mounted && epoch == _selectionEpoch && _ensuringThread) {
+        setState(() => _ensuringThread = false);
+      }
+    }
+  }
+
+  Future<void> _onPrimaryChanged(String? id) async {
+    setState(() {
+      if (widget.staffMode) {
+        _selectedClientId = id;
+        final pets = _petsForSelectedClient();
+        if (_selectedPetId == null ||
+            !pets.any((p) => p['id'] == _selectedPetId)) {
+          _selectedPetId = pets.length == 1 ? pets.first['id'] as String? : null;
+        }
+      } else {
+        _selectedPracticeId = id;
+        final pets = _petsForSelectedVet();
+        if (_selectedPetId == null ||
+            !pets.any((p) => p.id == _selectedPetId)) {
+          _selectedPetId = pets.length == 1 ? pets.first.id : null;
+        }
+      }
+      threadId = null;
+      messages = const [];
+      draft.clear();
+    });
+    await _applySelection(ensureIfMissing: true);
+  }
+
+  Future<void> _onPetChanged(String? id) async {
+    setState(() {
+      _selectedPetId = (id == null || id.isEmpty) ? null : id;
+      threadId = null;
+      messages = const [];
+      draft.clear();
+    });
+    await _applySelection(ensureIfMissing: true);
+  }
+
+  Future<void> _fetchThreadsAndMessages({
+    required bool showErrors,
+    required bool ensureMissing,
+  }) async {
     try {
       if (currentUserId == null) {
         final me = await ApiClient.instance.getMe();
         currentUserId = me['userId'] as String? ?? me['id'] as String?;
       }
-      List<VetLink> vets = [];
+      List<VetLink> vets = _vets;
       List<Pet> clientPets = _clientPets;
-      if (!widget.staffMode) {
+      var staffClients = _staffClients;
+      var staffPets = _staffPets;
+
+      if (widget.staffMode) {
+        if (staffClients.isEmpty) {
+          try {
+            final raw = await ApiClient.instance.listVetClients();
+            staffClients = raw
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList();
+          } catch (_) {}
+        }
+        if (staffPets.isEmpty) {
+          try {
+            final raw = await ApiClient.instance.listVetPets();
+            staffPets = raw
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList();
+          } catch (_) {}
+        }
+      } else {
         try {
           vets = await ApiClient.instance.getMyVets();
         } catch (_) {}
@@ -203,6 +526,7 @@ class _MessagingScreenState extends State<MessagingScreen>
               .toList();
         } catch (_) {}
       }
+
       final rawThreads = await ApiClient.instance.getMessageThreads();
       final enriched = rawThreads.map((t) {
         if (widget.staffMode) return t;
@@ -216,33 +540,23 @@ class _MessagingScreenState extends State<MessagingScreen>
               : vet?.vetFullName,
         );
       }).toList();
-      var nextThreadId = threadId;
-      if (enriched.isNotEmpty &&
-          (nextThreadId == null ||
-              !enriched.any((t) => t.id == nextThreadId))) {
-        final preferredPet = widget.initialPetId?.trim();
-        if (preferredPet != null && preferredPet.isNotEmpty) {
-          nextThreadId = enriched
-              .where((t) => t.petId == preferredPet)
-              .map((t) => t.id)
-              .firstOrNull;
-        }
-        nextThreadId ??= enriched.first.id;
-      }
-      if (enriched.isEmpty) nextThreadId = null;
-      List<ChatMessage> nextMessages = const [];
-      if (nextThreadId != null) {
-        nextMessages = await ApiClient.instance.getChatMessages(nextThreadId);
-      }
+
       if (!mounted) return;
       setState(() {
         _hasLinkedVets = widget.staffMode || vets.isNotEmpty;
         _clientPets = clientPets;
+        _vets = vets;
+        _staffClients = staffClients;
+        _staffPets = staffPets;
         threads = enriched;
-        threadId = nextThreadId;
-        messages = nextMessages;
+        if (threadId != null && !enriched.any((t) => t.id == threadId)) {
+          threadId = null;
+          messages = const [];
+        }
+        _bootstrapSelection();
       });
       _emitUnreadTotal();
+      await _applySelection(ensureIfMissing: ensureMissing);
     } catch (e) {
       if (showErrors && mounted) {
         final l10n = AppLocalizations.of(context)!;
@@ -264,7 +578,11 @@ class _MessagingScreenState extends State<MessagingScreen>
   }
 
   Future<void> selectThread(String id) async {
-    setState(() => threadId = id);
+    final t = threads.where((x) => x.id == id).firstOrNull;
+    setState(() {
+      threadId = id;
+      if (t != null) _syncSelectionFromThread(t);
+    });
     await loadMessages();
     await _markThreadReadIfNeeded(id);
   }
@@ -535,6 +853,243 @@ class _MessagingScreenState extends State<MessagingScreen>
     }
   }
 
+  Widget _buildSelectionBar(AppLocalizations l10n) {
+    if (widget.staffMode) {
+      final clientValue = _selectedClientId != null &&
+              _staffClients.any((c) => _clientIdOf(c) == _selectedClientId)
+          ? _selectedClientId
+          : null;
+      final petItems = _petsForSelectedClient();
+      final petValue = _selectedPetId != null &&
+              petItems.any((pet) => pet['id'] == _selectedPetId)
+          ? _selectedPetId
+          : '';
+
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        child: Column(
+          children: [
+            KeyedSubtree(
+              key: const Key('message_select_client'),
+              child: DropdownButtonFormField<String>(
+                key: ValueKey('staff_client_${clientValue ?? ''}'),
+                initialValue: clientValue,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: l10n.messageChooseClient,
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                items: _staffClients.map((c) {
+                  final id = _clientIdOf(c);
+                  final name = (c['fullName'] as String?) ??
+                      (c['email'] as String?) ??
+                      id;
+                  final unread = _unreadSum(clientId: id);
+                  return DropdownMenuItem(
+                    key: Key('message_select_client_item_$id'),
+                    value: id,
+                    child: Text(
+                      _labelWithUnread(name, unread),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: _onPrimaryChanged,
+              ),
+            ),
+            const SizedBox(height: 8),
+            KeyedSubtree(
+              key: const Key('message_select_pet'),
+              child: DropdownButtonFormField<String>(
+                key: ValueKey('staff_pet_${clientValue ?? ''}_$petValue'),
+                initialValue: petValue,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: l10n.messageChoosePetOptional,
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    key: const Key('message_select_pet_none'),
+                    value: '',
+                    child: Text(
+                      _labelWithUnread(
+                        l10n.messageGeneralThread,
+                        clientValue == null
+                            ? 0
+                            : _unreadSum(
+                                clientId: clientValue,
+                                generalPetOnly: true,
+                              ),
+                      ),
+                    ),
+                  ),
+                  ...petItems.map((pet) {
+                    final pid = pet['id'] as String? ?? '';
+                    final pname = pet['name'] as String? ?? pid;
+                    final unread = clientValue == null
+                        ? 0
+                        : _unreadSum(clientId: clientValue, petId: pid);
+                    return DropdownMenuItem(
+                      key: Key('message_select_pet_item_$pid'),
+                      value: pid,
+                      child: Text(
+                        _labelWithUnread(pname, unread),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }),
+                ],
+                onChanged: clientValue == null ? null : _onPetChanged,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final practiceValue = _selectedPracticeId != null &&
+            _vets.any((v) => v.practiceId == _selectedPracticeId)
+        ? _selectedPracticeId
+        : null;
+    final petItems = _petsForSelectedVet();
+    final petValue = _selectedPetId != null &&
+            petItems.any((pet) => pet.id == _selectedPetId)
+        ? _selectedPetId
+        : null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Column(
+        children: [
+          KeyedSubtree(
+            key: const Key('message_select_vet'),
+            child: DropdownButtonFormField<String>(
+              key: ValueKey('client_vet_${practiceValue ?? ''}'),
+              initialValue: practiceValue,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: l10n.messageChoosePro,
+                border: const OutlineInputBorder(),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: _vets.map((v) {
+                final label = v.practiceName.isNotEmpty
+                    ? v.practiceName
+                    : v.vetFullName;
+                final base = v.vetFullName.isNotEmpty && v.practiceName.isNotEmpty
+                    ? '$label · ${v.vetFullName}'
+                    : label;
+                final unread = _unreadSum(practiceId: v.practiceId);
+                return DropdownMenuItem(
+                  key: Key('message_select_vet_item_${v.practiceId}'),
+                  value: v.practiceId,
+                  child: Text(
+                    _labelWithUnread(base, unread),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: _onPrimaryChanged,
+            ),
+          ),
+          const SizedBox(height: 8),
+          KeyedSubtree(
+            key: const Key('message_select_pet'),
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(
+                  'client_pet_${practiceValue ?? ''}_${petValue ?? ''}'),
+              initialValue: petValue,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: l10n.messageChoosePet,
+                border: const OutlineInputBorder(),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                hintText: petItems.isEmpty ? l10n.emptyPetsTitle : null,
+              ),
+              items: petItems
+                  .map(
+                    (pet) => DropdownMenuItem(
+                      key: Key('message_select_pet_item_${pet.id}'),
+                      value: pet.id,
+                      child: Text(
+                        _labelWithUnread(
+                          pet.name,
+                          practiceValue == null
+                              ? 0
+                              : _unreadSum(
+                                  practiceId: practiceValue,
+                                  petId: pet.id,
+                                ),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: practiceValue == null || petItems.isEmpty
+                  ? null
+                  : _onPetChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComposer(AppLocalizations l10n) {
+    final enabled = threadId != null && !sending && !_ensuringThread;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        composerBottomPadding(context, embedded: widget.embedded),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            key: const Key('message_attach_btn'),
+            tooltip: l10n.attachMedia,
+            onPressed: enabled ? _showAttachSheet : null,
+            icon: const Icon(Icons.attach_file),
+          ),
+          Expanded(
+            child: TextField(
+              key: const Key('message_draft'),
+              controller: draft,
+              enabled: enabled,
+              decoration: InputDecoration(
+                hintText: l10n.vetMessaging,
+                border: const OutlineInputBorder(),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              onSubmitted: enabled ? (_) => send() : null,
+            ),
+          ),
+          IconButton(
+            key: const Key('message_send_btn'),
+            onPressed: enabled ? send : null,
+            icon: sending
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -543,223 +1098,146 @@ class _MessagingScreenState extends State<MessagingScreen>
 
     final noPetsClient =
         !widget.staffMode && _hasLinkedVets && _clientPets.isEmpty;
+    final noStaffClients = widget.staffMode && _staffClients.isEmpty;
 
-    final chatArea = !_hasLinkedVets
-        ? _MessagingLocked(
-            onLinkVet: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MyVetsScreen()),
-              );
-              await ApiClient.instance.ensureFreshSession();
-              if (mounted) initThreads();
-            },
-          )
-        : threadId == null
-            ? (noPetsClient
-                ? _MessagingNoPets(onAdd: _openPetForm)
-                : Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(l10n.noThreads,
-                            style: TextStyle(color: p.textMuted)),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          key: const Key('message_compose_empty_btn'),
-                          onPressed: _composeConversation,
-                          icon: const Icon(Icons.chat_bubble_outline),
-                          label: Text(l10n.messageNewConversation),
+    final Widget chatArea;
+    if (!_hasLinkedVets) {
+      chatArea = _MessagingLocked(
+        onLinkVet: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+          );
+          await ApiClient.instance.ensureFreshSession();
+          if (mounted) initThreads();
+        },
+      );
+    } else if (noPetsClient) {
+      chatArea = _MessagingNoPets(onAdd: _openPetForm);
+    } else if (noStaffClients) {
+      chatArea = Center(
+        child: Text(l10n.proLightNoClients, style: TextStyle(color: p.textMuted)),
+      );
+    } else {
+      chatArea = Column(
+        children: [
+          _buildSelectionBar(l10n),
+          Expanded(
+            child: _ensuringThread
+                ? const Center(child: CircularProgressIndicator())
+                : !_selectionComplete
+                    ? Center(
+                        child: Text(
+                          _incompleteSelectionHint(l10n),
+                          style: TextStyle(color: p.textMuted),
                         ),
-                      ],
-                    ),
-                  ))
-            : Column(
-                children: [
-                  Expanded(
-                    child: messages.isEmpty
+                      )
+                    : threadId == null
                         ? Center(
-                            child: Text(l10n.messageNoMessagesYet,
-                                style: TextStyle(color: p.textMuted)))
-                        : ListView.builder(
-                            reverse: true,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            itemCount: messages.length,
-                            itemBuilder: (_, i) {
-                              final m = messages[messages.length - 1 - i];
-                              final isMine = m.senderUserId == currentUserId;
-                              return Align(
-                                alignment: isMine
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 10),
-                                  constraints: BoxConstraints(
-                                      maxWidth:
-                                          MediaQuery.of(context).size.width *
-                                              0.75),
-                                  decoration: BoxDecoration(
-                                    color: isMine
-                                        ? AppColors.primary
-                                            .withValues(alpha: 0.85)
-                                        : p.surfaceElevated,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(16),
-                                      topRight: const Radius.circular(16),
-                                      bottomLeft:
-                                          Radius.circular(isMine ? 16 : 4),
-                                      bottomRight:
-                                          Radius.circular(isMine ? 4 : 16),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (m.hasMedia) ...[
-                                        _MessageMedia(
-                                          message: m,
-                                          isMine: isMine,
-                                          onOpen: () => _openMedia(m.mediaUrl!),
-                                          l10n: l10n,
-                                        ),
-                                        if (m.body.isNotEmpty)
-                                          const SizedBox(height: 8),
-                                      ],
-                                      if (m.body.isNotEmpty)
-                                        Text(
-                                          m.body,
-                                          style: TextStyle(
-                                            color: isMine ? AppColors.bg : null,
-                                            height: 1.3,
-                                          ),
-                                        ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        timeFmt.format(m.createdAt),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: isMine
-                                              ? AppColors.bg
-                                                  .withValues(alpha: 0.7)
-                                              : p.textMuted,
+                            child: Text(
+                              l10n.messageNoMessagesYet,
+                              style: TextStyle(color: p.textMuted),
+                            ),
+                          )
+                        : messages.isEmpty
+                            ? Center(
+                                child: Text(
+                                  l10n.messageNoMessagesYet,
+                                  style: TextStyle(color: p.textMuted),
+                                ),
+                              )
+                            : ListView.builder(
+                                reverse: true,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                itemCount: messages.length,
+                                itemBuilder: (_, i) {
+                                  final m = messages[messages.length - 1 - i];
+                                  final isMine =
+                                      m.senderUserId == currentUserId;
+                                  return Align(
+                                    alignment: isMine
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 10),
+                                      constraints: BoxConstraints(
+                                          maxWidth:
+                                              MediaQuery.of(context).size.width *
+                                                  0.75),
+                                      decoration: BoxDecoration(
+                                        color: isMine
+                                            ? AppColors.primary
+                                                .withValues(alpha: 0.85)
+                                            : p.surfaceElevated,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: const Radius.circular(16),
+                                          topRight: const Radius.circular(16),
+                                          bottomLeft:
+                                              Radius.circular(isMine ? 16 : 4),
+                                          bottomRight:
+                                              Radius.circular(isMine ? 4 : 16),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      8,
-                      8,
-                      8,
-                      composerBottomPadding(context, embedded: widget.embedded),
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          key: const Key('message_attach_btn'),
-                          tooltip: l10n.attachMedia,
-                          onPressed: sending ? null : _showAttachSheet,
-                          icon: const Icon(Icons.attach_file),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            key: const Key('message_draft'),
-                            controller: draft,
-                            decoration: InputDecoration(
-                              hintText: l10n.vetMessaging,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            onSubmitted: (_) => send(),
-                          ),
-                        ),
-                        IconButton(
-                          key: const Key('message_send_btn'),
-                          onPressed: sending ? null : send,
-                          icon: sending
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.send),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-
-    final content = loading
-        ? const Center(child: CircularProgressIndicator())
-        : Row(
-            children: [
-              if (threads.length > 1 || widget.embedded)
-                SizedBox(
-                  width: threads.length > 1 ? 140 : 0,
-                  child: threads.length > 1
-                      ? ListView.builder(
-                          itemCount: threads.length,
-                          itemBuilder: (_, i) {
-                            final t = threads[i];
-                            final selected = t.id == threadId;
-                            return ListTile(
-                              dense: true,
-                              selected: selected,
-                              title: Text(t.displayLabel,
-                                  maxLines: 2, overflow: TextOverflow.ellipsis),
-                              onTap: () => selectThread(t.id),
-                            );
-                          },
-                        )
-                      : null,
-                ),
-              Expanded(child: chatArea),
-            ],
-          );
-
-    // Icon-only FAB — extended + long labels covered the attach/send row on
-    // narrow phones (blocked taps in widget tests and production UX).
-    final composeFab = _hasLinkedVets && !(threadId == null && noPetsClient)
-        ? FloatingActionButton(
-            key: const Key('message_compose_fab'),
-            tooltip: l10n.messageNewConversation,
-            onPressed: _composeConversation,
-            child: const Icon(Icons.chat_bubble_outline),
-          )
-        : null;
-
-    if (widget.embedded) {
-      return Stack(
-        children: [
-          content,
-          if (composeFab != null)
-            Positioned(
-              right: 16,
-              bottom: 16 + systemBottomInset(context),
-              child: composeFab,
-            ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (m.hasMedia) ...[
+                                            _MessageMedia(
+                                              message: m,
+                                              isMine: isMine,
+                                              onOpen: () =>
+                                                  _openMedia(m.mediaUrl!),
+                                              l10n: l10n,
+                                            ),
+                                            if (m.body.isNotEmpty)
+                                              const SizedBox(height: 8),
+                                          ],
+                                          if (m.body.isNotEmpty)
+                                            Text(
+                                              m.body,
+                                              style: TextStyle(
+                                                color:
+                                                    isMine ? AppColors.bg : null,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            timeFmt.format(m.createdAt),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isMine
+                                                  ? AppColors.bg
+                                                      .withValues(alpha: 0.7)
+                                                  : p.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+          ),
+          _buildComposer(l10n),
         ],
       );
     }
-    final selectedThread = threads.where((t) => t.id == threadId).firstOrNull;
-    final appBarTitle = selectedThread != null
-        ? selectedThread.displayLabel
-        : l10n.vetMessaging;
+
+    final content = loading
+        ? const Center(child: CircularProgressIndicator())
+        : chatArea;
+
+    if (widget.embedded) {
+      return content;
+    }
     return Scaffold(
-      appBar: AppBar(title: Text(appBarTitle)),
-      floatingActionButton: composeFab,
+      appBar: AppBar(title: Text(l10n.vetMessaging)),
       body: content,
     );
   }
@@ -769,353 +1247,8 @@ class _MessagingScreenState extends State<MessagingScreen>
         hasLinkedVets: _hasLinkedVets,
         onReload: () async {
           await initThreads();
-          if (!mounted) return;
-          _autoComposeAttempted = false;
-          _maybeAutoComposeClient();
         },
       );
-
-  Future<void> _composeConversation() async {
-    if (widget.staffMode) {
-      await _composeConversationStaff();
-      return;
-    }
-    await _composeConversationClient();
-  }
-
-  Future<void> _composeConversationStaff() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      var clients = widget.staffClients;
-      var pets = widget.staffPets;
-      if (clients.isEmpty) {
-        final raw = await ApiClient.instance.listVetClients();
-        clients = raw
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-      if (pets.isEmpty) {
-        final raw = await ApiClient.instance.listVetPets();
-        pets = raw
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-      if (!mounted) return;
-      if (clients.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.proLightNoClients)),
-        );
-        return;
-      }
-
-      String clientIdOf(Map<String, dynamic> c) =>
-          (c['userId'] as String?) ?? (c['id'] as String?) ?? '';
-
-      String? selectedClientId =
-          clients.length == 1 ? clientIdOf(clients.first) : null;
-      String? selectedPetId;
-
-      List<Map<String, dynamic>> petsForClient(String? clientId) {
-        if (clientId == null || clientId.isEmpty) return const [];
-        return pets.where((p) {
-          final owner = (p['ownerUserId'] as String?) ??
-              (p['clientUserId'] as String?) ??
-              '';
-          return owner == clientId;
-        }).toList();
-      }
-
-      final initialPet = widget.initialPetId?.trim();
-      if (initialPet != null && initialPet.isNotEmpty) {
-        final match = pets.where((p) => p['id'] == initialPet).firstOrNull;
-        if (match != null) {
-          selectedPetId = initialPet;
-          selectedClientId = (match['ownerUserId'] as String?) ??
-              (match['clientUserId'] as String?) ??
-              selectedClientId;
-        }
-      }
-      final available = petsForClient(selectedClientId);
-      if (selectedPetId == null && available.length == 1) {
-        selectedPetId = available.first['id'] as String?;
-      }
-
-      final confirmed = await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        builder: (ctx) {
-          return StatefulBuilder(
-            builder: (ctx, setModal) {
-              final visiblePets = petsForClient(selectedClientId);
-              return Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  20,
-                  20 + systemBottomInset(ctx),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(l10n.messageComposeTitle,
-                        style: Theme.of(ctx).textTheme.titleMedium),
-                    const SizedBox(height: 12),
-                    Text(l10n.messageChooseClient,
-                        style: Theme.of(ctx).textTheme.labelLarge),
-                    const SizedBox(height: 8),
-                    ...clients.map((c) {
-                      final id = clientIdOf(c);
-                      final name = (c['fullName'] as String?) ??
-                          (c['email'] as String?) ??
-                          id;
-                      return ListTile(
-                        key: Key('message_compose_client_$id'),
-                        leading: Icon(
-                          selectedClientId == id
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_off,
-                          color: AppColors.primary,
-                        ),
-                        title: Text(name),
-                        onTap: () => setModal(() {
-                          selectedClientId = id;
-                          final next = petsForClient(id);
-                          if (selectedPetId == null ||
-                              !next.any((p) => p['id'] == selectedPetId)) {
-                            selectedPetId = next.length == 1
-                                ? next.first['id'] as String?
-                                : null;
-                          }
-                        }),
-                      );
-                    }),
-                    const SizedBox(height: 8),
-                    Text(l10n.messageChoosePetOptional,
-                        style: Theme.of(ctx).textTheme.labelLarge),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      key: const Key('message_compose_pet_none'),
-                      leading: Icon(
-                        selectedPetId == null
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
-                        color: AppColors.primary,
-                      ),
-                      title: Text(l10n.messageGeneralThread),
-                      onTap: () => setModal(() => selectedPetId = null),
-                    ),
-                    if (visiblePets.isEmpty)
-                      Text(l10n.emptyPetsTitle,
-                          style:
-                              TextStyle(color: PetsPalette.of(ctx).textMuted))
-                    else
-                      ...visiblePets.map((pet) {
-                        final pid = pet['id'] as String? ?? '';
-                        final pname = pet['name'] as String? ?? pid;
-                        return ListTile(
-                          key: Key('message_compose_pet_$pid'),
-                          leading: Icon(
-                            selectedPetId == pid
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_off,
-                            color: AppColors.primary,
-                          ),
-                          title: Text(pname),
-                          onTap: () => setModal(() => selectedPetId = pid),
-                        );
-                      }),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      key: const Key('message_compose_confirm'),
-                      onPressed:
-                          selectedClientId == null || selectedClientId!.isEmpty
-                              ? null
-                              : () => Navigator.pop(ctx, true),
-                      child: Text(l10n.messageStartConversation),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-      if (confirmed != true || selectedClientId == null || !mounted) return;
-      final thread = await ApiClient.instance.ensureMessageThread(
-        clientUserId: selectedClientId,
-        petId: selectedPetId,
-      );
-      if (!mounted) return;
-      setState(() {
-        if (!threads.any((t) => t.id == thread.id)) {
-          threads = [thread, ...threads];
-        }
-        threadId = thread.id;
-      });
-      await loadMessages();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mapApiError(e, l10n))),
-      );
-    }
-  }
-
-  Future<void> _composeConversationClient() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final vets = await ApiClient.instance.getMyVets();
-      final petsRaw = await ApiClient.instance.getPets();
-      final pets = petsRaw
-          .whereType<Map>()
-          .map((e) => Pet.fromJson(Map<String, dynamic>.from(e)))
-          .where((p) => p.isActive)
-          .toList();
-      if (!mounted) return;
-      if (vets.isEmpty) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.noVets)));
-        return;
-      }
-      if (pets.isEmpty) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.emptyPetsTitle)));
-        return;
-      }
-      VetLink? selectedVet = vets.length == 1 ? vets.first : null;
-      List<Pet> petsForVet(VetLink? vet) {
-        if (vet == null) return pets;
-        return pets.where((p) {
-          final pid = p.practiceId?.trim() ?? '';
-          return pid.isEmpty || pid == vet.practiceId;
-        }).toList();
-      }
-
-      Pet? selectedPet;
-      final initial = widget.initialPetId != null
-          ? pets.where((p) => p.id == widget.initialPetId).firstOrNull
-          : null;
-      final available = petsForVet(selectedVet);
-      if (initial != null && available.any((p) => p.id == initial.id)) {
-        selectedPet = initial;
-      } else if (available.length == 1) {
-        selectedPet = available.first;
-      }
-
-      final confirmed = await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        builder: (ctx) {
-          return StatefulBuilder(
-            builder: (ctx, setModal) {
-              final visiblePets = petsForVet(selectedVet);
-              return Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  20,
-                  20 + systemBottomInset(ctx),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(l10n.messageComposeTitle,
-                        style: Theme.of(ctx).textTheme.titleMedium),
-                    const SizedBox(height: 12),
-                    Text(l10n.messageChoosePro,
-                        style: Theme.of(ctx).textTheme.labelLarge),
-                    const SizedBox(height: 8),
-                    ...vets.map(
-                      (v) => ListTile(
-                        key: Key('message_compose_vet_${v.practiceId}'),
-                        leading: Icon(
-                          selectedVet?.practiceId == v.practiceId
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_off,
-                          color: AppColors.primary,
-                        ),
-                        title: Text(v.practiceName.isNotEmpty
-                            ? v.practiceName
-                            : v.vetFullName),
-                        subtitle: v.vetFullName.isNotEmpty
-                            ? Text(v.vetFullName)
-                            : null,
-                        onTap: () => setModal(() {
-                          selectedVet = v;
-                          final next = petsForVet(v);
-                          if (selectedPet == null ||
-                              !next.any((p) => p.id == selectedPet!.id)) {
-                            selectedPet = next.length == 1 ? next.first : null;
-                          }
-                        }),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(l10n.messageChoosePet,
-                        style: Theme.of(ctx).textTheme.labelLarge),
-                    const SizedBox(height: 8),
-                    if (visiblePets.isEmpty)
-                      Text(l10n.emptyPetsTitle,
-                          style:
-                              TextStyle(color: PetsPalette.of(ctx).textMuted))
-                    else
-                      ...visiblePets.map(
-                        (pet) => ListTile(
-                          key: Key('message_compose_pet_${pet.id}'),
-                          leading: Icon(
-                            selectedPet?.id == pet.id
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_off,
-                            color: AppColors.primary,
-                          ),
-                          title: Text(pet.name),
-                          onTap: () => setModal(() => selectedPet = pet),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      key: const Key('message_compose_confirm'),
-                      onPressed: selectedVet == null || selectedPet == null
-                          ? null
-                          : () => Navigator.pop(ctx, true),
-                      child: Text(l10n.messageStartConversation),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-      if (confirmed != true ||
-          selectedVet == null ||
-          selectedPet == null ||
-          !mounted) {
-        return;
-      }
-      final thread = await ApiClient.instance.ensureMessageThread(
-        practiceId: selectedVet!.practiceId,
-        petId: selectedPet!.id,
-      );
-      if (!mounted) return;
-      setState(() {
-        if (!threads.any((t) => t.id == thread.id)) {
-          threads = [thread, ...threads];
-        }
-        threadId = thread.id;
-      });
-      await loadMessages();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mapApiError(e, l10n))),
-      );
-    }
-  }
 }
 
 class _MessagingLocked extends StatelessWidget {

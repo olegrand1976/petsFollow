@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 
-typedef MockApiHandler = Response Function(RequestOptions options);
+typedef MockApiHandler = FutureOr<Response> Function(RequestOptions options);
 
 /// Dio interceptor that routes by `METHOD path` (path may be absolute or relative).
 /// Unmatched routes fail hard so tests stay explicit.
@@ -44,7 +46,7 @@ class MockApi {
 
   void install() {
     _interceptor = InterceptorsWrapper(
-      onRequest: (options, handler) {
+      onRequest: (options, handler) async {
         final method = options.method.toUpperCase();
         final candidates = <String>{
           '$method ${_normalize(options.path)}',
@@ -53,7 +55,7 @@ class MockApi {
         for (final entry in _routes.entries) {
           if (candidates.any(entry.key.hasMatch)) {
             try {
-              final res = entry.value(options);
+              final res = await entry.value(options);
               final status = res.statusCode ?? 200;
               // handler.resolve bypasses Dio validateStatus — reject 4xx/5xx
               // so callers get DioException like a real API.

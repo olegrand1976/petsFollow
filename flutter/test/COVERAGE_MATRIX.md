@@ -36,9 +36,12 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Préconsult models + submit key | ✓ | ✓ | · | models + key contract |
 | Care create/done/postpone keys | ✓ | ✓ | · | `care_actions_test` |
 | Messaging send keys | · | ✓ | · | `messaging_keys_test` |
+| Messaging select vet/pet keys | · | ✓ | · | `messaging_keys_test` |
 | Messaging attach camera/gallery keys | · | ✓ | · | `messaging_keys_test` |
 | Messaging attach sheet flow | · | ✓ | · | `messaging_attach_sheet_test` |
-| Messaging staff mode (composer + ensure clientUserId) | · | ✓ | · | `staff_messaging_test` |
+| Messaging staff + client selects (ensure thread) | · | ✓ | · | `staff_messaging_test` |
+| Messaging selection guards (draft enabled / stale ensure / clear draft) | · | ✓ | · | `messaging_selection_guards_test` |
+| Messaging unread labels + incomplete selection hint | · | ✓ | · | `messaging_selection_guards_test` |
 | Messaging video upload basename | ✓ | · | · | `message_media_upload_test` |
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |

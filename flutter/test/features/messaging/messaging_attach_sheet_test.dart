@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 
+import '../../helpers/fixtures.dart';
 import '../../helpers/mock_api.dart';
 import '../../helpers/pump_app.dart';
 
@@ -10,6 +12,8 @@ void main() {
 
   setUp(() {
     mock = MockApi();
+    ApiClient.instance.userId = 'user-1';
+    ApiClient.instance.userRole = 'client';
     mock.json('GET', '/api/v1/me', data: {
       'userId': 'user-1',
       'email': 'client.demo@petsfollow.test',
@@ -36,10 +40,20 @@ void main() {
         'status': 'active',
       },
     ]);
+    mock.json('GET', '/api/v1/pets', data: [
+      {
+        ...Fixtures.pet(),
+        'practiceId': 'practice-1',
+      },
+    ]);
     mock.install();
   });
 
-  tearDown(() => mock.uninstall());
+  tearDown(() {
+    mock.uninstall();
+    ApiClient.instance.userId = null;
+    ApiClient.instance.userRole = null;
+  });
 
   testWidgets('attach sheet opens camera/gallery after photo choice', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
