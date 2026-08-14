@@ -13,6 +13,7 @@ import (
 
 	webeid "github.com/gmb-lib/go-web-eid"
 	"github.com/gmb-lib/go-web-eid/certificate"
+	"github.com/gmb-lib/go-web-eid/exceptions"
 )
 
 // ErrCACertsMissing is returned when no Belgian eID CA could be loaded.
@@ -136,6 +137,59 @@ func VerifyAuthToken(ctx context.Context, validator webeid.AuthTokenValidator, t
 	return IdentityFromCertificate(cert)
 }
 
+// webEidExceptionCode returns go-web-eid's stable Code when present (Unwrap-safe).
+// Prefer this over Error() substrings — Wrap clones sentinels so errors.Is is unreliable.
+func webEidExceptionCode(err error) string {
+	var xerr *exceptions.Error
+	if errors.As(err, &xerr) && xerr != nil && xerr.Code != "" {
+		return xerr.Code
+	}
+	return ""
+}
+
+// ClassifyWebEidVerifyError maps VerifyAuthToken / Validate failures to API msgKeys.
+func ClassifyWebEidVerifyError(err error) string {
+	if err == nil {
+		return ""
+	}
+	if IsWebEidInfraError(err) {
+		return "eid_token_infra"
+	}
+	switch webEidExceptionCode(err) {
+	case exceptions.ErrTokenParse.Code, exceptions.ErrTokenUnsupportedFormat.Code:
+		return "eid_token_parse"
+	case exceptions.ErrCertificateNotTrusted.Code,
+		exceptions.ErrCertificateRevoked.Code,
+		exceptions.ErrCertificateExpired.Code,
+		exceptions.ErrCertificateNotYetValid.Code,
+		exceptions.ErrCertificateDisallowedPolicy.Code,
+		exceptions.ErrUserCertificateWrongPurpose.Code:
+		return "eid_cert_untrusted"
+	case exceptions.ErrTokenSignatureInvalid.Code,
+		exceptions.ErrSignatureValueInvalid.Code,
+		exceptions.ErrIdentityBindingMismatch.Code:
+		return "eid_token_signature"
+	}
+	// Local wraps (Parse / IdentityFromCertificate) and legacy string fallbacks.
+	msg := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(msg, "eid_token_parse"):
+		return "eid_token_parse"
+	case strings.Contains(msg, "eid_identity_empty"):
+		return "eid_identity_empty"
+	case strings.Contains(msg, "certificate_not_trusted"),
+		strings.Contains(msg, "certificate not trusted"),
+		strings.Contains(msg, "unknown authority"):
+		return "eid_cert_untrusted"
+	case strings.Contains(msg, "token_signature_invalid"),
+		strings.Contains(msg, "signature_invalid"),
+		strings.Contains(msg, "invalid signature"):
+		return "eid_token_signature"
+	default:
+		return "eid_token_invalid"
+	}
+}
+
 // IsWebEidInfraError reports OCSP/network/timeout failures (retryable; do not treat as bad PIN/token).
 func IsWebEidInfraError(err error) bool {
 	if err == nil {
@@ -144,22 +198,29 @@ func IsWebEidInfraError(err error) bool {
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		return true
 	}
+	if webEidExceptionCode(err) == exceptions.ErrOCSPRequestFailed.Code {
+		return true
+	}
 	msg := strings.ToLower(err.Error())
 	for _, needle := range []string{
-		"ocsp",
-		"timeout",
+		"ocsp_request_failed",
+		"ocsp request failed",
 		"i/o timeout",
 		"connection refused",
 		"connection reset",
 		"temporary failure",
 		"no such host",
 		"tls handshake",
-		"eof",
+		"unexpected eof",
 		"network is unreachable",
 	} {
 		if strings.Contains(msg, needle) {
 			return true
 		}
+	}
+	// Broad "timeout" only when not a user/library action timeout (those are client-side).
+	if strings.Contains(msg, "timeout") && !strings.Contains(msg, "user_timeout") && !strings.Contains(msg, "action_timeout") {
+		return true
 	}
 	return false
 }

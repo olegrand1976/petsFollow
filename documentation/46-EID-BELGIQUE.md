@@ -94,6 +94,11 @@ Rétention : purge automatique **1 an** via `POST /internal/retention/run`
   honoré côté Go que si `X-PF-Proxy-Secret` matche `BFF_PROXY_SECRET` (même gate
   que `X-PF-Client-IP`, forcé avec l’origine même sans IP client) — un appel API
   direct ne peut pas spoofe l’origine du challenge.
+  **Limitation locale** : l’extension (surtout Firefox) n’injecte souvent **pas**
+  de content script sur `http://localhost` / `127.0.0.1` alors que le même poste
+  fonctionne en HTTPS staging — UI `loopbackUnavailable` + repli Viewer. Tester
+  Web eID en local : même origine que `EID_SITE_ORIGIN`, extension autorisée pour
+  le site, ou utiliser staging.
 - **Viewer** : eID Viewer / BEid → export `.eid` → upload.
   Pas de détection d’extensions Chrome tierces (beID Connect, etc.) côté Pro.
 
@@ -117,3 +122,16 @@ Réf. checklist : `documentation/15-PLAN-TESTS.md` (C2.3 / C2.6 + section Z eID)
 (non automatisable). Le smoke vérifie import Viewer + binding `EID_SITE_ORIGIN` +
 contrat verify (422 / nonce one-shot). E2E utilise `__PF_WEB_EID_MOCK__` pour
 simuler la lib sans extension.
+
+**PIN** : le parcours Web eID **exige** le PIN d’authentification de la carte
+(signature du challenge). Il n’existe pas d’API Web eID « lecture identité sans PIN ».
+Sans PIN : exporter une fiche via eID Viewer (`.eid`) puis « Importer fiche eID Viewer ».
+
+UI lecture carte : loader + message d’attente pendant `authenticate` (dialogue PIN) ;
+timeout / annulation / extension absente / verify 422 → message d’erreur visible
+(`eid-reader-error`). Trust store CA : `go/internal/eid/certs/` (~430 CA uniques,
+PEM ; lots historiques expirés **conservés**) — Citizen (`citizen*`, `eidc*`) **et**
+Foreigner (`foreigner*`, `eidf*`) + racines (`belgiumrca*`, dont **Root CA6**).
+Re-sync : `make sync-eid-certs` (miroirs BOSA en HTTP — réseau de confiance).
+Une carte dont le lot CA manque → `eid_cert_untrusted`. Les erreurs go-web-eid sont
+classées via `exceptions.Error.Code` (`ClassifyWebEidVerifyError`).

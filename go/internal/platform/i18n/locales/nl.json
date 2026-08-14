@@ -222,6 +222,8 @@
     "eid_xml_invalid": "Ongeldige eID-XML",
     "eid_nonce_expired": "eID-challenge verlopen — probeer opnieuw",
     "eid_token_invalid": "Ongeldig Web eID-token",
+    "eid_cert_untrusted": "Kaartcertificaat niet vertrouwd (CA)",
+    "eid_token_signature": "Ongeldige Web eID-handtekening",
     "eid_token_parse": "Ongeldige kaartgegevens",
     "eid_ca_certs_missing": "eID CA-certificaten ontbreken op de server",
     "eid_identity_empty": "Geen bruikbare identiteit op het eID-bestand",

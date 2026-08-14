@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/gmb-lib/go-web-eid/exceptions"
 )
 
 func TestIdentityFromCertificate_SignatureVerifiedFlag(t *testing.T) {
@@ -40,16 +42,46 @@ func TestResolveChallengeOrigin(t *testing.T) {
 }
 
 func TestIsWebEidInfraError(t *testing.T) {
-	if !IsWebEidInfraError(fmt.Errorf("eid_token_invalid: ocsp request failed")) {
-		t.Fatal("ocsp must be infra")
+	ocsp := exceptions.Wrap(exceptions.ErrOCSPRequestFailed, errors.New("dial tcp timeout"))
+	if !IsWebEidInfraError(fmt.Errorf("eid_token_invalid: %w", ocsp)) {
+		t.Fatal("OCSP_REQUEST_FAILED must be infra")
 	}
 	if !IsWebEidInfraError(context.DeadlineExceeded) {
 		t.Fatal("deadline must be infra")
 	}
-	if IsWebEidInfraError(errors.New("eid_token_invalid: signature mismatch")) {
+	if IsWebEidInfraError(exceptions.Wrap(exceptions.ErrTokenSignatureInvalid, errors.New("bad"))) {
 		t.Fatal("crypto must not be infra")
+	}
+	if IsWebEidInfraError(errors.New("unexpected mid-file eof marker")) {
+		t.Fatal("bare eof substring must not be infra")
 	}
 	if IsWebEidInfraError(nil) {
 		t.Fatal("nil")
+	}
+}
+
+func TestClassifyWebEidVerifyError(t *testing.T) {
+	untrusted := exceptions.Wrap(exceptions.ErrCertificateNotTrusted, errors.New("x509: certificate signed by unknown authority"))
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_invalid: %w", untrusted)); got != "eid_cert_untrusted" {
+		t.Fatalf("typed CERTIFICATE_NOT_TRUSTED: got %q", got)
+	}
+	revoked := exceptions.Wrap(exceptions.ErrCertificateRevoked, errors.New("revoked"))
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_invalid: %w", revoked)); got != "eid_cert_untrusted" {
+		t.Fatalf("revoked: got %q", got)
+	}
+	sig := exceptions.Wrap(exceptions.ErrTokenSignatureInvalid, errors.New("bad sig"))
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_invalid: %w", sig)); got != "eid_token_signature" {
+		t.Fatalf("sig: got %q", got)
+	}
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_parse: boom")); got != "eid_token_parse" {
+		t.Fatalf("parse: got %q", got)
+	}
+	ocsp := exceptions.Wrap(exceptions.ErrOCSPRequestFailed, errors.New("timeout"))
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_invalid: %w", ocsp)); got != "eid_token_infra" {
+		t.Fatalf("infra: got %q", got)
+	}
+	// Legacy string path (no typed exception in chain).
+	if got := ClassifyWebEidVerifyError(fmt.Errorf("eid_token_invalid: webeid: CERTIFICATE_NOT_TRUSTED: unknown authority")); got != "eid_cert_untrusted" {
+		t.Fatalf("legacy string: got %q", got)
 	}
 }

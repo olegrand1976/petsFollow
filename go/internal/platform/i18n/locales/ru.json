@@ -222,6 +222,8 @@
     "eid_xml_invalid": "Неверный XML eID",
     "eid_nonce_expired": "Challenge eID истёк — повторите",
     "eid_token_invalid": "Неверный токен Web eID",
+    "eid_cert_untrusted": "Сертификат карты не доверен (CA)",
+    "eid_token_signature": "Неверная подпись Web eID",
     "eid_token_parse": "Неверные данные карты",
     "eid_ca_certs_missing": "На сервере нет сертификатов CA eID",
     "eid_identity_empty": "В файле eID нет пригодной личности",

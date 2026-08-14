@@ -1,13 +1,16 @@
 import { applyEidIdentityToForm, type EidIdentity } from '~/utils/eid-prefill'
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
+/** UI hard-stop if native messaging never ACKs / hangs beyond library timeouts. */
+const WEB_EID_AUTH_TIMEOUT_MS = 90_000
+
 function unwrapData<T>(res: any): T {
   return (res?.data ?? res) as T
 }
 
 /** E2E / Vitest : stub sans extension native (cf. `13b-desk-switch` pattern). */
 export type PfWebEidMock = {
-  status?: () => Promise<{ extension: boolean; nativeApp: boolean }>
+  status?: () => Promise<{ extension: boolean | string; nativeApp: boolean | string }>
   authenticate?: (nonce: string) => Promise<unknown>
 }
 
@@ -35,24 +38,88 @@ async function loadWebEidLibrary() {
   const mock = getWebEidMock()
   if (mock) {
     return {
-      status: mock.status ?? (async () => ({ extension: true, nativeApp: true })),
+      status: mock.status ?? (async () => ({ extension: '2.0.0', nativeApp: '2.0.0' })),
       authenticate: mock.authenticate ?? (async () => ({ mocked: true })),
     }
   }
   return import('@web-eid/web-eid-library')
 }
 
-function isWebEidUnavailableError(e: unknown): boolean {
-  const msg = String((e as any)?.message || e || '').toLowerCase()
-  const code = String((e as any)?.code || (e as any)?.name || '').toLowerCase()
-  return (
-    code.includes('extensionunavailable')
-    || code.includes('nativeappunavailable')
-    || msg.includes('extension')
-    || msg.includes('native app')
-    || msg.includes('web-eid')
-    || msg.includes('webeid')
-  )
+function errorBag(e: unknown): string {
+  const any = e as any
+  return [
+    any?.code,
+    any?.name,
+    any?.message,
+    any?.cause?.code,
+    any?.cause?.name,
+    any?.cause?.message,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
+function isLoopbackHttpOrigin(origin: string): boolean {
+  try {
+    const u = new URL(origin)
+    if (u.protocol !== 'http:') return false
+    const h = u.hostname.toLowerCase()
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Map @web-eid/web-eid-library errors to stable UI codes.
+ * ExtensionUnavailable = no postMessage ACK in 1s (extension missing/disabled/wrong browser).
+ */
+export function mapWebEidThrownError(e: unknown): string {
+  const blob = errorBag(e)
+  if (blob.includes('web_eid_timeout') || blob.includes('err_webeid_action_timeout')) {
+    return 'web_eid_timeout'
+  }
+  if (blob.includes('err_webeid_user_timeout') || blob.includes('usertimeouterror')) {
+    return 'web_eid_timeout'
+  }
+  if (blob.includes('err_webeid_user_cancelled') || blob.includes('usercancelled')) {
+    return 'web_eid_cancelled'
+  }
+  if (blob.includes('err_webeid_context_insecure') || blob.includes('contextinsecure')) {
+    return 'web_eid_context_insecure'
+  }
+  if (blob.includes('err_webeid_version_mismatch') || blob.includes('versionmismatch')) {
+    return 'web_eid_version_mismatch'
+  }
+  if (blob.includes('err_webeid_native_unavailable') || blob.includes('nativeunavailable')) {
+    return 'web_eid_native_unavailable'
+  }
+  if (
+    blob.includes('err_webeid_extension_unavailable')
+    || blob.includes('extensionunavailable')
+    || blob.includes('extension is not available')
+  ) {
+    return 'web_eid_extension_unavailable'
+  }
+  if (blob.includes('err_webeid_native_fatal') || blob.includes('nativefatal')) {
+    return 'web_eid_unavailable'
+  }
+  return ''
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, code: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(code)), ms)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }
 
 export function useEidPrefill() {
@@ -60,20 +127,27 @@ export function useEidPrefill() {
   const enabled = computed(() => isPublicFlagOn(config.public.eidEnabled))
 
   async function checkWebEidStatus(): Promise<
-    | { ok: true; hasExtension: boolean; hasNativeApp: boolean }
-    | { ok: false; message: string }
+    | { ok: true; hasExtension: boolean; hasNativeApp: boolean; detail?: string }
+    | { ok: false; message: string; code?: string }
   > {
     if (!isBrowserLike()) {
       return { ok: false, message: 'web_eid_client_only' }
     }
     try {
       const { status } = await loadWebEidLibrary()
-      const { extension, nativeApp } = await status()
-      const hasExtension = Boolean(extension)
-      const hasNativeApp = Boolean(nativeApp)
-      return { ok: true, hasExtension, hasNativeApp }
+      const st = await status()
+      // Library returns semver strings when present.
+      const hasExtension = Boolean(st?.extension)
+      const hasNativeApp = Boolean(st?.nativeApp)
+      return {
+        ok: true,
+        hasExtension,
+        hasNativeApp,
+        detail: `ext=${st?.extension || '-'} app=${st?.nativeApp || '-'}`,
+      }
     } catch (e: any) {
-      return { ok: false, message: e?.message || String(e) }
+      const code = mapWebEidThrownError(e) || 'web_eid_unavailable'
+      return { ok: false, message: e?.message || String(e), code }
     }
   }
 
@@ -88,33 +162,76 @@ export function useEidPrefill() {
     if (!isBrowserLike()) {
       throw new Error('web_eid_client_only')
     }
+
+    const pageOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+    const onLoopback = pageOrigin ? isLoopbackHttpOrigin(pageOrigin) : false
+
+    // On HTTPS (staging/prod): fail fast if extension/app missing.
+    // On localhost/127.0.0.1: many browsers do not inject Web eID → status() false-negatives
+    // even when the same install works on staging — skip hard gate and try authenticate.
+    const st = await checkWebEidStatus()
+    if (!onLoopback) {
+      if (!st.ok) {
+        throw new Error(st.code || 'web_eid_unavailable', { cause: new Error(st.message) })
+      }
+      if (!st.hasExtension) {
+        throw new Error('web_eid_extension_unavailable')
+      }
+      if (!st.hasNativeApp) {
+        throw new Error('web_eid_native_unavailable')
+      }
+    }
+
+    // Fresh challenge immediately before authenticate (PIN dialog can take a while).
     const challengeRes: any = await $fetch('/api/vet/eid/web-eid/challenge')
     const challenge = unwrapData<{ nonce: string; origin?: string }>(challengeRes)
     if (!challenge?.nonce) {
       throw new Error('eid_nonce_missing')
     }
-    // Mismatch site origin ↔ tab origin fails late in the extension — fail fast with a clear code.
-    if (challenge.origin && typeof window !== 'undefined') {
-      const pageOrigin = window.location.origin
-      if (challenge.origin !== pageOrigin) {
-        throw new Error(`eid_origin_mismatch:${challenge.origin}!=${pageOrigin}`)
-      }
+    if (challenge.origin && pageOrigin && challenge.origin !== pageOrigin) {
+      throw new Error(`eid_origin_mismatch:${challenge.origin}!=${pageOrigin}`)
     }
+
     let token: unknown
     try {
       const { authenticate } = await loadWebEidLibrary()
-      token = await authenticate(challenge.nonce)
+      const authPromise = Promise.resolve(
+        authenticate(challenge.nonce, {
+          userInteractionTimeout: WEB_EID_AUTH_TIMEOUT_MS,
+          lang: typeof navigator !== 'undefined' ? navigator.language?.slice(0, 2) : 'fr',
+        } as { userInteractionTimeout?: number; lang?: string }),
+      )
+      token = await withTimeout(authPromise, WEB_EID_AUTH_TIMEOUT_MS + 10_000, 'web_eid_timeout')
     } catch (e) {
-      if (isWebEidUnavailableError(e)) {
-        throw new Error('web_eid_unavailable', { cause: e })
+      const mapped = mapWebEidThrownError(e)
+      if (onLoopback && (
+        mapped === 'web_eid_extension_unavailable'
+        || mapped === 'web_eid_unavailable'
+        || mapped === 'web_eid_native_unavailable'
+      )) {
+        throw new Error('web_eid_loopback_unavailable', { cause: e })
+      }
+      if (mapped) {
+        throw new Error(mapped, { cause: e })
+      }
+      if ((e as any)?.message === 'web_eid_timeout') {
+        throw new Error('web_eid_timeout', { cause: e })
       }
       throw e
     }
-    const verifyRes: any = await $fetch('/api/vet/eid/web-eid/verify', {
-      method: 'POST',
-      body: { token },
-    })
-    return unwrapData<EidIdentity>(verifyRes)
+    try {
+      const verifyRes: any = await $fetch('/api/vet/eid/web-eid/verify', {
+        method: 'POST',
+        body: { token },
+      })
+      return unwrapData<EidIdentity>(verifyRes)
+    } catch (e: any) {
+      const msgKey = e?.data?.data?.error?.msgKey || e?.data?.error?.msgKey || e?.data?.error?.messageKey
+      if (typeof msgKey === 'string' && msgKey.startsWith('eid_')) {
+        throw new Error(msgKey, { cause: e })
+      }
+      throw e
+    }
   }
 
   return {

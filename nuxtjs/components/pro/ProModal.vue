@@ -223,8 +223,8 @@ onBeforeUnmount(() => {
 }
 
 .pro-modal__panel--xl {
-  width: min(96vw, 56rem);
-  max-height: min(92vh, 52rem);
+  width: min(96vw, 72rem);
+  max-height: min(94vh, 100rem);
 }
 
 /* Spécificité > base panel : largeur/hauteur full ne doivent jamais retomber à 28rem. */
@@ -324,8 +324,8 @@ onBeforeUnmount(() => {
 }
 
 .pro-modal__panel--contain.pro-modal__panel--xl {
-  height: min(92vh, 52rem);
-  max-height: min(92vh, 52rem);
+  height: min(94vh, 100rem);
+  max-height: min(94vh, 100rem);
 }
 
 /* Full + contain : forcer aussi la hauteur (sinon seul md/lg/xl avaient une règle contain). */

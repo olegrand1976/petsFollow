@@ -320,22 +320,16 @@ func (a *API) verifyVetWebEid(w http.ResponseWriter, r *http.Request) {
 	}
 	identity, err := eid.VerifyAuthToken(r.Context(), validator, req.Token, ch.Nonce)
 	if err != nil {
-		if eid.IsWebEidInfraError(err) {
+		code := eid.ClassifyWebEidVerifyError(err)
+		if code == "eid_token_infra" {
 			if storeErr := a.storeEidChallenge(r.Context(), id.UserID, ch); storeErr != nil {
 				log.Printf("eid nonce restore after infra error: %v", storeErr)
 			}
-			a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, "eid_token_infra")
-			writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "eid_token_infra")
+			a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, code)
+			writeErr(w, r, http.StatusServiceUnavailable, "unavailable", code)
 			return
 		}
-		code := "eid_token_invalid"
-		msg := err.Error()
-		switch {
-		case strings.Contains(msg, "eid_token_parse"):
-			code = "eid_token_parse"
-		case strings.Contains(msg, "eid_identity_empty"):
-			code = "eid_identity_empty"
-		}
+		log.Printf("eid web-eid verify failed user=%s code=%s err=%v", id.UserID, code, err)
 		a.recordEidReading(r.Context(), id, "web_eid", false, eid.Identity{}, code)
 		writeErr(w, r, http.StatusUnprocessableEntity, "validation_error", code)
 		return

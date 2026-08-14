@@ -82,7 +82,21 @@ usecases-check:
 	@git diff --exit-code -- nuxtjs/data/usecases/catalog.json \
 		|| (echo "catalog.json obsolète — lancez make usecases-sync et committez" >&2; exit 1)
 
+# Stack Docker complète (api + nuxtjs inclus). En conflit avec make api-dev /
+# nuxtjs-dev sur les mêmes ports — préférer up-infra + api-dev + nuxtjs-dev.
 up: env brand-sync
+	@set -a && source $(ENV_FILE) && set +a; \
+	  api_port=$${PETSFOLLOW_API_PORT:-8291}; \
+	  nuxt_port=$${PETSFOLLOW_NUXTJS_PORT:-3002}; \
+	  busy=""; \
+	  if ss -tlnH "sport = :$$api_port" 2>/dev/null | grep -q .; then busy="$$busy $$api_port(API)"; fi; \
+	  if ss -tlnH "sport = :$$nuxt_port" 2>/dev/null | grep -q .; then busy="$$busy $$nuxt_port(Nuxt)"; fi; \
+	  if [ -n "$$busy" ]; then \
+	    echo "make up impossible — port(s) déjà pris:$$busy" >&2; \
+	    echo "→ Dev hybride (recommandé) : make up-infra && make api-dev  (+ make nuxtjs-dev)" >&2; \
+	    echo "→ Ou libérer les ports (stop api-dev / nuxtjs-dev) puis relancer make up" >&2; \
+	    exit 1; \
+	  fi
 	$(COMPOSE) up --build -d
 
 up-infra: env
@@ -278,6 +292,10 @@ smoke-staging:
 	exit $$rc
 
 # eID BE : import Viewer + challenge/verify Web eID (local API :8291).
+# Re-sync Belgian eID CA pack (Citizen + Foreigner + roots) into go/internal/eid/certs/
+sync-eid-certs:
+	bash scripts/sync-eid-certs.sh
+
 smoke-eid:
 	@PETSFOLLOW_API_URL=http://localhost:$${PETSFOLLOW_API_PORT:-8291} \
 		EID_SITE_ORIGIN_EXPECT=$${EID_SITE_ORIGIN:-http://localhost:3002} \

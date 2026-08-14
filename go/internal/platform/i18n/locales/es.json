@@ -222,6 +222,8 @@
     "eid_xml_invalid": "XML eID inválido",
     "eid_nonce_expired": "Challenge eID caducado — reintente",
     "eid_token_invalid": "Token Web eID inválido",
+    "eid_cert_untrusted": "Certificado de la tarjeta no confiable (CA)",
+    "eid_token_signature": "Firma Web eID no válida",
     "eid_token_parse": "Datos de tarjeta inválidos",
     "eid_ca_certs_missing": "Faltan certificados CA eID en el servidor",
     "eid_identity_empty": "Sin identidad usable en la ficha eID",

@@ -222,6 +222,8 @@
     "eid_xml_invalid": "Vigane eID XML",
     "eid_nonce_expired": "eID challenge aegus — proovi uuesti",
     "eid_token_invalid": "Vigane Web eID token",
+    "eid_cert_untrusted": "Kaardi sertifikaati ei usaldata (CA)",
+    "eid_token_signature": "Vigane Web eID allkiri",
     "eid_token_parse": "Vigased kaardiandmed",
     "eid_ca_certs_missing": "eID CA sertifikaadid puuduvad serveris",
     "eid_identity_empty": "eID failis puudub kasutatav identiteet",

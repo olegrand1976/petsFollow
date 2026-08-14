@@ -43,8 +43,13 @@ services:
       - orthancdata:/var/lib/orthanc/db
     environment:
       VERBOSE_ENABLED: "true"
+    # Image Orthanc sans curl/wget — python3 est présent.
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u petsfollow:petsfollow http://127.0.0.1:8042/system || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; p=urllib.request.HTTPPasswordMgrWithDefaultRealm(); p.add_password(None,'http://127.0.0.1:8042/','petsfollow','petsfollow'); urllib.request.build_opener(urllib.request.HTTPBasicAuthHandler(p)).open('http://127.0.0.1:8042/system').read()\"",
+        ]
       interval: 5s
       timeout: 5s
       retries: 15

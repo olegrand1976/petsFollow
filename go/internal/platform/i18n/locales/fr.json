@@ -222,6 +222,8 @@
     "eid_xml_invalid": "XML eID invalide",
     "eid_nonce_expired": "Challenge eID expiré — réessayez",
     "eid_token_invalid": "Jeton Web eID invalide",
+    "eid_cert_untrusted": "Certificat de la carte non reconnu (CA)",
+    "eid_token_signature": "Signature Web eID invalide",
     "eid_token_parse": "Données de carte invalides",
     "eid_ca_certs_missing": "Certificats CA eID manquants côté serveur",
     "eid_identity_empty": "Aucune identité exploitable sur la fiche eID",

@@ -222,6 +222,8 @@
     "eid_xml_invalid": "Invalid eID XML",
     "eid_nonce_expired": "eID challenge expired — try again",
     "eid_token_invalid": "Invalid Web eID token",
+    "eid_cert_untrusted": "Card certificate not trusted (CA)",
+    "eid_token_signature": "Invalid Web eID signature",
     "eid_token_parse": "Invalid card data",
     "eid_ca_certs_missing": "eID CA certificates missing on server",
     "eid_identity_empty": "No usable identity on the eID file",

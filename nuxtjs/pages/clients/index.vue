@@ -90,7 +90,13 @@
     >
       <div class="create-client-modal-scroll">
         <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
-        <form v-if="!linkCandidate" class="pro-form create-client-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
+        <form
+          v-if="!linkCandidate"
+          id="vet-create-client-form"
+          class="pro-form create-client-form"
+          data-testid="vet-create-client-form"
+          @submit.prevent="createClient"
+        >
           <div class="create-client-grid">
             <div class="create-client-col create-client-col--identity">
               <ProEidReader
@@ -166,14 +172,6 @@
           </div>
           <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
           <p v-if="clientError" class="pro-error">{{ clientError }}</p>
-          <div class="create-client-actions">
-            <ProButton variant="secondary" type="button" @click="createOpen = false">
-              {{ $t('common.cancel') }}
-            </ProButton>
-            <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">
-              {{ $t('clients.create.submit') }}
-            </ProButton>
-          </div>
         </form>
         <div v-else class="pro-form" data-testid="vet-link-existing-client">
           <p class="pro-hint">
@@ -182,21 +180,38 @@
           <p v-if="linkCandidate.alreadyLinked" class="pro-error">{{ $t('clients.create.alreadyLinked') }}</p>
           <p v-if="clientError" class="pro-error">{{ clientError }}</p>
           <p v-if="clientMsg" class="pro-hint">{{ clientMsg }}</p>
-          <div class="create-client-actions">
-            <ProButton variant="secondary" type="button" @click="linkCandidate = null">
-              {{ $t('common.cancel') }}
-            </ProButton>
-            <ProButton
-              v-if="linkCandidate.linkable && !linkCandidate.alreadyLinked"
-              test-id="link-existing-client"
-              :disabled="clientSaving"
-              @click="linkExistingClient"
-            >
-              {{ $t('clients.create.linkExisting') }}
-            </ProButton>
-          </div>
         </div>
       </div>
+      <template #footer>
+        <template v-if="!linkCandidate">
+          <ProButton variant="secondary" type="button" @click="createOpen = false">
+            {{ $t('common.cancel') }}
+          </ProButton>
+          <ProButton
+            type="submit"
+            form="vet-create-client-form"
+            test-id="create-client-submit"
+            :disabled="clientSaving"
+            :loading="clientSaving"
+          >
+            {{ $t('clients.create.submit') }}
+          </ProButton>
+        </template>
+        <template v-else>
+          <ProButton variant="secondary" type="button" @click="linkCandidate = null">
+            {{ $t('common.cancel') }}
+          </ProButton>
+          <ProButton
+            v-if="linkCandidate.linkable && !linkCandidate.alreadyLinked"
+            test-id="link-existing-client"
+            :disabled="clientSaving"
+            :loading="clientSaving"
+            @click="linkExistingClient"
+          >
+            {{ $t('clients.create.linkExisting') }}
+          </ProButton>
+        </template>
+      </template>
     </ProModal>
 
     <ProCard>
@@ -210,7 +225,7 @@
               type="search"
               class="pro-input"
               :placeholder="$t('clients.searchPlaceholder')"
-            />
+            >
           </div>
           <div class="pro-field pro-field-inline">
             <label class="pro-label" for="pet-filter">{{ $t('clients.petsFilter') }}</label>
@@ -705,14 +720,6 @@ watch(
 .create-client-billing-title {
   margin: 0 0 0.25rem;
   font-size: 1rem;
-}
-.create-client-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--pf-vet-border, #d0d7de);
 }
 :deep(.pro-btn--icon) {
   min-width: 44px;

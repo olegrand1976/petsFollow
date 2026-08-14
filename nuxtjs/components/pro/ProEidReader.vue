@@ -3,18 +3,21 @@
     v-if="show"
     class="pro-eid-reader"
     data-testid="eid-reader"
+    :aria-busy="busy"
   >
     <div class="pro-eid-reader__heading">
       <h4 class="pro-eid-reader__title">{{ $t('clients.eid.title') }}</h4>
       <ProBadge variant="warning" data-testid="eid-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
     </div>
     <p class="pro-hint">{{ $t('clients.eid.hint') }}</p>
+    <p class="pro-hint">{{ $t('clients.eid.pinRequiredHint') }}</p>
 
     <div class="pro-eid-reader__actions">
       <ProButton
         type="button"
         test-id="eid-read-card"
         :disabled="busy"
+        :loading="busy && busyKind === 'card'"
         @click="onReadCard"
       >
         {{ $t('clients.eid.readCard') }}
@@ -24,6 +27,7 @@
           type="button"
           variant="secondary"
           :disabled="busy"
+          :loading="busy && busyKind === 'file'"
           tabindex="-1"
         >
           {{ $t('clients.eid.importViewer') }}
@@ -47,8 +51,16 @@
       </a>
     </div>
 
+    <p
+      v-if="busy && busyHint"
+      class="pro-hint pro-eid-reader__busy"
+      data-testid="eid-reader-busy"
+      role="status"
+    >
+      {{ busyHint }}
+    </p>
     <p v-if="msg" class="pro-hint" data-testid="eid-reader-msg">{{ msg }}</p>
-    <p v-if="error" class="pro-error" data-testid="eid-reader-error">{{ error }}</p>
+    <p v-if="error" class="pro-error" data-testid="eid-reader-error" role="alert">{{ error }}</p>
   </div>
 </template>
 
@@ -75,6 +87,8 @@ const {
 } = useEidPrefill()
 
 const busy = ref(false)
+const busyKind = ref<'card' | 'file' | null>(null)
+const busyHint = ref('')
 const msg = ref('')
 const error = ref('')
 const webEidReady = ref(false)
@@ -135,12 +149,52 @@ async function applyIdentity(identity: EidIdentity) {
   emit('filled', keys.map(String), identity)
 }
 
+function mapReadError(e: unknown): string {
+  const any = e as any
+  const raw = String(any?.message || any || '')
+  if (raw.startsWith('eid_origin_mismatch')) return t('clients.eid.originMismatch')
+  if (raw === 'web_eid_extension_unavailable') {
+    webEidReady.value = false
+    return t('clients.eid.extensionMissing')
+  }
+  if (raw === 'web_eid_loopback_unavailable') {
+    webEidReady.value = false
+    return t('clients.eid.loopbackUnavailable')
+  }
+  if (raw === 'web_eid_native_unavailable') {
+    webEidReady.value = false
+    return t('clients.eid.nativeAppMissing')
+  }
+  if (raw === 'web_eid_version_mismatch') {
+    webEidReady.value = false
+    return t('clients.eid.versionMismatch')
+  }
+  if (raw === 'web_eid_context_insecure') {
+    return t('clients.eid.contextInsecure')
+  }
+  if (raw === 'web_eid_unavailable') {
+    webEidReady.value = false
+    return t('clients.eid.webEidNotReady')
+  }
+  if (raw === 'web_eid_timeout') return t('clients.eid.timeout')
+  if (raw === 'web_eid_cancelled') return t('clients.eid.cancelled')
+  if (raw === 'eid_nonce_missing' || raw === 'eid_nonce_expired') return t('clients.eid.nonceExpired')
+  if (raw === 'eid_cert_untrusted') return t('clients.eid.certUntrusted')
+  if (raw === 'eid_token_signature') return t('clients.eid.tokenSignature')
+  if (raw === 'eid_token_invalid' || raw === 'eid_token_parse' || raw === 'eid_identity_empty') {
+    return t('clients.eid.verifyFailed')
+  }
+  return mapError(e) || t('clients.eid.readError')
+}
+
 async function onFile(ev: Event) {
   const input = ev.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
   busy.value = true
+  busyKind.value = 'file'
+  busyHint.value = t('clients.eid.importing')
   msg.value = ''
   error.value = ''
   try {
@@ -150,11 +204,15 @@ async function onFile(ev: Event) {
     error.value = mapError(e) || t('clients.eid.importError')
   } finally {
     busy.value = false
+    busyKind.value = null
+    busyHint.value = ''
   }
 }
 
 async function onReadCard() {
   busy.value = true
+  busyKind.value = 'card'
+  busyHint.value = t('clients.eid.reading')
   msg.value = ''
   error.value = ''
   try {
@@ -163,17 +221,11 @@ async function onReadCard() {
     webEidReady.value = true
     await applyIdentity(identity)
   } catch (e: any) {
-    const raw = String(e?.message || e || '')
-    if (raw.startsWith('eid_origin_mismatch')) {
-      error.value = t('clients.eid.originMismatch')
-    } else if (raw === 'web_eid_unavailable') {
-      webEidReady.value = false
-      error.value = t('clients.eid.webEidNotReady')
-    } else {
-      error.value = mapError(e) || t('clients.eid.readError')
-    }
+    error.value = mapReadError(e)
   } finally {
     busy.value = false
+    busyKind.value = null
+    busyHint.value = ''
   }
 }
 </script>
@@ -219,5 +271,9 @@ async function onReadCard() {
   font-size: 0.875rem;
   color: var(--pf-vet-accent, #0d9488);
   text-decoration: underline;
+}
+.pro-eid-reader__busy {
+  margin-top: 0.5rem;
+  font-weight: 500;
 }
 </style>
