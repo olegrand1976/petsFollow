@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	defaultModel     = "gemini-3.6-flash"
+	defaultModel     = "gemini-3.7-flash"
 	defaultLiteModel = "gemini-3.5-flash-lite"
 	// mediaHTTPTimeout covers PDF extract chunks (full-page catalogue pages are heavy).
 	mediaHTTPTimeout   = 5 * time.Minute

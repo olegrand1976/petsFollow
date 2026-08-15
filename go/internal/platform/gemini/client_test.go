@@ -4,7 +4,7 @@ import "testing"
 
 func TestNewDefaultsTo36AndFlashLite(t *testing.T) {
 	c := New("key", "", "")
-	if c.Model != "gemini-3.6-flash" {
+	if c.Model != "gemini-3.7-flash" {
 		t.Fatalf("Model=%q", c.Model)
 	}
 	if c.LiteModel != "gemini-3.5-flash-lite" {

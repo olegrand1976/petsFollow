@@ -251,7 +251,7 @@ func Load() Config {
 		JourneyEmailEnabled:         envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
 		JourneyEmailInterval:        envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
 		GeminiAPIKey:                envOr("GEMINI_API_KEY", ""),
-		GeminiModel:                 envOr("GEMINI_MODEL", "gemini-3.6-flash"),
+		GeminiModel:                 envOr("GEMINI_MODEL", "gemini-3.7-flash"),
 		GeminiLiteModel:             envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
 		GeminiLiveModel:             envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
 		GeminiEmbeddingModel:        envOr("GEMINI_EMBEDDING_MODEL", "text-embedding-004"),

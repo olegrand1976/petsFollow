@@ -97,7 +97,7 @@ func TestUtf8SafeSuffix(t *testing.T) {
 
 func TestDefaultModels(t *testing.T) {
 	c := New("key", "", "")
-	if c.Model != "gemini-3.6-flash" {
+	if c.Model != "gemini-3.7-flash" {
 		t.Fatalf("model=%q", c.Model)
 	}
 	if c.LiteModel != "gemini-3.5-flash-lite" {
