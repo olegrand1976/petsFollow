@@ -865,7 +865,7 @@ func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, e
 		return nil, err
 	}
 	defer rows.Close()
-	var out []Message
+	out := []Message{}
 	for rows.Next() {
 		var m Message
 		if err := rows.Scan(&m.ID, &m.ThreadID, &m.SenderUserID, &m.Body, &m.MediaURL, &m.MediaType, &m.ReadAt, &m.CreatedAt); err != nil {
@@ -952,7 +952,7 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 		return nil, err
 	}
 	defer rows.Close()
-	var out []Thread
+	out := []Thread{}
 	for rows.Next() {
 		var t Thread
 		if err := rows.Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID); err != nil {

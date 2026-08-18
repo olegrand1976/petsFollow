@@ -374,7 +374,7 @@ func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID s
 		return nil, err
 	}
 	defer rows.Close()
-	var out []ThreadSummary
+	out := []ThreadSummary{}
 	for rows.Next() {
 		var t ThreadSummary
 		if err := rows.Scan(
@@ -390,7 +390,7 @@ func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID s
 }
 
 func scanThreadSummaries(rows pgx.Rows) ([]ThreadSummary, error) {
-	var out []ThreadSummary
+	out := []ThreadSummary{}
 	for rows.Next() {
 		var t ThreadSummary
 		if err := rows.Scan(

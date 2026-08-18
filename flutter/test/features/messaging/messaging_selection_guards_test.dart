@@ -27,6 +27,7 @@ void main() {
   void stubClientBase({
     required List<Map<String, dynamic>> pets,
     List<Map<String, dynamic>> threads = const [],
+    Object? messages = const [],
   }) {
     mock.json('GET', '/api/v1/me', data: {
       'userId': 'user-1',
@@ -43,7 +44,11 @@ void main() {
     ]);
     mock.json('GET', '/api/v1/pets', data: pets);
     mock.json('GET', '/api/v1/messaging/threads', data: threads);
-    mock.json('GET', RegExp(r'/api/v1/messaging/threads/.+/messages'), data: []);
+    mock.json(
+      'GET',
+      RegExp(r'/api/v1/messaging/threads/.+/messages'),
+      data: messages,
+    );
     mock.json('POST', RegExp(r'/api/v1/messaging/threads/.+/read'), data: {});
   }
 
@@ -269,5 +274,45 @@ void main() {
 
     expect(find.text('Aucune conversation'), findsNothing);
     expect(find.text('Client'), findsWidgets);
+  });
+
+  test('getChatMessages treats null envelope as empty list', () async {
+    mock.json('GET', RegExp(r'/api/v1/messaging/threads/.+/messages'), data: null);
+    mock.install();
+
+    final msgs = await ApiClient.instance.getChatMessages('thread-empty');
+    expect(msgs, isEmpty);
+  });
+
+  testWidgets('empty vet/pet thread with null messages shows empty state',
+      (tester) async {
+    stubClientBase(
+      pets: [
+        {...Fixtures.pet(), 'practiceId': 'practice-1'},
+      ],
+      threads: [
+        {
+          'id': 'thread-empty',
+          'practiceId': 'practice-1',
+          'clientUserId': 'user-1',
+          'petId': 'pet-1',
+          'petName': 'Rex',
+          'practiceName': 'VetPlus',
+          'unreadCount': 0,
+        },
+      ],
+      messages: null,
+    );
+    mock.install();
+
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpApp(tester, home: const MessagingScreen());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Pas encore de messages'), findsOneWidget);
+    expect(find.byKey(const Key('message_draft')), findsOneWidget);
   });
 }

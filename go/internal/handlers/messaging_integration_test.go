@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 )
@@ -162,3 +163,63 @@ func TestMessagingVetClientHappyPath(t *testing.T) {
 		t.Fatalf("orphan access want 403 got %d %#v", code, env)
 	}
 }
+
+// New vet/pet thread with no rows must JSON-encode as [] (not null) — Flutter `as List`.
+func TestMessagingEmptyPetThreadReturnsEmptyArray(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	_, meEnv := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", clientTok, nil)
+	clientID, _ := dataMap(t, meEnv)["userId"].(string)
+	if clientID == "" {
+		t.Fatalf("missing client userId: %#v", meEnv)
+	}
+
+	petName := "MsgEmpty-" + uniqueEmail("pet")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", clientTok, map[string]any{
+		"name": petName, "species": "dog", "breed": "Test",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create pet %d %#v", code, env)
+	}
+	pet, _ := dataMap(t, env)["pet"].(map[string]any)
+	petID, _ := pet["id"].(string)
+	if petID == "" {
+		t.Fatalf("missing pet id %#v", env)
+	}
+	var threadID string
+	t.Cleanup(func() {
+		if threadID != "" {
+			_, _ = api.pool.Exec(context.Background(), `DELETE FROM messaging.messages WHERE thread_id=$1`, threadID)
+			_, _ = api.pool.Exec(context.Background(), `DELETE FROM messaging.threads WHERE id=$1`, threadID)
+		}
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pets.pets WHERE id=$1`, petID)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/messaging/threads", vetTok, map[string]any{
+		"clientUserId": clientID,
+		"petId":        petID,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("ensure empty thread %d %#v", code, env)
+	}
+	threadID, _ = dataMap(t, env)["id"].(string)
+	if threadID == "" {
+		t.Fatalf("missing thread id %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/messaging/threads/"+threadID+"/messages", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list empty messages %d %#v", code, env)
+	}
+	raw, ok := env["data"].([]any)
+	if !ok {
+		t.Fatalf("expected JSON array [], got %T %#v", env["data"], env["data"])
+	}
+	if len(raw) != 0 {
+		t.Fatalf("expected empty messages, got %#v", raw)
+	}
+}
+

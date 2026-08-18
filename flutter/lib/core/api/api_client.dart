@@ -1082,7 +1082,9 @@ class ApiClient {
 
   Future<List<dynamic>> getBillingPlans() async {
     final res = await dio.get('/api/v1/billing/plans');
-    return res.data['data']['plans'] as List<dynamic>;
+    return _asList(res.data is Map && res.data['data'] is Map
+        ? (res.data['data'] as Map)['plans']
+        : null);
   }
 
   /// Household digest (all clients — pack derived from pet count).
@@ -1096,14 +1098,14 @@ class ApiClient {
     final res = await dio.get('/api/v1/me/pet-tips');
     final data = res.data['data'];
     if (data is Map && data['items'] is List) {
-      return data['items'] as List<dynamic>;
+      return _asList(data['items']);
     }
     return const [];
   }
 
   Future<List<dynamic>> getHorseContacts(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/horse-contacts');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> createHorseContact(
@@ -1130,7 +1132,7 @@ class ApiClient {
 
   Future<List<dynamic>> getHorseCompetitions(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/horse-competitions');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> createHorseCompetition(
@@ -1167,7 +1169,7 @@ class ApiClient {
 
   Future<List<dynamic>> getHeartRateSessions(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/heartrate/sessions');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> completeHeartRate(String sessionId, int tapCount) async {
@@ -1206,7 +1208,7 @@ class ApiClient {
 
   Future<List<dynamic>> getWeightReadings(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/weights');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> createBloodPressureReading(
@@ -1236,12 +1238,12 @@ class ApiClient {
 
   Future<List<dynamic>> getBloodPressureReadings(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/blood-pressure');
-    return (res.data['data'] as List?) ?? const [];
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<List<dynamic>> getLabPanels(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/lab-panels');
-    return (res.data['data'] as List?) ?? const [];
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> getLabPanel(String petId, String panelId) async {
@@ -1251,12 +1253,7 @@ class ApiClient {
 
   Future<List<dynamic>> getTimeline(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/timeline');
-    return res.data['data'] as List<dynamic>;
-  }
-
-  Future<List<dynamic>> getMessages(String threadId) async {
-    final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<void> sendMessage(String threadId, String body) async {
@@ -1510,8 +1507,11 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> getProfiles() async {
     final res = await dio.get('/api/v1/me/profiles');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   Future<Map<String, dynamic>> switchProfile(String profileId) async {
@@ -1523,8 +1523,7 @@ class ApiClient {
   /// Typed messaging threads (single wrapper for `/messaging/threads`).
   Future<List<MessageThread>> getMessageThreads() async {
     final res = await dio.get('/api/v1/messaging/threads');
-    final raw = res.data['data'];
-    final data = raw is List ? raw : const <dynamic>[];
+    final data = _asList(res.data is Map ? res.data['data'] : null);
     return data
         .whereType<Map>()
         .map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t)))
@@ -1556,8 +1555,11 @@ class ApiClient {
 
   Future<List<ChatMessage>> getChatMessages(String threadId) async {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((m) => ChatMessage.fromJson(Map<String, dynamic>.from(m as Map))).toList();
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((m) => ChatMessage.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
   }
 
   Future<void> markThreadRead(String threadId) async {

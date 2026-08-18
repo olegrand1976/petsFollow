@@ -665,6 +665,8 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 `make smoke` — profile `full` (défaut) : health/ready, **CORS OPTIONS** (Allow-Origin depuis `CORS_ORIGIN` / site Pro), **login invalide → 401** (pas 5xx), auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404. Les écritures smoke sont purgées ensuite sur staging (`make staging-quality-cleanup` / job `cleanup-quality`).
 
+Fil vide (H1) : `GET /messaging/threads/{id}/messages` → `data: []` (jamais `null`) — Go `TestMessagingEmptyPetThreadReturnsEmptyArray` + Flutter `messaging_selection_guards_test` (`null` envelope).
+
 ### eID BE (Viewer + Web eID — C2.3 / C2.6)
 
 ```

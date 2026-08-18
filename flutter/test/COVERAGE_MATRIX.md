@@ -42,6 +42,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Messaging staff + client selects (ensure thread) | · | ✓ | · | `staff_messaging_test` |
 | Messaging selection guards (draft enabled / stale ensure / clear draft) | · | ✓ | · | `messaging_selection_guards_test` |
 | Messaging unread labels + incomplete selection hint | · | ✓ | · | `messaging_selection_guards_test` |
+| Messaging empty thread (null envelope → []) | · | ✓ | · | `messaging_selection_guards_test` |
 | Messaging video upload basename | ✓ | · | · | `message_media_upload_test` |
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
